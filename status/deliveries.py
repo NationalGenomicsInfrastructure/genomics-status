@@ -278,7 +278,8 @@ class DeliveriesPageHandler(SafeHandler):
                 if bioinfo_responsible not in responsible_list:
                     responsible_list[bioinfo_responsible] = 0
                 responsible_list[bioinfo_responsible] += 1
-                platforms.remove(None)
+                if None in platforms:
+                    platforms.remove(None)
 
                 project_data = {
                     "project_name": summary_data[project_id]["project_name"],
