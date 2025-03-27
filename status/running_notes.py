@@ -422,3 +422,24 @@ class LatestRunningNoteHandler(SafeHandler):
     def formatDate(date):
         datestr = datetime.datetime.fromisoformat(date).astimezone()
         return datestr.strftime("%a %b %d %Y, %H:%M:%S")
+
+
+class InvoicingNotesHandler(SafeHandler):
+    """Serves the invoicing running notes for a given project.
+    URL: /api/v1/invoicing_notes/([^/]*)
+    """
+
+    def get(self, partitionid):
+        self.set_header("Content-type", "application/json")
+        result_rows = self.application.cloudant.post_partition_view(
+            db="running_notes",
+            ddoc="note_types",
+            view="invoicing_notes",
+            partition_key=partitionid,
+            descending=True,
+        ).get_result()["rows"]
+        if result_rows:
+            invoicing_notes = []
+            for note in result_rows:
+                invoicing_notes.append(note["value"])
+            self.write({"invoicing_notes": invoicing_notes})
