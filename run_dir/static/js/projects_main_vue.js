@@ -24,6 +24,7 @@ const vProjectsStatus = {
             card_columns: ['library_construction_method'],
             descending: true,
             search_value: '',
+            statuses_ordered: ['Pending', 'Reception Control', 'Ongoing'],
             open_modal_card: null,
             // Filters
             all_filters: {
@@ -87,7 +88,7 @@ const vProjectsStatus = {
         }
     },
     computed: {
-        /* Only used on project cards page*/
+        /* Only used on project cards page */
         visibleProjects() {
             /* Filters and sorts the projects.
                Searching is applied here as well. */
@@ -163,13 +164,21 @@ const vProjectsStatus = {
                     return 0
                 })
             } else if (this.sortBy == 'status') {
-                // Sort on status
+                // Sort on status according to statuses_ordered
                 tempProjects = tempProjects.sort((a, b) => {
-                    let proj_a = this.project_details[a[0]]
-                    let proj_b = this.project_details[b[0]]
-                    if (proj_a['status_fields']['status'] > proj_b['status_fields']['status']) {
+                    let proj_a = this.project_details[a[0]];
+                    let proj_b = this.project_details[b[0]];
+                    let status_a = proj_a['status_fields']['status'];
+                    let status_b = proj_b['status_fields']['status'];
+                    let index_a = this.statuses_ordered.indexOf(status_a);
+                    let index_b = this.statuses_ordered.indexOf(status_b);
+
+                    if (index_a === -1) index_a = this.statuses_ordered.length; // If status is not found, place it at the end
+                    if (index_b === -1) index_b = this.statuses_ordered.length;
+
+                    if (index_a > index_b) {
                         return 1
-                    } else if (proj_a['status_fields']['status'] < proj_b['status_fields']['status']) {
+                    } else if (index_a < index_b) {
                         return -1
                     }
                     return 0
