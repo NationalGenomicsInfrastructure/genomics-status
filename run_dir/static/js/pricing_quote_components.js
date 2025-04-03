@@ -171,10 +171,12 @@ export const vPricingQuote = {
           return this.proj_data['invoice_generated']!==''? true:false
         },
     },
-    created: function() {
-      this.$root.fetchPublishedCostCalculator(true),
-      this.$root.fetchExchangeRates(),
-      this.fetch_latest_agreement_template_doc()
+    created: async function() {
+      await Promise.all([
+        this.$root.fetchPublishedCostCalculator(true),
+        this.$root.fetchExchangeRates(),
+        this.fetch_latest_agreement_template_doc()
+      ])
     },
     mounted: function () {
         this.get_project_specific_data()
@@ -335,6 +337,7 @@ export const vPricingQuote = {
                               ' ('+ agreement_selected['total_cost']+' SEK on cost calc v'+ agreement_selected['cost_calculator_version']+')'
             var sel_data = this.saved_agreement_data['saved_agreements'][timestamp_val]
             if('cost_calculator_version' in sel_data){
+
               if(this.$root.published_cost_calculator["Version"]!==sel_data['cost_calculator_version']){
                 axios
                   .get('/api/v1/cost_calculator', {
