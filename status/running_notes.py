@@ -94,7 +94,8 @@ class RunningNotesDataHandler(SafeHandler):
                 doc_id = row.value
             doc = application.projects_db.get(doc_id)
             project_name = doc["project_name"]
-            proj_ids = [partition_id, project_name]
+            library_method = doc["details"].get("library_construction_method", "")
+            proj_details = [partition_id, project_name, library_method]
             proj_coord_with_accents = ".".join(
                 doc["details"].get("project_coordinator", "").lower().split()
             )
@@ -155,7 +156,7 @@ class RunningNotesDataHandler(SafeHandler):
                 RunningNotesDataHandler.notify_tagged_user(
                     application,
                     userTags,
-                    proj_ids,
+                    proj_details,
                     note,
                     categories,
                     user,
@@ -177,7 +178,7 @@ class RunningNotesDataHandler(SafeHandler):
                 RunningNotesDataHandler.notify_tagged_user(
                     application,
                     [proj_coord],
-                    proj_ids,
+                    proj_details,
                     note,
                     categories,
                     user,
@@ -219,6 +220,7 @@ class RunningNotesDataHandler(SafeHandler):
         view_result = {}
         project_id = project[0]
         project_name = project[1]
+        library_method = project[2]
         time_in_format = timestamp.astimezone().strftime("%a %b %d %Y, %I:%M:%S %p")
         note_id = (
             "running_note_"
@@ -268,7 +270,7 @@ class RunningNotesDataHandler(SafeHandler):
                                 "type": "mrkdwn",
                                 "text": (
                                     "_{} for the project_ "
-                                    "<{}/project/{}#{}|{}, {}>! :smile: \n_The note is as follows:_ \n\n\n"
+                                    "<{}/project/{}#{}|{}, {}> [{}]! :smile: \n_The note is as follows:_ \n\n\n"
                                 ).format(
                                     slack_notf_text,
                                     application.settings["redirect_uri"].rsplit("/", 1)[
@@ -278,6 +280,7 @@ class RunningNotesDataHandler(SafeHandler):
                                     note_id,
                                     project_id,
                                     project_name,
+                                    library_method,
                                 ),
                             },
                         },
@@ -321,16 +324,14 @@ class RunningNotesDataHandler(SafeHandler):
                     )
                     msg["From"] = "genomics-status"
                     msg["To"] = view_result[user]
-                    text = (
-                        f"{email_text} in the project {project_id}, {project_name}! The note is as follows\n\
+                    text = f"{email_text} in the project {project_id}, {project_name} [{library_method}]! The note is as follows\n\
                     >{tagger} - {time_in_format}{category}\
                     >{note}"
-                    )
 
                     html = '<html>\
                     <body>\
                     <p> \
-                    {} in the project <a href="{}/project/{}#{}">{}, {}</a><br>The note is as follows</p>\
+                    {} in the project <a href="{}/project/{}#{}">{}, {}</a> [{}]<br>The note is as follows</p>\
                     <blockquote>\
                     <div class="panel panel-default" style="border: 1px solid #e4e0e0; border-radius: 4px;">\
                     <div class="panel-heading" style="background-color: #f5f5f5; padding: 10px 15px;">\
@@ -345,6 +346,7 @@ class RunningNotesDataHandler(SafeHandler):
                         note_id,
                         project_id,
                         project_name,
+                        library_method,
                         tagger,
                         time_in_format,
                         category,
