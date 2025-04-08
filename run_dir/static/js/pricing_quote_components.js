@@ -875,9 +875,14 @@ export const vPricingQuote = {
                     <h4>Invoicing Running Notes</h4>
                   </div>
                   <div class="card-body">
-                    <template v-for="running_note in invoicing_notes">
-                      <v-running-note-single :running_note_obj="running_note" :partition_id="this.proj_id" :compact="false"/>
-                  </template>
+                    <template v-if="this.invoicing_notes && this.invoicing_notes.length > 0">
+                      <template v-for="running_note in invoicing_notes">
+                        <v-running-note-single :running_note_obj="running_note" :partition_id="this.proj_id" :compact="false"/>
+                      </template>
+                    </template>
+                    <template v-else>
+                      <div class="well">No invoicing running notes found.</div>
+                    </template>
                   </div>
                 </div>
               </div>
