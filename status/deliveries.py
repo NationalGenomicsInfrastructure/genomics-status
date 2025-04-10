@@ -42,7 +42,7 @@ class DeliveriesPageHandler(SafeHandler):
                 # still try to update everything
                 # but will print error anyway
                 self.set_status(400)
-                self.write(e.message)
+                self.write(str(e))
                 continue
 
         # update status db
