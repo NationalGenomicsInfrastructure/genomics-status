@@ -294,6 +294,8 @@ class SequencingQueuesDataHandler(SafeHandler):
         queues["NovaSeq: Make Bulk Pool for Standard"] = "1655"
         # Novaseq Step 10: Make Bulk Pool for Novaseq Xp
         queues["NovaSeq : Make Bulk Pool for Xp"] = "1656"
+        # NovaseqXPlus Step 6: Make Bulk Pool (NovaSeqXPlus) v1.0
+        queues["NovaSeqXPlus : Make Bulk Pool (NovaSeqXPlus) v1.0"] = "3056"
         # NovaSeqXPlus Step 8:  Load to Flowcell (NovaSeqXPlus) v1.0
         queues["NovaSeqXPlus : Load to Flowcell (NovaSeqXPlus) v1.0"] = "3058"
 
