@@ -120,6 +120,7 @@ const vProjectCreationForm = {
 
             if (!valid) {
                 // Loop over the errors
+                console.log(validate.errors)
                 validate.errors.forEach(error => {
                     // Check if the instance path is a field
                     if (error.instancePath !== '') {
@@ -225,7 +226,7 @@ const vFormField = {
             }
             return this.field_enum;
         },
-        selected_value() {
+        current_value() {
             return this.$root.formData[this.identifier];
         },
         type() {
@@ -237,28 +238,41 @@ const vFormField = {
         },
         unallowed_option() {
             // Highlight if the selected value is not allowed (based on conditional logic)
-            if (this.selected_value === undefined) {
+            if (this.current_value === undefined) {
                 return false;
             }
-            return !(this.options.includes(this.selected_value));
+            return !(this.options.includes(this.current_value));
         },
         validation_errors() {
             // Check if there are validation errors for this field
             return this.$root.validation_errors_per_field[this.identifier] || [];
         }
     },
+    mounted() {
+        // Initialize the form data for this field
+        if (this.field.default !== undefined) {
+            this.$root.formData[this.identifier] = this.field.default;
+        } else {
+            if (this.form_type === 'boolean') {
+                this.$root.formData[this.identifier] = false;
+            } else {
+                this.$root.formData[this.identifier] = '';
+            }
+        }
+    },
     template:
         /*html*/`
         <div>
-            <template v-if="any_error">
-                <div v-if="validation_errors.length > 0" class="alert alert-danger" role="alert">
-                    <strong>Validation errors:</strong>
-                    <ul>
-                        <li v-for="error in validation_errors" :key="error.message">{{ error.message }}</li>
-                    </ul>
-                </div>
-            </template>
-            <label :for="identifier" class="form-label">{{ label }}</label>
+
+            <div class="row">
+                <label :for="identifier" class="form-label col-auto">{{ label }}</label>
+                <template v-if="any_error">
+                    <div v-if="validation_errors.length > 0" class="col-auto text-danger ml-auto">
+                        <strong>Validation errors for value '{{current_value}}': </strong>
+                        <span v-for="error in validation_errors" :key="error.message">{{ error.message }}</span>
+                    </div>
+                </template>
+            </div>
             <template v-if="this.form_type === 'select'">
                 <select class="form-select" :aria-label="description" v-model="this.$root.formData[identifier]">
                     <template v-for="option in options">
