@@ -1,3 +1,6 @@
+// Import Ajv from the CDN
+import Ajv from 'https://cdn.jsdelivr.net/npm/ajv@8.17.1/+esm';
+
 const vProjectCreationForm = {
     data() {
         return {
@@ -6,6 +9,8 @@ const vProjectCreationForm = {
           formData: {},
           json_form: {},
           showDebug: false,
+          validation_errors: [],
+          validation_errors_per_field: {}
         }
     },
     computed: {
@@ -29,6 +34,19 @@ const vProjectCreationForm = {
         }
     },
     methods: {
+        evaluateCondition(condition) {
+            return Object.keys(condition.properties).every(field => {
+                const fieldCondition = condition.properties[field];
+
+                if (fieldCondition.enum) {
+                    return fieldCondition.enum.includes(this.formData[field]);
+                }
+                if (fieldCondition.const !== undefined) {
+                    return this.formData[field] === fieldCondition.const;
+                }
+                return true;
+            });
+        },
         fetch_form(version) {
             let url = '/api/v1/project_creation_form'
             if (version !== undefined) {
@@ -43,6 +61,10 @@ const vProjectCreationForm = {
                     this.error_messages.push('Error fetching form. Please try again or contact a system adminstrator.');
                     console.log(error)
                 })
+        },
+        getOptions(field_arg) {
+            const condition = this.conditionalLogic.find(cond => cond.field === field_arg);
+            return condition ? condition.options : null;
         },
         getValue(object, field) {
             // Get the value of a field or return a default value
@@ -63,10 +85,6 @@ const vProjectCreationForm = {
                     console.log(error);
                 });
         },
-        getOptions(field_arg) {
-            const condition = this.conditionalLogic.find(cond => cond.field === field_arg);
-            return condition ? condition.options : null;
-        },
         updateOptions() {
             this.conditionalLogic = [];
             if (this.json_schema.allOf === undefined) {
@@ -84,18 +102,37 @@ const vProjectCreationForm = {
                 }
             });
         },
-        evaluateCondition(condition) {
-            return Object.keys(condition.properties).every(field => {
-                const fieldCondition = condition.properties[field];
+        updateOptionsAndValidate() {
+            this.updateOptions();
+            // Validate the form data against the JSON schema
+            this.validate_form_with_schema();
+        },
+        validate_form_with_schema() {
+            // Validate the form data against the JSON schema
+            // Create an instance of Ajv
+            const ajv = new Ajv({strictSchema: false, allErrors: true}); // Options can be passed here if needed
 
-                if (fieldCondition.enum) {
-                    return fieldCondition.enum.includes(this.formData[field]);
-                }
-                if (fieldCondition.const !== undefined) {
-                    return this.formData[field] === fieldCondition.const;
-                }
-                return true;
-            });
+            const validate = ajv.compile(this.json_schema);
+            const valid = validate(this.formData);
+            // Reset the validation errors
+            this.validation_errors = [];
+            this.validation_errors_per_field = {};
+
+            if (!valid) {
+                // Loop over the errors
+                validate.errors.forEach(error => {
+                    // Check if the instance path is a field
+                    if (error.instancePath !== '') {
+                        const field = error.instancePath.substring(1); // Remove the leading '/'
+                        this.validation_errors_per_field[field] = this.validation_errors_per_field[field] || [];
+                        this.validation_errors_per_field[field].push(error);
+                    } else {
+                        this.validation_errors.push(error.message);
+                    }
+                });
+                return false;
+            }
+            return true;
         }
     },
     mounted() {
@@ -104,7 +141,7 @@ const vProjectCreationForm = {
     watch: {
         formData: {
             deep: true,
-            handler: 'updateOptions'
+            handler: 'updateOptionsAndValidate'
         }
     },
     template: 
@@ -139,6 +176,9 @@ const vProjectCreationForm = {
                             <pre>{{ formData }}</pre>
                             <h3>conditionalLogic</h3>
                             <pre>{{ conditionalLogic }}</pre>
+                            <button class="btn btn-primary" @click="validate_form_with_schema">
+                                <i class="fa fa-check mr-2"></i>Validate Form
+                            </button>
                         </div>
                     </div>
 
@@ -148,17 +188,7 @@ const vProjectCreationForm = {
                     <form @submit.prevent="submitForm" class="mt-3 mb-5">
                         <template v-for="(field, identifier) in fields" :key="identifier">
                             <template v-if="field.ngi_form_type !== undefined">
-                                <template v-if="field.ngi_form_type === 'select'">
-                                    <v-form-select-field :field="field" :identifier="identifier"></v-form-select-field>
-                                </template>
-
-                                <template v-else-if="field.ngi_form_type === 'string'">
-                                    <v-form-text-field :field="field" :identifier="identifier"></v-form-text-field>
-                                </template>
-
-                                <template v-else-if="field.ngi_form_type === 'boolean'">
-                                    <v-form-boolean-field :field="field" :identifier="identifier"></v-form-boolean-field>
-                                </template>
+                                <v-form-field :field="field" :identifier="identifier"></v-form-field>
                             </template>
                         </template>
                         <button type="submit" class="btn btn-lg btn-primary mt-3">Submit</button>
@@ -168,8 +198,8 @@ const vProjectCreationForm = {
         </div>`
 }
 
-const vFormSelectField = {
-    name: 'v-form-select-field',
+const vFormField = {
+    name: 'v-form-field',
     props: ['field', 'identifier'],
     computed: {
         description() {
@@ -193,7 +223,7 @@ const vFormSelectField = {
             if (conditional_options !== null) {
                 return conditional_options;
             }
-            return this.field.enum;
+            return this.field_enum;
         },
         selected_value() {
             return this.$root.formData[this.identifier];
@@ -201,85 +231,57 @@ const vFormSelectField = {
         type() {
             return this.field.type;
         },
+        /* Error handling */
+        any_error() {
+            return this.unallowed_option || this.validation_errors.length > 0;
+        },
         unallowed_option() {
             // Highlight if the selected value is not allowed (based on conditional logic)
             if (this.selected_value === undefined) {
                 return false;
             }
             return !(this.options.includes(this.selected_value));
+        },
+        validation_errors() {
+            // Check if there are validation errors for this field
+            return this.$root.validation_errors_per_field[this.identifier] || [];
         }
     },
     template:
         /*html*/`
         <div>
-            <template v-if="unallowed_option">
-                <div class="alert alert-danger" role="alert">
-                    <strong>Selected value {{ selected_value }} is not allowed, please update your selection.</strong>
+            <template v-if="any_error">
+                <div v-if="validation_errors.length > 0" class="alert alert-danger" role="alert">
+                    <strong>Validation errors:</strong>
+                    <ul>
+                        <li v-for="error in validation_errors" :key="error.message">{{ error.message }}</li>
+                    </ul>
                 </div>
             </template>
             <label :for="identifier" class="form-label">{{ label }}</label>
-            <select class="form-select" :aria-label="description" v-model="this.$root.formData[identifier]">
-                <template v-for="option in options">
-                    <option :value="option">{{option}}</option>
-                </template>
-            </select>
+            <template v-if="this.form_type === 'select'">
+                <select class="form-select" :aria-label="description" v-model="this.$root.formData[identifier]">
+                    <template v-for="option in options">
+                        <option :value="option">{{option}}</option>
+                    </template>
+                </select>
+            </template>
+
+            <template v-else-if="this.form_type === 'string'">
+                <input class="form-control" :type="text" :name="identifier" :id="identifier" :placeholder="description" v-model="this.$root.formData[identifier]">
+            </template>
+
+            <template v-else-if="this.form_type === 'boolean'">
+                <div class="form-check form-switch">
+                    <label :for="identifier" class="form-check-label">{{ label }}</label>
+                    <input class="form-check-input" type="checkbox" :name="identifier" :id="identifier" :placeholder="description" v-model="this.$root.formData[identifier]">
+                </div>
+            </template>
+
             <p>{{ field.description }}</p>
         </div>`
 }
 
-
-const vFormTextField = {
-    name: 'v-form-text-field',
-    props: ['field', 'identifier'],
-    computed: {
-        description() {
-            return this.field.description;
-        },
-        label() {
-            return this.field.ngi_form_label;
-        },
-        type() {
-            return this.field.type;
-        },
-    },
-    template:
-        /*html*/`
-        <div>
-            <label :for="identifier" class="form-label">{{ label }}</label>
-            <input class="form-control" :type="text" :name="identifier" :id="identifier" :placeholder="description" v-model="this.$root.formData[identifier]">
-            <p>{{ description }}</p>
-        </div>`
-}
-
-
-const vFormBooleanField = {
-    name: 'v-form-boolean-field',
-    props: ['field', 'identifier'],
-    computed: {
-        description() {
-            return this.field.description;
-        },
-        label() {
-            return this.field.ngi_form_label;
-        },
-        type() {
-            return this.field.type;
-        },
-    },
-    template:
-        /*html*/`
-        <div>
-            <div class="form-check form-switch">
-                <label :for="identifier" class="form-check-label">{{ label }}</label>
-                <input class="form-check-input" type="checkbox" :name="identifier" :id="identifier" :placeholder="description" v-model="this.$root.formData[identifier]">
-            </div>
-            <p>{{ description }}</p>
-        </div>
-        `
-}
-
 const app = Vue.createApp(vProjectCreationForm)
-app.component('v-form-select-field', vFormSelectField)
-app.component('v-form-text-field', vFormTextField)
-app.component('v-form-boolean-field', vFormBooleanField)
+app.component('v-form-field', vFormField)
 app.mount('#v_project_creation')
