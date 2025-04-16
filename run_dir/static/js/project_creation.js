@@ -62,6 +62,12 @@ const vProjectCreationForm = {
                     console.log(error)
                 })
         },
+        getConditionalsFor(field_identifier) {
+            // Get the conditional logic for a specific field
+            return this.conditionalLogic.filter(cond => {
+                return cond.field === field_identifier
+            });
+        },
         getOptions(field_arg) {
             const condition = this.conditionalLogic.find(cond => cond.field === field_arg);
             return condition ? condition.options : null;
@@ -96,7 +102,8 @@ const vProjectCreationForm = {
                         this.conditionalLogic.push({
                             field,
                             options: rule.then.properties[field].enum,
-                            condition: rule.if
+                            condition: rule.if,
+                            description: rule.description
                         });
                     });
                 }
@@ -203,6 +210,9 @@ const vFormField = {
     name: 'v-form-field',
     props: ['field', 'identifier'],
     computed: {
+        conditonalsApplied() {
+            return this.$root.getConditionalsFor(this.identifier)
+        },
         description() {
             return this.field.description;
         },
@@ -262,7 +272,7 @@ const vFormField = {
     },
     template:
         /*html*/`
-        <div>
+        <div class="mb-5">
 
             <div class="row">
                 <label :for="identifier" class="form-label col-auto">{{ label }}</label>
@@ -281,6 +291,16 @@ const vFormField = {
                 </select>
             </template>
 
+            <template v-if="this.form_type === 'datalist'">
+                <input class="form-control" :list="identifier+'_list'" :aria-label="description" v-model="this.$root.formData[identifier]">
+                    <datalist :id="identifier+'_list'">
+                        <template v-for="option in options">
+                            <option :value="option">{{option}}</option>
+                        </template>
+                    </datalist>
+                </select>
+            </template>
+
             <template v-else-if="this.form_type === 'string'">
                 <input class="form-control" :type="text" :name="identifier" :id="identifier" :placeholder="description" v-model="this.$root.formData[identifier]">
             </template>
@@ -292,7 +312,15 @@ const vFormField = {
                 </div>
             </template>
 
-            <p>{{ field.description }}</p>
+            <p class="fst-italic">{{ field.description }}</p>
+            <template v-if="this.conditonalsApplied.length > 0">
+                <strong>Conditional logic applied:</strong>
+                <ul v-for="condition in this.conditonalsApplied">
+                    <li>
+                        {{condition.description}} -> Allowed values: {{condition.options}}
+                    </li>
+                </ul>
+            </template>
         </div>`
 }
 
