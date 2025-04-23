@@ -68,7 +68,7 @@ class LoginHandler(tornado.web.RequestHandler, tornado.auth.GoogleOAuth2Mixin):
 
         if len(gs_user_info["rows"]) == 1:
             row = gs_user_info["rows"][0]
-            gs_user_name = row["value"]["name"]
+            gs_user_name = row["value"].get("name", "")
 
             if gs_user_name != user_name:
                 # Update the gs_user name, so that it's possible to change name in google and have it updated in statusdb
