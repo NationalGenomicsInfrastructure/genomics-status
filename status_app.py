@@ -13,6 +13,7 @@ import tornado.ioloop
 import tornado.web
 import yaml
 from couchdb import Server
+from ibm_cloud_sdk_core.api_exception import ApiException
 from ibmcloudant import CouchDbSessionAuthenticator, cloudant_v1
 from tornado import template
 from tornado.log import LogFormatter
@@ -480,29 +481,17 @@ class Application(tornado.web.Application):
         if cloudant:
             self.cloudant = cloudant
 
-        # Load columns and presets from genstat-defaults user in StatusDB
-        genstat_id_rows = self.gs_users_db.view("authorized/users")[
-            "genstat-defaults"
-        ].rows
-        for row in genstat_id_rows:
-            genstat_defaults_doc_id = row.get("value")
-
-        # It's important to check that this user exists!
-        if not genstat_defaults_doc_id:
-            raise RuntimeError(
-                "genstat-defaults user not found on {}, please "
-                "make sure that the user is available with the "
-                "corresponding defaults information.".format(
-                    settings.get("couch_server", None)
+        try:
+            self.genstat_defaults = self.cloudant.get_document(
+                db="gs_configs", doc_id="genstat_defaults"
+            ).get_result()
+        except ApiException as e:
+            if e.status_code == 404:
+                raise RuntimeError(
+                    "genstat-defaults doc not found in gs_configs, please "
+                    "make sure that the doc is available with the "
+                    "corresponding defaults information."
                 )
-            )
-        elif len(genstat_id_rows) > 1:
-            # Not sure this can actually happen, but worth checking
-            raise RuntimeError(
-                "Multiple genstat-default users found in the database, please fix"
-            )
-
-        self.genstat_defaults = self.gs_users_db[genstat_defaults_doc_id]
 
         # Load private instrument listing
         self.instrument_list = settings.get("instruments")
