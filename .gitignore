@@ -1,5 +1,5 @@
 __pycache__/
-.DS_Store
+**.DS_Store
 .ruff_cache/
 .vscode/
 *.orig
@@ -12,9 +12,10 @@ dist/
 jquery/
 Pipfile
 Pipfile.lock
-run_dir/genosqlrc.yaml
+**genosqlrc.yaml
 run_dir/qc_reports/
 run_dir/settings.yaml
 run_dir/settings/
 status.egg-info/
 tests/test_items.yaml
+**orderportal_cred.yaml
