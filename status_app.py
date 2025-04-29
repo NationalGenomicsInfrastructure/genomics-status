@@ -524,10 +524,6 @@ class Application(tornado.web.Application):
         # Load password seed
         self.password_seed = settings.get("password_seed")
 
-        # load logins for the genologics sftp
-        self.genologics_login = settings["sftp"]["login"]
-        self.genologics_pw = settings["sftp"]["password"]
-
         # Location of the psul log
         self.psul_log = settings.get("psul_log")
 
