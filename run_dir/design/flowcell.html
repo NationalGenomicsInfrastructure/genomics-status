@@ -39,6 +39,12 @@
           {% end %}
         </td>
       </tr>
+      <tr class="darkth">
+        <th>External Links:</th>
+          <td>
+            <a id="statusdb_link" data-toggle="tooltip" title="Opens flowcell page in StatusDB" class="btn btn-light btn-xs float-left" target="_blank">StatusDB</a>
+          </td>
+      </tr>
     </table>
     <div class="tabbable mb-3">
       <ul class="nav nav-tabs">
@@ -311,4 +317,19 @@
 <script src="/static/js/links.js?v={{ gs_globals['git_commit'] }}" id="ln-js" data-link-type="flowcell"></script>
 <script src="/static/js/flowcell.js?v={{ gs_globals['git_commit'] }}" id="flowcells-js" data-flowcell="{{ flowcell.get('name') }}"></script>
 <script src="/static/js/clipboard.min.js"></script>
+<script>
+var flowcell = "{{ flowcell.get('name') }}";
+var run_mode = "{{ flowcell.get('run_mode') }}";
+
+function add_statusdb_link(){
+  return $.getJSON("/api/v1/flowcell_search_url/" + flowcell + "," + run_mode, function (data) {
+    $.each(data, function(key, value) {
+      //fill in link to statusdb
+      $("#statusdb_link").attr('href', data['sourcedb_url']+"/_utils/index.html?flowcells#/database/" + data['_doc_id']);
+    });
+});
+};
+
+document.addEventListener("DOMContentLoaded", add_statusdb_link);
+</script>
 {% end %}

@@ -348,6 +348,69 @@ class FlowcellSearchHandler(SafeHandler):
         return flowcells
 
 
+class FlowcellSearchURLHandler(SafeHandler):
+    """Searches Flowcells for text string
+
+    Loaded through /api/v1/flowcell_search_url/([^/]*)$
+    """
+
+    cached_fc_list = None
+    cached_xfc_list = None
+    cached_ont_fc_list = None
+    cached_element_fc_list = None
+    last_fetched = None
+
+    def get(self, search_string):
+        self.set_header("Content-type", "application/json")
+        self.write(json.dumps(self.search_flowcell_names(search_string)))
+
+    def search_flowcell_names(self, search_string=""):
+        if len(search_string) == 0:
+            return ""
+        
+        search_string, run_mode = search_string.split(",")
+        search_string = search_string.lower()
+        run_mode = run_mode.split(" ")[0]
+
+        print(f"search_string: {search_string}, run_mode: {run_mode}")
+
+        fc = {"sourcedb_url": "https://" + self.settings["couch_server"].split("@")[1]}
+
+        if run_mode in ["NovaSeqXPlus", "NovaSeq", "MiSeq"]:
+            # Illumina
+            xfc_view = self.application.x_flowcells_db.view(
+                "names/id_to_name", descending=True
+            )
+            for row in xfc_view:
+                if row.value and search_string in row.value.lower():
+                    fc["_doc_id"] = f"x_flowcells/{row.id}"
+                    return fc
+        else:
+            # ONT
+            ont_fc_view = self.application.nanopore_runs_db.view(
+                "names/name", descending=True
+            )
+            try:
+                for row in ont_fc_view:
+                    if search_string in row.key.lower():
+                        fc["_doc_id"] = f"nanopore_runs/{row.id}"
+                        return fc
+            except AttributeError:
+                pass
+            # Element Biosciences
+            element_fc_view = self.application.element_runs_db.view(
+                "info/id", descending=True
+            )
+            try:
+                for row in element_fc_view:
+                    if search_string in row.key.lower():
+                        fc["_doc_id"] = f"element_runs/{row.id}"
+                        return fc
+            except AttributeError:
+                pass
+        return fc
+
+
 class OldFlowcellsInfoDataHandler(SafeHandler):
     """Serves brief information about a given flowcell.
 
