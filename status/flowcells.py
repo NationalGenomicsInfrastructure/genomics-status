@@ -354,25 +354,17 @@ class FlowcellSearchURLHandler(SafeHandler):
     Loaded through /api/v1/flowcell_search_url/([^/]*)$
     """
 
-    cached_fc_list = None
-    cached_xfc_list = None
-    cached_ont_fc_list = None
-    cached_element_fc_list = None
-    last_fetched = None
-
     def get(self, search_string):
         self.set_header("Content-type", "application/json")
         self.write(json.dumps(self.search_flowcell_names(search_string)))
 
     def search_flowcell_names(self, search_string=""):
-        if len(search_string) == 0:
+        if len(search_string) == 0 or "," not in search_string:
             return ""
         
         search_string, run_mode = search_string.split(",")
         search_string = search_string.lower()
         run_mode = run_mode.split(" ")[0]
-
-        print(f"search_string: {search_string}, run_mode: {run_mode}")
 
         fc = {"sourcedb_url": "https://" + self.settings["couch_server"].split("@")[1]}
 
