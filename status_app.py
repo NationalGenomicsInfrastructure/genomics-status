@@ -49,7 +49,6 @@ from status.flowcells import (
     FlowcellQCHandler,
     FlowcellsDataHandler,
     FlowcellSearchHandler,
-    FlowcellSearchURLHandler,
     FlowcellsHandler,
     FlowcellsInfoDataHandler,
     OldFlowcellsInfoDataHandler,
@@ -268,7 +267,6 @@ class Application(tornado.web.Application):
             ("/api/v1/flowcell_q30/([^/]*)$", FlowcellQ30Handler),
             ("/api/v1/flowcell_links/([^/]*)$", FlowcellLinksDataHandler),
             ("/api/v1/flowcell_search/([^/]*)$", FlowcellSearchHandler),
-            ("/api/v1/flowcell_search_url/([^/]*)$", FlowcellSearchURLHandler),
             ("/api/v1/flowcell_yield/([^/]*)$", DataFlowcellYieldHandler),
             ("/api/v1/ont_plot/([^/]*)$", ONTFlowcellYieldHandler),
             tornado.web.URLSpec(

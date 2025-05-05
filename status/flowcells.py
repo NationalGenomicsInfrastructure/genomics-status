@@ -89,23 +89,25 @@ class FlowcellsHandler(SafeHandler):
             note_keys.append(note_key)
             temp_flowcells[row.key] = row.value
 
-        notes = self.application.running_notes_db.view(
-            "latest_note_previews/flowcell",
+        notes = self.application.cloudant.post_view(
+            db="running_notes",
+            ddoc="latest_note_previews",
+            view="flowcell",
             reduce=True,
             group=True,
             keys=list(note_keys),
-        )
+        ).get_result()["rows"]
         for row in notes:
-            key = row.key
+            key = row["key"]
             # NovaSeqXPlus FCs have the complete year in the date as part of the name, which is shortened in
             # some views in x_flowcells db but not in running_notes db. Hence why we require a sort of
             # translation as below
-            if len(row.key.split("_")[0]) > 6:
-                elem = row.key.split("_")
+            if len(row["key"].split("_")[0]) > 6:
+                elem = row["key"].split("_")
                 elem[0] = elem[0][2:]
                 key = "_".join(elem)
             temp_flowcells[key]["latest_running_note"] = {
-                row.value["created_at_utc"]: row.value
+                row["value"]["created_at_utc"]: row["value"]
             }
 
         return OrderedDict(sorted(temp_flowcells.items(), reverse=True))
@@ -346,62 +348,6 @@ class FlowcellSearchHandler(SafeHandler):
                 pass
 
         return flowcells
-
-
-class FlowcellSearchURLHandler(SafeHandler):
-    """Searches Flowcells for text string
-
-    Loaded through /api/v1/flowcell_search_url/([^/]*)$
-    """
-
-    def get(self, search_string):
-        self.set_header("Content-type", "application/json")
-        self.write(json.dumps(self.search_flowcell_names(search_string)))
-
-    def search_flowcell_names(self, search_string=""):
-        if len(search_string) == 0 or "," not in search_string:
-            return ""
-        
-        search_string, run_mode = search_string.split(",")
-        search_string = search_string.lower()
-        run_mode = run_mode.split(" ")[0]
-
-        fc = {"sourcedb_url": "https://" + self.settings["couch_server"].split("@")[1]}
-
-        if run_mode in ["NovaSeqXPlus", "NovaSeq", "MiSeq"]:
-            # Illumina
-            xfc_view = self.application.x_flowcells_db.view(
-                "names/id_to_name", descending=True
-            )
-            for row in xfc_view:
-                if row.value and search_string in row.value.lower():
-                    fc["_doc_id"] = f"x_flowcells/{row.id}"
-                    return fc
-        else:
-            # ONT
-            ont_fc_view = self.application.nanopore_runs_db.view(
-                "names/name", descending=True
-            )
-            try:
-                for row in ont_fc_view:
-                    if search_string in row.key.lower():
-                        fc["_doc_id"] = f"nanopore_runs/{row.id}"
-                        return fc
-            except AttributeError:
-                pass
-            # Element Biosciences
-            element_fc_view = self.application.element_runs_db.view(
-                "info/id", descending=True
-            )
-            try:
-                for row in element_fc_view:
-                    if search_string in row.key.lower():
-                        fc["_doc_id"] = f"element_runs/{row.id}"
-                        return fc
-            except AttributeError:
-                pass
-        return fc
-
 
 class OldFlowcellsInfoDataHandler(SafeHandler):
     """Serves brief information about a given flowcell.
