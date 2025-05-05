@@ -119,10 +119,12 @@ app.component('v-pricing-quote', {
           return this.proj_data['invoice_generated']!==''? true:false
         },
     },
-    created: function() {
-        this.$root.fetchPublishedCostCalculator(true),
-        this.$root.fetchExchangeRates(),
-        this.fetch_latest_agreement_template_doc()
+    created: async function() {
+        await Promise.all([
+          this.$root.fetchPublishedCostCalculator(true),
+          this.$root.fetchExchangeRates(),
+          this.fetch_latest_agreement_template_doc()
+        ])
     },
     mounted: function () {
         this.get_project_specific_data()
