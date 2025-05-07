@@ -289,6 +289,10 @@ class FlowcellHandler(SafeHandler):
                     fc_sample_yields=fc_sample_yields,
                     project_names=project_names,
                     user=self.get_current_user(),
+                    statusdb_url="https://" + self.settings["couch_server"].split("@")[
+                        1
+                    ],
+                    statusdb_id=entry.id,
                 )
             )
 
