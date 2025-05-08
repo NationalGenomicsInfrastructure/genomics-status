@@ -349,6 +349,7 @@ class FlowcellSearchHandler(SafeHandler):
 
         return flowcells
 
+
 class OldFlowcellsInfoDataHandler(SafeHandler):
     """Serves brief information about a given flowcell.
 
