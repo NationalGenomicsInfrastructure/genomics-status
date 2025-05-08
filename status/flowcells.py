@@ -89,23 +89,25 @@ class FlowcellsHandler(SafeHandler):
             note_keys.append(note_key)
             temp_flowcells[row.key] = row.value
 
-        notes = self.application.running_notes_db.view(
-            "latest_note_previews/flowcell",
+        notes = self.application.cloudant.post_view(
+            db="running_notes",
+            ddoc="latest_note_previews",
+            view="flowcell",
             reduce=True,
             group=True,
             keys=list(note_keys),
-        )
+        ).get_result()["rows"]
         for row in notes:
-            key = row.key
+            key = row["key"]
             # NovaSeqXPlus FCs have the complete year in the date as part of the name, which is shortened in
             # some views in x_flowcells db but not in running_notes db. Hence why we require a sort of
             # translation as below
-            if len(row.key.split("_")[0]) > 6:
-                elem = row.key.split("_")
+            if len(row["key"].split("_")[0]) > 6:
+                elem = row["key"].split("_")
                 elem[0] = elem[0][2:]
                 key = "_".join(elem)
             temp_flowcells[key]["latest_running_note"] = {
-                row.value["created_at_utc"]: row.value
+                row["value"]["created_at_utc"]: row["value"]
             }
 
         return OrderedDict(sorted(temp_flowcells.items(), reverse=True))
