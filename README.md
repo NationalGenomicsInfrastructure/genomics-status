@@ -22,34 +22,6 @@ git clone --recursive https://github.com/NationalGenomicsInfrastructure/genomics
 
 <details>
 
-<summary>Note on `conda` environments</summary>
-
-#### Create the environment with the correct dependencies
-
-If you decide to use a conda environment, create one making sure to use the `conda_requirements.yml` file with the following command:
-
-```bash
-conda env create -n <env_name> -f conda_requirements.yml
-```
-
-where `<env_name>` is the name of the environment you want to create.  Then, activate the environment with:
-
-```bash
-conda activate <env_name>
-```
-
-</details>
-
-Install the dependencies and the package (the `pip install -r requirements_dev.txt` can be skipped on a production server)
-
-```bash
-pip install -r requirements.txt
-pip install -r requirements_dev.txt
-python setup.py install
-```
-
-<details>
-
 <summary>Note on MacOS installations</summary>
 
 ### Fix library issues
@@ -74,6 +46,53 @@ sudo ln -s /opt/homebrew/opt/pango/lib/libpangoft2-1.0.dylib /usr/local/lib/pang
 ```
 
 </details>
+
+
+#### Install via `conda` [recommended]
+
+If you are using `conda`, we recommend creating a new environment using `conda-lock` to ensure that the environment is reproducible across different systems.
+
+**Create the environment using `conda-lock` [recommended]**
+
+To create a new environment using `conda-lock`, first install `conda-lock`, if you haven't already, using one of the [available methods](https://github.com/conda/conda-lock/tree/main?tab=readme-ov-file#installation). 
+
+Then, run the following command in the root directory of the repository:
+
+```bash
+conda-lock install --name <env_name>
+```
+
+This will create a new environment with the name `<env_name>` and install all the required dependencies.
+
+<details>
+
+<summary>Using default conda [alternative]</summary>
+
+#### Create the environment using `conda`
+
+If you prefer to create the environment using `conda` directly, you can use the provided `conda_requirements.yml` file.
+
+```bash
+conda env create -n <env_name> -f conda_requirements.yml
+```
+
+where `<env_name>` is the name of the environment you want to create.  Then, activate the environment with:
+
+```bash
+conda activate <env_name>
+```
+
+</details>
+
+#### Install via `pip` [alternative]
+
+Install the dependencies and the package (the `pip install -r requirements_dev.txt` can be skipped on a production server)
+
+```bash
+pip install -r requirements.txt
+pip install -r requirements_dev.txt
+python setup.py install
+```
 
 
 ### Configuration
