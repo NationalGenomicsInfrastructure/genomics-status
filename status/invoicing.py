@@ -44,7 +44,7 @@ class InvoicingDataHandler(SafeHandler):
         assert response.status_code == 200, (response.status_code, response.reason)
 
         return response.json()["fields"]
-    
+
     def get_contact_details_from_order(self, order_id: str) -> dict:
         """Get contact details for invoicing from order portal for a particular order"""
         order_details = self.get_order_details(order_id)
@@ -318,7 +318,9 @@ class GenerateInvoiceHandler(AgreementsDBHandler, InvoicingDataHandler):
         account_dets["ftg"] = inv_defs["account_details"].get("ftg", "")
 
         contact_dets = {}
-        contact_dets = self.get_contact_details_from_order(proj_doc["order_details"]["identifier"])
+        contact_dets = self.get_contact_details_from_order(
+            proj_doc["order_details"]["identifier"]
+        )
 
         proj_specs = {}
 
