@@ -116,12 +116,9 @@ class InvoicingPageDataHandler(AgreementsDBHandler):
         for row in view:
             proj_list[row.key] = row.value
             agreement_data = self.fetch_agreement(row.key)
-            try:
-                total_cost = agreement_data["saved_agreements"][
-                    agreement_data["invoice_spec_generated_for"]
-                ]["total_cost"]
-            except KeyError:
-                total_cost = 0
+            total_cost = agreement_data["saved_agreements"][
+                agreement_data["invoice_spec_generated_for"]
+            ]["total_cost"]
             proj_list[row.key]["total_cost"] = total_cost
         self.write(proj_list)
 
@@ -414,12 +411,9 @@ class SentInvoiceHandler(AgreementsDBHandler):
         for row in view:
             proj_list[row.value] = {"downloaded_date": row.key}
             agreement_data = self.fetch_agreement(row.value)
-            try:
-                total_cost = agreement_data["saved_agreements"][
-                    agreement_data["invoice_spec_generated_for"]
-                ]["total_cost"]
-            except KeyError:
-                total_cost = 0
+            total_cost = agreement_data["saved_agreements"][
+                agreement_data["invoice_spec_generated_for"]
+            ]["total_cost"]
             proj_list[row.value]["total_cost"] = total_cost
         self.write(proj_list)
 
