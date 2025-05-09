@@ -44,6 +44,43 @@ class InvoicingDataHandler(SafeHandler):
         assert response.status_code == 200, (response.status_code, response.reason)
 
         return response.json()["fields"]
+    
+    def get_contact_details_from_order(self, order_id: str) -> dict:
+        """Get contact details for invoicing from order portal for a particular order"""
+        order_details = self.get_order_details(order_id)
+        contact_dets = {}
+        contact_dets["name"] = order_details["project_pi_name"]
+        contact_dets["email"] = order_details["project_pi_email"]
+        contact_dets["reference"] = order_details["project_invoice_ref"]
+        contact_dets["invoice_address"] = order_details["address_invoice_address"]
+        contact_dets["invoice_zip"] = order_details["address_invoice_zip"]
+        contact_dets["invoice_city"] = order_details["address_invoice_city"]
+        contact_dets["invoice_country"] = order_details["address_invoice_country"]
+        contact_dets["department"] = (
+            order_details["address_invoice_department"]
+            if "address_invoice_department" in order_details
+            and order_details["address_invoice_department"]
+            else "-"
+        )
+        contact_dets["university"] = (
+            order_details["address_invoice_university"]
+            if "address_invoice_university" in order_details
+            and order_details["address_invoice_university"]
+            else "-"
+        )
+        contact_dets["invoice_vat"] = (
+            order_details["invoice_vat"]
+            if "invoice_vat" in order_details and order_details["invoice_vat"]
+            else "-"
+        )
+        contact_dets["invoice_organisation_number"] = (
+            order_details["invoice_organisation_number"]
+            if "invoice_organisation_number" in order_details
+            and order_details["invoice_organisation_number"]
+            else "-"
+        )
+
+        return contact_dets
 
 
 class InvoicingPageHandler(SafeHandler):
@@ -79,9 +116,12 @@ class InvoicingPageDataHandler(AgreementsDBHandler):
         for row in view:
             proj_list[row.key] = row.value
             agreement_data = self.fetch_agreement(row.key)
-            total_cost = agreement_data["saved_agreements"][
-                agreement_data["invoice_spec_generated_for"]
-            ]["total_cost"]
+            try:
+                total_cost = agreement_data["saved_agreements"][
+                    agreement_data["invoice_spec_generated_for"]
+                ]["total_cost"]
+            except KeyError:
+                total_cost = 0
             proj_list[row.key]["total_cost"] = total_cost
         self.write(proj_list)
 
@@ -281,37 +321,7 @@ class GenerateInvoiceHandler(AgreementsDBHandler, InvoicingDataHandler):
         account_dets["ftg"] = inv_defs["account_details"].get("ftg", "")
 
         contact_dets = {}
-        fields = self.get_order_details(proj_doc["order_details"]["identifier"])
-        contact_dets["name"] = fields["project_pi_name"]
-        contact_dets["email"] = fields["project_pi_email"]
-        contact_dets["reference"] = fields["project_invoice_ref"]
-        contact_dets["invoice_address"] = fields["address_invoice_address"]
-        contact_dets["invoice_zip"] = fields["address_invoice_zip"]
-        contact_dets["invoice_city"] = fields["address_invoice_city"]
-        contact_dets["invoice_country"] = fields["address_invoice_country"]
-        contact_dets["department"] = (
-            fields["address_postal_department"]
-            if "address_postal_department" in fields
-            and fields["address_postal_department"]
-            else "-"
-        )
-        contact_dets["university"] = (
-            fields["address_postal_university"]
-            if "address_postal_university" in fields
-            and fields["address_postal_university"]
-            else "-"
-        )
-        contact_dets["invoice_vat"] = (
-            fields["invoice_vat"]
-            if "invoice_vat" in fields and fields["invoice_vat"]
-            else "-"
-        )
-        contact_dets["invoice_organisation_number"] = (
-            fields["invoice_organisation_number"]
-            if "invoice_organisation_number" in fields
-            and fields["invoice_organisation_number"]
-            else "-"
-        )
+        contact_dets = self.get_contact_details_from_order(proj_doc["order_details"]["identifier"])
 
         proj_specs = {}
 
@@ -404,9 +414,12 @@ class SentInvoiceHandler(AgreementsDBHandler):
         for row in view:
             proj_list[row.value] = {"downloaded_date": row.key}
             agreement_data = self.fetch_agreement(row.value)
-            total_cost = agreement_data["saved_agreements"][
-                agreement_data["invoice_spec_generated_for"]
-            ]["total_cost"]
+            try:
+                total_cost = agreement_data["saved_agreements"][
+                    agreement_data["invoice_spec_generated_for"]
+                ]["total_cost"]
+            except KeyError:
+                total_cost = 0
             proj_list[row.value]["total_cost"] = total_cost
         self.write(proj_list)
 
@@ -419,35 +432,7 @@ class InvoicingOrderDetailsHandler(AgreementsDBHandler, InvoicingDataHandler):
     """
 
     def get(self, order_id):
-        order_details = self.get_order_details(order_id)
         contact_dets = {}
-        contact_dets["reference"] = order_details["project_invoice_ref"]
-        contact_dets["invoice_address"] = order_details["address_invoice_address"]
-        contact_dets["invoice_zip"] = order_details["address_invoice_zip"]
-        contact_dets["invoice_city"] = order_details["address_invoice_city"]
-        contact_dets["invoice_country"] = order_details["address_invoice_country"]
-        contact_dets["department"] = (
-            order_details["address_invoice_department"]
-            if "address_invoice_department" in order_details
-            and order_details["address_invoice_department"]
-            else "-"
-        )
-        contact_dets["university"] = (
-            order_details["address_invoice_university"]
-            if "address_invoice_university" in order_details
-            and order_details["address_invoice_university"]
-            else "-"
-        )
-        contact_dets["invoice_vat"] = (
-            order_details["invoice_vat"]
-            if "invoice_vat" in order_details and order_details["invoice_vat"]
-            else "-"
-        )
-        contact_dets["invoice_organisation_number"] = (
-            order_details["invoice_organisation_number"]
-            if "invoice_organisation_number" in order_details
-            and order_details["invoice_organisation_number"]
-            else "-"
-        )
+        contact_dets = self.get_contact_details_from_order(order_id)
         self.set_header("Content-type", "application/json")
         self.write(contact_dets)
