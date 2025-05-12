@@ -20,34 +20,6 @@ Clone the repository with the `--recursive` option (this will also download [nvd
 git clone --recursive https://github.com/NationalGenomicsInfrastructure/genomics-status.git
 ```
 
-<details>
-
-<summary>Note on MacOS installations</summary>
-
-### Fix library issues
-
-If you are using MacOS, you might run into some issues with the libraries when running the app. 
-
-In case you get the `OSError: cannot load library 'gobject-2.0-0'` error (or similar), install `glib` and `pango` via [Homebrew](https://brew.sh/):
-
-```bash
-brew install glib
-brew install pango
-```
-
-and then symlink the libraries to `/usr/local/lib`:
-
-```bash
-sudo ln -s /opt/homebrew/opt/glib/lib/libgobject-2.0.0.dylib /usr/local/lib/gobject-2.0
-sudo ln -s /opt/homebrew/opt/pango/lib/libpango-1.0.dylib /usr/local/lib/pango-1.0
-sudo ln -s /opt/homebrew/opt/harfbuzz/lib/libharfbuzz.dylib /usr/local/lib/harfbuzz
-sudo ln -s /opt/homebrew/opt/fontconfig/lib/libfontconfig.1.dylib /usr/local/lib/fontconfig-1
-sudo ln -s /opt/homebrew/opt/pango/lib/libpangoft2-1.0.dylib /usr/local/lib/pangoft2-1.0
-```
-
-</details>
-
-
 #### Install via `conda` [recommended]
 
 If you are using `conda`, we recommend creating a new environment using `conda-lock` to ensure that the environment is reproducible across different systems.
@@ -93,6 +65,80 @@ pip install -r requirements.txt
 pip install -r requirements_dev.txt
 python setup.py install
 ```
+
+<details>
+
+<summary>Troubleshoot issues on Apple Silicon installation</summary>
+
+If you are using an Apple Silicon Mac, you may encounter issues with the installation of some libraries, as they may not be compatible with the ARM architecture. Either of the following solutions may help you resolve these issues. The solutions are listed in order of reccommendation.
+
+### Use Dev containers
+
+If you are using Visual Studio Code, you can use the Dev Containers feature to create a development environment that is compatible with your architecture. This will allow you to run the code in a container that has all the necessary dependencies installed.
+To do this, you need to enable the Dev Containers feature in Visual Studio Code and then open the repository in a container. 
+
+### Avoid the problematic python packages
+
+The problematic python packages are only necessary for the correct functionality of the "Agreement and Invoicing" parts of Genomics Status, which are normally not used in a development environment. Therefore, you can skip the installation of these packages by removing them from the `environment.yml` or `conda_requirements.yml` file.
+
+**Conda-lock**
+If you are using `conda-lock`, delete the following lines in the `environment.yml` file:
+
+```yaml
+  - pango
+  - open-fonts
+  - xorg-libxrender
+  - xorg-libxext
+  - xorg-libxau
+```
+
+Then, lock and install the environment again:
+
+```bash
+conda lock -f environment.yml
+conda-lock install --name <env_name>
+```
+
+**Conda**
+
+If you are using the standard `conda` installation, delete the following lines in the `conda_requirements.yml` file:
+
+```yaml
+  - pango>=1.42.0
+  - open-fonts
+  - xorg-libxrender
+  - xorg-libxext
+  - xorg-libxau
+```
+
+Then, create the environment again:
+
+```bash
+conda env create -n <env_name> -f conda_requirements.yml
+```
+
+### Fix library issues system-wide
+
+In case you get the `OSError: cannot load library 'gobject-2.0-0'` error (or similar), install `glib` and `pango` via [Homebrew](https://brew.sh/):
+
+```bash
+brew install glib
+brew install pango
+```
+
+Then, symlink the libraries to `/usr/local/lib`:
+
+```bash
+sudo ln -s /opt/homebrew/opt/glib/lib/libgobject-2.0.0.dylib /usr/local/lib/gobject-2.0
+sudo ln -s /opt/homebrew/opt/pango/lib/libpango-1.0.dylib /usr/local/lib/pango-1.0
+sudo ln -s /opt/homebrew/opt/harfbuzz/lib/libharfbuzz.dylib /usr/local/lib/harfbuzz
+sudo ln -s /opt/homebrew/opt/fontconfig/lib/libfontconfig.1.dylib /usr/local/lib/fontconfig-1
+sudo ln -s /opt/homebrew/opt/pango/lib/libpangoft2-1.0.dylib /usr/local/lib/pangoft2-1.0
+```
+
+Finally, try to perform the installation again, either via `conda-lock/conda` or `pip`.
+
+</details>
 
 
 ### Configuration
