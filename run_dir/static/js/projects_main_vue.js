@@ -10,7 +10,6 @@ const vProjectsStatus = {
             project_details: {},
             project_samples: {},
             sticky_running_notes: {},
-            running_notes: {},
             error_messages: [],
             websocket_message:'',
             websocket: null,
