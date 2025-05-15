@@ -35,6 +35,37 @@ const vProjectCreationForm = {
             }
             return this.getValue(this.json_schema, 'properties');
         },
+        fields_per_group() {
+            // group fields by their group identifier
+            if (this.json_schema === undefined) {
+                return {}
+            }
+
+            // iterate over the this.fields and group them by their group identifier
+            const groupedFields = {};
+            Object.keys(this.fields).forEach(field => {
+                const fieldGroup = this.fields[field].ngi_form_group;
+                if (fieldGroup === undefined) {
+                    // If no group is defined, assign to a default group
+                    if (groupedFields['unassigned'] === undefined) {
+                        groupedFields['unassigned'] = {};
+                    }
+                    groupedFields['unassigned'][field] = this.fields[field];
+                } else {
+                    if (groupedFields[fieldGroup] === undefined) {
+                        groupedFields[fieldGroup] = {};
+                    }
+                    groupedFields[fieldGroup][field] = this.fields[field];
+                }
+            });
+            return groupedFields;
+        },
+        form_groups() {
+            if (this.json_form === undefined) {
+                return []
+            }
+            return this.getValue(this.json_form, 'form_groups');
+        },
         title() {
             return this.getValue(this.json_form, 'title');
         }
@@ -67,6 +98,13 @@ const vProjectCreationForm = {
                     this.error_messages.push('Error fetching form. Please try again or contact a system adminstrator.');
                     console.log(error)
                 })
+        },
+        fields_for_given_group(group_identifier) {
+            // Get the fields for a specific group
+            if (this.fields_per_group[group_identifier] === undefined) {
+                return {}
+            }
+            return this.fields_per_group[group_identifier];
         },
         getConditionalsFor(field_identifier) {
             // Get the conditional logic for a specific field
@@ -253,10 +291,15 @@ const vProjectCreationForm = {
                     <p>{{ instruction }}</p>
 
                     <form @submit.prevent="submitForm" class="mt-3 mb-5">
-                        <template v-for="(field, identifier) in fields" :key="identifier">
-                            <template v-if="field.ngi_form_type !== undefined">
-                                <v-form-field :field="field" :identifier="identifier"></v-form-field>
-                            </template>
+                        <template v-for="(form_group, group_identifier) in form_groups" :key="group_identifier">
+                            <div class="mb-5">
+                                <h3>{{form_group.display_name}}</h3>
+                                <template v-for="(field, identifier) in this.fields_for_given_group(group_identifier)" :key="identifier">
+                                    <template v-if="field.ngi_form_type !== undefined">
+                                        <v-form-field :field="field" :identifier="identifier"></v-form-field>
+                                    </template>
+                                </template>
+                            </div>
                         </template>
                         <button type="submit" class="btn btn-lg btn-primary mt-3">Submit</button>
                     </form>
@@ -333,7 +376,7 @@ const vFormField = {
     },
     template:
         /*html*/`
-        <div class="mb-5">
+        <div class="mb-3">
             <div class="row">
                 <label :for="identifier" class="form-label col-auto">{{ label }}</label>
                 <template v-if="any_error">
