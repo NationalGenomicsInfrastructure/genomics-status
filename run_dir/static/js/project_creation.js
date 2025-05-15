@@ -292,14 +292,16 @@ const vProjectCreationForm = {
 
                     <form @submit.prevent="submitForm" class="mt-3 mb-5">
                         <template v-for="(form_group, group_identifier) in form_groups" :key="group_identifier">
-                            <div class="mb-5">
-                                <h3>{{form_group.display_name}}</h3>
-                                <template v-for="(field, identifier) in this.fields_for_given_group(group_identifier)" :key="identifier">
-                                    <template v-if="field.ngi_form_type !== undefined">
-                                        <v-form-field :field="field" :identifier="identifier"></v-form-field>
+                            <template v-if="Object.keys(this.fields_for_given_group(group_identifier)).length !== 0">
+                                <div class="mb-5">
+                                    <h3>{{form_group.display_name}}</h3>
+                                    <template v-for="(field, identifier) in this.fields_for_given_group(group_identifier)" :key="identifier">
+                                        <template v-if="field.ngi_form_type !== undefined">
+                                            <v-form-field :field="field" :identifier="identifier"></v-form-field>
+                                        </template>
                                     </template>
-                                </template>
-                            </div>
+                                </div>
+                            </template>
                         </template>
                         <button type="submit" class="btn btn-lg btn-primary mt-3">Submit</button>
                     </form>
@@ -360,6 +362,37 @@ const vFormField = {
         validation_errors() {
             // Check if there are validation errors for this field
             return this.$root.validation_errors_per_field[this.identifier] || [];
+        },
+        visible() {
+            // Check if the field is visible based on conditional logic
+            if (this.field.ngi_form_visible_if === undefined) {
+                return true
+            }
+            const conditions = Object.keys(this.field.ngi_form_visible_if.properties).map(property => {
+
+                if (this.$root.formData[property] === undefined) {
+                    return false
+                }
+
+                // The visibility condition enum
+                const condition_enum = this.field.ngi_form_visible_if.properties[property].enum;
+
+                // Check if the property is in the enum
+                if (condition_enum !== undefined) {
+                    if (!condition_enum.includes(this.$root.formData[property])) {
+                        return false
+                    }
+                }
+                return true
+            })
+
+            // If all conditions are met, return true
+            if (conditions.length === 0) {
+                return true
+            }
+
+            // If any condition is not met, return false
+            return conditions.every(condition => condition === true);
         }
     },
     mounted() {
@@ -376,55 +409,57 @@ const vFormField = {
     },
     template:
         /*html*/`
-        <div class="mb-3">
-            <div class="row">
-                <label :for="identifier" class="form-label col-auto">{{ label }}</label>
-                <template v-if="any_error">
-                    <div v-if="validation_errors.length > 0" class="col-auto text-danger ml-auto">
-                        <strong>Validation errors for value '{{current_value}}': </strong>
-                        <span v-for="error in validation_errors" :key="error.message">{{ error.message }}</span>
-                    </div>
-                </template>
-            </div>
-            <template v-if="this.form_type === 'select'">
-                <select class="form-select" :aria-label="description" v-model="this.$root.formData[identifier]">
-                    <template v-for="option in options">
-                        <option :value="option">{{option}}</option>
+        <template v-if="this.visible">
+            <div class="mb-3">
+                <div class="row">
+                    <label :for="identifier" class="form-label col-auto">{{ label }}</label>
+                    <template v-if="any_error">
+                        <div v-if="validation_errors.length > 0" class="col-auto text-danger ml-auto">
+                            <strong>Validation errors for value '{{current_value}}': </strong>
+                            <span v-for="error in validation_errors" :key="error.message">{{ error.message }}</span>
+                        </div>
                     </template>
-                </select>
-            </template>
-
-            <template v-if="this.form_type === 'datalist'">
-                <input class="form-control" :list="identifier+'_list'" :aria-label="description" v-model="this.$root.formData[identifier]">
-                    <datalist :id="identifier+'_list'">
+                </div>
+                <template v-if="this.form_type === 'select'">
+                    <select class="form-select" :aria-label="description" v-model="this.$root.formData[identifier]">
                         <template v-for="option in options">
                             <option :value="option">{{option}}</option>
                         </template>
-                    </datalist>
-                </select>
-            </template>
+                    </select>
+                </template>
 
-            <template v-else-if="this.form_type === 'string'">
-                <input class="form-control" :type="text" :name="identifier" :id="identifier" :placeholder="description" v-model="this.$root.formData[identifier]">
-            </template>
+                <template v-if="this.form_type === 'datalist'">
+                    <input class="form-control" :list="identifier+'_list'" :aria-label="description" v-model="this.$root.formData[identifier]">
+                        <datalist :id="identifier+'_list'">
+                            <template v-for="option in options">
+                                <option :value="option">{{option}}</option>
+                            </template>
+                        </datalist>
+                    </select>
+                </template>
 
-            <template v-else-if="this.form_type === 'boolean'">
-                <div class="form-check form-switch">
-                    <label :for="identifier" class="form-check-label">{{ label }}</label>
-                    <input class="form-check-input" type="checkbox" :name="identifier" :id="identifier" :placeholder="description" v-model="this.$root.formData[identifier]">
-                </div>
-            </template>
+                <template v-else-if="this.form_type === 'string'">
+                    <input class="form-control" :type="text" :name="identifier" :id="identifier" :placeholder="description" v-model="this.$root.formData[identifier]">
+                </template>
 
-            <p class="fst-italic">{{ field.description }}</p>
-            <template v-if="this.conditonalsApplied.length > 0">
-                <strong>Conditional logic applied:</strong>
-                <ul v-for="condition in this.conditonalsApplied">
-                    <li>
-                        {{condition.description}} -> Allowed values: {{condition.options}}
-                    </li>
-                </ul>
-            </template>
-        </div>`
+                <template v-else-if="this.form_type === 'boolean'">
+                    <div class="form-check form-switch">
+                        <label :for="identifier" class="form-check-label">{{ label }}</label>
+                        <input class="form-check-input" type="checkbox" :name="identifier" :id="identifier" :placeholder="description" v-model="this.$root.formData[identifier]">
+                    </div>
+                </template>
+
+                <p class="fst-italic">{{ field.description }}</p>
+                <template v-if="this.conditonalsApplied.length > 0">
+                    <strong>Conditional logic applied:</strong>
+                    <ul v-for="condition in this.conditonalsApplied">
+                        <li>
+                            {{condition.description}} -> Allowed values: {{condition.options}}
+                        </li>
+                    </ul>
+                </template>
+            </div>
+        </template>`
 }
 
 const vCreateForm = {
