@@ -7,8 +7,9 @@ const vProjectCreationForm = {
           conditionalLogic: [],
           error_messages: [],
           formData: {},
+          isEditingForm: false,
           json_form: {},
-          new_json_schema: {},
+          new_json_form: {},
           initiated: false,
           showDebug: false,
           validation_errors: [],
@@ -24,6 +25,9 @@ const vProjectCreationForm = {
         },
         json_schema() {
             return this.getValue(this.json_form, 'json_schema');
+        },
+        new_json_schema() {
+            return this.getValue(this.new_json_form, 'json_schema');
         },
         fields() {
             if (this.json_schema === undefined) {
@@ -71,8 +75,20 @@ const vProjectCreationForm = {
             });
         },
         getOptions(field_arg) {
-            const condition = this.conditionalLogic.find(cond => cond.field === field_arg);
-            return condition ? condition.options : null;
+            // Get the options for a specific field based on conditional logic
+            const conditionals = this.getConditionalsFor(field_arg);
+            if (conditionals.length === 0) {
+                return null;
+            }
+            // Create the intersection of all options
+            const options = conditionals.reduce((acc, cond) => {
+                if (acc === null) {
+                    return cond.options;
+                }
+                return acc.filter(option => cond.options.includes(option));
+            }, null);
+
+            return options;
         },
         getValue(object, field) {
             // Get the value of a field or return a default value
@@ -84,10 +100,30 @@ const vProjectCreationForm = {
             }
             return undefined
         },
-        startNewForm(){
+        setValuesBasedOnConditionals() {
+            // Check all fields in the form data, set values according to option if only one option is available
+            Object.keys(this.formData).forEach(field => {
+                const conditionals = this.getConditionalsFor(field);
+                if (conditionals.length === 0) {
+                    return;
+                }
+                const options = conditionals.reduce((acc, cond) => {
+                    if (acc === null) {
+                        return cond.options;
+                    }
+                    return acc.filter(option => cond.options.includes(option));
+                }, null);
+                if (options !== null && options.length === 1) {
+                    console.log(`Setting ${field} to ${options[0]} based on conditional logic`);
+                    this.formData[field] = options[0];
+                }
+            });
+        },
+        startEditForm(){
             // Only allow it to be iniatied once.
             if (!this.initiated) {
-                this.new_json_schema = JSON.parse(JSON.stringify(this.$root.json_form));
+                this.isEditingForm = true;
+                this.new_json_form = JSON.parse(JSON.stringify(this.$root.json_form));
                 this.initiated = true;
             }
         },
@@ -123,6 +159,8 @@ const vProjectCreationForm = {
         },
         updateOptionsAndValidate() {
             this.updateOptions();
+            // Apply options in cases where only one option is available
+            this.setValuesBasedOnConditionals();
             // Validate the form data against the JSON schema
             this.validate_form_with_schema();
         },
@@ -168,7 +206,7 @@ const vProjectCreationForm = {
             deep: true,
             handler: 'updateOptionsAndValidate'
         },
-        new_json_schema: {
+        new_json_form: {
             deep: true,
             handler: 'validateNew()'
         }
@@ -296,7 +334,6 @@ const vFormField = {
     template:
         /*html*/`
         <div class="mb-5">
-
             <div class="row">
                 <label :for="identifier" class="form-label col-auto">{{ label }}</label>
                 <template v-if="any_error">
@@ -352,24 +389,53 @@ const vCreateForm = {
     data() {
         return {
             showDebug: false,
+            new_conditional_if: '',
+            new_conditional_then: '',
         }
     },
     computed: {
         newForm() {
-            return this.$root.getValue(this.$root.new_json_schema, 'json_schema');
+            return this.$root.getValue(this.$root.new_json_form, 'json_schema');
         },
         fields() {
             return this.$root.getValue(this.newForm, 'properties');
         },
+        allOf() {
+            return this.$root.getValue(this.newForm, 'allOf');
+        }
+    },
+    methods: {
+        addPropertyToCondition(conditional) {
+            // Add a new property to the conditional logic
+            const newProperty = {
+                description: 'New property',
+                if: {
+                    properties: {
+                        [this.new_conditional_if]: {
+                            enum: []
+                        }
+                    }
+                },
+                then: {
+                    properties: {
+                        [this.new_conditional_then]: {
+                            enum: []
+                        }
+                    }
+                }
+            };
+            this.allOf.push(newProperty);
+        },
+        saveForm() {
+            this.$root.json_form = this.$root.new_json_form;
+        }
     },
     template: 
         /*html*/`
         <div class="container">
             <div class="row mt-5">
-                <template v-if="new_json_schema === {}">
-                    <div class="alert alert-info" role="alert">
-                        <h3>Loading...</h3>
-                    </div>
+                <template v-if="!this.$root.isEditingForm">
+                    <button class="btn btn-lg btn-primary mt-3" @click="this.$root.startEditForm">Edit form</button>
                 </template>
                 <template v-else>
                     <div class="row">
@@ -383,15 +449,183 @@ const vCreateForm = {
                         </div>
                     </div>
                     <template v-if="showDebug" class="card">
-                        <pre>{{ this.$root.new_json_schema }}</pre>
+                        <pre>{{ this.$root.new_json_form }}</pre>
                     </template>
-                    <button class="btn btn-lg btn-primary mt-3" @click="this.$root.startNewForm">Start new form</button>
                     <template v-for="(field, identifier) in fields" :key="identifier">
                         <template v-if="field.ngi_form_type !== undefined">
                             <v-update-form-field :field="field" :identifier="identifier"></v-update-form-field>
                         </template>
                     </template>
+                    <div class="row">
+                        <h2>Conditional logic</h2>
+                        <template v-for="(conditional, conditional_index) in this.allOf">
+                            <v-conditional-edit-form :conditional="conditional" :conditional_index="conditional_index"></v-conditional-edit-form>
+                        </template>
+                        <h3>Add condition</h3>
+                        <select class="form-control" v-model="this.new_conditional_if">
+                            <template v-for="identifier in Object.keys(this.$root.fields)">
+                                <option :value="identifier">{{identifier}}</option>
+                            </template>
+                        </select>
+                        <select class="form-control" v-model="this.new_conditional_then">
+                            <template v-for="identifier in Object.keys(this.$root.fields)">
+                                <option :value="identifier">{{identifier}}</option>
+                            </template>
+                        </select>
+                        <button class="btn btn-primary" @click.prevent="this.addPropertyToCondition()">Add new condition</button>
+                    </div>
+                    <div class="row">
+                        <button class="btn btn-lg btn-primary mt-3" @click="this.saveForm">Save form</button>
+                    </div>
                 </template>
+            </div>
+        </div>
+    `
+}
+
+const vConditionalEditForm = {
+    name: 'v-conditional-edit-form',
+    props: ['conditional', 'conditional_index'],
+    computed: {
+        description() {
+            return this.conditional.description;
+        },
+        propertyReferenceIf() {
+            return this.$root.getValue(this.$root.fields, this.propertyKeyIf)
+        },
+        propertyReferenceThen() {
+            return this.$root.getValue(this.$root.fields, this.propertyKeyThen)
+        },
+        propertyReferenceIsEnumIf() {
+            // Check if the property that is referenced is an enum
+            if (this.propertyReferenceIf.enum === undefined) {
+                return false
+            }
+            return true
+        },
+        propertyReferenceIsBooleanIf() {
+            // Check if the property that is referenced is a boolean
+            if (this.propertyReferenceIf.type === 'boolean') {
+                return true
+            }
+        },
+        propertyReferenceIsBooleanThen() {
+            // Check if the property that is referenced is a boolean
+            if (this.propertyReferenceThen.type === 'boolean') {
+                return true
+            }
+        },
+        propertyReferenceIsEnumThen() {
+            // Check if the property that is referenced is an enum
+            if (this.propertyReferenceThen.enum === undefined) {
+                return false
+            }
+            return true
+        },
+        propertyKeyIf() {
+            return Object.keys(this.conditional.if.properties)[0];
+        },
+        propertyKeyThen() {
+            return Object.keys(this.conditional.then.properties)[0];
+        },
+        propertyObjectIf() {
+            return this.$root.getValue(this.conditional.if.properties, this.propertyKeyIf);
+        },
+        propertiesThen() {
+            return this.conditional.then.properties;
+        },
+        enumIf() {
+            if (this.propertyObjectIf.enum === undefined) {
+                return []
+            }
+            return this.conditional.if.properties[this.propertyKeyIf]['enum'];
+        },
+        enumThen() {
+            if (this.propertiesThen[this.propertyKeyThen]['enum'] === undefined) {
+                return []
+            }
+            return this.conditional.then.properties[this.propertyKeyThen]['enum'];
+        }
+    },
+    methods: {
+        removeIfEnum(index_enum) {
+            // Remove the enum value from the conditional
+            this.conditional.if.properties[this.propertyKeyIf]['enum'].splice(index_enum, 1);
+        },
+        addNewConditionalValueIf() {
+            // Add a new empty allowed value to the conditional
+            if (this.conditional.if.properties[this.propertyKeyIf]['enum'] === undefined) {
+                this.conditional.if.properties[this.propertyKeyIf]['enum'] = []
+            }
+            if (this.propertyReferenceIsBooleanIf) {
+                this.conditional.if.properties[this.propertyKeyIf]['enum'].push(false)
+            } else if( this.propertyReferenceIsEnumIf ) {
+                this.conditional.if.properties[this.propertyKeyIf]['enum'].push(this.propertyReferenceIf.enum[0])
+            } else {
+                this.conditional.if.properties[this.propertyKeyIf]['enum'].push('')
+            }
+        },
+        addNewAllowedValueThen() {
+            // Add a new empty allowed value to the conditional
+            if (this.conditional.then.properties[this.propertyKeyThen]['enum'] === undefined) {
+                this.conditional.then.properties[this.propertyKeyThen]['enum'] = []
+            }
+            if (this.propertyReferenceIsBooleanThen) {
+                this.conditional.then.properties[this.propertyKeyThen]['enum'].push(false)
+            } else if( this.propertyReferenceIsEnumThen ) {
+                this.conditional.then.properties[this.propertyKeyThen]['enum'].push(this.propertyReferenceThen.enum[0])
+            } else {
+               this.conditional.then.properties[this.propertyKeyThen]['enum'].push('')
+            }
+        }
+    },
+    template:
+        /*html*/`
+        <h3 class="mt-3">Condition: {{conditional.description}}</h3>
+        <div class="row">
+            <div class="col-6">
+                <h4>If <span class="fst-italic">{{this.propertyKeyIf}}</span> is any of</h4>
+                <template v-for="(enumValue, index_enum) in this.enumIf">
+                    <div class="input-group mb-3">
+                        <template v-if="this.propertyReferenceIsEnumIf">
+                            <select class="form-select" v-model="this.conditional.if.properties[this.propertyKeyIf]['enum'][index_enum]">
+                                <template v-for="option in this.propertyReferenceIf.enum">
+                                    <option :value="option">{{option}}</option>
+                                </template>
+                            </select>
+                        </template>
+                        <template v-else>
+                            <input class="form-control col-auto" type="string" v-model="this.conditional.if.properties[this.propertyKeyIf]['enum'][index_enum]">
+                        </template>
+                        <button class="btn btn-danger col-auto" @click.prevent="this.removeIfEnum(index_enum)">Remove</button>
+                    </div>
+                </template>
+                <button class="btn btn-primary" @click.prevent="addNewConditionalValueIf">Add new value</button>
+            </div>
+            <div class="col-6">
+                <h4>Then <span class="fst-italic">{{this.propertyKeyThen}}</span> has to be one of </h4>
+                <template v-for="(enumValue, index_enum) in this.enumThen">
+                    <div class="input-group mb-3">
+                        <template v-if="this.propertyReferenceIsEnumThen">
+                            <select class="form-select" v-model="this.conditional.then.properties[this.propertyKeyThen]['enum'][index_enum]">
+                                <template v-for="option in this.propertyReferenceThen.enum">
+                                    <option :value="option">{{option}}</option>
+                                </template>
+                            </select>
+                        </template>
+                        <template v-else-if="this.propertyReferenceIsBooleanThen">
+                            <div class="form-check form-switch">
+                                <label class="form-check-label">{{this.conditional.then.properties[this.propertyKeyThen]['enum'][index_enum]}}</label>
+                                <input class="form-check-input" type="checkbox" v-model="this.conditional.then.properties[this.propertyKeyThen]['enum'][index_enum]">
+                            </div>
+                        </template>
+                        <template v-else>
+                            <input class="form-control col-auto" type="string" v-model="this.conditional.then.properties[this.propertyKeyThen]['enum'][index_enum]">
+                        </template>
+                        <button class="btn btn-danger col-auto ml-2" @click.prevent="this.conditional.then.properties[this.propertyKeyThen]['enum'].splice(index_enum, 1)">Remove</button>
+                    </div>
+                </template>
+                <button class="btn btn-primary" @click.prevent="this.addNewAllowedValueThen">Add new allowed value</button>
             </div>
         </div>
     `
@@ -411,13 +645,22 @@ const vUpdateFormField = {
             return this.field.ngi_form_label;
         },
         new_form() {
-            return this.$root.getValue(this.$root.new_json_schema, 'json_schema');
+            return this.$root.getValue(this.$root.new_json_form, 'json_schema');
         },
         current_value() {
             return this.$root.formData[this.identifier];
         },
         type() {
             return this.field.type;
+        }
+    },
+    methods: {
+        add_new_allowed() {
+            if (this.new_form['properties'][this.identifier]['enum'] === undefined) {
+                this.new_form['properties'][this.identifier]['enum'] = []
+            }
+            // Add a new empty allowed value
+            this.new_form['properties'][this.identifier]['enum'].push('')
         }
     },
     template:
@@ -474,7 +717,7 @@ const vUpdateFormField = {
                             <button class="btn btn-danger col-auto" @click.prevent="this.new_form['properties'][identifier]['enum'].splice(index, 1)">Remove</button>
                         </div>
                     </template>
-                    <button class="btn btn-primary" @click.prevent="this.new_form['properties'][identifier]['enum'].push('')">Add new allowed value</button>
+                    <button class="btn btn-primary" @click.prevent="this.add_new_allowed()">Add new allowed value</button>
                 </div>
             </template>
         </div>`
@@ -484,4 +727,5 @@ const app = Vue.createApp(vProjectCreationForm)
 app.component('v-form-field', vFormField)
 app.component('v-create-form', vCreateForm)
 app.component('v-update-form-field', vUpdateFormField)
+app.component('v-conditional-edit-form', vConditionalEditForm)
 app.mount('#v_project_creation')
