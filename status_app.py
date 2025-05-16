@@ -97,8 +97,8 @@ from status.production import (
 )
 from status.project_cards import ProjectCardsHandler, ProjectCardsWebSocket
 from status.project_creation import (
-    ProjectCreationHandler,
     ProjectCreationFormDataHandler,
+    ProjectCreationHandler,
 )
 from status.projects import (
     CaliperImageHandler,
