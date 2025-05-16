@@ -722,7 +722,10 @@ const vUpdateFormField = {
         label() {
             return this.field.ngi_form_label;
         },
-        new_form() {
+        new_json_form() {
+            return this.$root.new_json_form;
+        },
+        new_json_schema() {
             return this.$root.getValue(this.$root.new_json_form, 'json_schema');
         },
         current_value() {
@@ -730,15 +733,32 @@ const vUpdateFormField = {
         },
         type() {
             return this.field.type;
+        },
+        visible_if() {
+            return this.$root.getValue(this.field, 'ngi_form_visible_if');
         }
     },
     methods: {
         add_new_allowed() {
-            if (this.new_form['properties'][this.identifier]['enum'] === undefined) {
-                this.new_form['properties'][this.identifier]['enum'] = []
+            if (this.new_json_schema['properties'][this.identifier]['enum'] === undefined) {
+                this.new_json_schema['properties'][this.identifier]['enum'] = []
             }
             // Add a new empty allowed value
-            this.new_form['properties'][this.identifier]['enum'].push('')
+            this.new_json_schema['properties'][this.identifier]['enum'].push('')
+        },
+        add_visible_if() {
+
+            // Add the skeleton for a new conditional logic when the field should be visible
+            if (this.new_json_schema['properties'][this.identifier]['ngi_form_visible_if'] === undefined) {
+
+                this.new_json_schema['properties'][this.identifier]['ngi_form_visible_if'] = {
+                    properties: {}
+                }
+            }
+
+            this.new_json_schema['properties'][this.identifier]['ngi_form_visible_if']['properties'][''] = {
+                enum: []
+            }
         }
     },
     template:
@@ -747,19 +767,26 @@ const vUpdateFormField = {
             <h2>{{this.label}}</h2>
             <div>
                 <label :for="identifier" class="form-label">Identifier</label>
-                <input :id="identifier" class="form-control" type="string"  v-model="identifier" disabled>
+                <input :id="identifier" class="form-control" type="string"  v-model="identifier">
             </div>
             <div>
+                <label :for="identifier + '_ngi_form_group'" class="form-label">Group</label>
+                <select :id="identifier + '_ngi_form_group'" class="form-control" type="string" v-model="this.new_json_schema['properties'][identifier]['ngi_form_group']">
+                    <template v-for="(form_group, group_identifier) in this.new_json_form['form_groups']">
+                        <option :value="group_identifier">{{form_group.display_name}}</option>
+                    </template>
+                </select>
+            <div>
                 <label :for="identifier + '_description'" class="form-label">Description</label>
-                <input :id="identifier + '_description'" class="form-control" type="string" v-model="this.new_form['properties'][identifier]['description']">
+                <input :id="identifier + '_description'" class="form-control" type="string" v-model="this.new_json_schema['properties'][identifier]['description']">
             </div>
             <div>
                 <label :for="identifier + '_default'" class="form-label">Default value</label>
-                <input :id="identifier + '_default'" class="form-control" type="string" v-model="this.new_form['properties'][identifier]['default']">
+                <input :id="identifier + '_default'" class="form-control" type="string" v-model="this.new_json_schema['properties'][identifier]['default']">
             </div>
             <div>
                 <label :for="identifier + '_ngi_form_type'" class="form-label">Form Type</label>
-                <select :id="identifier + '_ngi_form_type'" class="form-control" v-model="this.new_form['properties'][identifier]['ngi_form_type']">
+                <select :id="identifier + '_ngi_form_type'" class="form-control" v-model="this.new_json_schema['properties'][identifier]['ngi_form_type']">
                     <option value="string">String</option>
                     <option value="boolean">Boolean</option>
                     <option value="select">Select</option>
@@ -769,30 +796,42 @@ const vUpdateFormField = {
             </div>
             <div>
                 <label :for="identifier + '_ngi_form_label'" class="form-label">Label</label>
-                <input :id="identifier + '_ngi_form_label'" class="form-control" type="string" v-model="this.new_form['properties'][identifier]['ngi_form_label']">
+                <input :id="identifier + '_ngi_form_label'" class="form-control" type="string" v-model="this.new_json_schema['properties'][identifier]['ngi_form_label']">
             </div>
             <div>
                 <label :for="identifier + '_ngi_form_lims_udf'" class="form-label">LIMS UDF</label>
-                <input :id="identifier + '_ngi_form_lims_udf'" class="form-control" type="string" v-model="this.new_form['properties'][identifier]['ngi_form_lims_udf']">
+                <input :id="identifier + '_ngi_form_lims_udf'" class="form-control" type="string" v-model="this.new_json_schema['properties'][identifier]['ngi_form_lims_udf']">
             </div>
             <template v-if="(this.type === 'string') && (this.form_type !== 'select')">
                 <div>
                     <label :for="identifier + '_pattern'" class="form-label">Pattern</label>
-                    <input :id="identifier + '_pattern'" class="form-control" type="string" v-model="this.new_form['properties'][identifier]['pattern']">
+                    <input :id="identifier + '_pattern'" class="form-control" type="string" v-model="this.new_json_schema['properties'][identifier]['pattern']">
                 </div>
                 <div class="form-check form-switch">
                     <!-- Get Suggestions -->
                     <label :for="identifier + '_ngi_form_get_suggestions'" class="form-check-label">Get Suggestions (will fetch used values to suggest) </label>
-                    <input :for="identifier + '_ngi_form_get_suggestions'" class="form-check-input" type="checkbox" v-model="this.new_form['properties'][identifier]['ngi_form_get_suggestions']">
+                    <input :for="identifier + '_ngi_form_get_suggestions'" class="form-check-input" type="checkbox" v-model="this.new_json_schema['properties'][identifier]['ngi_form_get_suggestions']">
                 </div>
             </template>
+            <div>
+                <h4>Visible if</h4>
+                <template v-if="this.visible_if !== undefined">
+                    <div>
+                        <pre>{{this.visible_if}}</pre>
+                    </div>
+                </template>
+                <template v-else>
+                    <p>Always visible</p>
+                    <button class="btn btn-primary" @click.prevent="this.add_visible_if()">Add conditional visibility</button>
+                </template>
+            </div>
             <template v-if="(this.form_type === 'select') || (this.form_type === 'datalist')">
                 <div class="col-6">
                     <h3>Allowed values</h3>
-                    <template v-for="(option, index) in this.new_form['properties'][identifier]['enum']" :key="index">
+                    <template v-for="(option, index) in this.new_json_schema['properties'][identifier]['enum']" :key="index">
                         <div class="input-group mb-3">
-                            <input :id="identifier + '_enum_'+index" class="form-control col-auto" type="string" v-model="this.new_form['properties'][identifier]['enum'][index]">
-                            <button class="btn btn-danger col-auto" @click.prevent="this.new_form['properties'][identifier]['enum'].splice(index, 1)">Remove</button>
+                            <input :id="identifier + '_enum_'+index" class="form-control col-auto" type="string" v-model="this.new_json_schema['properties'][identifier]['enum'][index]">
+                            <button class="btn btn-danger col-auto" @click.prevent="this.new_json_schema['properties'][identifier]['enum'].splice(index, 1)">Remove</button>
                         </div>
                     </template>
                     <button class="btn btn-primary" @click.prevent="this.add_new_allowed()">Add new allowed value</button>
