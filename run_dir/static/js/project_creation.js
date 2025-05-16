@@ -397,14 +397,10 @@ const vFormField = {
     },
     mounted() {
         // Initialize the form data for this field
-        if (this.field.default !== undefined) {
-            this.$root.formData[this.identifier] = this.field.default;
+        if (this.form_type === 'boolean') {
+            this.$root.formData[this.identifier] = false;
         } else {
-            if (this.form_type === 'boolean') {
-                this.$root.formData[this.identifier] = false;
-            } else {
-                this.$root.formData[this.identifier] = '';
-            }
+            this.$root.formData[this.identifier] = '';
         }
     },
     template:
@@ -659,7 +655,7 @@ const vConditionalEditForm = {
     },
     template:
         /*html*/`
-        <h3 class="mt-3">Condition: {{conditional.description}}</h3>
+        <h3 class="mt-5">Condition: {{conditional.description}}</h3>
         <div class="row">
             <div class="col-6">
                 <h4>If <span class="fst-italic">{{this.propertyKeyIf}}</span> is any of</h4>
@@ -781,10 +777,6 @@ const vUpdateFormField = {
                 <input :id="identifier + '_description'" class="form-control" type="string" v-model="this.new_json_schema['properties'][identifier]['description']">
             </div>
             <div>
-                <label :for="identifier + '_default'" class="form-label">Default value</label>
-                <input :id="identifier + '_default'" class="form-control" type="string" v-model="this.new_json_schema['properties'][identifier]['default']">
-            </div>
-            <div>
                 <label :for="identifier + '_ngi_form_type'" class="form-label">Form Type</label>
                 <select :id="identifier + '_ngi_form_type'" class="form-control" v-model="this.new_json_schema['properties'][identifier]['ngi_form_type']">
                     <option value="string">String</option>
@@ -817,11 +809,27 @@ const vUpdateFormField = {
                 <h4>Visible if</h4>
                 <template v-if="this.visible_if !== undefined">
                     <div>
+                        <select class="form-control" v-model="this.new_json_schema['properties'][this.identifier]['ngi_form_visible_if']['properties']['']">
+                            <template v-for="identifier in Object.keys(this.$root.fields)">
+                                <option :value="identifier">{{identifier}}</option>
+                            </template>
+                        </select>
                         <pre>{{this.visible_if}}</pre>
                     </div>
                 </template>
                 <template v-else>
                     <p>Always visible</p>
+                    <select class="form-control" v-model="this.new_conditional_if">
+                        <template v-for="identifier in Object.keys(this.$root.fields)">
+                            <option :value="identifier">{{identifier}}</option>
+                        </template>
+                    </select>
+                    <select class="form-control" v-model="this.new_conditional_then">
+                        <template v-for="identifier in Object.keys(this.$root.fields)">
+                            <option :value="identifier">{{identifier}}</option>
+                        </template>
+                    </select>
+                    <button class="btn btn-primary" @click.prevent="this.addPropertyToCondition()">Add new condition</button>
                     <button class="btn btn-primary" @click.prevent="this.add_visible_if()">Add conditional visibility</button>
                 </template>
             </div>
