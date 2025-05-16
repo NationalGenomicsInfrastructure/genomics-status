@@ -671,7 +671,7 @@ const vConditionalEditForm = {
                         <template v-else>
                             <input class="form-control col-auto" type="string" v-model="this.conditional.if.properties[this.propertyKeyIf]['enum'][index_enum]">
                         </template>
-                        <button class="btn btn-danger col-auto" @click.prevent="this.removeIfEnum(index_enum)">Remove</button>
+                        <button class="btn btn-danger col-auto" @click.prevent="this.removeIfEnum(index_enum)">Remove<i class="fa-solid fa-trash ml-2"></i></button>
                     </div>
                 </template>
                 <button class="btn btn-primary" @click.prevent="addNewConditionalValueIf">Add new value</button>
@@ -696,7 +696,7 @@ const vConditionalEditForm = {
                         <template v-else>
                             <input class="form-control col-auto" type="string" v-model="this.conditional.then.properties[this.propertyKeyThen]['enum'][index_enum]">
                         </template>
-                        <button class="btn btn-danger col-auto ml-2" @click.prevent="this.conditional.then.properties[this.propertyKeyThen]['enum'].splice(index_enum, 1)">Remove</button>
+                        <button class="btn btn-danger col-auto ml-2" @click.prevent="this.conditional.then.properties[this.propertyKeyThen]['enum'].splice(index_enum, 1)">Remove<i class="fa-solid fa-trash ml-2"></i></button>
                     </div>
                 </template>
                 <button class="btn btn-primary" @click.prevent="this.addNewAllowedValueThen">Add new allowed value</button>
@@ -710,7 +710,9 @@ const vUpdateFormField = {
     props: ['field', 'identifier'],
     data: function() {
         return {
-            show_allowed_values: false
+            show_allowed_values: false,
+            selectedVisibleIfKey: '',
+            visibleIfErrorMessage: ''
         }
     },
     computed: {        
@@ -755,6 +757,10 @@ const vUpdateFormField = {
             this.new_json_schema['properties'][this.identifier]['enum'].push('')
         },
         add_visible_if() {
+            if (this.selectedVisibleIfKey === '') {
+                this.visibleIfErrorMessage = 'Please select a field to add a conditional logic';
+                return null
+            }
 
             // Add the skeleton for a new conditional logic when the field should be visible
             if (this.new_json_schema['properties'][this.identifier]['ngi_form_visible_if'] === undefined) {
@@ -764,10 +770,11 @@ const vUpdateFormField = {
                 }
             }
 
-            this.new_json_schema['properties'][this.identifier]['ngi_form_visible_if']['properties'][''] = {
-                enum: []
+            this.new_json_schema['properties'][this.identifier]['ngi_form_visible_if']['properties'][this.selectedVisibleIfKey] = {
+                enum: ['']
             }
-        }
+        },
+
     },
     template:
         /*html*/`
@@ -818,32 +825,41 @@ const vUpdateFormField = {
                 </div>
             </template>
             <div>
-                <h4>Visible if</h4>
+                <h4 class="mt-3">Visible if</h4>
                 <template v-if="this.visible_if !== undefined">
-                    <div>
-                        <select class="form-control" v-model="this.new_json_schema['properties'][this.identifier]['ngi_form_visible_if']['properties']['']">
-                            <template v-for="identifier in Object.keys(this.$root.fields)">
-                                <option :value="identifier">{{identifier}}</option>
+                    <div class="row">
+                        <template v-for="(condition_key, condition_index) in Object.keys(this.visible_if['properties'])">
+                            <template v-if="condition_index > 0">
+                                <h4>AND</h4>
                             </template>
-                        </select>
-                        <pre>{{this.visible_if}}</pre>
+                            <div class="offset-1 col-11">
+                                <button class="btn btn-danger" @click.prevent="delete this.new_json_schema['properties'][identifier]['ngi_form_visible_if']['properties'][condition_key]">Remove<i class="fa-solid fa-trash ml-2"></i></button>
+                                <v-visible-if-condition-edit-form :field_identifier="identifier" :condition_key="condition_key"></v-visible-if-condition-edit-form>
+                            </div>
+                        </template>
                     </div>
                 </template>
                 <template v-else>
                     <p>Always visible</p>
-                    <select class="form-control" v-model="this.new_conditional_if">
-                        <template v-for="identifier in Object.keys(this.$root.fields)">
-                            <option :value="identifier">{{identifier}}</option>
-                        </template>
-                    </select>
-                    <select class="form-control" v-model="this.new_conditional_then">
-                        <template v-for="identifier in Object.keys(this.$root.fields)">
-                            <option :value="identifier">{{identifier}}</option>
-                        </template>
-                    </select>
-                    <button class="btn btn-primary" @click.prevent="this.addPropertyToCondition()">Add new condition</button>
-                    <button class="btn btn-primary" @click.prevent="this.add_visible_if()">Add conditional visibility</button>
                 </template>
+                <template v-if="this.visibleIfErrorMessage !== ''">
+                    <div class="alert alert-danger" role="alert">
+                        <h3>{{ this.visibleIfErrorMessage }}</h3>
+                    </div>
+                </template>
+                <div class="row">
+                    <div class="col-6">
+                        <label :for="identifier + '_visible_if'" class="form-label">Select field to add conditional logic</label>
+                        <select class="form-control" v-model="this.selectedVisibleIfKey">
+                            <template v-for="identifier in Object.keys(this.$root.fields)">
+                                <option :value="identifier">{{identifier}}</option>
+                            </template>
+                        </select>
+                    </div>
+                    <div class="col-auto">
+                        <button class="btn btn-primary" @click.prevent="this.add_visible_if()">Add conditional visibility</button>
+                    </div>
+                </div>
             </div>
             <template v-if="(this.form_type === 'select') || (this.form_type === 'datalist')">
                 <div class="col-6">
@@ -854,7 +870,7 @@ const vUpdateFormField = {
                         <template v-for="(option, index) in this.new_json_schema['properties'][identifier]['enum']" :key="index">
                             <div class="input-group mb-3">
                                 <input :id="identifier + '_enum_'+index" class="form-control col-auto" type="string" v-model="this.new_json_schema['properties'][identifier]['enum'][index]">
-                                <button class="btn btn-danger col-auto" @click.prevent="this.new_json_schema['properties'][identifier]['enum'].splice(index, 1)">Remove</button>
+                                <button class="btn btn-danger col-auto" @click.prevent="this.new_json_schema['properties'][identifier]['enum'].splice(index, 1)">Remove<i class="fa-solid fa-trash ml-2"></i></button>
                             </div>
                         </template>
                         <button class="btn btn-primary" @click.prevent="this.add_new_allowed()">Add new allowed value</button>
@@ -867,7 +883,85 @@ const vUpdateFormField = {
         </div>`
 }
 
+const vVisibleIfConditionEditForm = {
+    name: 'v-visible-if-condition-edit-form',
+    props: ['field_identifier', 'condition_key'],
+    computed: {
+        condition() {
+            const condition = this.$root.getValue(this.new_json_schema['properties'][this.field_identifier]['ngi_form_visible_if']['properties'], this.condition_key);
+            if (condition === undefined) {
+                return {'enum': ['']}
+            }
+            return condition;
+        },        
+        enumIf() {
+            // The enum inside the condition
+            return this.condition.enum;
+        },
+        new_json_schema() {
+            return this.$root.getValue(this.$root.new_json_form, 'json_schema');
+        },
+        propertyReferenceIf() {
+            // The property that is referenced in the condition
+            return this.$root.getValue(this.new_json_schema['properties'], this.condition_key)
+        },
+        propertyReferenceIfLabel() {
+            // The label of the property that is referenced in the condition
+            if (this.propertyReferenceIf === undefined || this.propertyReferenceIf.ngi_form_label === undefined) {
+                return this.condition_key
+            }
+            return this.propertyReferenceIf.ngi_form_label;
+        },
+        propertyReferenceIsEnumIf() {
+            // Check if the property that is referenced is an enum
+            if (this.propertyReferenceIf.enum === undefined) {
+                return false
+            }
+            return true
+        }
+    },
+    methods: {
+        updateKey(index) {
+            const currentKey = Object.keys(this.new_json_schema['properties'][this.identifier]['ngi_form_visible_if']['properties'])[condition_index];
+            const defaultValue = {'enum': []};
+    
+            // Delete the old key and set the new key with the same value
+            delete this.new_json_schema['properties'][this.identifier]['ngi_form_visible_if']['properties'][currentKey];
+            this.new_json_schema['properties'][this.identifier]['ngi_form_visible_if']['properties'][this.selectedKey] = defaultValue
+    
+            // Reset the selectedKey to avoid confusion
+            this.selectedKey = '';
+        }
+    },
+    template:
+        /*html*/`
+            <div>
+                <h4>{{this.propertyReferenceIfLabel}} </h4>
+                is any of
+                <template v-for="(enumValue, index_enum) in this.enumIf">
+                    <div class="row">
+                        <div class="col-6">
+                            <div class="input-group mb-3">
+                                <template v-if="this.propertyReferenceIsEnumIf">
+                                    <select class="form-select" v-model="this.enumIf[index_enum]">
+                                        <template v-for="option in this.propertyReferenceIf.enum">
+                                            <option :value="option">{{option}}</option>
+                                        </template>
+                                    </select>
+                                </template>
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <button class="btn btn-danger" @click.prevent="this.enumIf.splice(index_enum, 1)">Remove<i class="fa-solid fa-trash ml-2"></i></button>
+                        </div>
+                    </div>
+                </template>
+                <button class="btn btn-primary" @click.prevent="this.enumIf.push('')"><i class="fa-solid fa-plus"></i></button>
+            </div>`
+}
+
 const app = Vue.createApp(vProjectCreationForm)
+app.component('v-visible-if-condition-edit-form', vVisibleIfConditionEditForm)
 app.component('v-form-field', vFormField)
 app.component('v-create-form', vCreateForm)
 app.component('v-update-form-field', vUpdateFormField)
