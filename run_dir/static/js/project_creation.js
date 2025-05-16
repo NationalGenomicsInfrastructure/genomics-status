@@ -708,6 +708,11 @@ const vConditionalEditForm = {
 const vUpdateFormField = {
     name: 'v-update-form-field',
     props: ['field', 'identifier'],
+    data: function() {
+        return {
+            show_allowed_values: false
+        }
+    },
     computed: {        
         description() {
             return this.field.description;
@@ -723,6 +728,13 @@ const vUpdateFormField = {
         },
         new_json_schema() {
             return this.$root.getValue(this.$root.new_json_form, 'json_schema');
+        },
+        nr_of_allowed_values() {
+            // Check if enum is defined on field
+            if (this.new_json_schema['properties'][this.identifier]['enum'] === undefined) {
+                return 0
+            }
+            return this.new_json_schema['properties'][this.identifier]['enum'].length;
         },
         current_value() {
             return this.$root.formData[this.identifier];
@@ -836,13 +848,20 @@ const vUpdateFormField = {
             <template v-if="(this.form_type === 'select') || (this.form_type === 'datalist')">
                 <div class="col-6">
                     <h3>Allowed values</h3>
-                    <template v-for="(option, index) in this.new_json_schema['properties'][identifier]['enum']" :key="index">
-                        <div class="input-group mb-3">
-                            <input :id="identifier + '_enum_'+index" class="form-control col-auto" type="string" v-model="this.new_json_schema['properties'][identifier]['enum'][index]">
-                            <button class="btn btn-danger col-auto" @click.prevent="this.new_json_schema['properties'][identifier]['enum'].splice(index, 1)">Remove</button>
-                        </div>
+                    <p>{{this.nr_of_allowed_values}} number of allowed values are added.</p>
+                    <template v-if="this.show_allowed_values">
+                        <button class="btn btn-danger mb-2" @click.prevent="this.show_allowed_values = false">Hide allowed values</button>
+                        <template v-for="(option, index) in this.new_json_schema['properties'][identifier]['enum']" :key="index">
+                            <div class="input-group mb-3">
+                                <input :id="identifier + '_enum_'+index" class="form-control col-auto" type="string" v-model="this.new_json_schema['properties'][identifier]['enum'][index]">
+                                <button class="btn btn-danger col-auto" @click.prevent="this.new_json_schema['properties'][identifier]['enum'].splice(index, 1)">Remove</button>
+                            </div>
+                        </template>
+                        <button class="btn btn-primary" @click.prevent="this.add_new_allowed()">Add new allowed value</button>
                     </template>
-                    <button class="btn btn-primary" @click.prevent="this.add_new_allowed()">Add new allowed value</button>
+                    <template v-else>
+                        <button class="btn btn-primary" @click.prevent="this.show_allowed_values = true">Show allowed values</button>
+                    </template>
                 </div>
             </template>
         </div>`
