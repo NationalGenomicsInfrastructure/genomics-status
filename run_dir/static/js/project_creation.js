@@ -661,42 +661,47 @@ const vConditionalEditForm = {
     },
     methods: {
         removeIfEnum(index_enum) {
-            // Remove the enum value from the conditional
+            // Remove the enum value from the "if" conditional
             this.conditional.if.properties[this.propertyKeyIf]['enum'].splice(index_enum, 1);
         },
         addNewConditionalValueIf(option) {
-            // Add a new empty allowed value to the conditional
+            // Add a new allowed value to the "if" conditional
             if (this.conditional.if.properties[this.propertyKeyIf]['enum'] === undefined) {
-                this.conditional.if.properties[this.propertyKeyIf]['enum'] = []
+                this.conditional.if.properties[this.propertyKeyIf]['enum'] = [];
             }
             if (option !== undefined) {
-                this.conditional.if.properties[this.propertyKeyIf]['enum'].push(option)
+                this.conditional.if.properties[this.propertyKeyIf]['enum'].push(option);
             } else if (this.propertyReferenceIsBooleanIf) {
-                this.conditional.if.properties[this.propertyKeyIf]['enum'].push(false)
-            } else if( this.propertyReferenceIsEnumIf ) {
-                this.conditional.if.properties[this.propertyKeyIf]['enum'].push(this.propertyReferenceIf.enum[0])
+                this.conditional.if.properties[this.propertyKeyIf]['enum'].push(false);
+            } else if (this.propertyReferenceIsEnumIf) {
+                this.conditional.if.properties[this.propertyKeyIf]['enum'].push(this.propertyReferenceIf.enum[0]);
             } else {
-                this.conditional.if.properties[this.propertyKeyIf]['enum'].push('')
+                this.conditional.if.properties[this.propertyKeyIf]['enum'].push('');
             }
         },
-        addNewAllowedValueThen() {
-            // Add a new empty allowed value to the conditional
+        removeThenEnum(index_enum) {
+            // Remove the enum value from the "then" conditional
+            this.conditional.then.properties[this.propertyKeyThen]['enum'].splice(index_enum, 1);
+        },
+        addNewConditionalValueThen(option) {
+            // Add a new allowed value to the "then" conditional
             if (this.conditional.then.properties[this.propertyKeyThen]['enum'] === undefined) {
-                this.conditional.then.properties[this.propertyKeyThen]['enum'] = []
+                this.conditional.then.properties[this.propertyKeyThen]['enum'] = [];
             }
-            if (this.propertyReferenceIsBooleanThen) {
-                this.conditional.then.properties[this.propertyKeyThen]['enum'].push(false)
-            } else if( this.propertyReferenceIsEnumThen ) {
-                this.conditional.then.properties[this.propertyKeyThen]['enum'].push(this.propertyReferenceThen.enum[0])
+            if (option !== undefined) {
+                this.conditional.then.properties[this.propertyKeyThen]['enum'].push(option);
+            } else if (this.propertyReferenceIsBooleanThen) {
+                this.conditional.then.properties[this.propertyKeyThen]['enum'].push(false);
+            } else if (this.propertyReferenceIsEnumThen) {
+                this.conditional.then.properties[this.propertyKeyThen]['enum'].push(this.propertyReferenceThen.enum[0]);
             } else {
-               this.conditional.then.properties[this.propertyKeyThen]['enum'].push('')
+                this.conditional.then.properties[this.propertyKeyThen]['enum'].push('');
             }
         },
-        removeConditionalValueIf(option) {
-            // Check what index in the enum the option is
-            const option_index = this.conditional.if.properties[this.propertyKeyIf]['enum'].indexOf(option);
-            // Remove the corresponding index
-            this.conditional.if.properties[this.propertyKeyIf]['enum'].splice(option_index, 1);
+        removeConditionalValueThen(option) {
+            // Remove a specific value from the "then" enum
+            const option_index = this.conditional.then.properties[this.propertyKeyThen]['enum'].indexOf(option);
+            this.conditional.then.properties[this.propertyKeyThen]['enum'].splice(option_index, 1);
         }
     },
     template:
@@ -756,29 +761,45 @@ const vConditionalEditForm = {
                 <h2><i class="fa-solid fa-arrow-right"></i></h2>
             </div>
             <div class="col-5">
-                <h4>then <span class="fw-bold">{{this.propertyReferenceDisplayNameThen}}</span> has to be one of </h4>
-                <template v-for="(enumValue, index_enum) in this.enumThen">
-                    <div class="input-group mb-3">
-                        <template v-if="this.propertyReferenceIsEnumThen">
-                            <select class="form-select" v-model="this.conditional.then.properties[this.propertyKeyThen]['enum'][index_enum]">
-                                <template v-for="option in this.propertyReferenceThen.enum">
-                                    <option :value="option">{{option}}</option>
-                                </template>
-                            </select>
-                        </template>
-                        <template v-else-if="this.propertyReferenceIsBooleanThen">
-                            <div class="form-check form-switch">
-                                <label class="form-check-label">{{this.conditional.then.properties[this.propertyKeyThen]['enum'][index_enum]}}</label>
-                                <input class="form-check-input" type="checkbox" v-model="this.conditional.then.properties[this.propertyKeyThen]['enum'][index_enum]">
-                            </div>
-                        </template>
-                        <template v-else>
-                            <input class="form-control col-auto" type="string" v-model="this.conditional.then.properties[this.propertyKeyThen]['enum'][index_enum]">
-                        </template>
-                        <button class="btn btn-outline-danger col-auto ml-2" @click.prevent="this.conditional.then.properties[this.propertyKeyThen]['enum'].splice(index_enum, 1)"><i class="fa-solid fa-trash ml-2"></i></button>
-                    </div>
+                <h4>then <span class="fw-bold">{{this.propertyReferenceDisplayNameThen}}</span> has to be one of</h4>
+                <template v-if="this.showAllOptionsThen && this.propertyReferenceIsEnumThen">
+                    <template v-for="option in this.propertyReferenceThen.enum">
+                        <h4>
+                            <template v-if="this.enumThen.includes(option)">
+                                <button class="btn btn-success" @click.prevent="this.removeConditionalValueThen(option)">{{option}}</button>
+                            </template>
+                            <template v-else>
+                                <button class="btn btn-secondary" @click.prevent="this.addNewConditionalValueThen(option)">{{option}}</button>
+                            </template>
+                        </h4>
+                    </template>
                 </template>
-                <button class="btn btn-outline-primary" @click.prevent="this.addNewAllowedValueThen"><i class="fa-solid fa-plus"></i></button>
+                <template v-else>
+                    <template v-for="(enumValue, index_enum) in this.enumThen">
+                        <div class="input-group mb-3">
+                            <template v-if="this.propertyReferenceIsEnumThen">
+                                <select class="form-select" v-model="this.conditional.then.properties[this.propertyKeyThen]['enum'][index_enum]">
+                                    <template v-for="option in this.propertyReferenceThen.enum">
+                                        <option :value="option">{{option}}</option>
+                                    </template>
+                                </select>
+                            </template>
+                            <template v-else>
+                                <input class="form-control col-auto" type="string" v-model="this.conditional.then.properties[this.propertyKeyThen]['enum'][index_enum]">
+                            </template>
+                            <button class="btn btn-outline-danger col-auto" @click.prevent="this.removeThenEnum(index_enum)"><i class="fa-solid fa-trash ml-2"></i></button>
+                        </div>
+                    </template>
+                </template>
+                <template v-if="this.showAllOptionsThen">
+                    <a href="#" @click.prevent="this.showAllOptionsThen = !this.showAllOptionsThen">Show only selected options</a>
+                </template>
+                <template v-else>
+                    <button class="btn btn-outline-primary" @click.prevent="addNewAllowedValueThen"><i class="fa-solid fa-plus"></i></button>
+                    <template v-if="this.propertyReferenceIsEnumThen">
+                        <a class="ml-2" href="#" @click.prevent="this.showAllOptionsThen = !this.showAllOptionsThen">Show all options</a>
+                    </template>
+                </template>
             </div>
         </div>
     `
