@@ -548,19 +548,30 @@ const vCreateForm = {
                             <template v-for="(conditional, conditional_index) in this.allOf">
                                 <v-conditional-edit-form :conditional="conditional" :conditional_index="conditional_index"></v-conditional-edit-form>
                             </template>
-                            <h3>Add condition</h3>
-                            <select class="form-control" v-model="this.new_conditional_if">
-                                <template v-for="identifier in Object.keys(this.$root.fields)">
-                                    <option :value="identifier">{{identifier}}</option>
-                                </template>
-                            </select>
-                            <select class="form-control" v-model="this.new_conditional_then">
-                                <template v-for="identifier in Object.keys(this.$root.fields)">
-                                    <option :value="identifier">{{identifier}}</option>
-                                </template>
-                            </select>
+                            <h3 class="mt-5 border-top pt-3">Add condition</h3>
+                            <div class="row">
+                                <div class="col-5">
+                                    <select class="form-select" v-model="this.new_conditional_if">
+                                        <template v-for="identifier in Object.keys(this.$root.fields)">
+                                            <option :value="identifier">{{identifier}}</option>
+                                        </template>
+                                    </select>
+                                </div>
+                                <div class="col-2 text-center">
+                                    <h2><i class="fa-solid fa-arrow-right"></i></h2>
+                                </div>
+                                <div class="col-5">
+                                    <select class="form-select" v-model="this.new_conditional_then">
+                                        <template v-for="identifier in Object.keys(this.$root.fields)">
+                                            <option :value="identifier">{{identifier}}</option>
+                                        </template>
+                                    </select>
+                                </div>
+                            </div>
                             <button class="btn btn-primary" @click.prevent="this.addPropertyToCondition()">Add new condition</button>
-                            <button class="btn btn-danger" @click.prevent="this.display_conditional_logic = false">Hide conditional logic</button>
+                            <div class="mt-5 border-top pt-3">
+                                <button class="btn btn-danger" @click.prevent="this.display_conditional_logic = false">Hide conditional logic</button>
+                            </div>
                         </template>
                         <template v-else>
                             <button class="btn btn-primary" @click.prevent="this.display_conditional_logic = true">Show conditional logic</button>
