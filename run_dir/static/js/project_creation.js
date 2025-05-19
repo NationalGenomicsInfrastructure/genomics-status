@@ -578,6 +578,12 @@ const vCreateForm = {
 const vConditionalEditForm = {
     name: 'v-conditional-edit-form',
     props: ['conditional', 'conditional_index'],
+    data() {
+        return {
+            showAllOptionsIf: false,
+            showAllOptionsThen: false
+        }
+    },
     computed: {
         description() {
             return this.conditional.description;
@@ -658,12 +664,14 @@ const vConditionalEditForm = {
             // Remove the enum value from the conditional
             this.conditional.if.properties[this.propertyKeyIf]['enum'].splice(index_enum, 1);
         },
-        addNewConditionalValueIf() {
+        addNewConditionalValueIf(option) {
             // Add a new empty allowed value to the conditional
             if (this.conditional.if.properties[this.propertyKeyIf]['enum'] === undefined) {
                 this.conditional.if.properties[this.propertyKeyIf]['enum'] = []
             }
-            if (this.propertyReferenceIsBooleanIf) {
+            if (option !== undefined) {
+                this.conditional.if.properties[this.propertyKeyIf]['enum'].push(option)
+            } else if (this.propertyReferenceIsBooleanIf) {
                 this.conditional.if.properties[this.propertyKeyIf]['enum'].push(false)
             } else if( this.propertyReferenceIsEnumIf ) {
                 this.conditional.if.properties[this.propertyKeyIf]['enum'].push(this.propertyReferenceIf.enum[0])
@@ -683,6 +691,12 @@ const vConditionalEditForm = {
             } else {
                this.conditional.then.properties[this.propertyKeyThen]['enum'].push('')
             }
+        },
+        removeConditionalValueIf(option) {
+            // Check what index in the enum the option is
+            const option_index = this.conditional.if.properties[this.propertyKeyIf]['enum'].indexOf(option);
+            // Remove the corresponding index
+            this.conditional.if.properties[this.propertyKeyIf]['enum'].splice(option_index, 1);
         }
     },
     template:
@@ -699,22 +713,44 @@ const vConditionalEditForm = {
         <div class="row">
             <div class="col-5">
                 <h4>If <span class="fw-bold">{{this.propertyReferenceDisplayNameIf}}</span> is any of</h4>
-                <template v-for="(enumValue, index_enum) in this.enumIf">
-                    <div class="input-group mb-3">
-                        <template v-if="this.propertyReferenceIsEnumIf">
-                            <select class="form-select" v-model="this.conditional.if.properties[this.propertyKeyIf]['enum'][index_enum]">
-                                <template v-for="option in this.propertyReferenceIf.enum">
-                                    <option :value="option">{{option}}</option>
-                                </template>
-                            </select>
-                        </template>
-                        <template v-else>
-                            <input class="form-control col-auto" type="string" v-model="this.conditional.if.properties[this.propertyKeyIf]['enum'][index_enum]">
-                        </template>
-                        <button class="btn btn-outline-danger col-auto" @click.prevent="this.removeIfEnum(index_enum)"><i class="fa-solid fa-trash ml-2"></i></button>
-                    </div>
+                <template v-if="this.showAllOptionsIf && this.propertyReferenceIsEnumIf">
+                    <template v-for="option in this.propertyReferenceIf.enum">
+                        <h4>
+                            <template v-if="this.conditional.if.properties[this.propertyKeyIf]['enum'].includes(option)">
+                                <button class="btn btn-success" @click.prevent="this.removeConditionalValueIf(option)">{{option}}</button>
+                            </template>
+                            <template v-else>
+                                <button class="btn btn-secondary" @click.prevent="this.addNewConditionalValueIf(option)">{{option}}</button>
+                            </template>
+                        </h4>
+                    </template>
                 </template>
-                <button class="btn btn-outline-primary" @click.prevent="addNewConditionalValueIf"><i class="fa-solid fa-plus"></i></button>
+                <template v-else>
+                    <template v-for="(enumValue, index_enum) in this.enumIf">
+                        <div class="input-group mb-3">
+                            <template v-if="this.propertyReferenceIsEnumIf">
+                                <select class="form-select" v-model="this.conditional.if.properties[this.propertyKeyIf]['enum'][index_enum]">
+                                    <template v-for="option in this.propertyReferenceIf.enum">
+                                        <option :value="option">{{option}}</option>
+                                    </template>
+                                </select>
+                            </template>
+                            <template v-else>
+                                <input class="form-control col-auto" type="string" v-model="this.conditional.if.properties[this.propertyKeyIf]['enum'][index_enum]">
+                            </template>
+                            <button class="btn btn-outline-danger col-auto" @click.prevent="this.removeIfEnum(index_enum)"><i class="fa-solid fa-trash ml-2"></i></button>
+                        </div>
+                    </template>
+                </template>
+                <template v-if="this.showAllOptionsIf">
+                    <a href="#" @click.prevent="this.showAllOptionsIf = !this.showAllOptionsIf">Show only selected options</a>
+                </template>
+                <template v-else>
+                    <button class="btn btn-outline-primary" @click.prevent="addNewConditionalValueIf"><i class="fa-solid fa-plus"></i></button>
+                    <template v-if="this.propertyReferenceIsEnumIf">
+                        <a class="ml-2" href="#" v-if="this.propertyReferenceIsEnumIf" @click.prevent="this.showAllOptionsIf = !this.showAllOptionsIf">Show all options</a>
+                    </template>
+                </template>
             </div>
             <div class="col-2 text-center">
                 <h2><i class="fa-solid fa-arrow-right"></i></h2>
