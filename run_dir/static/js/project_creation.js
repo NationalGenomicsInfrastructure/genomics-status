@@ -462,9 +462,11 @@ const vCreateForm = {
     name: 'v-create-form',
     data() {
         return {
-            showDebug: false,
+            display_conditional_logic: false,
+            display_fields: false,
             new_conditional_if: '',
             new_conditional_then: '',
+            showDebug: false
         }
     },
     computed: {
@@ -514,7 +516,7 @@ const vCreateForm = {
                 <template v-else>
                     <div class="row">
                         <div class="col-auto">
-                            <h1>Update Form: {{title}}</h1>
+                            <h1>Update Form:</h1>
                         </div>
                         <div class="col-auto ml-auto">
                             <button class="btn btn-sm btn-secondary" @click="showDebug = !showDebug">
@@ -525,28 +527,44 @@ const vCreateForm = {
                     <template v-if="showDebug" class="card">
                         <pre>{{ this.$root.new_json_form }}</pre>
                     </template>
-                    <template v-for="(field, identifier) in fields" :key="identifier">
-                        <template v-if="field.ngi_form_type !== undefined">
-                            <v-update-form-field :field="field" :identifier="identifier"></v-update-form-field>
-                        </template>
-                    </template>
-                    <div class="row">
-                        <h2>Conditional logic</h2>
-                        <template v-for="(conditional, conditional_index) in this.allOf">
-                            <v-conditional-edit-form :conditional="conditional" :conditional_index="conditional_index"></v-conditional-edit-form>
-                        </template>
-                        <h3>Add condition</h3>
-                        <select class="form-control" v-model="this.new_conditional_if">
-                            <template v-for="identifier in Object.keys(this.$root.fields)">
-                                <option :value="identifier">{{identifier}}</option>
+                    <div>
+                        <h2 class="mt-3">Fields</h2>
+                        <template v-if="this.display_fields">
+                            <template v-for="(field, identifier) in fields" :key="identifier">
+                                <template v-if="field.ngi_form_type !== undefined">
+                                    <v-update-form-field :field="field" :identifier="identifier"></v-update-form-field>
+                                </template>                                
                             </template>
-                        </select>
-                        <select class="form-control" v-model="this.new_conditional_then">
-                            <template v-for="identifier in Object.keys(this.$root.fields)">
-                                <option :value="identifier">{{identifier}}</option>
+                            <button class="btn btn-danger" @click.prevent="this.display_fields = false">Hide fields</button>
+                        </template>
+                        <template v-else>
+                            <button class="btn btn-primary" @click.prevent="this.display_fields = true">Show fields</button>
+                        </template>
+                    </div>
+
+                    <div>
+                        <h2 class="mt-3">Conditional logic</h2>
+                        <template v-if="this.display_conditional_logic">
+                            <template v-for="(conditional, conditional_index) in this.allOf">
+                                <v-conditional-edit-form :conditional="conditional" :conditional_index="conditional_index"></v-conditional-edit-form>
                             </template>
-                        </select>
-                        <button class="btn btn-primary" @click.prevent="this.addPropertyToCondition()">Add new condition</button>
+                            <h3>Add condition</h3>
+                            <select class="form-control" v-model="this.new_conditional_if">
+                                <template v-for="identifier in Object.keys(this.$root.fields)">
+                                    <option :value="identifier">{{identifier}}</option>
+                                </template>
+                            </select>
+                            <select class="form-control" v-model="this.new_conditional_then">
+                                <template v-for="identifier in Object.keys(this.$root.fields)">
+                                    <option :value="identifier">{{identifier}}</option>
+                                </template>
+                            </select>
+                            <button class="btn btn-primary" @click.prevent="this.addPropertyToCondition()">Add new condition</button>
+                            <button class="btn btn-danger" @click.prevent="this.display_conditional_logic = false">Hide conditional logic</button>
+                        </template>
+                        <template v-else>
+                            <button class="btn btn-primary" @click.prevent="this.display_conditional_logic = true">Show conditional logic</button>
+                        </template>
                     </div>
                     <div class="row">
                         <button class="btn btn-lg btn-primary mt-3" @click="this.saveForm">Save form</button>
@@ -655,7 +673,15 @@ const vConditionalEditForm = {
     },
     template:
         /*html*/`
-        <h3 class="mt-5">Condition: {{conditional.description}}</h3>
+
+        <div class="row">
+            <div class="col-12 mb-3">
+                <h3 class="mt-5">Condition: {{conditional_index + 1}}</h3>
+
+                <label class="form-label">Condition name/description</label>
+                <input class="form-control" type="string" v-model="this.conditional.description"></input>
+            </div>
+        </div>
         <div class="row">
             <div class="col-6">
                 <h4>If <span class="fst-italic">{{this.propertyKeyIf}}</span> is any of</h4>
@@ -825,8 +851,8 @@ const vUpdateFormField = {
                 </div>
             </template>
             <div>
-                <h4 class="mt-3">Visible if</h4>
-                <template v-if="this.visible_if !== undefined">
+            <template v-if="this.visible_if !== undefined">
+                <h4 class="mt-3">Visible only if</h4>
                     <div class="row">
                         <template v-for="(condition_key, condition_index) in Object.keys(this.visible_if['properties'])">
                             <template v-if="condition_index > 0">
@@ -840,7 +866,7 @@ const vUpdateFormField = {
                     </div>
                 </template>
                 <template v-else>
-                    <p>Always visible</p>
+                    <h4>Always visible</h4>
                 </template>
                 <template v-if="this.visibleIfErrorMessage !== ''">
                     <div class="alert alert-danger" role="alert">
@@ -849,7 +875,7 @@ const vUpdateFormField = {
                 </template>
                 <div class="row">
                     <div class="col-6">
-                        <label :for="identifier + '_visible_if'" class="form-label">Select field to add conditional logic</label>
+                        <label :for="identifier + '_visible_if'" class="form-label">Select field to base conditional visibility on</label>
                         <select class="form-control" v-model="this.selectedVisibleIfKey">
                             <template v-for="identifier in Object.keys(this.$root.fields)">
                                 <option :value="identifier">{{identifier}}</option>
