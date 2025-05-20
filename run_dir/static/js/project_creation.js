@@ -718,99 +718,100 @@ const vConditionalEditForm = {
     template:
         /*html*/`
 
-        <div class="row">
-            <div class="col-12 mb-3">
-                <h3 class="mt-5">{{conditional_index + 1}}. {{this.conditional.description}}</h3>
-
-                <label class="form-label">Condition name/description</label>
-                <input class="form-control" type="string" v-model="this.conditional.description"></input>
+        <div class="border-bottom pb-3">
+            <div class="row">
+                <div class="col-12 mb-3">
+                    <h3 class="mt-5">{{conditional_index + 1}}. {{this.conditional.description}}</h3>
+                    <label class="form-label">Condition name/description</label>
+                    <input class="form-control" type="string" v-model="this.conditional.description"></input>
+                </div>
             </div>
-        </div>
-        <div class="row">
-            <div class="col-5">
-                <h4>If <span class="fw-bold">{{this.propertyReferenceDisplayNameIf}}</span> is any of</h4>
-                <template v-if="this.showAllOptionsIf && this.propertyReferenceIsEnumIf">
-                    <template v-for="option in this.propertyReferenceIf.enum">
-                        <h4>
-                            <template v-if="this.conditional.if.properties[this.propertyKeyIf]['enum'].includes(option)">
-                                <button class="btn btn-success" @click.prevent="this.removeConditionalValueIf(option)">{{option}}</button>
-                            </template>
-                            <template v-else>
-                                <button class="btn btn-secondary" @click.prevent="this.addNewConditionalValueIf(option)">{{option}}</button>
-                            </template>
-                        </h4>
+            <div class="row">
+                <div class="col-5">
+                    <h4>If <span class="fw-bold">{{this.propertyReferenceDisplayNameIf}}</span> is any of</h4>
+                    <template v-if="this.showAllOptionsIf && this.propertyReferenceIsEnumIf">
+                        <template v-for="option in this.propertyReferenceIf.enum">
+                            <h4>
+                                <template v-if="this.conditional.if.properties[this.propertyKeyIf]['enum'].includes(option)">
+                                    <button class="btn btn-success" @click.prevent="this.removeConditionalValueIf(option)">{{option}}</button>
+                                </template>
+                                <template v-else>
+                                    <button class="btn btn-secondary" @click.prevent="this.addNewConditionalValueIf(option)">{{option}}</button>
+                                </template>
+                            </h4>
+                        </template>
                     </template>
-                </template>
-                <template v-else>
-                    <template v-for="(enumValue, index_enum) in this.enumIf">
-                        <div class="input-group mb-3">
-                            <template v-if="this.propertyReferenceIsEnumIf">
-                                <select class="form-select" v-model="this.conditional.if.properties[this.propertyKeyIf]['enum'][index_enum]">
-                                    <template v-for="option in this.propertyReferenceIf.enum">
-                                        <option :value="option">{{option}}</option>
-                                    </template>
-                                </select>
-                            </template>
-                            <template v-else>
-                                <input class="form-control col-auto" type="string" v-model="this.conditional.if.properties[this.propertyKeyIf]['enum'][index_enum]">
-                            </template>
-                            <button class="btn btn-outline-danger col-auto" @click.prevent="this.removeIfEnum(index_enum)"><i class="fa-solid fa-trash ml-2"></i></button>
-                        </div>
+                    <template v-else>
+                        <template v-for="(enumValue, index_enum) in this.enumIf">
+                            <div class="input-group mb-3">
+                                <template v-if="this.propertyReferenceIsEnumIf">
+                                    <select class="form-select" v-model="this.conditional.if.properties[this.propertyKeyIf]['enum'][index_enum]">
+                                        <template v-for="option in this.propertyReferenceIf.enum">
+                                            <option :value="option">{{option}}</option>
+                                        </template>
+                                    </select>
+                                </template>
+                                <template v-else>
+                                    <input class="form-control col-auto" type="string" v-model="this.conditional.if.properties[this.propertyKeyIf]['enum'][index_enum]">
+                                </template>
+                                <button class="btn btn-outline-danger col-auto" @click.prevent="this.removeIfEnum(index_enum)"><i class="fa-solid fa-trash ml-2"></i></button>
+                            </div>
+                        </template>
                     </template>
-                </template>
-                <template v-if="this.showAllOptionsIf">
-                    <a href="#" @click.prevent="this.showAllOptionsIf = !this.showAllOptionsIf">Show only selected options</a>
-                </template>
-                <template v-else>
-                    <button class="btn btn-outline-primary" @click.prevent="addNewConditionalValueIf"><i class="fa-solid fa-plus"></i></button>
-                    <template v-if="this.propertyReferenceIsEnumIf">
-                        <a class="ml-2" href="#" v-if="this.propertyReferenceIsEnumIf" @click.prevent="this.showAllOptionsIf = !this.showAllOptionsIf">Show all options</a>
+                    <template v-if="this.showAllOptionsIf">
+                        <a href="#" @click.prevent="this.showAllOptionsIf = !this.showAllOptionsIf">Show only selected options</a>
                     </template>
-                </template>
-            </div>
-            <div class="col-2 text-center">
-                <h2><i class="fa-solid fa-arrow-right"></i></h2>
-            </div>
-            <div class="col-5">
-                <h4>then <span class="fw-bold">{{this.propertyReferenceDisplayNameThen}}</span> has to be one of</h4>
-                <template v-if="this.showAllOptionsThen && this.propertyReferenceIsEnumThen">
-                    <template v-for="option in this.propertyReferenceThen.enum">
-                        <h4>
-                            <template v-if="this.enumThen.includes(option)">
-                                <button class="btn btn-success" @click.prevent="this.removeConditionalValueThen(option)">{{option}}</button>
-                            </template>
-                            <template v-else>
-                                <button class="btn btn-secondary" @click.prevent="this.addNewConditionalValueThen(option)">{{option}}</button>
-                            </template>
-                        </h4>
+                    <template v-else>
+                        <button class="btn btn-outline-primary" @click.prevent="addNewConditionalValueIf"><i class="fa-solid fa-plus"></i></button>
+                        <template v-if="this.propertyReferenceIsEnumIf">
+                            <a class="ml-2" href="#" v-if="this.propertyReferenceIsEnumIf" @click.prevent="this.showAllOptionsIf = !this.showAllOptionsIf">Show all options</a>
+                        </template>
                     </template>
-                </template>
-                <template v-else>
-                    <template v-for="(enumValue, index_enum) in this.enumThen">
-                        <div class="input-group mb-3">
-                            <template v-if="this.propertyReferenceIsEnumThen">
-                                <select class="form-select" v-model="this.conditional.then.properties[this.propertyKeyThen]['enum'][index_enum]">
-                                    <template v-for="option in this.propertyReferenceThen.enum">
-                                        <option :value="option">{{option}}</option>
-                                    </template>
-                                </select>
-                            </template>
-                            <template v-else>
-                                <input class="form-control col-auto" type="string" v-model="this.conditional.then.properties[this.propertyKeyThen]['enum'][index_enum]">
-                            </template>
-                            <button class="btn btn-outline-danger col-auto" @click.prevent="this.removeThenEnum(index_enum)"><i class="fa-solid fa-trash ml-2"></i></button>
-                        </div>
+                </div>
+                <div class="col-2 text-center">
+                    <h2><i class="fa-solid fa-arrow-right"></i></h2>
+                </div>
+                <div class="col-5">
+                    <h4>then <span class="fw-bold">{{this.propertyReferenceDisplayNameThen}}</span> has to be one of</h4>
+                    <template v-if="this.showAllOptionsThen && this.propertyReferenceIsEnumThen">
+                        <template v-for="option in this.propertyReferenceThen.enum">
+                            <h4>
+                                <template v-if="this.enumThen.includes(option)">
+                                    <button class="btn btn-success" @click.prevent="this.removeConditionalValueThen(option)">{{option}}</button>
+                                </template>
+                                <template v-else>
+                                    <button class="btn btn-secondary" @click.prevent="this.addNewConditionalValueThen(option)">{{option}}</button>
+                                </template>
+                            </h4>
+                        </template>
                     </template>
-                </template>
-                <template v-if="this.showAllOptionsThen">
-                    <a href="#" @click.prevent="this.showAllOptionsThen = !this.showAllOptionsThen">Show only selected options</a>
-                </template>
-                <template v-else>
-                    <button class="btn btn-outline-primary" @click.prevent="addNewAllowedValueThen"><i class="fa-solid fa-plus"></i></button>
-                    <template v-if="this.propertyReferenceIsEnumThen">
-                        <a class="ml-2" href="#" @click.prevent="this.showAllOptionsThen = !this.showAllOptionsThen">Show all options</a>
+                    <template v-else>
+                        <template v-for="(enumValue, index_enum) in this.enumThen">
+                            <div class="input-group mb-3">
+                                <template v-if="this.propertyReferenceIsEnumThen">
+                                    <select class="form-select" v-model="this.conditional.then.properties[this.propertyKeyThen]['enum'][index_enum]">
+                                        <template v-for="option in this.propertyReferenceThen.enum">
+                                            <option :value="option">{{option}}</option>
+                                        </template>
+                                    </select>
+                                </template>
+                                <template v-else>
+                                    <input class="form-control col-auto" type="string" v-model="this.conditional.then.properties[this.propertyKeyThen]['enum'][index_enum]">
+                                </template>
+                                <button class="btn btn-outline-danger col-auto" @click.prevent="this.removeThenEnum(index_enum)"><i class="fa-solid fa-trash ml-2"></i></button>
+                            </div>
+                        </template>
                     </template>
-                </template>
+                    <template v-if="this.showAllOptionsThen">
+                        <a href="#" @click.prevent="this.showAllOptionsThen = !this.showAllOptionsThen">Show only selected options</a>
+                    </template>
+                    <template v-else>
+                        <button class="btn btn-outline-primary" @click.prevent="addNewAllowedValueThen"><i class="fa-solid fa-plus"></i></button>
+                        <template v-if="this.propertyReferenceIsEnumThen">
+                            <a class="ml-2" href="#" @click.prevent="this.showAllOptionsThen = !this.showAllOptionsThen">Show all options</a>
+                        </template>
+                    </template>
+                </div>
             </div>
         </div>
     `
@@ -868,7 +869,8 @@ const vUpdateFormField = {
             this.new_json_schema['properties'][this.identifier]['enum'].push('')
         },
         add_visible_if() {
-            if (this.selectedVisibleIfKey === 'Default_null') {
+            this.visibleIfErrorMessage = '';
+            if (this.selectedVisibleIfKey === '') {
                 this.visibleIfErrorMessage = 'Please select a field to add a conditional logic';
                 return null
             }
@@ -881,8 +883,24 @@ const vUpdateFormField = {
                 }
             }
 
+            if (this.new_json_schema['properties'][this.identifier]['ngi_form_visible_if']['properties'][this.selectedVisibleIfKey] !== undefined) {
+                this.visibleIfErrorMessage = 'This field is already included';
+                return null
+            }
+
+            let referenceSelectedField = this.$root.getValue(this.new_json_schema['properties'], this.selectedVisibleIfKey);
+            let default_value = '';
+            if (referenceSelectedField.enum !== undefined) {
+                default_value = referenceSelectedField.enum[0];
+            } else if (referenceSelectedField.type === 'boolean') {
+                default_value = false;
+            } else if (referenceSelectedField.type === 'string') {
+                default_value = '';
+            } else {
+                default_value = null;
+            }
             this.new_json_schema['properties'][this.identifier]['ngi_form_visible_if']['properties'][this.selectedVisibleIfKey] = {
-                enum: ['']
+                enum: [default_value]
             }
         },
 
@@ -946,7 +964,7 @@ const vUpdateFormField = {
                                 <h4>AND</h4>
                             </template>
                             <div class="offset-1 col-11">
-                                <button class="btn btn-danger" @click.prevent="delete this.new_json_schema['properties'][identifier]['ngi_form_visible_if']['properties'][condition_key]">Remove<i class="fa-solid fa-trash ml-2"></i></button>
+                                <button class="btn btn-outline-danger" @click.prevent="delete this.new_json_schema['properties'][identifier]['ngi_form_visible_if']['properties'][condition_key]">Remove field<i class="fa-solid fa-trash ml-2"></i></button>
                                 <v-visible-if-condition-edit-form :field_identifier="identifier" :condition_key="condition_key"></v-visible-if-condition-edit-form>
                             </div>
                         </template>
@@ -957,14 +975,13 @@ const vUpdateFormField = {
                 </template>
                 <template v-if="this.visibleIfErrorMessage !== ''">
                     <div class="alert alert-danger" role="alert">
-                        <h3>{{ this.visibleIfErrorMessage }}</h3>
+                        <h4>{{ this.visibleIfErrorMessage }}</h4>
                     </div>
                 </template>
                 <div class="row">
                     <div class="col-6">
                         <div class="input-group">
-                            <select class="form-control" v-model="this.selectedVisibleIfKey">
-                                <option value="Default_null">Select field to base conditional visibility on</option>
+                            <select class="form-select" placeholder="test" v-model="this.selectedVisibleIfKey">
                                 <template v-for="identifier in Object.keys(this.$root.fields)">
                                     <option :value="identifier">{{identifier}}</option>
                                 </template>
@@ -999,6 +1016,11 @@ const vUpdateFormField = {
 const vVisibleIfConditionEditForm = {
     name: 'v-visible-if-condition-edit-form',
     props: ['field_identifier', 'condition_key'],
+        data() {
+        return {
+            showAllOptions: false // Controls whether all options are shown
+        };
+    },
     computed: {
         condition() {
             const condition = this.$root.getValue(this.new_json_schema['properties'][this.field_identifier]['ngi_form_visible_if']['properties'], this.condition_key);
@@ -1048,28 +1070,60 @@ const vVisibleIfConditionEditForm = {
     },
     template:
         /*html*/`
-            <div>
+            <div class="mb-3">
                 <h4>{{this.propertyReferenceIfLabel}} </h4>
                 is any of
-                <template v-for="(enumValue, index_enum) in this.enumIf">
-                    <div class="row">
-                        <div class="col-6">
-                            <div class="input-group mb-3">
-                                <template v-if="this.propertyReferenceIsEnumIf">
-                                    <select class="form-select" v-model="this.enumIf[index_enum]">
-                                        <template v-for="option in this.propertyReferenceIf.enum">
-                                            <option :value="option">{{option}}</option>
-                                        </template>
-                                    </select>
-                                </template>
-                            </div>
-                        </div>
-                        <div class="col-auto">
-                            <button class="btn btn-danger" @click.prevent="this.enumIf.splice(index_enum, 1)">Remove<i class="fa-solid fa-trash ml-2"></i></button>
-                        </div>
-                    </div>
+                <template v-if="this.showAllOptions && this.propertyReferenceIsEnumIf">
+                    <template v-for="option in this.propertyReferenceIf.enum">
+                        <h4>
+                            <template v-if="this.enumIf.includes(option)">
+                                <button class="btn btn-success" @click.prevent="this.enumIf.splice(this.enumIf.indexOf(option), 1)">{{option}}</button>
+                            </template>
+                            <template v-else>
+                                <button class="btn btn-secondary" @click.prevent="this.enumIf.push(option)">{{option}}</button>
+                            </template>
+                        </h4>
+                    </template>
                 </template>
-                <button class="btn btn-primary" @click.prevent="this.enumIf.push('')"><i class="fa-solid fa-plus"></i></button>
+                <template v-else>
+                    <template v-if="this.propertyReferenceIsEnumIf">
+                        <template v-for="(enumValue, index_enum) in this.enumIf">
+                            <div class="row">
+                                <div class="col-6">
+                                    <div class="input-group mb-3">
+                                        <template v-if="this.propertyReferenceIsEnumIf">
+                                            <select class="form-select" v-model="this.enumIf[index_enum]">
+                                                <template v-for="option in this.propertyReferenceIf.enum">
+                                                    <option :value="option">{{option}}</option>
+                                                </template>
+                                            </select>
+                                        </template>
+                                    </div>
+                                </div>
+                                <div class="col-auto">
+                                    <button class="btn btn-outline-danger" @click.prevent="this.enumIf.splice(index_enum, 1)"><i class="fa-solid fa-trash ml-2"></i></button>
+                                </div>
+                            </div>
+                        </template>
+                    </template>
+                    <template v-else>
+                        <template v-for="(enumValue, index_enum) in this.enumIf">
+                            <div class="input-group mb-3">
+                                <input class="form-control col-auto" type="string" v-model="this.enumIf[index_enum]">
+                                <button class="btn btn-outline-danger col-auto" @click.prevent="this.enumIf.splice(index_enum, 1)"><i class="fa-solid fa-trash ml-2"></i></button>
+                            </div>
+                        </template>
+                    </template>
+                </template>
+                <template v-if="this.showAllOptions">
+                    <a href="#" @click.prevent="this.showAllOptions = !this.showAllOptions">Show only selected options</a>
+                </template>
+                <template v-else>
+                    <button class="btn btn-outline-primary" @click.prevent="this.enumIf.push('')"><i class="fa-solid fa-plus"></i></button>
+                    <template v-if="this.propertyReferenceIsEnumIf">
+                        <a class="ml-2" href="#" @click.prevent="this.showAllOptions = !this.showAllOptions">Show all options</a>
+                    </template>
+                </template>
             </div>`
 }
 
