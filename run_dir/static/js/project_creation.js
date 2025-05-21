@@ -465,6 +465,7 @@ const vCreateForm = {
             display_conditional_logic: false,
             display_fields: false,
             new_composite_conditional_if: [],
+            new_composite_conditional_then: [],
             new_conditional_if: '',
             new_conditional_then: '',
             showDebug: false
@@ -482,11 +483,26 @@ const vCreateForm = {
         }
     },
     methods: {
+        removeCondition(conditional_index) {
+            // Remove the condition at the specified index
+            this.allOf.splice(conditional_index, 1);
+        },
         addExtraConditionIf(conditional_index) {
             // Add a new condition to the existing conditional logic
             const conditional = this.allOf[conditional_index];
             if (conditional.if.properties[this.new_composite_conditional_if[conditional_index]] === undefined) {
                 conditional.if.properties[this.new_composite_conditional_if[conditional_index]] = { enum: [] };
+                return
+            } else {
+                // do nothing
+                return
+            }
+        },
+        addExtraConditionThen(conditional_index) {
+            // Add a new condition to the existing conditional logic
+            const conditional = this.allOf[conditional_index];
+            if (conditional.then.properties[this.new_composite_conditional_then[conditional_index]] === undefined) {
+                conditional.then.properties[this.new_composite_conditional_then[conditional_index]] = { enum: [] };
                 return
             } else {
                 // do nothing
@@ -558,8 +574,12 @@ const vCreateForm = {
                         <h2 class="mt-3">Conditional logic</h2>
                         <template v-if="this.display_conditional_logic">
                             <template v-for="(conditional, conditional_index) in this.allOf">
-                                <div class="border-bottom pb-3">
-                                    <v-conditional-edit-form :conditional="conditional" :conditional_index="conditional_index"></v-conditional-edit-form>
+                                <div class="border-bottom pb-5">
+                                    <v-conditional-edit-form
+                                        :conditional="conditional"
+                                        :conditional_index="conditional_index"
+                                        @remove-condition="removeCondition">
+                                    </v-conditional-edit-form>
                                     <div class="row">
                                         <div class="col-5">
                                             <div class="input-group">
@@ -569,6 +589,16 @@ const vCreateForm = {
                                                     </template>
                                                 </select>
                                                 <button class="btn btn-outline-primary" @click.prevent="this.addExtraConditionIf(conditional_index)">Add extra condition</button>
+                                            </div>
+                                        </div>
+                                        <div class="col-5 offset-2">
+                                            <div class="input-group">
+                                                <select class="form-select" placeholder="test" v-model="this.new_composite_conditional_then[conditional_index]">
+                                                    <template v-for="identifier in Object.keys(this.$root.fields)">
+                                                        <option :value="identifier">{{identifier}}</option>
+                                                    </template>
+                                                </select>
+                                                <button class="btn btn-outline-primary" @click.prevent="this.addExtraConditionThen(conditional_index)">Add extra condition</button>
                                             </div>
                                         </div>
                                     </div>
@@ -651,7 +681,7 @@ const vConditionalEditForm = {
             return Object.keys(this.conditional.if.properties);
         },
         propertyKeyThen() {
-            return Object.keys(this.conditional.then.properties)[0];
+            return Object.keys(this.conditional.then.properties);
         },
 
         propertiesThen() {
@@ -664,229 +694,181 @@ const vConditionalEditForm = {
             return this.conditional.then.properties[this.propertyKeyThen]['enum'];
         }
     },
-    methods: {
-
-        removeThenEnum(index_enum) {
-            // Remove the enum value from the "then" conditional
-            this.conditional.then.properties[this.propertyKeyThen]['enum'].splice(index_enum, 1);
-        },
-        addNewConditionalValueThen(option) {
-            // Add a new allowed value to the "then" conditional
-            if (this.conditional.then.properties[this.propertyKeyThen]['enum'] === undefined) {
-                this.conditional.then.properties[this.propertyKeyThen]['enum'] = [];
-            }
-            if (option !== undefined) {
-                this.conditional.then.properties[this.propertyKeyThen]['enum'].push(option);
-            } else if (this.propertyReferenceIsBooleanThen) {
-                this.conditional.then.properties[this.propertyKeyThen]['enum'].push(false);
-            } else if (this.propertyReferenceIsEnumThen) {
-                this.conditional.then.properties[this.propertyKeyThen]['enum'].push(this.propertyReferenceThen.enum[0]);
-            } else {
-                this.conditional.then.properties[this.propertyKeyThen]['enum'].push('');
-            }
-        },
-        removeConditionalValueThen(option) {
-            // Remove a specific value from the "then" enum
-            const option_index = this.conditional.then.properties[this.propertyKeyThen]['enum'].indexOf(option);
-            this.conditional.then.properties[this.propertyKeyThen]['enum'].splice(option_index, 1);
-        }
-    },
     template:
         /*html*/`
-
         <div class="pb-3">
             <div class="row">
                 <div class="col-12 mb-3">
-                    <h3 class="mt-5">{{conditional_index + 1}}. {{this.conditional.description}}</h3>
+                    <h3 class="mt-5">{{conditional_index + 1}}. {{this.conditional.description}}
+                        <button class="btn btn-outline-danger" @click.prevent="$emit('remove-condition', conditional_index)">
+                            Remove Condition <i class="fa-solid fa-trash ml-2"></i>
+                        </button>
+                    </h3>
                     <label class="form-label">Condition name/description</label>
                     <input class="form-control" type="string" v-model="this.conditional.description"></input>
                 </div>
+
             </div>
             <div class="row">
                 <div class="col-5">
                     <template v-for="(if_property, if_property_index) in this.propertyKeyIf">
-                        <v-conditional-edit-form-single-if :conditional="this.conditional" :conditional_index="this.conditional_index" 
-                                                           :if_property="if_property" :if_property_index="if_property_index"></v-conditional-edit-form-single-if>
+                        <v-conditional-edit-form-single-condition
+                             :conditional="this.conditional"
+                             :conditional_index="this.conditional_index"
+                             :property="if_property"
+                             :property_index="if_property_index"
+                             :condition_type="'if'">
+                        </v-conditional-edit-form-single-condition>
                     </template>
+
                 </div>
                 <div class="col-2 text-center">
                     <h2><i class="fa-solid fa-arrow-right"></i></h2>
                 </div>
                 <div class="col-5">
-                    <h4>then <span class="fw-bold">{{this.propertyReferenceDisplayNameThen}}</span> has to be one of</h4>
-                    <template v-if="this.showAllOptionsThen && this.propertyReferenceIsEnumThen">
-                        <template v-for="option in this.propertyReferenceThen.enum">
-                            <h4>
-                                <template v-if="this.enumThen.includes(option)">
-                                    <button class="btn btn-success" @click.prevent="this.removeConditionalValueThen(option)">{{option}}</button>
-                                </template>
-                                <template v-else>
-                                    <button class="btn btn-secondary" @click.prevent="this.addNewConditionalValueThen(option)">{{option}}</button>
-                                </template>
-                            </h4>
-                        </template>
-                    </template>
-                    <template v-else>
-                        <template v-for="(enumValue, index_enum) in this.enumThen">
-                            <div class="input-group mb-3">
-                                <template v-if="this.propertyReferenceIsEnumThen">
-                                    <select class="form-select" v-model="this.conditional.then.properties[this.propertyKeyThen]['enum'][index_enum]">
-                                        <template v-for="option in this.propertyReferenceThen.enum">
-                                            <option :value="option">{{option}}</option>
-                                        </template>
-                                    </select>
-                                </template>
-                                <template v-else>
-                                    <input class="form-control col-auto" type="string" v-model="this.conditional.then.properties[this.propertyKeyThen]['enum'][index_enum]">
-                                </template>
-                                <button class="btn btn-outline-danger col-auto" @click.prevent="this.removeThenEnum(index_enum)"><i class="fa-solid fa-trash ml-2"></i></button>
-                            </div>
-                        </template>
-                    </template>
-                    <template v-if="this.showAllOptionsThen">
-                        <a href="#" @click.prevent="this.showAllOptionsThen = !this.showAllOptionsThen">Show only selected options</a>
-                    </template>
-                    <template v-else>
-                        <button class="btn btn-outline-primary" @click.prevent="addNewAllowedValueThen"><i class="fa-solid fa-plus"></i></button>
-                        <template v-if="this.propertyReferenceIsEnumThen">
-                            <a class="ml-2" href="#" @click.prevent="this.showAllOptionsThen = !this.showAllOptionsThen">Show all options</a>
-                        </template>
+                    <template v-for="(then_property, then_property_index) in this.propertyKeyThen">
+                        <v-conditional-edit-form-single-condition
+                            :conditional="this.conditional" 
+                            :conditional_index="this.conditional_index" 
+                            :property="then_property" 
+                            :property_index="then_property_index"
+                            :condition_type="'then'">
+                        </v-conditional-edit-form-single-condition>
                     </template>
                 </div>
             </div>
         </div>
     `
 }
-
-const vConditionalEditFormSingleIf = {
-    name: 'v-conditional-edit-form-single-if',
-    props: ['conditional', 'conditional_index', 'if_property', 'if_property_index'],
+const vConditionalEditFormSingleCondition = {
+    name: 'v-conditional-edit-form-single-condition',
+    props: ['conditional', 'conditional_index', 'property', 'property_index', 'condition_type'],
     data() {
         return {
-            showAllOptionsIf: false
-        }
+            showAllOptions: false // Controls whether all options are shown
+        };
     },
     computed: {
-        enumIf() {
-            if (this.propertyObjectIf.enum === undefined) {
-                return []
+        conditionProperties() {
+            // Access the correct condition properties based on condition_type
+            return this.conditional[this.condition_type].properties;
+        },
+        enumValues() {
+            // Get the enum values for the current property
+            if (this.conditionProperties[this.property].enum === undefined) {
+                return [];
             }
-            return this.conditional.if.properties[this.propertyKeyIf]['enum'];
+            return this.conditionProperties[this.property].enum;
         },
-        propertyKeyIf() {
-            return Object.keys(this.conditional.if.properties);
+        propertyReference() {
+            // Get the referenced property from the root fields
+            return this.$root.getValue(this.$root.fields, this.property);
         },
-        propertyObjectIf() {
-            return this.$root.getValue(this.conditional.if.properties, this.propertyKeyIf);
-        },
-        propertyReferenceDisplayNameIf() {
-            // Get the display name of the property that is referenced in the conditional logic
-            if (this.propertyReferenceIf === undefined || this.propertyReferenceIf.ngi_form_label === undefined) {
-                return this.propertyKeyIf
+        propertyReferenceLabel() {
+            // Get the label of the referenced property
+            if (this.propertyReference === undefined || this.propertyReference.ngi_form_label === undefined) {
+                return this.property;
             }
-            return this.$root.getValue(this.propertyReferenceIf, 'ngi_form_label')
+            return this.propertyReference.ngi_form_label;
         },
-        propertyReferenceIf() {
-            return this.$root.getValue(this.$root.fields, this.if_property)
+        propertyReferenceIsEnum() {
+            // Check if the referenced property is an enum
+            return this.propertyReference?.enum !== undefined;
         },
-        propertyReferenceIsBooleanIf() {
-            // Check if the property that is referenced is a boolean
-            if (this.propertyReferenceIf.type === 'boolean') {
-                return true
-            }
-        },
-        propertyReferenceIsEnumIf() {
-            // Check if the property that is referenced is an enum
-            if (this.propertyReferenceIf.enum === undefined) {
-                return false
-            }
-            return true
-        },
-        propertyKeyIf() {
-            return this.if_property;
+        propertyReferenceIsBoolean() {
+            // Check if the referenced property is a boolean
+            return this.propertyReference?.type === 'boolean';
         }
     },
     methods: {
-        removeIfEnum(index_enum) {
-            // Remove the enum value from the "if" conditional
-            this.conditional.if.properties[this.propertyKeyIf]['enum'].splice(index_enum, 1);
-        },
-        addNewConditionalDefaultValueIf() {
-            // Add a new default value to the "if" conditional
-            if (this.conditional.if.properties[this.propertyKeyIf]['enum'] === undefined) {
-                this.conditional.if.properties[this.propertyKeyIf]['enum'] = [];
-            }
-
-            if (this.propertyReferenceIsBooleanIf) {
-                this.conditional.if.properties[this.propertyKeyIf]['enum'].push(false);
-            } else if (this.propertyReferenceIsEnumIf) {
-                this.conditional.if.properties[this.propertyKeyIf]['enum'].push(this.propertyReferenceIf.enum[0]);
-            } else {
-                this.conditional.if.properties[this.propertyKeyIf]['enum'].push('');
-            }
-        },
-        addNewConditionalValueIf(option) {
-            // Add a new allowed value to the "if" conditional
-            if (this.conditional.if.properties[this.propertyKeyIf]['enum'] === undefined) {
-                this.conditional.if.properties[this.propertyKeyIf]['enum'] = [];
+        addNewValue(option) {
+            // Add a new value to the enum
+            if (this.conditionProperties[this.property].enum === undefined) {
+                this.conditionProperties[this.property].enum = [];
             }
             if (option !== undefined) {
-                this.conditional.if.properties[this.propertyKeyIf]['enum'].push(option);
+                this.conditionProperties[this.property].enum.push(option);
+            } else if (this.propertyReferenceIsBoolean) {
+                this.conditionProperties[this.property].enum.push(false);
+            } else if (this.propertyReferenceIsEnum) {
+                this.conditionProperties[this.property].enum.push(this.propertyReference.enum[0]);
+            } else {
+                this.conditionProperties[this.property].enum.push('');
             }
         },
+        removeValue(index) {
+            // Remove a value from the enum
+            this.conditionProperties[this.property].enum.splice(index, 1);
+        },
+        removeProperty() {
+            // Remove the entire property from the condition
+            delete this.conditionProperties[this.property];
+        }
     },
     template:
-        /*html*/`
-        <template v-if="if_property_index === 0">
-            <h4>If <span class="fw-bold">{{this.propertyReferenceDisplayNameIf}}</span> is any of</h4>
+    /*html*/`
+        <template v-if="property_index === 0">
+            <h4 v-if="condition_type === 'if'">
+                If <span class="fw-bold">{{propertyReferenceLabel}}</span> is any of
+                <button class="btn btn-outline-danger btn-sm ml-2" @click.prevent="removeProperty">
+                    Remove Property <i class="fa-solid fa-trash"></i>
+                </button>
+            </h4>
+            <h4 v-else>
+                Then <span class="fw-bold">{{propertyReferenceLabel}}</span> has to be one of
+                <button class="btn btn-outline-danger btn-sm ml-2" @click.prevent="removeProperty">
+                    Remove Property <i class="fa-solid fa-trash"></i>
+                </button>
+            </h4>
         </template>
         <template v-else>
-            <h4 class="mt-3">AND</h4>
-            <h4><span class="fw-bold">{{this.propertyReferenceDisplayNameIf}}</span> is any of</h4>
+            <h4 class="mt-3">
+                AND <span class="fw-bold">{{propertyReferenceLabel}}</span> is any of
+                <button class="btn btn-outline-danger btn-sm ml-2" @click.prevent="removeProperty">
+                    Remove Property <i class="fa-solid fa-trash"></i>
+                </button>
+            </h4>
         </template>
-        <template v-if="this.showAllOptionsIf && this.propertyReferenceIsEnumIf">
-            <template v-for="option in this.propertyReferenceIf.enum">
+        <template v-if="showAllOptions && propertyReferenceIsEnum">
+            <template v-for="option in propertyReference.enum">
                 <h4>
-                    <template v-if="this.conditional.if.properties[this.propertyKeyIf]['enum'].includes(option)">
-                        <button class="btn btn-success" @click.prevent="this.removeConditionalValueIf(option)">{{option}}</button>
+                    <template v-if="enumValues.includes(option)">
+                        <button class="btn btn-success" @click.prevent="enumValues.splice(enumValues.indexOf(option), 1)">{{option}}</button>
                     </template>
                     <template v-else>
-                        <button class="btn btn-secondary" @click.prevent="this.addNewConditionalValueIf(option)">{{option}}</button>
+                        <button class="btn btn-secondary" @click.prevent="enumValues.push(option)">{{option}}</button>
                     </template>
                 </h4>
             </template>
         </template>
         <template v-else>
-            <template v-for="(enumValue, index_enum) in this.enumIf">
+            <template v-for="(value, index) in enumValues">
                 <div class="input-group mb-3">
-                    <template v-if="this.propertyReferenceIsEnumIf">
-                        <select class="form-select" v-model="this.conditional.if.properties[this.propertyKeyIf]['enum'][index_enum]">
-                            <template v-for="option in this.propertyReferenceIf.enum">
+                    <template v-if="propertyReferenceIsEnum">
+                        <select class="form-select" v-model="enumValues[index]">
+                            <template v-for="option in propertyReference.enum">
                                 <option :value="option">{{option}}</option>
                             </template>
                         </select>
                     </template>
                     <template v-else>
-                        <input class="form-control col-auto" type="string" v-model="this.conditional.if.properties[this.propertyKeyIf]['enum'][index_enum]">
+                        <input class="form-control col-auto" type="string" v-model="enumValues[index]">
                     </template>
-                    <button class="btn btn-outline-danger col-auto" @click.prevent="this.removeIfEnum(index_enum)"><i class="fa-solid fa-trash ml-2"></i></button>
+                    <button class="btn btn-outline-danger col-auto" @click.prevent="removeValue(index)"><i class="fa-solid fa-trash ml-2"></i></button>
                 </div>
             </template>
         </template>
-        <template v-if="this.showAllOptionsIf">
-            <a href="#" @click.prevent="this.showAllOptionsIf = !this.showAllOptionsIf">Show only selected options</a>
+        <template v-if="showAllOptions">
+            <a href="#" @click.prevent="showAllOptions = !showAllOptions">Show only selected options</a>
         </template>
         <template v-else>
-            <template v-if="this.propertyReferenceIsEnumIf">
-                <a href="#" v-if="this.propertyReferenceIsEnumIf" @click.prevent="this.showAllOptionsIf = !this.showAllOptionsIf">Show all options</a>
+            <button class="btn btn-outline-primary" @click.prevent="addNewValue()">Add value<i class="fa-solid fa-plus ml-2"></i></button>
+            <template v-if="propertyReferenceIsEnum">
+                <a class="ml-2" href="#" @click.prevent="showAllOptions = !showAllOptions">Show all options</a>
             </template>
         </template>
-        <div class="mt-3">
-            <button class="btn btn-outline-primary col-auto" @click.prevent="addNewConditionalDefaultValueIf">Add new value<i class="fa-solid fa-plus ml-2"></i></button>
-            <button class="btn btn-danger col-auto ml-2" @click.prevent="delete this.conditional.if.properties[this.propertyKeyIf]">Remove field<i class="fa-solid fa-trash ml-2"></i></button>
-        </div>
     `
-}
+};
 
 const vUpdateFormField = {
     name: 'v-update-form-field',
@@ -1199,7 +1181,7 @@ const vVisibleIfConditionEditForm = {
 }
 
 const app = Vue.createApp(vProjectCreationForm)
-app.component('v-conditional-edit-form-single-if', vConditionalEditFormSingleIf)
+app.component('v-conditional-edit-form-single-condition', vConditionalEditFormSingleCondition)
 app.component('v-visible-if-condition-edit-form', vVisibleIfConditionEditForm)
 app.component('v-form-field', vFormField)
 app.component('v-create-form', vCreateForm)
