@@ -646,11 +646,6 @@ const vConditionalEditForm = {
     name: 'v-conditional-edit-form',
     props: ['conditional', 'conditional_index'],
     emits: ['remove-condition'],
-    data() {
-        return {
-            editMode: false
-        }
-    },
     computed: {
         description() {
             return this.conditional.description;
@@ -811,18 +806,31 @@ const vConditionalEditFormSingleCondition = {
         </template>
         <template v-else>
             <template v-for="(value, index) in enumValues">
-                <div class="input-group mb-3">
-                    <template v-if="propertyReferenceIsEnum">
+            <div class="mb-3">
+                <template v-if="propertyReferenceIsEnum">
+                    <div class="input-group">
                         <select class="form-select" v-model="enumValues[index]">
                             <template v-for="option in propertyReference.enum">
                                 <option :value="option">{{option}}</option>
                             </template>
                         </select>
-                    </template>
-                    <template v-else>
+                        <button class="btn btn-outline-danger col-auto" @click.prevent="removeValue(index)"><i class="fa-solid fa-trash"></i></button>
+                    </div>
+                </template>
+                <template v-else-if="propertyReferenceIsBoolean">
+                    <div class="form-check form-switch">
+                        <label :for="'boolean_switch_condition' + conditional_index + '_enumIndex' + index" class="form-check-label">{{enumValues[index]}}</label>
+                        <input :id="'boolean_switch_condition' + conditional_index + '_enumIndex' + index" class="form-check-input" type="checkbox" v-model="enumValues[index]">
+                        </div>
+                        <button class="btn btn-outline-danger col-auto ml-2" @click.prevent="removeValue(index)"><i class="fa-solid fa-trash ml-2"></i></button>
+                </template>
+                <template v-else>
+                    <div class="input-group">
                         <input class="form-control col-auto" type="string" v-model="enumValues[index]">
-                    </template>
-                    <button class="btn btn-outline-danger col-auto" @click.prevent="removeValue(index)"><i class="fa-solid fa-trash ml-2"></i></button>
+                        <button class="btn btn-outline-danger col-auto" @click.prevent="removeValue(index)"><i class="fa-solid fa-trash"></i></button>
+                    </div>
+                </template>
+
                 </div>
             </template>
         </template>
