@@ -556,7 +556,7 @@ const vCreateForm = {
                         <pre>{{ this.$root.new_json_form }}</pre>
                     </template>
                     <div>
-                        <h2 class="mt-3">Fields</h2>
+                        <h2 class="mt-3">Fields<button v-if="this.display_fields" class="btn btn-secondary ml-2" @click.prevent="this.display_fields = false">Hide fields</button></h2>
                         <template v-if="this.display_fields">
                             <template v-for="(field, identifier) in fields" :key="identifier">
                                 <template v-if="field.ngi_form_type !== undefined">
@@ -571,7 +571,7 @@ const vCreateForm = {
                     </div>
 
                     <div>
-                        <h2 class="mt-3">Conditional logic</h2>
+                        <h2 class="mt-3">Conditional logic <button v-if="this.display_conditional_logic" class="btn btn-secondary" @click.prevent="this.display_conditional_logic = false">Hide conditional logic</button></h2>
                         <template v-if="this.display_conditional_logic">
                             <template v-for="(conditional, conditional_index) in this.allOf">
                                 <div class="border-bottom pb-5">
@@ -645,53 +645,21 @@ const vCreateForm = {
 const vConditionalEditForm = {
     name: 'v-conditional-edit-form',
     props: ['conditional', 'conditional_index'],
+    emits: ['remove-condition'],
     data() {
         return {
-            showAllOptionsThen: false
+            editMode: false
         }
     },
     computed: {
         description() {
             return this.conditional.description;
         },
-        propertyReferenceThen() {
-            return this.$root.getValue(this.$root.fields, this.propertyKeyThen)
-        },
-        propertyReferenceIsBooleanThen() {
-            // Check if the property that is referenced is a boolean
-            if (this.propertyReferenceThen.type === 'boolean') {
-                return true
-            }
-        },
-        propertyReferenceIsEnumThen() {
-            // Check if the property that is referenced is an enum
-            if (this.propertyReferenceThen.enum === undefined) {
-                return false
-            }
-            return true
-        },
-        propertyReferenceDisplayNameThen() {
-            if (this.propertyReferenceThen === undefined || this.propertyReferenceThen.ngi_form_label === undefined) {
-                return this.propertyKeyThen
-            }
-
-            return this.$root.getValue(this.propertyReferenceThen, 'ngi_form_label')
-        },
         propertyKeyIf() {
             return Object.keys(this.conditional.if.properties);
         },
         propertyKeyThen() {
             return Object.keys(this.conditional.then.properties);
-        },
-
-        propertiesThen() {
-            return this.conditional.then.properties;
-        },
-        enumThen() {
-            if (this.propertiesThen[this.propertyKeyThen]['enum'] === undefined) {
-                return []
-            }
-            return this.conditional.then.properties[this.propertyKeyThen]['enum'];
         }
     },
     template:
@@ -707,7 +675,6 @@ const vConditionalEditForm = {
                     <label class="form-label">Condition name/description</label>
                     <input class="form-control" type="string" v-model="this.conditional.description"></input>
                 </div>
-
             </div>
             <div class="row">
                 <div class="col-5">
@@ -740,6 +707,7 @@ const vConditionalEditForm = {
         </div>
     `
 }
+
 const vConditionalEditFormSingleCondition = {
     name: 'v-conditional-edit-form-single-condition',
     props: ['conditional', 'conditional_index', 'property', 'property_index', 'condition_type'],
