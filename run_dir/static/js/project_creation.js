@@ -7,7 +7,7 @@ const vProjectCreationForm = {
           conditionalLogic: [],
           error_messages: [],
           formData: {},
-          isEditingForm: false,
+          isInspectingForm: false,
           json_form: {},
           new_json_form: {},
           initiated: false,
@@ -157,10 +157,10 @@ const vProjectCreationForm = {
                 }
             });
         },
-        startEditForm(){
+        startInspectingForm(){
             // Only allow it to be iniatied once.
             if (!this.initiated) {
-                this.isEditingForm = true;
+                this.isInspectingForm = true;
                 this.new_json_form = JSON.parse(JSON.stringify(this.$root.json_form));
                 this.initiated = true;
             }
@@ -464,6 +464,7 @@ const vCreateForm = {
         return {
             display_conditional_logic: false,
             display_fields: false,
+            edit_mode: false,
             new_composite_conditional_if: [],
             new_composite_conditional_then: [],
             new_conditional_if: '',
@@ -538,8 +539,8 @@ const vCreateForm = {
         /*html*/`
         <div class="container">
             <div class="row mt-5">
-                <template v-if="!this.$root.isEditingForm">
-                    <button class="btn btn-lg btn-primary mt-3" @click="this.$root.startEditForm">Edit form</button>
+                <template v-if="!this.$root.isInspectingForm">
+                    <button class="btn btn-lg btn-primary mt-3" @click="this.$root.startInspectingForm">Inspect form details</button>
                 </template>
                 <template v-else>
                     <div class="row">
@@ -547,7 +548,10 @@ const vCreateForm = {
                             <h1>Update Form:</h1>
                         </div>
                         <div class="col-auto ml-auto">
-                            <button class="btn btn-sm btn-secondary" @click="showDebug = !showDebug">
+                            <button class="btn btn-sm btn-secondary" @click="edit_mode = !edit_mode">
+                                <i class="fa fa-bug mr-2"></i>Toggle Edit Mode
+                            </button>
+                            <button class="btn btn-sm btn-secondary ml-2" @click="showDebug = !showDebug">
                                 <i class="fa fa-bug mr-2"></i>Toggle Debug Info
                             </button>
                         </div>
@@ -560,7 +564,7 @@ const vCreateForm = {
                         <template v-if="this.display_fields">
                             <template v-for="(field, identifier) in fields" :key="identifier">
                                 <template v-if="field.ngi_form_type !== undefined">
-                                    <v-update-form-field :field="field" :identifier="identifier"></v-update-form-field>
+                                    <v-update-form-field :field="field" :identifier="identifier" :edit_mode="edit_mode"></v-update-form-field>
                                 </template>                                
                             </template>
                             <button class="btn btn-danger" @click.prevent="this.display_fields = false">Hide fields</button>
@@ -578,9 +582,10 @@ const vCreateForm = {
                                     <v-conditional-edit-form
                                         :conditional="conditional"
                                         :conditional_index="conditional_index"
-                                        @remove-condition="removeCondition">
+                                        @remove-condition="removeCondition"
+                                        :edit_mode="this.edit_mode">
                                     </v-conditional-edit-form>
-                                    <div class="row">
+                                    <div v-if="edit_mode" class="row">
                                         <div class="col-5">
                                             <div class="input-group">
                                                 <select class="form-select" placeholder="test" v-model="this.new_composite_conditional_if[conditional_index]">
@@ -604,27 +609,29 @@ const vCreateForm = {
                                     </div>
                                 </div>
                             </template>
-                            <h3 class="mt-5 border-top pt-3">Add condition</h3>
-                            <div class="row">
-                                <div class="col-5">
-                                    <select class="form-select" v-model="this.new_conditional_if">
-                                        <template v-for="identifier in Object.keys(this.$root.fields)">
-                                            <option :value="identifier">{{identifier}}</option>
-                                        </template>
-                                    </select>
+                            <div v-if="edit_mode">
+                                <h3 class="mt-5 border-top pt-3">Add condition</h3>
+                                <div class="row">
+                                    <div class="col-5">
+                                        <select class="form-select" v-model="this.new_conditional_if">
+                                            <template v-for="identifier in Object.keys(this.$root.fields)">
+                                                <option :value="identifier">{{identifier}}</option>
+                                            </template>
+                                        </select>
+                                    </div>
+                                    <div class="col-2 text-center">
+                                        <h2><i class="fa-solid fa-arrow-right"></i></h2>
+                                    </div>
+                                    <div class="col-5">
+                                        <select class="form-select" v-model="this.new_conditional_then">
+                                            <template v-for="identifier in Object.keys(this.$root.fields)">
+                                                <option :value="identifier">{{identifier}}</option>
+                                            </template>
+                                        </select>
+                                    </div>
                                 </div>
-                                <div class="col-2 text-center">
-                                    <h2><i class="fa-solid fa-arrow-right"></i></h2>
-                                </div>
-                                <div class="col-5">
-                                    <select class="form-select" v-model="this.new_conditional_then">
-                                        <template v-for="identifier in Object.keys(this.$root.fields)">
-                                            <option :value="identifier">{{identifier}}</option>
-                                        </template>
-                                    </select>
-                                </div>
+                                <button class="btn btn-primary" @click.prevent="this.addPropertyToCondition()">Add new condition</button>
                             </div>
-                            <button class="btn btn-primary" @click.prevent="this.addPropertyToCondition()">Add new condition</button>
                             <div class="mt-5 border-top pt-3">
                                 <button class="btn btn-danger" @click.prevent="this.display_conditional_logic = false">Hide conditional logic</button>
                             </div>
@@ -633,7 +640,7 @@ const vCreateForm = {
                             <button class="btn btn-primary" @click.prevent="this.display_conditional_logic = true">Show conditional logic</button>
                         </template>
                     </div>
-                    <div class="row">
+                    <div v-if="edit_mode" class="row">
                         <button class="btn btn-lg btn-primary mt-3" @click="this.saveForm">Save form</button>
                     </div>
                 </template>
@@ -644,7 +651,7 @@ const vCreateForm = {
 
 const vConditionalEditForm = {
     name: 'v-conditional-edit-form',
-    props: ['conditional', 'conditional_index'],
+    props: ['conditional', 'conditional_index', 'edit_mode'],
     emits: ['remove-condition'],
     computed: {
         description() {
@@ -663,12 +670,14 @@ const vConditionalEditForm = {
             <div class="row">
                 <div class="col-12 mb-3">
                     <h3 class="mt-5">{{conditional_index + 1}}. {{this.conditional.description}}
-                        <button class="btn btn-outline-danger" @click.prevent="$emit('remove-condition', conditional_index)">
+                        <button v-if="edit_mode" class="btn btn-outline-danger" @click.prevent="$emit('remove-condition', conditional_index)">
                             Remove Condition <i class="fa-solid fa-trash ml-2"></i>
                         </button>
                     </h3>
-                    <label class="form-label">Condition name/description</label>
-                    <input class="form-control" type="string" v-model="this.conditional.description"></input>
+                    <div v-if="edit_mode">
+                        <label class="form-label">Condition name/description</label>
+                        <input class="form-control" type="string" v-model="this.conditional.description"></input>
+                    </div>
                 </div>
             </div>
             <div class="row">
@@ -679,7 +688,8 @@ const vConditionalEditForm = {
                              :conditional_index="this.conditional_index"
                              :property="if_property"
                              :property_index="if_property_index"
-                             :condition_type="'if'">
+                             :condition_type="'if'"
+                             :edit_mode="edit_mode">
                         </v-conditional-edit-form-single-condition>
                     </template>
 
@@ -694,7 +704,8 @@ const vConditionalEditForm = {
                             :conditional_index="this.conditional_index" 
                             :property="then_property" 
                             :property_index="then_property_index"
-                            :condition_type="'then'">
+                            :condition_type="'then'"
+                            :edit_mode="edit_mode">
                         </v-conditional-edit-form-single-condition>
                     </template>
                 </div>
@@ -705,7 +716,7 @@ const vConditionalEditForm = {
 
 const vConditionalEditFormSingleCondition = {
     name: 'v-conditional-edit-form-single-condition',
-    props: ['conditional', 'conditional_index', 'property', 'property_index', 'condition_type'],
+    props: ['conditional', 'conditional_index', 'property', 'property_index', 'condition_type', 'edit_mode'],
     data() {
         return {
             showAllOptions: false // Controls whether all options are shown
@@ -773,21 +784,27 @@ const vConditionalEditFormSingleCondition = {
         <template v-if="property_index === 0">
             <h4 v-if="condition_type === 'if'">
                 If <span class="fw-bold">{{propertyReferenceLabel}}</span> is any of
-                <button class="btn btn-outline-danger btn-sm ml-2" @click.prevent="removeProperty">
+                <button v-if="edit_mode" class="btn btn-outline-danger btn-sm ml-2" @click.prevent="removeProperty">
                     Remove Property <i class="fa-solid fa-trash"></i>
                 </button>
             </h4>
             <h4 v-else>
                 Then <span class="fw-bold">{{propertyReferenceLabel}}</span> has to be one of
-                <button class="btn btn-outline-danger btn-sm ml-2" @click.prevent="removeProperty">
+                <button v-if="edit_mode" class="btn btn-outline-danger btn-sm ml-2" @click.prevent="removeProperty">
                     Remove Property <i class="fa-solid fa-trash"></i>
                 </button>
             </h4>
         </template>
         <template v-else>
-            <h4 class="mt-3">
+            <h4 v-if="condition_type === 'if'" class="mt-3">
                 AND <span class="fw-bold">{{propertyReferenceLabel}}</span> is any of
-                <button class="btn btn-outline-danger btn-sm ml-2" @click.prevent="removeProperty">
+                <button v-if="edit_mode" class="btn btn-outline-danger btn-sm ml-2" @click.prevent="removeProperty">
+                    Remove Property <i class="fa-solid fa-trash"></i>
+                </button>
+            </h4>
+            <h4 v-else class="mt-3">
+                AND <span class="fw-bold">{{propertyReferenceLabel}}</span> has to be one of
+                <button v-if="edit_mode" class="btn btn-outline-danger btn-sm ml-2" @click.prevent="removeProperty">
                     Remove Property <i class="fa-solid fa-trash"></i>
                 </button>
             </h4>
@@ -796,59 +813,61 @@ const vConditionalEditFormSingleCondition = {
             <template v-for="option in propertyReference.enum">
                 <h4>
                     <template v-if="enumValues.includes(option)">
-                        <button class="btn btn-success" @click.prevent="enumValues.splice(enumValues.indexOf(option), 1)">{{option}}</button>
+                        <button v-if="edit_mode" class="btn btn-success" @click.prevent="enumValues.splice(enumValues.indexOf(option), 1)">{{option}}</button>
                     </template>
                     <template v-else>
-                        <button class="btn btn-secondary" @click.prevent="enumValues.push(option)">{{option}}</button>
+                        <button v-if="edit_mode" class="btn btn-secondary" @click.prevent="enumValues.push(option)">{{option}}</button>
                     </template>
                 </h4>
             </template>
         </template>
         <template v-else>
             <template v-for="(value, index) in enumValues">
-            <div class="mb-3">
-                <template v-if="propertyReferenceIsEnum">
-                    <div class="input-group">
-                        <select class="form-select" v-model="enumValues[index]">
-                            <template v-for="option in propertyReference.enum">
-                                <option :value="option">{{option}}</option>
-                            </template>
-                        </select>
-                        <button class="btn btn-outline-danger col-auto" @click.prevent="removeValue(index)"><i class="fa-solid fa-trash"></i></button>
-                    </div>
-                </template>
-                <template v-else-if="propertyReferenceIsBoolean">
-                    <div class="form-check form-switch">
-                        <label :for="'boolean_switch_condition' + conditional_index + '_enumIndex' + index" class="form-check-label">{{enumValues[index]}}</label>
-                        <input :id="'boolean_switch_condition' + conditional_index + '_enumIndex' + index" class="form-check-input" type="checkbox" v-model="enumValues[index]">
+                <div class="mb-3">
+                    <template v-if="!edit_mode">
+                        <p>{{value}}</p>
+                    </template>
+                    <template v-else-if="propertyReferenceIsEnum">
+                        <div class="input-group">
+                            <select class="form-select" v-model="enumValues[index]">
+                                <template v-for="option in propertyReference.enum">
+                                    <option :value="option">{{option}}</option>
+                                </template>
+                            </select>
+                            <button v-if="edit_mode" class="btn btn-outline-danger col-auto" @click.prevent="removeValue(index)"><i class="fa-solid fa-trash"></i></button>
                         </div>
-                        <button class="btn btn-outline-danger col-auto ml-2" @click.prevent="removeValue(index)"><i class="fa-solid fa-trash ml-2"></i></button>
-                </template>
-                <template v-else>
-                    <div class="input-group">
-                        <input class="form-control col-auto" type="string" v-model="enumValues[index]">
-                        <button class="btn btn-outline-danger col-auto" @click.prevent="removeValue(index)"><i class="fa-solid fa-trash"></i></button>
-                    </div>
-                </template>
-
+                    </template>
+                    <template v-else-if="propertyReferenceIsBoolean">
+                        <div class="form-check form-switch">
+                            <label :for="'boolean_switch_condition' + conditional_index + '_enumIndex' + index" class="form-check-label">{{enumValues[index]}}</label>
+                            <input :id="'boolean_switch_condition' + conditional_index + '_enumIndex' + index" class="form-check-input" type="checkbox" v-model="enumValues[index]">
+                        </div>
+                        <button v-if="edit_mode" class="btn btn-outline-danger col-auto ml-2" @click.prevent="removeValue(index)"><i class="fa-solid fa-trash ml-2"></i></button>
+                    </template>
+                    <template v-else>
+                        <div class="input-group">
+                            <input class="form-control col-auto" type="string" v-model="enumValues[index]">
+                            <button v-if="edit_mode" class="btn btn-outline-danger col-auto" @click.prevent="removeValue(index)"><i class="fa-solid fa-trash"></i></button>
+                        </div>
+                    </template>
                 </div>
             </template>
         </template>
         <template v-if="showAllOptions">
-            <a href="#" @click.prevent="showAllOptions = !showAllOptions">Show only selected options</a>
+            <a v-if="edit_mode" href="#" @click.prevent="showAllOptions = !showAllOptions">Show only selected options</a>
         </template>
         <template v-else>
-            <button class="btn btn-outline-primary" @click.prevent="addNewValue()">Add value<i class="fa-solid fa-plus ml-2"></i></button>
+            <button v-if="edit_mode" class="btn btn-outline-primary" @click.prevent="addNewValue()">Add value<i class="fa-solid fa-plus ml-2"></i></button>
             <template v-if="propertyReferenceIsEnum">
-                <a class="ml-2" href="#" @click.prevent="showAllOptions = !showAllOptions">Show all options</a>
+                <a v-if="edit_mode" class="ml-2" href="#" @click.prevent="showAllOptions = !showAllOptions">Show all options</a>
             </template>
         </template>
     `
-};
+}
 
 const vUpdateFormField = {
     name: 'v-update-form-field',
-    props: ['field', 'identifier'],
+    props: ['field', 'identifier', 'edit_mode'],
     data: function() {
         return {
             show_allowed_values: false,
@@ -856,7 +875,7 @@ const vUpdateFormField = {
             visibleIfErrorMessage: ''
         }
     },
-    computed: {        
+    computed: {
         description() {
             return this.field.description;
         },
@@ -931,120 +950,118 @@ const vUpdateFormField = {
             this.new_json_schema['properties'][this.identifier]['ngi_form_visible_if']['properties'][this.selectedVisibleIfKey] = {
                 enum: [default_value]
             }
-        },
-
+        }
     },
-    template:
+     template:
         /*html*/`
-        <div class="mb-5">
-            <h2>{{this.label}}</h2>
-            <div>
-                <label :for="identifier" class="form-label">Identifier</label>
-                <input :id="identifier" class="form-control" type="string"  v-model="identifier">
-            </div>
-            <div>
-                <label :for="identifier + '_ngi_form_group'" class="form-label">Group</label>
-                <select :id="identifier + '_ngi_form_group'" class="form-control" type="string" v-model="this.new_json_schema['properties'][identifier]['ngi_form_group']">
-                    <template v-for="(form_group, group_identifier) in this.new_json_form['form_groups']">
-                        <option :value="group_identifier">{{form_group.display_name}}</option>
-                    </template>
-                </select>
-            </div>
-            <div>
-                <label :for="identifier + '_description'" class="form-label">Description</label>
-                <input :id="identifier + '_description'" class="form-control" type="string" v-model="this.new_json_schema['properties'][identifier]['description']">
-            </div>
-            <div>
-                <label :for="identifier + '_ngi_form_type'" class="form-label">Form Type</label>
-                <select :id="identifier + '_ngi_form_type'" class="form-control" v-model="this.new_json_schema['properties'][identifier]['ngi_form_type']">
-                    <option value="string">String</option>
-                    <option value="boolean">Boolean</option>
-                    <option value="select">Select</option>
-                    <option value="datalist">Datalist</option>
-                </select>
-
-            </div>
-            <div>
-                <label :for="identifier + '_ngi_form_label'" class="form-label">Label</label>
-                <input :id="identifier + '_ngi_form_label'" class="form-control" type="string" v-model="this.new_json_schema['properties'][identifier]['ngi_form_label']">
-            </div>
-            <div>
-                <label :for="identifier + '_ngi_form_lims_udf'" class="form-label">LIMS UDF</label>
-                <input :id="identifier + '_ngi_form_lims_udf'" class="form-control" type="string" v-model="this.new_json_schema['properties'][identifier]['ngi_form_lims_udf']">
-            </div>
-            <template v-if="(this.type === 'string') && (this.form_type !== 'select')">
+            <div class="mb-5">
+                <h2>{{this.label}}</h2>
                 <div>
-                    <label :for="identifier + '_pattern'" class="form-label">Pattern</label>
-                    <input :id="identifier + '_pattern'" class="form-control" type="string" v-model="this.new_json_schema['properties'][identifier]['pattern']">
+                    <label :for="identifier" class="form-label">Identifier</label>
+                    <input :id="identifier" class="form-control" type="string" v-model="identifier" :disabled="!edit_mode">
                 </div>
-                <div class="form-check form-switch">
-                    <!-- Get Suggestions -->
-                    <label :for="identifier + '_ngi_form_get_suggestions'" class="form-check-label">Get Suggestions (will fetch used values to suggest) </label>
-                    <input :for="identifier + '_ngi_form_get_suggestions'" class="form-check-input" type="checkbox" v-model="this.new_json_schema['properties'][identifier]['ngi_form_get_suggestions']">
-                </div>
-            </template>
-            <div>
-                <h3 class="mt-3">Visibility</h3>
-                <template v-if="this.visible_if !== undefined">
-                    <h4 class="mt-2">Visible only if</h4>
-                    <div class="row">
-                        <template v-for="(condition_key, condition_index) in Object.keys(this.visible_if['properties'])">
-                            <template v-if="condition_index > 0">
-                                <h4>AND</h4>
-                            </template>
-                            <div class="offset-1 col-11">
-                                <button class="btn btn-outline-danger" @click.prevent="delete this.new_json_schema['properties'][identifier]['ngi_form_visible_if']['properties'][condition_key]">Remove field<i class="fa-solid fa-trash ml-2"></i></button>
-                                <v-visible-if-condition-edit-form :field_identifier="identifier" :condition_key="condition_key"></v-visible-if-condition-edit-form>
-                            </div>
+                <div>
+                    <label :for="identifier + '_ngi_form_group'" class="form-label">Group</label>
+                    <select :id="identifier + '_ngi_form_group'" class="form-control" v-model="this.new_json_schema['properties'][identifier]['ngi_form_group']" :disabled="!edit_mode">
+                        <template v-for="(form_group, group_identifier) in this.new_json_form['form_groups']">
+                            <option :value="group_identifier">{{form_group.display_name}}</option>
                         </template>
+                    </select>
+                </div>
+                <div>
+                    <label :for="identifier + '_description'" class="form-label">Description</label>
+                    <input :id="identifier + '_description'" class="form-control" type="string" v-model="this.new_json_schema['properties'][identifier]['description']" :disabled="!edit_mode">
+                </div>
+                <div>
+                    <label :for="identifier + '_ngi_form_type'" class="form-label">Form Type</label>
+                    <select :id="identifier + '_ngi_form_type'" class="form-control" v-model="this.new_json_schema['properties'][identifier]['ngi_form_type']" :disabled="!edit_mode">
+                        <option value="string">String</option>
+                        <option value="boolean">Boolean</option>
+                        <option value="select">Select</option>
+                        <option value="datalist">Datalist</option>
+                    </select>
+                </div>
+                <div>
+                    <label :for="identifier + '_ngi_form_label'" class="form-label">Label</label>
+                    <input :id="identifier + '_ngi_form_label'" class="form-control" type="string" v-model="this.new_json_schema['properties'][identifier]['ngi_form_label']" :disabled="!edit_mode">
+                </div>
+                <div>
+                    <label :for="identifier + '_ngi_form_lims_udf'" class="form-label">LIMS UDF</label>
+                    <input :id="identifier + '_ngi_form_lims_udf'" class="form-control" type="string" v-model="this.new_json_schema['properties'][identifier]['ngi_form_lims_udf']" :disabled="!edit_mode">
+                </div>
+                <template v-if="(this.type === 'string') && (this.form_type !== 'select')">
+                    <div>
+                        <label :for="identifier + '_pattern'" class="form-label">Pattern</label>
+                        <input :id="identifier + '_pattern'" class="form-control" type="string" v-model="this.new_json_schema['properties'][identifier]['pattern']" :disabled="!edit_mode">
+                    </div>
+                    <div class="form-check form-switch">
+                        <label :for="identifier + '_ngi_form_get_suggestions'" class="form-check-label">Get Suggestions (will fetch used values to suggest)</label>
+                        <input :for="identifier + '_ngi_form_get_suggestions'" class="form-check-input" type="checkbox" v-model="this.new_json_schema['properties'][identifier]['ngi_form_get_suggestions']" :disabled="!edit_mode">
                     </div>
                 </template>
-                <template v-else>
-                    <h4 class="mt-2">Always visible</h4>
-                </template>
-                <template v-if="this.visibleIfErrorMessage !== ''">
-                    <div class="alert alert-danger" role="alert">
-                        <h4>{{ this.visibleIfErrorMessage }}</h4>
-                    </div>
-                </template>
-                <div class="row">
-                    <div class="col-6">
-                        <div class="input-group">
-                            <select class="form-select" placeholder="test" v-model="this.selectedVisibleIfKey">
-                                <template v-for="identifier in Object.keys(this.$root.fields)">
-                                    <option :value="identifier">{{identifier}}</option>
+                <div>
+                    <h3 class="mt-3">Visibility</h3>
+                    <template v-if="this.visible_if !== undefined">
+                        <h4 class="mt-2">Visible only if</h4>
+                        <div class="row">
+                            <template v-for="(condition_key, condition_index) in Object.keys(this.visible_if['properties'])">
+                                <template v-if="condition_index > 0">
+                                    <h4>AND</h4>
                                 </template>
-                            </select>
-                            <button class="btn btn-primary" @click.prevent="this.add_visible_if()">Add conditional visibility</button>
+                                <div class="offset-1 col-11">
+                                    <button v-if="edit_mode" class="btn btn-outline-danger" @click.prevent="delete this.new_json_schema['properties'][identifier]['ngi_form_visible_if']['properties'][condition_key]">Remove field<i class="fa-solid fa-trash ml-2"></i></button>
+                                    <v-visible-if-condition-edit-form :field_identifier="identifier" :condition_key="condition_key" :edit_mode="edit_mode"></v-visible-if-condition-edit-form>
+                                </div>
+                            </template>
+                        </div>
+                    </template>
+                    <template v-else>
+                        <h4 class="mt-2">Always visible</h4>
+                    </template>
+                    <template v-if="this.visibleIfErrorMessage !== ''">
+                        <div class="alert alert-danger" role="alert">
+                            <h4>{{ this.visibleIfErrorMessage }}</h4>
+                        </div>
+                    </template>
+                    <div v-if="edit_mode" class="row">
+                        <div class="col-6">
+                            <div class="input-group">
+                                <select class="form-select" placeholder="test" v-model="this.selectedVisibleIfKey">
+                                    <template v-for="identifier in Object.keys(this.$root.fields)">
+                                        <option :value="identifier">{{identifier}}</option>
+                                    </template>
+                                </select>
+                                <button class="btn btn-primary" @click.prevent="this.add_visible_if()" :disabled="!edit_mode">Add conditional visibility</button>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-            <template v-if="(this.form_type === 'select') || (this.form_type === 'datalist')">
-                <div class="col-6">
-                    <h3>Allowed values</h3>
-                    <p>{{this.nr_of_allowed_values}} number of allowed values are added.</p>
-                    <template v-if="this.show_allowed_values">
-                        <button class="btn btn-danger mb-2" @click.prevent="this.show_allowed_values = false">Hide allowed values</button>
-                        <template v-for="(option, index) in this.new_json_schema['properties'][identifier]['enum']" :key="index">
-                            <div class="input-group mb-3">
-                                <input :id="identifier + '_enum_'+index" class="form-control col-auto" type="string" v-model="this.new_json_schema['properties'][identifier]['enum'][index]">
-                                <button class="btn btn-danger col-auto" @click.prevent="this.new_json_schema['properties'][identifier]['enum'].splice(index, 1)">Remove<i class="fa-solid fa-trash ml-2"></i></button>
-                            </div>
+                <template v-if="(this.form_type === 'select') || (this.form_type === 'datalist')">
+                    <div class="col-6">
+                        <h3>Allowed values</h3>
+                        <p>{{this.nr_of_allowed_values}} number of allowed values are added.</p>
+                        <template v-if="this.show_allowed_values">
+                            <button class="btn btn-danger mb-2" @click.prevent="this.show_allowed_values = false">Hide allowed values</button>
+                            <template v-for="(option, index) in this.new_json_schema['properties'][identifier]['enum']" :key="index">
+                                <div class="input-group mb-3">
+                                    <input :id="identifier + '_enum_'+index" class="form-control col-auto" type="string" v-model="this.new_json_schema['properties'][identifier]['enum'][index]" :disabled="!edit_mode">
+                                    <button v-if="edit_mode" class="btn btn-danger col-auto" @click.prevent="this.new_json_schema['properties'][identifier]['enum'].splice(index, 1)">Remove<i class="fa-solid fa-trash ml-2"></i></button>
+                                </div>
+                            </template>
+                            <button v-if="edit_mode" class="btn btn-primary" @click.prevent="this.add_new_allowed()">Add new allowed value</button>
                         </template>
-                        <button class="btn btn-primary" @click.prevent="this.add_new_allowed()">Add new allowed value</button>
-                    </template>
-                    <template v-else>
-                        <button class="btn btn-primary" @click.prevent="this.show_allowed_values = true">Show allowed values</button>
-                    </template>
-                </div>
-            </template>
-        </div>`
+                        <template v-else>
+                            <button class="btn btn-primary" @click.prevent="this.show_allowed_values = true">Show allowed values</button>
+                        </template>
+                    </div>
+                </template>
+            </div>
+        `
 }
 
 const vVisibleIfConditionEditForm = {
     name: 'v-visible-if-condition-edit-form',
-    props: ['field_identifier', 'condition_key'],
+    props: ['field_identifier', 'condition_key', 'edit_mode'],
         data() {
         return {
             showAllOptions: false // Controls whether all options are shown
@@ -1100,16 +1117,16 @@ const vVisibleIfConditionEditForm = {
     template:
         /*html*/`
             <div class="mb-3">
-                <h4>{{this.propertyReferenceIfLabel}} </h4>
+                <h4>{{this.propertyReferenceIfLabel}}</h4>
                 is any of
                 <template v-if="this.showAllOptions && this.propertyReferenceIsEnumIf">
                     <template v-for="option in this.propertyReferenceIf.enum">
                         <h4>
                             <template v-if="this.enumIf.includes(option)">
-                                <button class="btn btn-success" @click.prevent="this.enumIf.splice(this.enumIf.indexOf(option), 1)">{{option}}</button>
+                                <button v-if="edit_mode" class="btn btn-success" @click.prevent="this.enumIf.splice(this.enumIf.indexOf(option), 1)">{{option}}</button>
                             </template>
                             <template v-else>
-                                <button class="btn btn-secondary" @click.prevent="this.enumIf.push(option)">{{option}}</button>
+                                <button v-if="edit_mode" class="btn btn-secondary" @click.prevent="this.enumIf.push(option)">{{option}}</button>
                             </template>
                         </h4>
                     </template>
@@ -1121,7 +1138,7 @@ const vVisibleIfConditionEditForm = {
                                 <div class="col-6">
                                     <div class="input-group mb-3">
                                         <template v-if="this.propertyReferenceIsEnumIf">
-                                            <select class="form-select" v-model="this.enumIf[index_enum]">
+                                            <select class="form-select" v-model="this.enumIf[index_enum]" :disabled="!edit_mode">
                                                 <template v-for="option in this.propertyReferenceIf.enum">
                                                     <option :value="option">{{option}}</option>
                                                 </template>
@@ -1130,7 +1147,9 @@ const vVisibleIfConditionEditForm = {
                                     </div>
                                 </div>
                                 <div class="col-auto">
-                                    <button class="btn btn-outline-danger" @click.prevent="this.enumIf.splice(index_enum, 1)"><i class="fa-solid fa-trash ml-2"></i></button>
+                                    <button v-if="edit_mode" class="btn btn-outline-danger" @click.prevent="this.enumIf.splice(index_enum, 1)">
+                                        <i class="fa-solid fa-trash ml-2"></i>
+                                    </button>
                                 </div>
                             </div>
                         </template>
@@ -1138,22 +1157,27 @@ const vVisibleIfConditionEditForm = {
                     <template v-else>
                         <template v-for="(enumValue, index_enum) in this.enumIf">
                             <div class="input-group mb-3">
-                                <input class="form-control col-auto" type="string" v-model="this.enumIf[index_enum]">
-                                <button class="btn btn-outline-danger col-auto" @click.prevent="this.enumIf.splice(index_enum, 1)"><i class="fa-solid fa-trash ml-2"></i></button>
+                                <input class="form-control col-auto" type="string" v-model="this.enumIf[index_enum]" :disabled="!edit_mode">
+                                <button v-if="edit_mode" class="btn btn-outline-danger col-auto" @click.prevent="this.enumIf.splice(index_enum, 1)">
+                                    <i class="fa-solid fa-trash ml-2"></i>
+                                </button>
                             </div>
                         </template>
                     </template>
                 </template>
                 <template v-if="this.showAllOptions">
-                    <a href="#" @click.prevent="this.showAllOptions = !this.showAllOptions">Show only selected options</a>
+                    <a v-if="edit_mode" href="#" @click.prevent="this.showAllOptions = !this.showAllOptions">Show only selected options</a>
                 </template>
                 <template v-else>
-                    <button class="btn btn-outline-primary" @click.prevent="this.enumIf.push('')"><i class="fa-solid fa-plus"></i></button>
+                    <button v-if="edit_mode" class="btn btn-outline-primary" @click.prevent="this.enumIf.push('')">
+                        <i class="fa-solid fa-plus"></i>
+                    </button>
                     <template v-if="this.propertyReferenceIsEnumIf">
-                        <a class="ml-2" href="#" @click.prevent="this.showAllOptions = !this.showAllOptions">Show all options</a>
+                        <a v-if="edit_mode" class="ml-2" href="#" @click.prevent="this.showAllOptions = !this.showAllOptions">Show all options</a>
                     </template>
                 </template>
-            </div>`
+            </div>
+        `
 }
 
 const app = Vue.createApp(vProjectCreationForm)
