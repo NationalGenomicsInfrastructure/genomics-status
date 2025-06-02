@@ -20,13 +20,29 @@ Clone the repository with the `--recursive` option (this will also download [nvd
 git clone --recursive https://github.com/NationalGenomicsInfrastructure/genomics-status.git
 ```
 
+#### Install via `conda` [recommended]
+
+If you are using `conda`, we recommend creating a new environment using `conda-lock` to ensure that the environment is reproducible across different systems.
+
+**Create the environment using `conda-lock` [recommended]**
+
+To create a new environment using `conda-lock`, first install `conda-lock`, if you haven't already, using one of the [available methods](https://github.com/conda/conda-lock/tree/main?tab=readme-ov-file#installation). 
+
+Then, run the following command in the root directory of the repository:
+
+```bash
+conda-lock install --name <env_name>
+```
+
+This will create a new environment with the name `<env_name>` and install all the required dependencies.
+
 <details>
 
-<summary>Note on `conda` environments</summary>
+<summary>Using default conda [alternative]</summary>
 
-#### Create the environment with the correct dependencies
+#### Create the environment using `conda`
 
-If you decide to use a conda environment, create one making sure to use the `conda_requirements.yml` file with the following command:
+If you prefer to create the environment using `conda` directly, you can use the provided `conda_requirements.yml` file.
 
 ```bash
 conda env create -n <env_name> -f conda_requirements.yml
@@ -40,6 +56,8 @@ conda activate <env_name>
 
 </details>
 
+#### Install via `pip` [alternative]
+
 Install the dependencies and the package (the `pip install -r requirements_dev.txt` can be skipped on a production server)
 
 ```bash
@@ -50,11 +68,56 @@ python setup.py install
 
 <details>
 
-<summary>Note on MacOS installations</summary>
+<summary>Troubleshoot issues on Apple Silicon installation</summary>
 
-### Fix library issues
+If you are using an Apple Silicon Mac, you may encounter issues with the installation of some libraries, as they may not be compatible with the ARM architecture. Either of the following solutions may help you resolve these issues. The solutions are listed in order of reccommendation.
 
-If you are using MacOS, you might run into some issues with the libraries when running the app. 
+### Use Dev containers
+
+If you are using Visual Studio Code, you can use the Dev Containers feature to create a development environment that is compatible with your architecture. This will allow you to run the code in a container that has all the necessary dependencies installed.
+To do this, you need to enable the Dev Containers feature in Visual Studio Code and then open the repository in a container. 
+
+### Avoid the problematic python packages
+
+The problematic python packages are only necessary for the correct functionality of the "Agreement and Invoicing" parts of Genomics Status, which are normally not used in a development environment. Therefore, you can skip the installation of these packages by removing them from the `environment.yml` or `conda_requirements.yml` file.
+
+**Conda-lock**
+If you are using `conda-lock`, delete the following lines in the `environment.yml` file:
+
+```yaml
+  - pango
+  - open-fonts
+  - xorg-libxrender
+  - xorg-libxext
+  - xorg-libxau
+```
+
+Then, lock and install the environment again:
+
+```bash
+conda lock -f environment.yml
+conda-lock install --name <env_name>
+```
+
+**Conda**
+
+If you are using the standard `conda` installation, delete the following lines in the `conda_requirements.yml` file:
+
+```yaml
+  - pango>=1.42.0
+  - open-fonts
+  - xorg-libxrender
+  - xorg-libxext
+  - xorg-libxau
+```
+
+Then, create the environment again:
+
+```bash
+conda env create -n <env_name> -f conda_requirements.yml
+```
+
+### Fix library issues system-wide
 
 In case you get the `OSError: cannot load library 'gobject-2.0-0'` error (or similar), install `glib` and `pango` via [Homebrew](https://brew.sh/):
 
@@ -63,7 +126,7 @@ brew install glib
 brew install pango
 ```
 
-and then symlink the libraries to `/usr/local/lib`:
+Then, symlink the libraries to `/usr/local/lib`:
 
 ```bash
 sudo ln -s /opt/homebrew/opt/glib/lib/libgobject-2.0.0.dylib /usr/local/lib/gobject-2.0
@@ -72,6 +135,8 @@ sudo ln -s /opt/homebrew/opt/harfbuzz/lib/libharfbuzz.dylib /usr/local/lib/harfb
 sudo ln -s /opt/homebrew/opt/fontconfig/lib/libfontconfig.1.dylib /usr/local/lib/fontconfig-1
 sudo ln -s /opt/homebrew/opt/pango/lib/libpangoft2-1.0.dylib /usr/local/lib/pangoft2-1.0
 ```
+
+Finally, try to perform the installation again, either via `conda-lock/conda` or `pip`.
 
 </details>
 
