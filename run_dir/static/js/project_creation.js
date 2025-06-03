@@ -510,6 +510,31 @@ const vCreateForm = {
                 return
             }
         },
+        addNewField() {
+            // Add a new field to the form
+            if (this.new_field === '') {
+                alert('Please provide a field identifier');
+                return;
+            }
+            if (this.fields[this.new_field] !== undefined) {
+                alert('Field with this identifier already exists');
+                return;
+            }
+            // Create a new field with default values
+            const newField = {
+                ngi_form_type: 'string',
+                ngi_form_label: this.new_field,
+                description: 'New field',
+                type: 'string',
+                enum: []
+            };
+            // Add the new field to the JSON schema
+            this.newForm.properties[this.new_field] = newField;
+            // Reset the new_field input
+            this.new_field = '';
+            // Update the form data to include the new field
+            this.$root.formData[this.new_field] = '';
+        },
         addPropertyToCondition(conditional) {
             // Add a new property to the conditional logic
             const newProperty = {
@@ -565,8 +590,15 @@ const vCreateForm = {
                             <template v-for="(field, identifier) in fields" :key="identifier">
                                 <template v-if="field.ngi_form_type !== undefined">
                                     <v-update-form-field :field="field" :identifier="identifier" :edit_mode="edit_mode"></v-update-form-field>
-                                </template>                                
+                                </template>
                             </template>
+                            <div v-if="edit_mode" class="mb-3">
+                                <h3>Add new field</h3>
+                                <div>
+                                    <input class="form-control" type="text" placeholder="Field identifier" v-model="this.new_field">
+                                    <button class="btn btn-primary mt-2" @click.prevent="this.addNewField()">Add new field</button>
+                                </div>
+                            </div>
                             <button class="btn btn-danger" @click.prevent="this.display_fields = false">Hide fields</button>
                         </template>
                         <template v-else>
