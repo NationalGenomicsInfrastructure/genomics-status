@@ -350,12 +350,6 @@ def fetch_ont_run_stats(
             "%Y-%m-%d"
         )
 
-        # This part of the run name is either a position or an instrument ID depending on if its on PromethION or MinION
-        if re.match("[1-8][A-C]", instr_or_pos):
-            run_dict["position"] = instr_or_pos
-        else:
-            run_dict["instrument"] = instr_or_pos
-
     # If run is finished, i.e. reports are generated
     elif run_dict["TACA_run_status"] == "finished":
         # Only try to calculate new metrics if run had basecalling enabled
