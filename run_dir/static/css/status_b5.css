@@ -374,12 +374,13 @@ tr.group, tr.group:hover, .dtrg-group {
 .trunc-note {
   max-height: 400px;
   overflow: scroll;
+  scrollbar-width: thin; /* Firefox */
 }
 
 /* Force visible scrollbars in chrome. Not supported in Firefox */
 .trunc-note::-webkit-scrollbar, .trunc-note-latest::-webkit-scrollbar{
   -webkit-appearance: none;
-  width: 7px;
+  width: 3px;
 }
 /* Force visible scrollbars in chrome. Not supported in Firefox */
 .trunc-note::-webkit-scrollbar-thumb, .trunc-note-latest::-webkit-scrollbar-thumb {
