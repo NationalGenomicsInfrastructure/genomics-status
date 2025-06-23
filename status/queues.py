@@ -69,6 +69,8 @@ class qPCRPoolsDataHandler(SafeHandler):
             "ONT cDNA PCR - RNA",
             "ONT direct cDNA - RNA",
             "ONT direct RNA - RNA",
+            "10X Chromium: 5GEX (GEM-X)",
+            "10X Chromium",
         ]
 
         queues = {}
