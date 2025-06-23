@@ -602,7 +602,7 @@ export const vRunningNoteSingle = {
                 - <span v-html="categories_labels"/>
                 </template>
             </div>
-            <div class="card-body">
+            <div class="card-body trunc-note">
                 <div class="running-note-body" v-html="formatted_note"/>
             </div>
         </div>
