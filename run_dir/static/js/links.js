@@ -97,3 +97,15 @@ $("#link_form").submit(function(e) {
     alert('The link needs a title and a type needs to be selected');
   }
 });
+
+$(document).ready(function () {
+  $('#new_link_type').on('change', function () {
+    const selectedType = $(this).val();
+    if (selectedType === 'project_folder') {
+        $('#new_link_title').val('Project Folder');
+    }
+    else{
+        $('#new_link_title').val('');
+    }
+  });
+});
