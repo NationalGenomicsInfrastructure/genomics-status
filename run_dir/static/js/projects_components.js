@@ -44,6 +44,8 @@ export const vProjectDetails = {
             proj_links: [],
             link_error: '',
             visible_info_ids: [],
+            new_link_type: '',
+            new_link_name: '',
             pricing_app: null
         }
     },
@@ -77,6 +79,16 @@ export const vProjectDetails = {
                 return 'bg-warning'
             } else if (this.project_data['status'] == 'Pending') {
                 return 'bg-secondary'
+            }
+        }
+    },
+    watch: {
+        new_link_type(newVal, oldVal) {
+            if (newVal === 'project_folder') {
+                this.new_link_name = 'Project Folder';
+            }
+            else if (newVal !== 'project_folder' && this.new_link_name === 'Project Folder') {
+                this.new_link_name = '';
             }
         }
     },
