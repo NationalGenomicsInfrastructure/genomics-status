@@ -76,11 +76,11 @@ class qPCRPoolsDataHandler(SafeHandler):
         queues = {}
         # query for Miseq and NovaSeq
         query = (
-            "select art.artifactid, art.name, st.lastmodifieddate, st.generatedbyid, ct.name, ctp.wellxposition, ctp.wellyposition, s.projectid "
+            "select art.artifactid, art.name, CAST(st.lastmodifieddate as DATE), st.generatedbyid, ct.name, ctp.wellxposition, ctp.wellyposition, s.projectid "
             "from artifact art, stagetransition st, container ct, containerplacement ctp, sample s, artifact_sample_map asm "
             "where art.artifactid=st.artifactid and st.stageid in (select stageid from stage where stepid={}) and st.completedbyid is null and st.workflowrunid>0 "
             "and ctp.processartifactid=st.artifactid and ctp.containerid=ct.containerid and s.processid=asm.processid and asm.artifactid=art.artifactid "
-            "group by art.artifactid, st.lastmodifieddate, st.generatedbyid, ct.name, ctp.wellxposition, ctp.wellyposition, s.projectid;"
+            "group by art.artifactid, CAST(st.lastmodifieddate as DATE), st.generatedbyid, ct.name, ctp.wellxposition, ctp.wellyposition, s.projectid;"
         )
         # Queue = 1002, stepid in the query
         queues["MiSeq"] = query.format(1002)
