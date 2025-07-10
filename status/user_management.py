@@ -99,20 +99,22 @@ class UserManagementDataHandler(SafeHandler):
             )
 
 
-
 class CurrentUserDataHandler(SafeHandler):
     """Serves data for the current user
     URL: /api/v1/user_management/users
     """
+
     def get(self):
         self.set_header("Content-type", "application/json")
         user = self.get_current_user()
         if user:
-            self.write({
-                "user": user.name,
-                "email": user.email,
-                "roles": user.roles,
-            })
+            self.write(
+                {
+                    "user": user.name,
+                    "email": user.email,
+                    "roles": user.roles,
+                }
+            )
         else:
             self.set_status(401)
             self.write({"error": "Unauthorized"})

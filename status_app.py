@@ -181,7 +181,11 @@ from status.statistics import (
 )
 from status.suggestion_box import SuggestionBoxDataHandler, SuggestionBoxHandler
 from status.testing import TestDataHandler
-from status.user_management import UserManagementDataHandler, UserManagementHandler, CurrentUserDataHandler
+from status.user_management import (
+    CurrentUserDataHandler,
+    UserManagementDataHandler,
+    UserManagementHandler,
+)
 from status.user_preferences import UserPrefPageHandler, UserPrefPageHandler_b5
 from status.util import (
     BaseHandler,
