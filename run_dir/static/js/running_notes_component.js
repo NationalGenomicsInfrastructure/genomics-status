@@ -1,3 +1,5 @@
+import { getDropdownPosition } from './smart_suggestion.js';
+
 const cat_classes = {
     'automatic': {
       'Workset': ['primary', 'calendar-plus', 'btn-primary', 'For workset-related work'],
@@ -16,8 +18,163 @@ const cat_classes = {
     }
   }
 
+  export const vRunningNoteSingle = {
+    props: ['running_note_obj', 'compact', "partition_id", "uri_hash"],
+    data: function() {
+        return {
+            glowingCard: false
+        }
+    },
+    mounted() {
+        if (this.uri_hash === '#' + this.note_id) {
+            this.make_selected_card_glow()
+        }
+    },
+    computed: {
+        categories() {
+            return this.getRunningNoteProperty('categories').map(category => category.trim())
+        },
+        categories_labels() {
+            if (this.categories == undefined) {
+                return ''
+            }
+            return this.generateCategoryLabel(this.categories)
+        },
+        mark_card_important() {
+            return this.categories.includes('Important') ? 'card-important' : ''
+        },
+        created_at_utc() {
+            return this.getRunningNoteProperty('created_at_utc')
+        },
+        formattedTimeStamp() {
+            let date = new Date(this.created_at_utc);
+            return date.toDateString() + ', ' + date.toLocaleTimeString(date);
+        },
+        timestampAge() {
+            // Get the timestamp from the running note
+            let timestamp = this.created_at_utc;
+
+            // Create a new Date object using the timestamp
+            let date = new Date(timestamp);
+
+            // Get the current date
+            let now = new Date();
+
+            // Calculate the difference in seconds
+            let diffInSeconds = Math.floor((now - date) / 1000);
+
+            if (diffInSeconds < 60) {
+                return 'Just now';
+            }
+
+            let diffInMinutes = Math.floor(diffInSeconds / 60);
+            if (diffInMinutes < 60) {
+                return `${diffInMinutes} minutes ago`;
+            }
+
+            let diffInHours = Math.floor(diffInMinutes / 60);
+            if (diffInHours < 24) {
+                return `${diffInHours} hours ago`;
+            }
+
+            let diffInDays = Math.floor(diffInHours / 24);
+            return `${diffInDays} days ago`;
+        },
+        formatted_note() {
+            if (this.note == undefined) {
+                return ''
+            }
+            return make_markdown(this.note)
+        },
+        running_note() {
+            if (this.running_note_obj == undefined) {
+                return undefined
+            }
+            // Check if running note is an object
+
+            if (typeof this.running_note_obj == 'object') {
+                return this.running_note_obj
+            }
+            let running_note_json = JSON.parse(this.running_note_obj)
+            return Object.values(running_note_json)[0];
+        },
+        note_hash(){
+            return (new Date(this.created_at_utc).getTime());
+        },
+        note_id() {
+            return 'running_note_'+this.partition_id+'_'+this.note_hash;
+        },
+        email() {
+            return this.getRunningNoteProperty('email')
+        },
+        note() {
+            return this.getRunningNoteProperty('note')
+        },
+        user() {
+            return this.getRunningNoteProperty('user')
+        },
+        href(){
+            return '/project_new/' + this.partition_id + '#' + this.note_id
+        },
+    },    
+    methods: {
+        generateCategoryLabel(categories){
+           let cat_label = '';
+           Object.values(categories).forEach(function(val){
+             if (Object.values(cat_classes).some(subCat => subCat.hasOwnProperty(val))){
+                const subCat = Object.values(cat_classes).find(subCat => subCat.hasOwnProperty(val));
+                 cat_label += '<span class="badge bg-'+subCat[val][0]+'">'+val+'&nbsp;'+'<span class="fa fa-'+ subCat[val][1] +'">'+"</span></span> ";
+             }
+           });
+           return cat_label;
+        },
+        getRunningNoteProperty(key){
+            if (this.running_note !== undefined) {
+                if (key in this.running_note) {
+                    return this.running_note[key]
+                }
+            }
+            return undefined
+        },
+        makeSelectedCardGlow(event) {
+            this.$nextTick(() => {
+                this.$refs.card_div.scrollIntoView({ block: "center" });
+                this.glowingCard = true;
+                setTimeout(() => {
+                    this.glowingCard = false;
+                }, 3000);
+            });
+        }
+    },
+    template:
+    /*html*/`
+    <div class="pb-3">
+        <div :class="['card', {glow: glowingCard}]" ref="card_div">
+            <div class="card-header" :class="mark_card_important" :id="note_id">
+                <a class="text-decoration-none" :href="'mailto:' + this.email">{{this.user}}</a>
+                <template v-if="!compact">
+                - <a @click.prevent="makeSelectedCardGlow" class="text-decoration-none" :href=this.href>
+                    <span class="todays_date">{{ formattedTimeStamp }}</span>
+                </a>
+                </template>
+                <span> - {{timestampAge}}</span>
+                <template v-if="categories">
+                - <span v-html="categories_labels"/>
+                </template>
+            </div>
+            <div class="card-body trunc-note">
+                <div class="running-note-body" v-html="formatted_note"/>
+            </div>
+        </div>
+    </div>
+    `,
+}
+
 export const vRunningNotesTab = {
-    props: ['user', 'partition_id', 'all_users', 'note_type'],
+    components: {
+        vRunningNoteSingle,
+    },
+    props: ['partition_id', 'note_type'],
     data() {
         return {
             category_filter: 'All',
@@ -29,7 +186,13 @@ export const vRunningNotesTab = {
             search_term: '',
             submitting: false,
             show_help: false,
-            cat_classes: cat_classes
+            cat_classes: cat_classes,
+            all_users: [],
+            user: {
+                user: '',
+                email: '',
+                role: ''
+            },
         }
     },
     computed: {
@@ -86,6 +249,9 @@ export const vRunningNotesTab = {
         }
     },
     methods: {
+        getDropdownPositionHelper(input, dropdownHeight) {
+            return getDropdownPosition(input, dropdownHeight)
+        },
         check_uri_hash(){
             // If the uri is a link to a specific note, we send that to each note with a props so that the correct one can glow up
             if (window.location.hash) {
@@ -108,6 +274,34 @@ export const vRunningNotesTab = {
                     this.$root.error_messages.push('Unable to fetch running notes, please try again or contact a system administrator.')
                 })
         },
+        fetchAllUsers() {
+            axios
+                .get('/api/v1/user_management/users')
+                .then(response => {
+                    let data = response.data
+                    if (data !== null) {
+                        this.all_users = data
+                    }
+                })
+                .catch(error => {
+                    console.log(error)
+                    this.error_messages.push('Unable to fetch users, please try again or contact a system administrator.')
+                })
+        },
+        fetch_current_user() {
+            axios
+                .get('/api/v1/current_user')
+                .then(response => {
+                    let data = response.data
+                    if (data !== null) {
+                        this.user = data
+                    }
+                })
+                .catch(error => {
+                    console.log(error)
+                    this.$root.error_messages.push('Unable to fetch current user, please try again or contact a system administrator.')
+                })
+        },
         openNewNoteForm() {
             let new_note_form = this.$refs.new_note_form;
             let new_note_caret = this.$refs.new_note_caret;
@@ -125,7 +319,7 @@ export const vRunningNotesTab = {
             if (textarea === undefined) {
                 return {}
             }
-            this.dropdown_position = this.$root.getDropdownPositionHelper(textarea, 100);
+            this.dropdown_position = this.getDropdownPositionHelper(textarea, 100);
         },
         setFilter(filter) {
             this.category_filter = filter
@@ -258,11 +452,13 @@ export const vRunningNotesTab = {
         }
     },
     mounted() {
-        if ( !( ["flowcell", "workset", "flowcell_ont", "project"].includes(this.note_type))) {
+        if ( !( ["flowcell", "workset", "flowcell_ont", "project", "flowcell_element"].includes(this.note_type))) {
             alert("Error: Invalid note type given, will not fetch notes")
             return
         }
         this.fetchAllRunningNotes(this.partition_id);
+        this.fetchAllUsers();
+        this.fetch_current_user();
     },
     template: /*html*/`
     <div class="card text-dark info-border mb-3 mt-3">
@@ -458,154 +654,3 @@ export const vRunningNotesTab = {
 }
 
 
-export const vRunningNoteSingle = {
-    props: ['running_note_obj', 'compact', "partition_id", "uri_hash"],
-    data: function() {
-        return {
-            glowingCard: false
-        }
-    },
-    mounted() {
-        if (this.uri_hash === '#' + this.note_id) {
-            this.make_selected_card_glow()
-        }
-    },
-    computed: {
-        categories() {
-            return this.getRunningNoteProperty('categories').map(category => category.trim())
-        },
-        categories_labels() {
-            if (this.categories == undefined) {
-                return ''
-            }
-            return this.generateCategoryLabel(this.categories)
-        },
-        mark_card_important() {
-            return this.categories.includes('Important') ? 'card-important' : ''
-        },
-        created_at_utc() {
-            return this.getRunningNoteProperty('created_at_utc')
-        },
-        formattedTimeStamp() {
-            let date = new Date(this.created_at_utc);
-            return date.toDateString() + ', ' + date.toLocaleTimeString(date);
-        },
-        timestampAge() {
-            // Get the timestamp from the running note
-            let timestamp = this.created_at_utc;
-
-            // Create a new Date object using the timestamp
-            let date = new Date(timestamp);
-
-            // Get the current date
-            let now = new Date();
-
-            // Calculate the difference in seconds
-            let diffInSeconds = Math.floor((now - date) / 1000);
-
-            if (diffInSeconds < 60) {
-                return 'Just now';
-            }
-
-            let diffInMinutes = Math.floor(diffInSeconds / 60);
-            if (diffInMinutes < 60) {
-                return `${diffInMinutes} minutes ago`;
-            }
-
-            let diffInHours = Math.floor(diffInMinutes / 60);
-            if (diffInHours < 24) {
-                return `${diffInHours} hours ago`;
-            }
-
-            let diffInDays = Math.floor(diffInHours / 24);
-            return `${diffInDays} days ago`;
-        },
-        formatted_note() {
-            if (this.note == undefined) {
-                return ''
-            }
-            return make_markdown(this.note)
-        },
-        running_note() {
-            if (this.running_note_obj == undefined) {
-                return undefined
-            }
-            // Check if running note is an object
-
-            if (typeof this.running_note_obj == 'object') {
-                return this.running_note_obj
-            }
-            let running_note_json = JSON.parse(this.running_note_obj)
-            return Object.values(running_note_json)[0];
-        },
-        note_hash(){
-            return (new Date(this.created_at_utc).getTime());
-        },
-        note_id() {
-            return 'running_note_'+this.partition_id+'_'+this.note_hash;
-        },
-        email() {
-            return this.getRunningNoteProperty('email')
-        },
-        note() {
-            return this.getRunningNoteProperty('note')
-        },
-        user() {
-            return this.getRunningNoteProperty('user')
-        },
-        href(){
-            return '/project_new/' + this.partition_id + '#' + this.note_id
-        },
-    },    
-    methods: {
-        generateCategoryLabel(categories){
-           let cat_label = '';
-           Object.values(categories).forEach(function(val){
-             if (Object.values(cat_classes).some(subCat => subCat.hasOwnProperty(val))){
-                const subCat = Object.values(cat_classes).find(subCat => subCat.hasOwnProperty(val));
-                 cat_label += '<span class="badge bg-'+subCat[val][0]+'">'+val+'&nbsp;'+'<span class="fa fa-'+ subCat[val][1] +'">'+"</span></span> ";
-             }
-           });
-           return cat_label;
-        },
-        getRunningNoteProperty(key){
-            if (this.running_note !== undefined) {
-                if (key in this.running_note) {
-                    return this.running_note[key]
-                }
-            }
-            return undefined
-        },
-        makeSelectedCardGlow(event) {
-            this.$nextTick(() => {
-                this.$refs.card_div.scrollIntoView({ block: "center" });
-                this.glowingCard = true;
-                setTimeout(() => {
-                    this.glowingCard = false;
-                }, 3000);
-            });
-        }
-    },
-    template:
-    /*html*/`
-    <div class="pb-3">
-        <div :class="['card', {glow: glowingCard}]" ref="card_div">
-            <div class="card-header" :class="mark_card_important" :id="note_id">
-                <a class="text-decoration-none" :href="'mailto:' + this.email">{{this.user}}</a>
-                <template v-if="!compact">
-                - <a @click.prevent="makeSelectedCardGlow" class="text-decoration-none" :href=this.href>
-                    <span class="todays_date">{{ formattedTimeStamp }}</span>
-                </a>
-                </template>
-                <span> - {{timestampAge}}</span>
-                <template v-if="categories">
-                - <span v-html="categories_labels"/>
-                </template>
-            </div>
-            <div class="card-body trunc-note">
-                <div class="running-note-body" v-html="formatted_note"/>
-            </div>
-        </div>
-    </div>
-    `,
-}

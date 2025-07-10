@@ -181,7 +181,7 @@ from status.statistics import (
 )
 from status.suggestion_box import SuggestionBoxDataHandler, SuggestionBoxHandler
 from status.testing import TestDataHandler
-from status.user_management import UserManagementDataHandler, UserManagementHandler
+from status.user_management import UserManagementDataHandler, UserManagementHandler, CurrentUserDataHandler
 from status.user_preferences import UserPrefPageHandler, UserPrefPageHandler_b5
 from status.util import (
     BaseHandler,
@@ -251,6 +251,7 @@ class Application(tornado.web.Application):
             ("/api/v1/charon_summary/([^/]*)$", CharonProjectHandler),
             ("/api/v1/configs/([^/]*)$", ConfigDataHandler),
             ("/api/v1/cost_calculator", PricingDataHandler),
+            ("/api/v1/current_user", CurrentUserDataHandler),
             ("/api/v1/delete_invoice", DeleteInvoiceHandler),
             tornado.web.URLSpec(
                 "/api/v1/download_images/(?P<project>[^/]+)/(?P<type>[^/]+)",

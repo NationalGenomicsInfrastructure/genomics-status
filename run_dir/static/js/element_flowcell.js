@@ -1,3 +1,4 @@
+import { vRunningNotesTab } from './running_notes_component.js'
 
 const vElementApp = {
     data() {
@@ -326,6 +327,9 @@ app.component('v-element-flowcell', {
                 <li class="nav-item">
                     <a class="nav-link" href="#tab_element_quality_graph" role="tab" data-toggle="tab">Graphs</a>
                 </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#tab_element_running_notes" role="tab" data-toggle="tab">Running Notes {{user}}</a>
+            </li>
             </ul>
         </div>
 
@@ -341,6 +345,9 @@ app.component('v-element-flowcell', {
             </div>
             <div class="tab-pane fade show" id="tab_element_quality_graph">
                 <v-element-graphs></v-element-graphs>
+            </div>
+            <div class="tab-pane fade show" ref="flowcell-running-notes-pane" role="tabpanel" aria-labelledby="flowcell-running-notes-pane-btn"  id="tab_element_running_notes">
+                <v-running-notes-tab ref="flowcell-running-notes-pane-component" :partition_id="ngi_run_id" note_type="flowcell_element"></v-running-notes-tab>
             </div>
         </div>
     </div>
@@ -1473,4 +1480,5 @@ app.component('v-element-graphs', {
     `
 });
 
+app.component('v-running-notes-tab', vRunningNotesTab)
 app.mount("#element_vue_app");

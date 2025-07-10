@@ -123,6 +123,13 @@ class RunningNotesDataHandler(SafeHandler):
                 .rows[0]
                 .value
             )
+        elif note_type == "flowcell_element":
+            connected_projects = application.cloudant.post_view(
+                                db="element_runs",
+                                ddoc="names",
+                                view="project_ids_list",
+                                key=partition_id,
+                            ).get_result()['rows'][0]['value']
         elif note_type == "workset":
             values = (
                 application.worksets_db.view("worksets/project_list", key=partition_id)
@@ -185,11 +192,12 @@ class RunningNotesDataHandler(SafeHandler):
                     created_time,
                     "creation",
                 )
-        if note_type in ["flowcell", "workset", "flowcell_ont"]:
+        if note_type in ["flowcell", "workset", "flowcell_ont", "flowcell_element"]:
             choose_link = {
                 "flowcell": "flowcells",
                 "workset": "workset",
                 "flowcell_ont": "flowcells_ont",
+                "flowcell_element": "flowcells_element",
             }
             link_id = partition_id
             if note_type == "workset":
