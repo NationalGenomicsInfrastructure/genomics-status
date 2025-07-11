@@ -90,55 +90,52 @@ class RunningNotesDataHandler(SafeHandler):
             created_time = datetime.datetime.now(datetime.timezone.utc)
         if note_type == "project":
             connected_projects = [partition_id]
-            v = application.projects_db.view("project/project_id")
-            for row in v[partition_id]:
-                doc_id = row.value
-            doc = application.projects_db.get(doc_id)
+            doc = application.cloudant.post_view(
+                db="projects",
+                ddoc="project",
+                view="project_id",
+                key=partition_id,
+                include_docs=True,
+            ).get_result()["rows"][0]["doc"]
             project_name = doc["project_name"]
             library_method = doc["details"].get("library_construction_method", "")
             proj_details = [partition_id, project_name, library_method]
             proj_coord_with_accents = ".".join(
                 doc["details"].get("project_coordinator", "").lower().split()
             )
-        elif note_type == "flowcell":
-            # get connected projects from fc db
-            flowcell_date, flowcell_id = partition_id.split("_")
-            # If the date has 8 digits, use only the last 6 for lookup
-            if len(flowcell_date) == 8:
-                flowcell_date = flowcell_date[2:]
-
-            flowcell_lookup_id = flowcell_date + "_" + flowcell_id
-
-            connected_projects = (
-                application.x_flowcells_db.view(
-                    "names/project_ids_list", key=flowcell_lookup_id
-                )
-                .rows[0]
-                .value
-            )
-        elif note_type == "flowcell_ont":
-            connected_projects = (
-                application.nanopore_runs_db.view(
-                    "names/project_ids_list", key=partition_id
-                )
-                .rows[0]
-                .value
-            )
-        elif note_type == "flowcell_element":
-            connected_projects = application.cloudant.post_view(
-                db="element_runs",
-                ddoc="names",
-                view="project_ids_list",
+        elif note_type == "workset":
+            values = application.cloudant.post_view(
+                db="worksets",
+                ddoc="worksets",
+                view="project_list",
                 key=partition_id,
             ).get_result()["rows"][0]["value"]
-        elif note_type == "workset":
-            values = (
-                application.worksets_db.view("worksets/project_list", key=partition_id)
-                .rows[0]
-                .value
-            )
             connected_projects = values["project_list"]
             workset_name = values["name"]
+        else:
+            if note_type == "flowcell":
+                # get connected projects from fc db
+                flowcell_date, flowcell_id = partition_id.split("_")
+                # If the date has 8 digits, use only the last 6 for lookup
+                if len(flowcell_date) == 8:
+                    flowcell_date = flowcell_date[2:]
+
+                flowcell_lookup_id = flowcell_date + "_" + flowcell_id
+                lookup_db = "x_flowcells"
+                lookup_key = flowcell_lookup_id
+            elif note_type == "flowcell_ont":
+                lookup_db = "nanopore_runs"
+                lookup_key = partition_id
+            elif note_type == "flowcell_element":
+                lookup_db = "element_runs"
+                lookup_key = partition_id
+            connected_projects = application.cloudant.post_view(
+                db=lookup_db,
+                ddoc="names",
+                view="project_ids_list",
+                key=lookup_key,
+            ).get_result()["rows"][0]["value"]
+
         newNote = {
             "_id": f"{partition_id}:{datetime.datetime.timestamp(created_time)}",
             "user": user,
@@ -231,7 +228,9 @@ class RunningNotesDataHandler(SafeHandler):
                     "project",
                     created_time,
                 )
-        created_note = application.running_notes_db.get(newNote["_id"])
+        created_note = application.cloudant.get_document(
+            db="running_notes", doc_id=newNote["_id"]
+        ).get_result()
         return created_note
 
     @staticmethod
