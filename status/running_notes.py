@@ -12,6 +12,7 @@ import markdown
 import nest_asyncio
 import slack_sdk
 import tornado
+from ibmcloudant.cloudant_v1 import Document
 
 from status.util import SafeHandler
 
@@ -154,7 +155,19 @@ class RunningNotesDataHandler(SafeHandler):
         gen_log.info(
             f"Running note to be created with id {newNote['_id']} by {user} at {created_time.isoformat()}"
         )
-        application.running_notes_db.save(newNote)
+
+        doc = Document().from_dict(newNote)
+
+        response = application.cloudant.post_document(
+            db="running_notes", document=doc
+        ).get_result()
+
+        if not response.get("ok"):
+            gen_log.error(
+                f"Failed to create running note with id {newNote['_id']} by {user} at {created_time.isoformat()}"
+            )
+            raise Exception(f"Failed to create running note for {partition_id}")
+
         #### Check and send mail to tagged users (for project running notes as flowcell and workset notes are copied over)
         if note_type == "project":
             pattern = re.compile("(@)([a-zA-Z0-9.-]+)")
