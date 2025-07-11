@@ -255,9 +255,10 @@ class RunningNotesDataHandler(SafeHandler):
                 )
             )
         )
-        for row in application.gs_users_db.view("authorized/users"):
-            if row.key != "genstat_defaults":
-                view_result[row.key.split("@")[0]] = row.key
+        for row in application.cloudant.post_view(
+            db="gs_users", ddoc="authorized", view="users"
+        ).get_result()["rows"]:
+            view_result[row["key"].split("@")[0]] = row["key"]
         category = ""
         if categories:
             category = " - " + ", ".join(categories)
@@ -390,11 +391,16 @@ class LatestStickyNoteHandler(SafeHandler):
 
     def get(self, partitionid):
         self.set_header("Content-type", "application/json")
-        latest_sticky_doc = self.application.running_notes_db.view(
-            "note_types/sticky_notes", partition=partitionid, descending=True, limit=1
-        ).rows
+        latest_sticky_doc = self.application.cloudant.post_partition_view(
+            db="running_notes",
+            ddoc="note_types",
+            view="sticky_notes",
+            partition_key=partitionid,
+            descending=True,
+            limit=1,
+        ).get_result()["rows"]
         if latest_sticky_doc:
-            latest_sticky_note = latest_sticky_doc[0].value
+            latest_sticky_note = latest_sticky_doc[0]["value"]
             self.write({latest_sticky_note["created_at_utc"]: latest_sticky_note})
 
 
@@ -432,11 +438,16 @@ class LatestRunningNoteHandler(SafeHandler):
     @staticmethod
     def get_latest_running_note(app, note_type, partition_id):
         latest_note = {}
-        view = app.running_notes_db.view(
-            f"latest_note_previews/{note_type}", reduce=True
-        )
-        if view[partition_id].rows:
-            note = view[partition_id].rows[0].value
+        view = app.cloudant.post_view(
+            db="running_notes",
+            ddoc="latest_note_previews",
+            view=note_type,
+            start_key=partition_id,
+            end_key=partition_id,
+            reduce=True,
+        ).get_result()
+        if view["rows"]:
+            note = view["rows"][0]["value"]
             latest_note = {note["created_at_utc"]: note}
         return latest_note
 
