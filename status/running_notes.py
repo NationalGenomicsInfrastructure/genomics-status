@@ -25,11 +25,11 @@ class RunningNotesDataHandler(SafeHandler):
     def get(self, partitionid):
         self.set_header("Content-type", "application/json")
         running_notes_json = {}
-        running_notes_docs = self.application.running_notes_db.view(
-            f"_partition/{partitionid}/_all_docs", include_docs=True
-        )
+        running_notes_docs = self.application.cloudant.post_partition_all_docs(
+            db="running_notes", partition_key=partitionid, include_docs=True
+        ).get_result()["rows"]
         for row in running_notes_docs:
-            running_note = row.doc
+            running_note = row["doc"]
             note_contents = {}
             for item in [
                 "user",
