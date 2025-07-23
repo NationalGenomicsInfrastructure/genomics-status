@@ -150,7 +150,7 @@ class WorksetDataHandler(SafeHandler):
                 key=workset,
             )
             .get_result()
-            .get("rows",[])
+            .get("rows", [])
         )
         result = {}
         for row in ws_view:
