@@ -20,11 +20,12 @@ class UserPrefPageHandler(SafeHandler):
         option = json.loads(self.request.body)
         doc = ph.get_user_details(self.application, self.get_current_user().email)
         doc["notification_preferences"] = option["notification_preferences"]
-        try:
-            self.application.gs_users_db.save(doc)
-        except Exception as e:
+        response = self.application.cloudant.put_document(
+                db="gs_users", doc_id=doc["_id"], document=doc
+            ).get_result()
+        if not response.get("ok", False):
             self.set_status(400)
-            self.write(e.message)
+            self.write("Error: Could not save preferences")
 
         self.set_status(201)
         self.write({"success": "success!!"})

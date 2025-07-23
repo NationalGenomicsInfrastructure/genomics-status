@@ -31,14 +31,18 @@ class UserManagementDataHandler(SafeHandler):
         if self.get_current_user().is_admin:
             add_roles = True
 
-        for row in self.application.gs_users_db.view("authorized/info"):
-            view_result[row.key] = {
-                "initials": row.value.get("initials", ""),
-                "name": row.value.get("name", ""),
+        for row in self.application.cloudant.post_view(
+            db="gs_users",
+            ddoc="authorized",
+            view="info"
+        ).get_result()["rows"]:
+            view_result[row["key"]] = {
+                "initials": row["value"].get("initials", ""),
+                "name": row["value"].get("name", ""),
             }
 
             if add_roles:
-                view_result[row.key]["roles"] = row.value.get("roles", [])
+                view_result[row["key"]]["roles"] = row["value"].get("roles", [])
 
         self.write(view_result)
 
@@ -46,44 +50,56 @@ class UserManagementDataHandler(SafeHandler):
         data = json.loads(self.request.body)
         userToChange = data["username"]
 
-        view_result = self.application.gs_users_db.view(
-            "authorized/users", key=userToChange
-        )
-        idtoChange = view_result.rows[0].value if view_result.rows else ""
+        view_result = self.application.cloudant.post_view(
+            db="gs_users",
+            ddoc="authorized",
+            view="users",
+            key=userToChange,
+            include_docs=True
+        ).get_result()["rows"]
+        user_doc = view_result[0]["doc"] if view_result else {}
         action = self.get_argument("action")
         if self.get_current_user().is_admin:
             if action == "create":
-                if idtoChange:
+                if user_doc:
                     self.set_status(409)
                     self.write("User already exists!")
                 else:
-                    try:
-                        self.application.gs_users_db.save(data)
-                    except Exception as e:
+                    response = self.application.cloudant.post_document(
+                        db="gs_users",
+                        document=data
+                    ).get_result()
+                    if not response.get("ok", False):
                         self.set_status(400)
-                        self.finish(e.message)
+                        self.finish("User creation failed!")
 
                     self.set_status(201)
                     self.write({"success": "success!!"})
             else:
-                user_doc = self.application.gs_users_db.get(idtoChange)
-                if action == "modify" and idtoChange:
+                if action == "modify" and user_doc:
                     user_doc["roles"] = data["roles"]
                     user_doc["name"] = data["name"]
                     user_doc["initials"] = data["initials"]
-                    try:
-                        self.application.gs_users_db.save(user_doc)
-                    except Exception as e:
+                    response = self.application.cloudant.put_document(
+                        db="gs_users",
+                        document=user_doc,
+                        doc_id=user_doc["_id"],
+                    )
+                    if not response.get("ok", False):
                         self.set_status(400)
-                        self.finish(e.message)
+                        self.finish("User modification failed!")
 
                     self.set_status(201)
                     self.write({"success": "success!!"})
 
-                elif action == "delete" and idtoChange:
+                elif action == "delete" and user_doc:
                     try:
-                        self.application.gs_users_db.delete(user_doc)
-                    except Exception as e:
+                        response = self.application.cloudant.delete_document(
+                            db="gs_users",
+                            doc_id=user_doc["_id"],
+                            rev=user_doc["_rev"]
+                        )
+                    except ibm_cloud_sdk_core.ApiException as e:
                         self.set_status(400)
                         self.finish(e.message)
 

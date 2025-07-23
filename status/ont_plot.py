@@ -19,12 +19,15 @@ class ONTFlowcellYieldHandler(SafeHandler):
             first_term, second_term = search_string.split("-")
 
         docs = [
-            x.value
-            for x in self.application.nanopore_runs_db.view("info/all_stats")[
-                "20" + first_term : "20" + second_term + "ZZZZ"
-            ].rows
+            x["value"]
+            for x in self.application.cloudant.post_view(
+                db="nanopore_runs",
+                ddoc="info",
+                view="all_stats",
+                start_key="20" + first_term,
+                end_key="20" + second_term + "ZZZZ",
+            ).get_result()["rows"]
         ]
-
         self.set_header("Content-type", "application/json")
         self.write(json.dumps(docs))
 

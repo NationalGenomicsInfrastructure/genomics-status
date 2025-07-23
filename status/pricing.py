@@ -38,25 +38,35 @@ class PricingBaseHandler(SafeHandler):
     # _____________________________ FETCH METHODS _____________________________
 
     def fetch_published_doc_version(self, version=None):
-        db = self.application.cost_calculator_db
         if version is not None:
-            rows = db.view(
-                "entire_document/published_by_version",
-                descending=True,
-                key=version,
-                limit=1,
-            ).rows
+            rows = self.application.cloudant.post_view(
+                    db="cost_calculator",
+                    ddoc="entire_document",
+                    view="published_by_version",
+                    descending=True,
+                    key=version,
+            ).get_result()["rows"]
         else:
-            rows = db.view(
-                "entire_document/published_by_version", descending=True, limit=1
-            ).rows
-        doc = rows[0].value
+            rows = self.application.cloudant.post_view(
+                    db="cost_calculator",
+                    ddoc="entire_document",
+                    view="published_by_version",
+                    descending=True,
+                    limit=1
+            ).get_result()["rows"]
+        doc = rows[0]["value"]
         return doc
 
     def fetch_latest_doc(self):
         db = self.application.cost_calculator_db
-        curr_rows = db.view("entire_document/by_version", descending=True, limit=1).rows
-        curr_doc = curr_rows[0].value
+        curr_rows = self.application.cloudant.post_view(
+            db="cost_calculator",
+            ddoc="entire_document",
+            view="by_version",
+            descending=True,
+            limit=1,
+        ).get_result()["rows"]
+        curr_doc = curr_rows[0]["value"]
         return curr_doc
 
     # ____________________________ UPDATE DOC HELPER METHODS ____________________
@@ -83,11 +93,14 @@ class PricingDateToVersionDataHandler(PricingBaseHandler):
     """
 
     def get(self):
-        cc_view = self.application.cost_calculator_db.view(
-            "version_info/by_date", descending=False
-        )
+        cc_view_rows = self.application.cloudant.post_view(
+            db="cost_calculator",
+            ddoc="version_info",
+            view="by_date",
+            descending=False,
+        ).get_result()["rows"]
 
-        self.write(json.dumps(cc_view.rows))
+        self.write(json.dumps(cc_view_rows))
 
 
 class PricingExchangeRatesDataHandler(PricingBaseHandler):
@@ -121,17 +134,19 @@ class PricingExchangeRatesDataHandler(PricingBaseHandler):
             dt = datetime.datetime.now()
 
         str_format_date = dt.strftime("%Y-%m-%d")
-        view = self.application.pricing_exchange_rates_db.view(
-            "entire_document/by_date",
-            startkey=str_format_date,
+        view_row = self.application.cloudant.post_view(
+            db="pricing_exchange_rates",
+            ddoc="entire_document",
+            view="by_date",
+            start_key=str_format_date,
             descending=True,
             limit=1,
-        )
+        ).get_result()["rows"]
 
         result = {}
-        result["USD_in_SEK"] = view.rows[0].value["USD_in_SEK"]
-        result["EUR_in_SEK"] = view.rows[0].value["EUR_in_SEK"]
-        result["Issued at"] = view.rows[0].value["Issued at"]
+        result["USD_in_SEK"] = view_row[0]["value"]["USD_in_SEK"]
+        result["EUR_in_SEK"] = view_row[0]["value"]["EUR_in_SEK"]
+        result["Issued at"] = view_row[0]["value"]["Issued at"]
         return result
 
     def get(self):
@@ -438,8 +453,9 @@ class PricingReassignLockDataHandler(PricingBaseHandler):
         doc["Lock Info"] = lock_info
         doc = self._update_last_modified(doc)
 
-        cc_db = self.application.cost_calculator_db
-        cc_db.save(doc)
+        self.application.cloudant.put_document(
+            db="cost_calculator", doc_id=doc["_id"], document=doc
+        ).get_result()
         self.set_header("Content-type", "application/json")
         self.write({"message": "Lock info updated"})
 
@@ -509,8 +525,10 @@ class PricingDraftDataHandler(PricingBaseHandler):
 
         self._update_last_modified(doc)
 
-        cc_db = self.application.cost_calculator_db
-        cc_db.save(doc)
+        self.application.cloudant.post_document(
+            db="cost_calculator",
+            document=doc,
+        ).get_result()
         self.set_header("Content-type", "application/json")
         self.write({"message": "Draft created"})
 
@@ -559,8 +577,9 @@ class PricingDraftDataHandler(PricingBaseHandler):
 
         self._update_last_modified(latest_doc)
 
-        cc_db = self.application.cost_calculator_db
-        cc_db.save(latest_doc)
+        self.application.cloudant.put_document(
+            db="cost_calculator", doc_id=latest_doc["_id"], document=latest_doc
+        ).get_result()
         msg = "Draft successfully saved at {}".format(
             datetime.datetime.now().strftime("%H:%M:%S")
         )
@@ -599,8 +618,9 @@ class PricingDraftDataHandler(PricingBaseHandler):
                     "Error: Attempting to delete a draft locked by someone else."
                 )
 
-        cc_db = self.application.cost_calculator_db
-        cc_db.delete(latest_doc)
+        self.application.cloudant.delete_document(
+            db="cost_calculator", doc_id=latest_doc["_id"], rev=latest_doc["_rev"]
+        ).get_result()
         msg = "Draft successfully deleted at {}".format(
             datetime.datetime.now().strftime("%H:%M:%S")
         )
@@ -668,8 +688,10 @@ class PricingPublishDataHandler(PricingBaseHandler):
         doc["Issued by user email"] = user_email
         doc["Issued at"] = datetime.datetime.now().isoformat()
 
-        cc_db = self.application.cost_calculator_db
-        cc_db.save(doc)
+        self.application.cloudant.post_document(
+            db="cost_calculator",
+            document=doc,
+        ).get_result()
         self.write({"message": "New cost calculator published"})
 
 
@@ -733,13 +755,17 @@ class AgreementsDBHandler(SafeHandler):
     # _____________________________ FETCH METHODS _____________________________
 
     def fetch_agreement(self, project_id):
-        db = self.application.agreements_db
-        rows = db.view(
-            "entire_document/project_id", descending=True, key=project_id, limit=1
-        ).rows
+        rows = self.application.cloudant.post_view(
+            db="agreements",
+            ddoc="entire_document",
+            view="project_id",
+            descending=True,
+            key=project_id,
+            limit=1,
+        ).get_result()["rows"]
         doc = {}
         if len(rows) > 0:
-            doc = rows[0].value
+            doc = rows[0]["value"]
         return doc
 
     # ____________________________ UPDATE DOC METHODS ____________________
@@ -759,10 +785,10 @@ class AgreementsDBHandler(SafeHandler):
             doc["signed"] = timestamp
             doc["signed_by"] = self.get_current_user().name
             doc["signed_at"] = int(datetime.datetime.now().timestamp() * 1000)
-
-        db = self.application.agreements_db
         # probably add a try-except here in the future
-        db.save(doc)
+        self.application.cloudant.put_document(
+            db="agreements", doc_id=doc["_id"], document=doc
+        ).get_result()
 
 
 class GenerateQuoteHandler(AgreementsDBHandler):
@@ -824,8 +850,8 @@ class GenerateQuoteHandler(AgreementsDBHandler):
 
         if "agreement_summary" not in quote_input.keys():
             default_agreement_summary = (
-                AgreementTemplateTextHandler.fetch_latest_agreement_doc(
-                    self.application.agreement_templates_db
+                AgreementTemplateTextHandler.fetch_latest_agreement_template_doc(
+                    self.application.cloudant
                 )
             )
             quote_input["agreement_summary"] = default_agreement_summary[
@@ -901,15 +927,21 @@ class AgreementTemplateTextHandler(SafeHandler):
     """
 
     def get(self):
-        response = AgreementTemplateTextHandler.fetch_latest_agreement_doc(
-            self.application.agreement_templates_db
+        response = AgreementTemplateTextHandler.fetch_latest_agreement_template_doc(
+            self.application.cloudant
         )
         self.set_header("Content-type", "application/json")
         self.write(json.dumps(response))
 
-    def fetch_latest_agreement_doc(db):
-        curr_rows = db.view("entire_document/by_version", descending=True, limit=1).rows
-        curr_doc = curr_rows[0].value
+    def fetch_latest_agreement_template_doc(db_conn):
+        curr_rows = db_conn.post_view(
+            db="agreement_templates",
+            ddoc="entire_document",
+            view="by_version",
+            descending=True,
+            limit=1,
+        ).get_result()["rows"]
+        curr_doc = curr_rows[0]["value"]
         curr_doc.pop("_id")
         curr_doc.pop("_rev")
         return curr_doc
