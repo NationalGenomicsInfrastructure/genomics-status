@@ -40,25 +40,24 @@ class PricingBaseHandler(SafeHandler):
     def fetch_published_doc_version(self, version=None):
         if version is not None:
             rows = self.application.cloudant.post_view(
-                    db="cost_calculator",
-                    ddoc="entire_document",
-                    view="published_by_version",
-                    descending=True,
-                    key=version,
+                db="cost_calculator",
+                ddoc="entire_document",
+                view="published_by_version",
+                descending=True,
+                key=version,
             ).get_result()["rows"]
         else:
             rows = self.application.cloudant.post_view(
-                    db="cost_calculator",
-                    ddoc="entire_document",
-                    view="published_by_version",
-                    descending=True,
-                    limit=1
+                db="cost_calculator",
+                ddoc="entire_document",
+                view="published_by_version",
+                descending=True,
+                limit=1,
             ).get_result()["rows"]
         doc = rows[0]["value"]
         return doc
 
     def fetch_latest_doc(self):
-        db = self.application.cost_calculator_db
         curr_rows = self.application.cloudant.post_view(
             db="cost_calculator",
             ddoc="entire_document",

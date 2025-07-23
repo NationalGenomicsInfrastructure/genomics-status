@@ -21,12 +21,16 @@ class WorksetsDataHandler(SafeHandler):
 
     def get(self):
         self.set_header("Content-type", "application/json")
-        ws_view = self.application.cloudant.post_view(
-            db="worksets",
-            ddoc="worksets",
-            view="summary",
-            descending=True,
-        ).get_result().get("rows", {})
+        ws_view = (
+            self.application.cloudant.post_view(
+                db="worksets",
+                ddoc="worksets",
+                view="summary",
+                descending=True,
+            )
+            .get_result()
+            .get("rows", [])
+        )
         result = {}
         for row in ws_view:
             result[row["key"]] = row["value"]
@@ -43,12 +47,16 @@ class WorksetsHandler(SafeHandler):
     def worksets_data(self, all=False):
         result = {}
         half_a_year_ago = datetime.datetime.now() - relativedelta(months=6)
-        ws_view = self.application.cloudant.post_view(
-            db="worksets",
-            ddoc="worksets",
-            view="summary",
-            descending=True,
-        ).get_result().get("rows", {})
+        ws_view = (
+            self.application.cloudant.post_view(
+                db="worksets",
+                ddoc="worksets",
+                view="summary",
+                descending=True,
+            )
+            .get_result()
+            .get("rows", [])
+        )
         workset_keys = {}
 
         for row in ws_view:
@@ -69,14 +77,18 @@ class WorksetsHandler(SafeHandler):
                     continue
 
         # Get Latest running note
-        notes = self.application.cloudant.post_view(
-            db="running_notes",
-            ddoc="latest_note_previews",
-            view="workset",
-            reduce=True,
-            group=True,
-            keys=list(workset_keys.keys()),
-        ).get_result().get("rows", {})
+        notes = (
+            self.application.cloudant.post_view(
+                db="running_notes",
+                ddoc="latest_note_previews",
+                view="workset",
+                reduce=True,
+                group=True,
+                keys=list(workset_keys.keys()),
+            )
+            .get_result()
+            .get("rows", [])
+        )
         for row in notes:
             result[workset_keys[row["key"]]]["latest_running_note"] = {
                 row["value"]["created_at_utc"]: row["value"]
@@ -129,13 +141,17 @@ class WorksetDataHandler(SafeHandler):
 
     @staticmethod
     def get_workset_data(application, workset):
-        ws_view = application.cloudant.post_view(
-            db="worksets",
-            ddoc="worksets",
-            view="name",
-            descending=True,
-            key=workset,
-        ).get_result().get("rows", {})
+        ws_view = (
+            application.cloudant.post_view(
+                db="worksets",
+                ddoc="worksets",
+                view="name",
+                descending=True,
+                key=workset,
+            )
+            .get_result()
+            .get("rows",[])
+        )
         result = {}
         for row in ws_view:
             result[row["key"]] = row["value"]
@@ -143,12 +159,16 @@ class WorksetDataHandler(SafeHandler):
             result[row["key"]].pop("_rev", None)
         if not result:
             # Check if the lims id was used
-            ws_view = application.cloudant.post_view(
-                db="worksets",
-                ddoc="worksets",
-                view="lims_id",
-                key=workset,
-            ).get_result().get("rows", {})
+            ws_view = (
+                application.cloudant.post_view(
+                    db="worksets",
+                    ddoc="worksets",
+                    view="lims_id",
+                    key=workset,
+                )
+                .get_result()
+                .get("rows", [])
+            )
             for row in ws_view:
                 result[row["key"]] = row["value"]
                 result[row["key"]].pop("_id", None)
@@ -169,19 +189,27 @@ class ClosedWorksetsHandler(SafeHandler):
     def get(self):
         result = {}
         a_year_ago = datetime.datetime.now() - relativedelta(years=1)
-        project_dates_view = self.application.cloudant.post_view(
-            db="projects",
-            ddoc="project",
-            view="id_name_dates",
-            descending=True,
-        ).get_result().get("rows", {})
+        project_dates_view = (
+            self.application.cloudant.post_view(
+                db="projects",
+                ddoc="project",
+                view="id_name_dates",
+                descending=True,
+            )
+            .get_result()
+            .get("rows", [])
+        )
         project_dates = dict((row["key"], row["value"]) for row in project_dates_view)
-        ws_view = self.application.cloudant.post_view(
-            db="worksets",
-            ddoc="worksets",
-            view="summary",
-            descending=True,
-        ).get_result().get("rows", {})
+        ws_view = (
+            self.application.cloudant.post_view(
+                db="worksets",
+                ddoc="worksets",
+                view="summary",
+                descending=True,
+            )
+            .get_result()
+            .get("rows", [])
+        )
         for row in ws_view:
             if row["value"].get("date_run"):
                 if parse(row["value"]["date_run"]) <= a_year_ago:
@@ -244,12 +272,16 @@ class WorksetSearchHandler(SafeHandler):
             WorksetSearchHandler.cached_list is None
             or WorksetSearchHandler.last_fetched < t_threshold
         ):
-            ws_view = self.application.cloudant.post_view(
-                db="worksets",
-                ddoc="worksets",
-                view="only_name",
-                descending=True,
-            ).get_result().get("rows", {})
+            ws_view = (
+                self.application.cloudant.post_view(
+                    db="worksets",
+                    ddoc="worksets",
+                    view="only_name",
+                    descending=True,
+                )
+                .get_result()
+                .get("rows", [])
+            )
             WorksetSearchHandler.cached_list = [row["key"] for row in ws_view]
             WorksetSearchHandler.last_fetched = datetime.datetime.now()
 

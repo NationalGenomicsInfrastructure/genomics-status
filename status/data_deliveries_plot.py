@@ -19,9 +19,7 @@ class DataDeliveryHandler(SafeHandler):
             end_date = today.isoformat()
 
         docs = self.application.cloudant.post_view(
-            db="projects",
-            ddoc="project",
-            view="staged_files_sum"
+            db="projects", ddoc="project", view="staged_files_sum"
         ).get_result()["rows"]
         # Projects without close date are filtered out
         data = [

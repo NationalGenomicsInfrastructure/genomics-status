@@ -14,9 +14,7 @@ def recover_logs(handler, search_string=None, inst_type="bravo"):
             return [
                 row["value"]
                 for row in handler.application.cloudant.post_view(
-                    db="instrument_logs",
-                    ddoc="time",
-                    view="last_week"
+                    db="instrument_logs", ddoc="time", view="last_week"
                 ).get_result()["rows"]
             ]
 
@@ -42,9 +40,7 @@ def recover_logs(handler, search_string=None, inst_type="bravo"):
         instruments_list = {
             row["key"]: row["value"]
             for row in handler.application.cloudant.post_view(
-                db="instruments",
-                ddoc="info",
-                view="id_to_name"
+                db="instruments", ddoc="info", view="id_to_name"
             ).get_result()["rows"]
         }
         # by default, return all logs from the last week
@@ -127,10 +123,9 @@ class InstrumentNamesHandler(SafeHandler):
     def get(self):
         self.set_header("Content-type", "application/json")
         self.write(
-            json.dumps(self.application.cloudant.post_view(
-                        db="instruments",
-                        ddoc="info",
-                        view="id_to_name"
-                        ).get_result()["rows"]
+            json.dumps(
+                self.application.cloudant.post_view(
+                    db="instruments", ddoc="info", view="id_to_name"
+                ).get_result()["rows"]
             )
         )

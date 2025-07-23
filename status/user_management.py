@@ -1,5 +1,7 @@
 import json
 
+from ibm_cloud_sdk_core.api_exception import ApiException
+
 from status.util import SafeHandler
 
 
@@ -32,9 +34,7 @@ class UserManagementDataHandler(SafeHandler):
             add_roles = True
 
         for row in self.application.cloudant.post_view(
-            db="gs_users",
-            ddoc="authorized",
-            view="info"
+            db="gs_users", ddoc="authorized", view="info"
         ).get_result()["rows"]:
             view_result[row["key"]] = {
                 "initials": row["value"].get("initials", ""),
@@ -55,7 +55,7 @@ class UserManagementDataHandler(SafeHandler):
             ddoc="authorized",
             view="users",
             key=userToChange,
-            include_docs=True
+            include_docs=True,
         ).get_result()["rows"]
         user_doc = view_result[0]["doc"] if view_result else {}
         action = self.get_argument("action")
@@ -66,8 +66,7 @@ class UserManagementDataHandler(SafeHandler):
                     self.write("User already exists!")
                 else:
                     response = self.application.cloudant.post_document(
-                        db="gs_users",
-                        document=data
+                        db="gs_users", document=data
                     ).get_result()
                     if not response.get("ok", False):
                         self.set_status(400)
@@ -95,11 +94,9 @@ class UserManagementDataHandler(SafeHandler):
                 elif action == "delete" and user_doc:
                     try:
                         response = self.application.cloudant.delete_document(
-                            db="gs_users",
-                            doc_id=user_doc["_id"],
-                            rev=user_doc["_rev"]
+                            db="gs_users", doc_id=user_doc["_id"], rev=user_doc["_rev"]
                         )
-                    except ibm_cloud_sdk_core.ApiException as e:
+                    except ApiException as e:
                         self.set_status(400)
                         self.finish(e.message)
 
