@@ -38,7 +38,7 @@ class PricingBaseHandler(SafeHandler):
     # _____________________________ FETCH METHODS _____________________________
 
     def fetch_published_doc_version(self, version=None):
-       # If version is not specified (key=None), it fetches the latest published document
+        # If version is not specified (key=None), it fetches the latest published document
         rows = self.application.cloudant.post_view(
             db="cost_calculator",
             ddoc="entire_document",
