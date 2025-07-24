@@ -38,22 +38,15 @@ class PricingBaseHandler(SafeHandler):
     # _____________________________ FETCH METHODS _____________________________
 
     def fetch_published_doc_version(self, version=None):
-        if version is not None:
-            rows = self.application.cloudant.post_view(
-                db="cost_calculator",
-                ddoc="entire_document",
-                view="published_by_version",
-                descending=True,
-                key=version,
-            ).get_result()["rows"]
-        else:
-            rows = self.application.cloudant.post_view(
-                db="cost_calculator",
-                ddoc="entire_document",
-                view="published_by_version",
-                descending=True,
-                limit=1,
-            ).get_result()["rows"]
+       # If version is not specified (key=None), it fetches the latest published document
+        rows = self.application.cloudant.post_view(
+            db="cost_calculator",
+            ddoc="entire_document",
+            view="published_by_version",
+            descending=True,
+            key=version,
+            limit=1,
+        ).get_result()["rows"]
         doc = rows[0]["value"]
         return doc
 
