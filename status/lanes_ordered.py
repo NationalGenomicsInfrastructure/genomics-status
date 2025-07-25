@@ -28,18 +28,28 @@ class LanesOrderedDataHandler(SafeHandler):
 
         if key_begin:
             key_end = key_begin + ["ZZZ"]
-            view = self.application.projects_db.view(
-                "project/status_lanes_ordered", group_level=group_level, reduce=True
-            )[key_begin:key_end]
+            view = self.application.cloudant.post_view(
+                db="projects",
+                ddoc="project",
+                view="status_lanes_ordered",
+                group_level=group_level,
+                reduce=True,
+                start_key=key_begin,
+                end_key=key_end,
+            ).get_result()["rows"]
         else:
-            view = self.application.projects_db.view(
-                "project/status_lanes_ordered", group_level=group_level, reduce=True
-            )
+            view = self.application.cloudant.post_view(
+                db="projects",
+                ddoc="project",
+                view="status_lanes_ordered",
+                group_level=group_level,
+                reduce=True,
+            ).get_result()["rows"]
 
         # Create a dictionary with the data
         data = {
             item["key"][group_level - 1]: {"value": "{:0.2f}".format(item["value"])}
-            for item in view.rows
+            for item in view
             if item["key"][group_level - 1] not in ["closed", "aborted"]
         }
 
