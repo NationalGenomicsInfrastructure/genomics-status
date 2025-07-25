@@ -43,10 +43,7 @@ from status.flowcell import (
     ONTToulligQCReportHandler,
 )
 from status.flowcells import (
-    FlowcellDemultiplexHandler,
     FlowcellLinksDataHandler,
-    FlowcellQ30Handler,
-    FlowcellQCHandler,
     FlowcellsDataHandler,
     FlowcellSearchHandler,
     FlowcellsHandler,
@@ -268,9 +265,6 @@ class Application(tornado.web.Application):
             ("/api/v1/flowcells", FlowcellsDataHandler),
             ("/api/v1/flowcell_info2/([^/]*)$", FlowcellsInfoDataHandler),
             ("/api/v1/flowcell_info/([^/]*)$", OldFlowcellsInfoDataHandler),
-            ("/api/v1/flowcell_qc/([^/]*)$", FlowcellQCHandler),
-            ("/api/v1/flowcell_demultiplex/([^/]*)$", FlowcellDemultiplexHandler),
-            ("/api/v1/flowcell_q30/([^/]*)$", FlowcellQ30Handler),
             ("/api/v1/flowcell_links/([^/]*)$", FlowcellLinksDataHandler),
             ("/api/v1/flowcell_search/([^/]*)$", FlowcellSearchHandler),
             ("/api/v1/flowcell_yield/([^/]*)$", DataFlowcellYieldHandler),

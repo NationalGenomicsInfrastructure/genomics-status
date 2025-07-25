@@ -36,38 +36,38 @@
             {% for onefc in element_fcs %}
                 <tr>
                     <td class="ngi_run_id">
-                        <a class="text-decoration-none" href="/flowcells_element/{{ onefc.key }}">{{ onefc.key }}</a>
-                        {% if onefc.value.get('Outcome') == 'OutcomeCompleted' %}
+                        <a class="text-decoration-none" href="/flowcells_element/{{ onefc['key'] }}">{{ onefc['key'] }}</a>
+                        {% if onefc['value'].get('Outcome') == 'OutcomeCompleted' %}
                             <abbr title="Run completed"><span class="fa fa-check-circle"></span></abbr>
-                        {% elif onefc.value.get('Outcome') == 'ongoing' %}
+                        {% elif onefc['value'].get('Outcome') == 'ongoing' %}
                             <abbr title="Ongoing"><span class="fa fa-hourglass-half"></span></abbr>
-                        {% elif onefc.value.get('Outcome') == 'OutcomeStopped' %}
+                        {% elif onefc['value'].get('Outcome') == 'OutcomeStopped' %}
                             <abbr title="Run stopped"><span class="fa fa-file-dashed-line"></span></abbr>
-                        {% elif onefc.value.get('Outcome') == 'OutcomeFailed' %}
+                        {% elif onefc['value'].get('Outcome') == 'OutcomeFailed' %}
                            <abbr title="Run failed"><span class="fa fa-file-dashed-line"></span></abbr>
                         {% end %}
                     </td>
-                    <td class="start_date">{{ onefc.key[:8] }}</td>
+                    <td class="start_date">{{ onefc['key'][:8] }}</td>
                     <td class="run_type">
-                        {{ onefc.value.get("RunType") }}
+                        {{ onefc['value'].get("RunType") }}
                     </td>
                     <td class="side">
-                        {{ onefc.value.get("Side") }}
+                        {{ onefc['value'].get("Side") }}
                     </td>
                     <td class="cycles">
-                        {{ onefc.value.get("Cycles") }}
+                        {{ onefc['value'].get("Cycles") }}
                     </td>
                     <td class="throughput_selection">
-                        {{ onefc.value.get("ThroughputSelection") }}
+                        {{ onefc['value'].get("ThroughputSelection") }}
                     </td>
                     <td class="kit_configuration">
-                        {{ onefc.value.get("KitConfiguration") }}
+                        {{ onefc['value'].get("KitConfiguration") }}
                     </td>
                     <td class="chemistry_version">
-                        {{ onefc.value.get("ChemistryVersion") }}
+                        {{ onefc['value'].get("ChemistryVersion") }}
                     </td>
                     <td class="outcome text-center">
-                        {{ onefc.value.get("Outcome") }}
+                        {{ onefc['value'].get("Outcome") }}
                     </td>
                 </tr>
             {% end %}

@@ -14,17 +14,18 @@ class SensorpushBaseHandler(SafeHandler):
 
         # Fetch all sensor names from the start day
         # If a sensor is missing for that date, it won't be fetched
-        sensor_id_view = self.application.sensorpush_db.view(
-            "sensor_id/by_date", descending=True
-        )
-        sensors = [row.value for row in sensor_id_view[start_time_str]]
+        sensor_id_view = self.application.cloudant.post_view(
+            db="sensorpush",
+            ddoc="sensor_id",
+            view="by_date",
+            descending=True,
+            key=start_time_str,
+        ).get_result()["rows"]
+        sensors = [row["value"] for row in sensor_id_view]
         if sensors == []:
             return {}
 
         # Fetch samples from 1 month ago for each sensor
-        samples_view = self.application.sensorpush_db.view(
-            "entire_document/by_sensor_id_and_date"
-        )
         sensor_data = {}
         for sensor_original in sorted(sensors):
             # Make it more suitable to use as a selector.
@@ -40,11 +41,16 @@ class SensorpushBaseHandler(SafeHandler):
                 "intervals_lower": [],
                 "intervals_higher": [],
             }
-            for sensor_daily_row in samples_view[
-                [sensor_original, start_time_str] : [sensor_original, "9999"]
-            ]:
-                _, timestamp = sensor_daily_row.key
-                doc = sensor_daily_row.value
+            samples_view = self.application.cloudant.post_view(
+                db="sensorpush",
+                ddoc="entire_document",
+                view="by_sensor_id_and_date",
+                start_key=[sensor_original, start_time_str],
+                end_key=[sensor_original, "9999"],
+            ).get_result()["rows"]
+            for sensor_daily_row in samples_view:
+                _, timestamp = sensor_daily_row["key"]
+                doc = sensor_daily_row["value"]
                 sensor_data[sensor]["samples"] += doc["saved_samples"]
                 sensor_data[sensor]["intervals_lower"] += doc["intervals_lower"]
                 sensor_data[sensor]["intervals_higher"] += doc["intervals_higher"]

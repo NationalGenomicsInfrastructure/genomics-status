@@ -35,6 +35,39 @@ control_names = [
 ]
 
 
+def get_proj_details(db_conn, project_id):
+    proj_doc = db_conn.post_view(
+        db="projects",
+        ddoc="project",
+        view="project_id",
+        key=project_id,
+        include_docs=True,
+    ).get_result()["rows"][0]["doc"]
+    proj_details = {}
+    proj_details["library_type"] = proj_doc["details"].get(
+        "library_construction_method", ""
+    )
+    proj_details["sequencing_platform"] = proj_doc["details"].get(
+        "sequencing_platform", ""
+    )
+    proj_details["flowcell"] = proj_doc["details"].get("flowcell", "")
+    queued_date = proj_doc["details"].get("queued", "")
+    if not queued_date:
+        queued_date = proj_doc.get("project_summary", {}).get("queued", "")
+    proj_details["queued_date"] = queued_date
+    proj_details["setup"] = proj_doc["details"].get("sequencing_setup", "")
+    proj_details["lanes"] = proj_doc["details"].get(
+        "sequence_units_ordered_(lanes)", ""
+    )
+    proj_details["flowcell_option"] = proj_doc["details"].get("flowcell_option", "")
+    proj_details["name"] = proj_doc["project_name"]
+    proj_details["total_num_samples"] = proj_doc["no_of_samples"]
+    proj_details["oldest_sample_queued_date"] = proj_doc.get("project_summary", {}).get(
+        "queued", ""
+    )
+    return proj_details
+
+
 class qPCRPoolsDataHandler(SafeHandler):
     """Serves a page with qPCR queues from LIMS listed
     URL: /api/v1/qpcr_pools
@@ -101,7 +134,6 @@ class qPCRPoolsDataHandler(SafeHandler):
         )
 
         methods = queues.keys()
-        projects = self.application.projects_db.view("project/project_id")
         connection = psycopg2.connect(
             user=self.application.lims_conf["username"],
             host=self.application.lims_conf["url"],
@@ -120,10 +152,6 @@ class qPCRPoolsDataHandler(SafeHandler):
                 container = record[4]
                 value = chr(65 + int(record[6])) + ":" + str(int(record[5]) + 1)
                 project = "P" + str(record[7])
-                library_type = ""
-                sequencing_platform = ""
-                flowcell = ""
-                queued_date = ""
 
                 if container in pools[method]:
                     pools[method][container]["samples"].append(
@@ -138,45 +166,40 @@ class qPCRPoolsDataHandler(SafeHandler):
                             # showing up in Library validation as instructed by the lab
                             pools[method][container]["samples"].pop()
                             continue
-                        proj_doc = self.application.projects_db.get(
-                            projects[project].rows[0].value
+                        proj_details = get_proj_details(
+                            self.application.cloudant, project
                         )
-                        library_type = proj_doc["details"].get(
-                            "library_construction_method", ""
-                        )
-                        sequencing_platform = proj_doc["details"].get(
-                            "sequencing_platform", ""
-                        )
-                        flowcell = proj_doc["details"].get("flowcell", "")
-                        queued_date = proj_doc["details"].get("queued", "")
-                        if not queued_date:
-                            queued_date = proj_doc.get("project_summary", {}).get(
-                                "queued", ""
-                            )
                         if (
-                            library_type
+                            proj_details["library_type"]
                             not in pools[method][container]["library_types"]
                         ):
                             pools[method][container]["library_types"].append(
-                                library_type
+                                proj_details["library_type"]
                             )
                         if (
-                            sequencing_platform
+                            proj_details["sequencing_platform"]
                             not in pools[method][container]["sequencing_platforms"]
                         ):
                             pools[method][container]["sequencing_platforms"].append(
-                                sequencing_platform
+                                proj_details["sequencing_platform"]
                             )
-                        if flowcell not in pools[method][container]["flowcells"]:
-                            pools[method][container]["flowcells"].append(flowcell)
-                        pools[method][container]["proj_queue_dates"].append(queued_date)
+                        if (
+                            proj_details["flowcell"]
+                            not in pools[method][container]["flowcells"]
+                        ):
+                            pools[method][container]["flowcells"].append(
+                                proj_details["flowcell"]
+                            )
+                        pools[method][container]["proj_queue_dates"].append(
+                            proj_details["queued_date"]
+                        )
                         latest_running_note = (
                             LatestRunningNoteHandler.get_latest_running_note(
                                 self.application, "project", project
                             )
                         )
                         pools[method][container]["projects"][project] = {
-                            "name": proj_doc["project_name"],
+                            "name": proj_details["name"],
                             "latest_running_note": latest_running_note,
                         }
                 else:
@@ -187,21 +210,7 @@ class qPCRPoolsDataHandler(SafeHandler):
                         # We do not want the projects P28910, N.egative_00_00 and P28911, P.ositive_00_00
                         # showing up in Library validation as instructed by the lab
                         continue
-                    proj_doc = self.application.projects_db.get(
-                        projects[project].rows[0].value
-                    )
-                    library_type = proj_doc["details"].get(
-                        "library_construction_method", ""
-                    )
-                    sequencing_platform = proj_doc["details"].get(
-                        "sequencing_platform", ""
-                    )
-                    flowcell = proj_doc["details"].get("flowcell", "")
-                    queued_date = proj_doc["details"].get("queued", "")
-                    if not queued_date:
-                        queued_date = proj_doc.get("project_summary", {}).get(
-                            "queued", ""
-                        )
+                    proj_details = get_proj_details(self.application.cloudant, project)
                     latest_running_note = (
                         LatestRunningNoteHandler.get_latest_running_note(
                             self.application, "project", project
@@ -211,13 +220,13 @@ class qPCRPoolsDataHandler(SafeHandler):
                         "samples": [
                             {"name": record[1], "well": value, "queue_time": queue_time}
                         ],
-                        "library_types": [library_type],
-                        "sequencing_platforms": [sequencing_platform],
-                        "flowcells": [flowcell],
-                        "proj_queue_dates": [queued_date],
+                        "library_types": [proj_details["library_type"]],
+                        "sequencing_platforms": [proj_details["sequencing_platform"]],
+                        "flowcells": [proj_details["flowcell"]],
+                        "proj_queue_dates": [proj_details["queued_date"]],
                         "projects": {
                             project: {
-                                "name": proj_doc["project_name"],
+                                "name": proj_details["name"],
                                 "latest_running_note": latest_running_note,
                             }
                         },
@@ -302,7 +311,6 @@ class SequencingQueuesDataHandler(SafeHandler):
         queues["NovaSeqXPlus : Load to Flowcell (NovaSeqXPlus) v1.0"] = "3058"
 
         methods = queues.keys()
-        projects = self.application.projects_db.view("project/project_id")
         connection = psycopg2.connect(
             user=self.application.lims_conf["username"],
             host=self.application.lims_conf["url"],
@@ -325,36 +333,16 @@ class SequencingQueuesDataHandler(SafeHandler):
                 project = "P" + str(record[5])
                 final_loading_conc = "TBD"
                 if project not in pool_groups[method]:
-                    proj_doc = self.application.projects_db.get(
-                        projects[project].rows[0].value
-                    )
-                    setup = proj_doc["details"].get("sequencing_setup", "")
-                    lanes = proj_doc["details"].get(
-                        "sequence_units_ordered_(lanes)", ""
-                    )
-                    librarytype = proj_doc["details"].get(
-                        "library_construction_method", ""
-                    )
-                    sequencing_platform = proj_doc["details"].get(
-                        "sequencing_platform", ""
-                    )
-                    flowcell = proj_doc["details"].get("flowcell", "")
-                    queued_date = proj_doc["details"].get("queued", "")
-                    if not queued_date:
-                        queued_date = proj_doc.get("project_summary", {}).get(
-                            "queued", ""
-                        )
-                    flowcell_option = proj_doc["details"].get("flowcell_option", "")
-                    name = proj_doc["project_name"]
+                    proj_details = get_proj_details(self.application.cloudant, project)
                     pool_groups[method][project] = {
-                        "name": name,
-                        "setup": setup,
-                        "lanes": lanes,
-                        "sequencing_platform": sequencing_platform,
-                        "flowcell": flowcell,
-                        "proj_queue_date": queued_date,
-                        "flowcell_option": flowcell_option,
-                        "librarytype": librarytype,
+                        "name": proj_details["name"],
+                        "setup": proj_details["setup"],
+                        "lanes": proj_details["lanes"],
+                        "sequencing_platform": proj_details["sequencing_platform"],
+                        "flowcell": proj_details["flowcell"],
+                        "proj_queue_date": proj_details["queued_date"],
+                        "flowcell_option": proj_details["flowcell_option"],
+                        "librarytype": proj_details["library_type"],
                         "plates": {
                             container: {
                                 "queue_time": queue_time,
@@ -373,7 +361,7 @@ class SequencingQueuesDataHandler(SafeHandler):
                     )
 
                 # Get Pool Conc
-                if "Finished library" in librarytype:
+                if "Finished library" in proj_details["library_type"]:
                     if method in ["1662"]:
                         pcquery = pool_conc_query_nextseq.format(
                             "Concentration", record[3]
@@ -419,7 +407,10 @@ class SequencingQueuesDataHandler(SafeHandler):
 
                     # Get qPCR conc
                     conc_qpcr = 0.0
-                    if "Finished library" not in librarytype or is_rerun:
+                    if (
+                        "Finished library" not in proj_details["library_type"]
+                        or is_rerun
+                    ):
                         cursor.execute(qpcr_conc_query.format(record[0]))
                         row = cursor.fetchone()
                         if row is None:
@@ -457,7 +448,10 @@ class SequencingQueuesDataHandler(SafeHandler):
 
                     # qPCR conc
                     conc_qpcr = 0.0
-                    if "Finished library" not in librarytype or is_rerun:
+                    if (
+                        "Finished library" not in proj_details["library_type"]
+                        or is_rerun
+                    ):
                         cursor.execute(qpcr_conc_query.format(record[0]))
                         row = cursor.fetchone()
                         if row is None:
@@ -512,7 +506,6 @@ class WorksetQueuesDataHandler(SafeHandler):
         queues["ChromiumGenomev2"] = "1801"
 
         methods = queues.keys()
-        projects = self.application.projects_db.view("project/project_id")
         connection = psycopg2.connect(
             user=self.application.lims_conf["username"],
             host=self.application.lims_conf["url"],
@@ -547,18 +540,8 @@ class WorksetQueuesDataHandler(SafeHandler):
                             2
                         ].isoformat()
                 else:
-                    proj_doc = self.application.projects_db.get(
-                        projects[project].rows[0].value
-                    )
-                    total_num_samples = proj_doc["no_of_samples"]
+                    proj_details = get_proj_details(self.application.cloudant, project)
                     oldest_sample_queued_date = record[2].isoformat()
-                    projName = proj_doc["project_name"]
-                    protocol = proj_doc["details"]["library_construction_method"]
-                    queued_date = proj_doc["details"].get("queued", "")
-                    if not queued_date:
-                        queued_date = proj_doc.get("project_summary", {}).get(
-                            "queued", "NA"
-                        )
                     latest_running_note = (
                         LatestRunningNoteHandler.get_latest_running_note(
                             self.application, "project", project
@@ -566,12 +549,12 @@ class WorksetQueuesDataHandler(SafeHandler):
                     )
                     pools[method][project] = {
                         "samples": [(record[1], requeued)],
-                        "total_num_samples": total_num_samples,
+                        "total_num_samples": proj_details["total_num_samples"],
                         "oldest_sample_queued_date": oldest_sample_queued_date,
-                        "pname": projName,
-                        "protocol": protocol,
+                        "pname": proj_details["name"],
+                        "protocol": proj_details["library_type"],
                         "latest_running_note": latest_running_note,
-                        "queued_date": queued_date,
+                        "queued_date": proj_details["queued_date"],
                     }
 
         self.set_header("Content-type", "application/json")
@@ -604,7 +587,6 @@ class LibraryPoolingQueuesDataHandler(SafeHandler):
         queues["NextSeq"] = "2104"
 
         methods = queues.keys()
-        projects = self.application.projects_db.view("project/project_id")
         connection = psycopg2.connect(
             user=self.application.lims_conf["username"],
             host=self.application.lims_conf["url"],
@@ -632,41 +614,29 @@ class LibraryPoolingQueuesDataHandler(SafeHandler):
                 if container in pools[method]:
                     pools[method][container]["samples"].append({"name": name})
                     if project not in pools[method][container]["projects"]:
-                        proj_doc = self.application.projects_db.get(
-                            projects[project].rows[0].value
+                        proj_details = get_proj_details(
+                            self.application.cloudant, project
                         )
-                        library_type = proj_doc["details"].get(
-                            "library_construction_method", ""
-                        )
-                        queued_date = proj_doc["details"].get("queued", "")
                         if (
-                            library_type
+                            proj_details["library_type"]
                             not in pools[method][container]["library_types"]
                         ):
                             pools[method][container]["library_types"].append(
-                                library_type
+                                proj_details["library_type"]
                             )
-                        pools[method][container]["proj_queue_dates"].append(queued_date)
-                        pools[method][container]["projects"][project] = proj_doc[
-                            "project_name"
+                        pools[method][container]["proj_queue_dates"].append(
+                            proj_details["queued_date"]
+                        )
+                        pools[method][container]["projects"][project] = proj_details[
+                            "name"
                         ]
                 else:
-                    proj_doc = self.application.projects_db.get(
-                        projects[project].rows[0].value
-                    )
-                    library_type = proj_doc["details"].get(
-                        "library_construction_method", ""
-                    )
-                    queued_date = proj_doc["details"].get("queued", "")
-                    if not queued_date:
-                        queued_date = proj_doc.get("project_summary", {}).get(
-                            "queued", ""
-                        )
+                    proj_details = get_proj_details(self.application.cloudant, project)
                     pools[method][container] = {
                         "samples": [{"name": name}],
-                        "library_types": [library_type],
-                        "proj_queue_dates": [queued_date],
-                        "projects": {project: proj_doc["project_name"]},
+                        "library_types": [proj_details["library_type"]],
+                        "proj_queue_dates": [proj_details["queued_date"]],
+                        "projects": {project: proj_details["name"]},
                     }
 
         self.set_header("Content-type", "application/json")
@@ -794,7 +764,7 @@ class SmartSeq3ProgressPageDataHandler(SafeHandler):
                                 if udfname in sample_dict:
                                     # If the value is different, log a warning
                                     if sample_dict[udfname] != udfvalue:
-                                        gen_log.warn(
+                                        gen_log.warning(
                                             f"Sample {sample_name} has different values for udf {udfname} in step {stepname} "
                                             f"previous value: {sample_dict[udfname]}, new value: {udfvalue}"
                                         )

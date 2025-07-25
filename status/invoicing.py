@@ -25,11 +25,13 @@ class InvoicingDataHandler(SafeHandler):
     # _____________________________ FETCH METHODS _____________________________
 
     def get_proj_doc(self, proj_id: str) -> dict:
-        view = self.application.projects_db.view(
-            "project/project_id", startkey=proj_id, limit=1
-        )
-        proj_doc_id = view.rows[0].value
-        proj_doc = self.application.projects_db.get(proj_doc_id)
+        proj_doc = self.application.cloudant.post_view(
+            db="projects",
+            ddoc="project",
+            view="project_id",
+            key=proj_id,
+            include_docs=True,
+        ).get_result()["rows"][0]["doc"]
 
         return proj_doc
 
@@ -109,17 +111,21 @@ class InvoicingPageDataHandler(AgreementsDBHandler):
     """
 
     def get(self):
-        view = self.application.projects_db.view("invoicing/spec_generated_not_sent")
+        view = self.application.cloudant.post_view(
+            db="projects",
+            ddoc="invoicing",
+            view="spec_generated_not_sent",
+        ).get_result()["rows"]
 
         proj_list = {}
 
         for row in view:
-            proj_list[row.key] = row.value
-            agreement_data = self.fetch_agreement(row.key)
+            proj_list[row["key"]] = row["value"]
+            agreement_data = self.fetch_agreement(row["key"])
             total_cost = agreement_data["saved_agreements"][
                 agreement_data["invoice_spec_generated_for"]
             ]["total_cost"]
-            proj_list[row.key]["total_cost"] = total_cost
+            proj_list[row["key"]]["total_cost"] = total_cost
         self.write(proj_list)
 
 
@@ -158,14 +164,22 @@ class InvoiceSpecDateHandler(AgreementsDBHandler, InvoicingDataHandler):
             proj_doc["agreement_doc_id"] = agreement_doc["_id"]
             return_msg = "Invoice spec generated"
             # # probably add a try-except here in the future
-            self.application.agreements_db.save(agreement_doc)
+            self.application.cloudant.put_document(
+                db="agreements",
+                document=agreement_doc,
+                doc_id=agreement_doc["_id"],
+            )
 
         if action_type == "invalidate":
             generated_at = post_data["timestamp"]
             return_msg = "Invoice spec invalidated"
 
         proj_doc["invoice_spec_generated"] = generated_at
-        self.application.projects_db.save(proj_doc)
+        self.application.cloudant.put_document(
+            db="projects",
+            document=proj_doc,
+            doc_id=proj_doc["_id"],
+        )
         # update proj db directly at same time as lims? Do we need it in lims?
 
         self.set_header("Content-type", "application/json")
@@ -390,8 +404,12 @@ class DeleteInvoiceHandler(AgreementsDBHandler, InvoicingDataHandler):
             agreement_doc.pop("invoice_spec_generated_by")
             agreement_doc.pop("invoice_spec_generated_at")
 
-            self.application.agreements_db.save(agreement_doc)
-            self.application.projects_db.save(proj_doc)
+            self.application.cloudant.put_document(
+                db="agreements", document=agreement_doc, doc_id=agreement_doc["_id"]
+            )
+            self.application.cloudant.put_document(
+                db="projects", document=proj_doc, doc_id=proj_doc["_id"]
+            )
 
 
 class SentInvoiceHandler(AgreementsDBHandler):
@@ -406,17 +424,20 @@ class SentInvoiceHandler(AgreementsDBHandler):
         # six_months_ago = (datetime.datetime.now() - relativedelta(months=6)).strftime(
         #    "%Y-%m-%d"
         # )
-        view = self.application.projects_db.view(
-            "invoicing/spec_sent",  # startkey=six_months_ago
-        )
+        view = self.application.cloudant.post_view(
+            db="projects",
+            ddoc="invoicing",
+            view="spec_sent",
+            # start_key=six_months_ago
+        ).get_result()["rows"]
         proj_list = {}
         for row in view:
-            proj_list[row.value] = {"downloaded_date": row.key}
-            agreement_data = self.fetch_agreement(row.value)
+            proj_list[row["value"]] = {"downloaded_date": row["key"]}
+            agreement_data = self.fetch_agreement(row["value"])
             total_cost = agreement_data["saved_agreements"][
                 agreement_data["invoice_spec_generated_for"]
             ]["total_cost"]
-            proj_list[row.value]["total_cost"] = total_cost
+            proj_list[row["value"]]["total_cost"] = total_cost
         self.write(proj_list)
 
 

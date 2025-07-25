@@ -51,11 +51,16 @@ class ApplicationDataHandler(SafeHandler):
         if application == "null":
             application = None
         projects = []
-        project_view = self.application.projects_db.view(
-            "project/applications", reduce=False
-        )
-        for row in project_view[application]:
-            projects.append(row.value)
+        project_view = self.application.cloudant.post_view(
+            db="projects",
+            ddoc="project",
+            view="applications",
+            key=application,
+            reduce=False,
+        ).get_result()["rows"]
+
+        for row in project_view:
+            projects.append(row["value"])
 
         return projects
 

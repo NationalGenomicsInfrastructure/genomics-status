@@ -12,15 +12,20 @@ class ProductionCronjobsHandler(SafeHandler):
 
     def get(self):
         cronjobs = {}
-        servers = self.application.cronjobs_db.view("server/alias")
-        for server in servers.rows:
-            doc = self.application.cronjobs_db.get(server.value)
-            cronjobs[server.key] = {
+        servers = self.application.cloudant.post_view(
+            db="cronjobs",
+            ddoc="server",
+            view="alias",
+            include_docs=True,
+        ).get_result()["rows"]
+        for server in servers:
+            doc = server["doc"]
+            cronjobs[server["key"]] = {
                 "last_updated": datetime.strftime(
                     parser.parse(doc["Last updated"]), "%Y-%m-%d %H:%M"
                 ),
                 "users": doc["users"],
-                "server": server.key,
+                "server": server["key"],
             }
         template = self.application.loader.load("cronjobs.html")
         self.write(
