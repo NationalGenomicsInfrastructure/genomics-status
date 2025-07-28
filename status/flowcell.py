@@ -652,7 +652,6 @@ class ONTFlowcellHandler(SafeHandler):
         super(SafeHandler, self).__init__(application, request, **kwargs)
 
     def fetch_ont_flowcell(self, run_name):
-
         return fetch_ont_run_stats(
             run_name=run_name,
             db_conn=self.application.cloudant,

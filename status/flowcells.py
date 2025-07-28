@@ -145,7 +145,7 @@ class FlowcellsHandler(SafeHandler):
                 ont_flowcells[row["key"]] = fetch_ont_run_stats(
                     run_name=row["key"],
                     db_conn=self.application.cloudant,
-                    all_stats = row["value"],
+                    all_stats=row["value"],
                 )
             except Exception:
                 unfetched_runs.append(row["key"])
