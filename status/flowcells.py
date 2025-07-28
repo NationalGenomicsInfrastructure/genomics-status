@@ -417,9 +417,7 @@ class OldFlowcellsInfoDataHandler(SafeHandler):
             descending=True,
             key=flowcell,
         ).get_result()["rows"]
-        flowcell_info = None
-        if fc_view:
-            flowcell_info = fc_view[0]["value"]
+        flowcell_info = fc_view[0]["value"] if fc_view else None
 
         return flowcell_info
 

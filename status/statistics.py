@@ -27,7 +27,6 @@ def get_stats_data(db_conn, view, gl=0, cleaning=None, doreduce=True):
         else:
             return meta_key
 
-    # db_view = db.view(view, group_level=gl, reduce=doreduce)
     db_view = db_conn.post_view(
         **view,
         group_level=gl,
