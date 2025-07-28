@@ -323,20 +323,50 @@ def get_view_val(key: str, view, db_conn) -> Optional[dict]:
 
 def fetch_ont_run_stats(
     run_name: str,
-    view_all_stats,
-    view_args,
-    view_project,
-    view_mux_scans,
-    view_pore_count_history,
     db_conn,
+    all_stats: Optional[dict] = None,
 ) -> dict:
     """Take a run name and different db views that uses run name as key.
     Return a dict containing all the relevant info to show on the flowcells page.
     """
 
+    view_all_stats = {
+        "db": "nanopore_runs",
+        "ddoc": "info",
+        "view": "all_stats",
+        "descending": True,
+    }
+    view_args = {
+        "db": "nanopore_runs",
+        "ddoc": "info",
+        "view": "args",
+        "descending": True,
+    }
+    view_project = {
+        "db": "projects",
+        "ddoc": "project",
+        "view": "id_name_dates",
+        "descending": True,
+    }
+    view_mux_scans = {
+        "db": "nanopore_runs",
+        "ddoc": "info",
+        "view": "mux_scans",
+        "descending": True,
+    }
+    view_pore_count_history = {
+        "db": "nanopore_runs",
+        "ddoc": "info",
+        "view": "pore_count_history",
+        "descending": True,
+    }
     run_dict = {}
     run_dict["run_name"] = run_name
-    all_stats = get_view_val(run_name, view_all_stats, db_conn)
+    if all_stats:
+        # If all_stats is provided, use it directly
+        run_dict.update(all_stats)
+    else:
+        all_stats = get_view_val(run_name, view_all_stats, db_conn)
     args = get_view_val(run_name, view_args, db_conn)
     run_dict.update(all_stats)
 
@@ -622,44 +652,9 @@ class ONTFlowcellHandler(SafeHandler):
         super(SafeHandler, self).__init__(application, request, **kwargs)
 
     def fetch_ont_flowcell(self, run_name):
-        view_all_stats = {
-            "db": "nanopore_runs",
-            "ddoc": "info",
-            "view": "all_stats",
-            "descending": True,
-        }
-        view_args = {
-            "db": "nanopore_runs",
-            "ddoc": "info",
-            "view": "args",
-            "descending": True,
-        }
-        view_project = {
-            "db": "projects",
-            "ddoc": "project",
-            "view": "id_name_dates",
-            "descending": True,
-        }
-        view_mux_scans = {
-            "db": "nanopore_runs",
-            "ddoc": "info",
-            "view": "mux_scans",
-            "descending": True,
-        }
-        view_pore_count_history = {
-            "db": "nanopore_runs",
-            "ddoc": "info",
-            "view": "pore_count_history",
-            "descending": True,
-        }
 
         return fetch_ont_run_stats(
             run_name=run_name,
-            view_all_stats=view_all_stats,
-            view_args=view_args,
-            view_project=view_project,
-            view_mux_scans=view_mux_scans,
-            view_pore_count_history=view_pore_count_history,
             db_conn=self.application.cloudant,
         )
 

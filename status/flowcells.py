@@ -133,30 +133,6 @@ class FlowcellsHandler(SafeHandler):
             "view": "all_stats",
             "descending": True,
         }
-        view_args = {
-            "db": "nanopore_runs",
-            "ddoc": "info",
-            "view": "args",
-            "descending": True,
-        }
-        view_project = {
-            "db": "projects",
-            "ddoc": "project",
-            "view": "id_name_dates",
-            "descending": True,
-        }
-        view_mux_scans = {
-            "db": "nanopore_runs",
-            "ddoc": "info",
-            "view": "mux_scans",
-            "descending": True,
-        }
-        view_pore_count_history = {
-            "db": "nanopore_runs",
-            "ddoc": "info",
-            "view": "pore_count_history",
-            "descending": True,
-        }
 
         ont_flowcells = OrderedDict()
 
@@ -168,12 +144,8 @@ class FlowcellsHandler(SafeHandler):
             try:
                 ont_flowcells[row["key"]] = fetch_ont_run_stats(
                     run_name=row["key"],
-                    view_all_stats=view_all_stats,
-                    view_args=view_args,
-                    view_project=view_project,
-                    view_mux_scans=view_mux_scans,
-                    view_pore_count_history=view_pore_count_history,
                     db_conn=self.application.cloudant,
+                    all_stats = row["value"],
                 )
             except Exception:
                 unfetched_runs.append(row["key"])
