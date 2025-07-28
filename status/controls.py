@@ -48,47 +48,53 @@ class ControlsHandler(SafeHandler):
         from collections import defaultdict
 
         result = defaultdict(dict)
-        controls_view = self.application.projects_db.view("project/controls")
-
-        all_cont_proj = controls_view[[control_type, ""] : [control_type, "Z"]]
+        all_cont_proj = self.application.cloudant.post_view(
+            db="projects",
+            ddoc="project",
+            view="controls",
+            start_key=[control_type, ""],
+            end_key=[control_type, "Z"],
+        ).get_result()["rows"]
         for cont_proj in all_cont_proj:
-            for cont_sample in cont_proj.value:
-                for workset in cont_proj.value[
+            for cont_sample in cont_proj["value"]:
+                for workset in cont_proj[
+                    "value"
+                ][
                     cont_sample
                 ]:  # here we create one entry in result for each workset, this will be one line in the controls table
                     if workset != "no_workset":
                         workset_sample_id = workset + cont_sample
                         result[workset_sample_id]["sample_id"] = cont_sample
-                        result[workset_sample_id]["customer_name"] = cont_proj.value[
+                        result[workset_sample_id]["customer_name"] = cont_proj["value"][
                             cont_sample
                         ][workset]["customer_name"]
                         if (
-                            "status_manual" in cont_proj.value[cont_sample][workset]
+                            "status_manual" in cont_proj["value"][cont_sample][workset]
                         ):  # status originates from LIMS project overview, is often not set for controls
-                            result[workset_sample_id]["status_manual"] = (
-                                cont_proj.value[cont_sample][workset]["status_manual"]
-                            )
+                            result[workset_sample_id]["status_manual"] = cont_proj[
+                                "value"
+                            ][cont_sample][workset]["status_manual"]
                         else:
                             result[workset_sample_id]["status_manual"] = (
                                 "* In Progress"  # asterisk indicates that the status in LIMS is not set, the sample has a workset and so MUST be at least "In Progress"
                             )
-                        result[workset_sample_id]["project"] = cont_proj.key[1]
-                        result[workset_sample_id]["workset_name"] = cont_proj.value[
+                        result[workset_sample_id]["project"] = cont_proj["key"][1]
+                        result[workset_sample_id]["workset_name"] = cont_proj["value"][
                             cont_sample
                         ][workset]["workset_name"]
-                        if "workset_id" in cont_proj.value[cont_sample][workset]:
-                            result[workset_sample_id]["workset_id"] = cont_proj.value[
-                                cont_sample
-                            ][workset]["workset_id"]
+                        if "workset_id" in cont_proj["value"][cont_sample][workset]:
+                            result[workset_sample_id]["workset_id"] = cont_proj[
+                                "value"
+                            ][cont_sample][workset]["workset_id"]
                         else:
                             result[workset_sample_id]["workset_id"] = "NA"
-                        if "prep_status" in cont_proj.value[cont_sample][workset]:
-                            result[workset_sample_id]["prep_status"] = cont_proj.value[
-                                cont_sample
-                            ][workset]["prep_status"]
+                        if "prep_status" in cont_proj["value"][cont_sample][workset]:
+                            result[workset_sample_id]["prep_status"] = cont_proj[
+                                "value"
+                            ][cont_sample][workset]["prep_status"]
                         else:
                             result[workset_sample_id]["prep_status"] = ""
-                        result[workset_sample_id]["sequenced_fc"] = cont_proj.value[
+                        result[workset_sample_id]["sequenced_fc"] = cont_proj["value"][
                             cont_sample
                         ][workset]["sequenced_fc"]
         return result
@@ -104,12 +110,15 @@ class ControlsHandler(SafeHandler):
         result = {}
         result_just_ws_name = {}
 
-        controls_ws_view = self.application.worksets_db.view(
-            "worksets/controls_project_list", descending=True
-        )
+        controls_ws_view = self.application.cloudant.post_view(
+            db="worksets",
+            ddoc="worksets",
+            view="controls_project_list",
+            descending=True,
+        ).get_result()["rows"]
         for ws in controls_ws_view:
-            result[", ".join(ws.key)] = ws.value
-            result_just_ws_name[ws.key[1]] = ws.value
+            result[", ".join(ws["key"])] = ws["value"]
+            result_just_ws_name[ws["key"][1]] = ws["value"]
         return result, result_just_ws_name
 
     def collect_control_info(self, control_type, workset_data, workset_name_data):
