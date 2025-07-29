@@ -8,14 +8,11 @@
 
         <thead style="vertical-align: top">
             <tr class="sticky darkth">
-                <th class="sort" data-sort="start_date">Start Date</th>
                 <th class="sort" data-sort="run_name">Run name</th>
                 <th class="sort" data-sort="sample_name">Sample name</th>
                 <th class="sort" data-sort="experiment_name">Experiment name</th>
                 <th class="sort" data-sort="project">Project</th>
-                <th class="sort" data-sort="prep_kit">Prep Kit</th>
                 <th class="sort" data-sort="barcoding_kit">Barcoding Kit</th>
-                <th class="sort" data-sort="flow_cell_type">Flow Cell Type</th>
                 <th class="sort text-center" data-sort="flow_cell_qc">Flow cell QC</th>
                 <th class="sort text-center" data-sort="load_fmol">Loading (fmol)</th>
                 <th class="sort text-center" data-sort="reloadings">Reloadings</th>
@@ -47,14 +44,11 @@
         </thead>
         <tfoot>
             <tr class="darkth">
-                <th class="sort searchable" data-sort="start_date">Start Date</th>
                 <th class="sort searchable" data-sort="run_name">Run name</th>
                 <th class="sort searchable" data-sort="sample_name">Sample name</th>
                 <th class="sort searchable" data-sort="experiment_name">Experiment name</th>
                 <th class="sort searchable" data-sort="project">Project</th>
-                <th class="sort searchable" data-sort="prep_kit">Prep Kit</th>
                 <th class="sort searchable" data-sort="barcoding_kit">Barcoding Kit</th>
-                <th class="sort searchable" data-sort="flow_cell_type">Flow Cell Type</th>
                 <th class="sort" data-sort="flow_cell_qc"></th>
                 <th class="sort" data-sort="load_fmol"></th>
                 <th class="sort" data-sort="reloadings"></th>
@@ -72,7 +66,6 @@
         <tbody class="list">
             {% for onefc in ont_flowcells %}
                 <tr>
-                    <td class="start_date">{{ ont_flowcells[onefc]["start_date"] }}</td>
                     <td class = run_name>
                         <a class="text-decoration-none" href="/flowcells_ont/{{ onefc }}">{{ onefc }}</a>
                         {% if ont_flowcells.get(onefc).get('TACA_run_status') == 'finished' %}
@@ -137,9 +130,7 @@
                         {{ ont_flowcells[onefc]["project_name"] }}
                         </a>
                     </td>
-                    <td class="prep_kit">{{ ont_flowcells[onefc]["prep_kit"] }}</td>
                     <td class="barcoding_kit">{{ ont_flowcells[onefc]["barcoding_kit"] }}</td>
-                    <td class="flow_cell_type">{{ ont_flowcells[onefc]["flow_cell_type"] }}</td>
                     <td class="flow_cell_qc text-center">
                         {# First-hand: Try to fetch the QC value from the automatically collected instrument logs #}
                         {% try %}
