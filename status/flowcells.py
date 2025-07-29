@@ -6,12 +6,11 @@ import logging
 import re
 from collections import OrderedDict
 
-import pandas as pd
 from dateutil.relativedelta import relativedelta
 from genologics import lims
 from genologics.config import BASEURI, PASSWORD, USERNAME
 
-from status.flowcell import fetch_ont_run_stats, thresholds
+from status.flowcell import thresholds
 from status.running_notes import LatestRunningNoteHandler
 from status.util import SafeHandler
 
@@ -21,6 +20,15 @@ lims = lims.Lims(BASEURI, USERNAME, PASSWORD)
 
 
 def find_id(stringable, pattern_type: str) -> re.match:
+    """Looks for a specific pattern in a stringable object and returns the match.
+
+    project: e.g. P12345
+    sample: e.g. P12345_1001
+    pool: e.g. 2-123456
+    step: e.g. 24-123456
+
+    """
+
     string = str(stringable)
 
     patterns = {
@@ -125,46 +133,20 @@ class FlowcellsHandler(SafeHandler):
         return OrderedDict(sorted(temp_flowcells.items(), reverse=True))
 
     def list_ont_flowcells(self):
-        """Fetch dictionary of the form {ont_run_name : ont_run_stats_dict}"""
+        """Load the rows of the nanopore_runs:info/all_stats view
+        and convert into {run_name: stats} dict.
+        """
 
-        view_all_stats = {
-            "db": "nanopore_runs",
-            "ddoc": "info",
-            "view": "all_stats",
-            "descending": True,
-        }
-
-        ont_flowcells = OrderedDict()
-
-        unfetched_runs = []
         view_all_stats_rows = self.application.cloudant.post_view(
-            **view_all_stats
+            db="nanopore_runs",
+            ddoc="info",
+            view="all_stats",
+            descending=True,
         ).get_result()["rows"]
-        for row in view_all_stats_rows:
-            try:
-                ont_flowcells[row["key"]] = fetch_ont_run_stats(
-                    run_name=row["key"],
-                    db_conn=self.application.cloudant,
-                    all_stats=row["value"],
-                )
-            except Exception:
-                unfetched_runs.append(row["key"])
-                application_log.exception(f"Failed to fetch run {row['key']}")
 
-        if ont_flowcells:
-            try:
-                # Use Pandas dataframe for column-wise operations, every db entry becomes a row
-                df = pd.DataFrame.from_dict(ont_flowcells, orient="index")
+        ont_flowcells = {row["key"]: row["value"] for row in view_all_stats_rows}
 
-                # Empty values are replaced with empty strings
-                df.fillna("", inplace=True)
-
-                # Convert back to dictionary and return
-                ont_flowcells = df.to_dict(orient="index")
-            except Exception:
-                application_log.exception("Failed to compile ONT flowcell dataframe")
-
-        return ont_flowcells, unfetched_runs
+        return ont_flowcells
 
     def list_element_flowcells(self):
         return self.application.cloudant.post_view(
@@ -179,7 +161,7 @@ class FlowcellsHandler(SafeHandler):
         all = self.get_argument("all", False)
         t = self.application.loader.load("flowcells.html")
         fcs = self.list_flowcells(all=all)
-        ont_fcs, unfetched_runs = self.list_ont_flowcells()
+        ont_fcs = self.list_ont_flowcells()
         element_fcs = self.list_element_flowcells()
         self.write(
             t.generate(
@@ -188,11 +170,11 @@ class FlowcellsHandler(SafeHandler):
                 user=self.get_current_user(),
                 flowcells=fcs,
                 ont_flowcells=ont_fcs,
+                unfetched_runs=None,
                 element_fcs=element_fcs,
                 form_date=LatestRunningNoteHandler.formatDate,
                 find_id=find_id,
                 all=all,
-                unfetched_runs=unfetched_runs,
             )
         )
 
