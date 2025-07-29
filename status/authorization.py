@@ -15,13 +15,7 @@ class LoginHandler(tornado.web.RequestHandler, tornado.auth.GoogleOAuth2Mixin):
                 code=self.get_argument("code"),
             )
             user = GoogleUser(user_token)
-            user_view = self.application.gs_users_db.view(
-                "authorized/users", reduce=False
-            )
-            user_roles = self.application.gs_users_db.view(
-                "authorized/info", reduce=False
-            )
-            if user.authenticated and user.is_authorized(user_view):
+            if user.authenticated and user.is_authorized(self.application.cloudant):
                 self.set_secure_cookie("user", user.display_name)
 
                 self.check_and_update_statusdb_user_name(
@@ -30,9 +24,15 @@ class LoginHandler(tornado.web.RequestHandler, tornado.auth.GoogleOAuth2Mixin):
 
                 # It will have at least one email (otherwise she couldn't log in)
                 self.set_secure_cookie("email", user.emails[0])
-                user_info_row = user_roles[user.emails[0]].rows[0]
-                if user_info_row.value and "roles" in user_info_row.value:
-                    user_roles = [*user_info_row.value["roles"]]
+                user_info_row = self.application.cloudant.post_view(
+                    db="gs_users",
+                    ddoc="authorized",
+                    view="info",
+                    key=user.emails[0],
+                    include_docs=True,
+                ).get_result()["rows"][0]
+                if user_info_row["value"] and "roles" in user_info_row["value"]:
+                    user_roles = [*user_info_row["value"]["roles"]]
                 else:
                     user_roles = ["user"]
                 self.set_secure_cookie("roles", json.dumps(user_roles))

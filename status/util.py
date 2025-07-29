@@ -404,11 +404,18 @@ class GoogleUser:
             self.display_name = info.get("displayName", "")
             self.emails = [email["value"] for email in info.get("emails")]
 
-    def is_authorized(self, user_view):
+    def is_authorized(self, db_conn):
         """Checks that the user is actually authorised to use genomics-status."""
         authenticated = False
         for email in self.emails:
-            if user_view[email]:
+            user_view = db_conn.post_view(
+                db="gs_users",
+                ddoc="authorized",
+                view="users",
+                key=email,
+                reduce=False,
+            ).get_result()["rows"]
+            if user_view:
                 self.valid_email = email
                 authenticated = True
         return authenticated
