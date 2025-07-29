@@ -37,25 +37,27 @@ class SampleRequirementsBaseHandler(SafeHandler):
     # _____________________________ FETCH METHODS _____________________________
 
     def fetch_published_doc_version(self, version=None):
-        db = self.application.sample_requirements_db
-        if version is not None:
-            rows = db.view(
-                "entire_document/published_by_version",
-                descending=True,
-                key=version,
-                limit=1,
-            ).rows
-        else:
-            rows = db.view(
-                "entire_document/published_by_version", descending=True, limit=1
-            ).rows
-        doc = rows[0].value
+        # If version is not specified (key=None), it fetches the latest published document
+        rows = self.application.cloudant.post_view(
+            db="sample_requirements",
+            ddoc="entire_document",
+            view="published_by_version",
+            descending=True,
+            key=version,
+            limit=1,
+        ).get_result()["rows"]
+        doc = rows[0]["value"]
         return doc
 
     def fetch_latest_doc(self):
-        db = self.application.sample_requirements_db
-        curr_rows = db.view("entire_document/by_version", descending=True, limit=1).rows
-        curr_doc = curr_rows[0].value
+        curr_rows = self.application.cloudant.post_view(
+            db="sample_requirements",
+            ddoc="entire_document",
+            view="by_version",
+            descending=True,
+            limit=1,
+        ).get_result()["rows"]
+        curr_doc = curr_rows[0]["value"]
         return curr_doc
 
     # ____________________________ UPDATE DOC HELPER METHODS ____________________
@@ -82,11 +84,14 @@ class SampleRequirementsDateToVersionDataHandler(SampleRequirementsBaseHandler):
     """
 
     def get(self):
-        cc_view = self.application.sample_requirements_db.view(
-            "version_info/by_date", descending=False
-        )
+        cc_view = self.application.cloudant.post_view(
+            db="sample_requirements",
+            ddoc="version_info",
+            view="by_date",
+            descending=False,
+        ).get_result()["rows"]
 
-        self.write(json.dumps(cc_view.rows))
+        self.write(json.dumps(cc_view))
 
 
 class SampleRequirementsReassignLockDataHandler(SampleRequirementsBaseHandler):
@@ -116,8 +121,11 @@ class SampleRequirementsReassignLockDataHandler(SampleRequirementsBaseHandler):
         doc["Lock Info"] = lock_info
         doc = self._update_last_modified(doc)
 
-        sr_db = self.application.sample_requirements_db
-        sr_db.save(doc)
+        self.application.cloudant.put_document(
+            db="sample_requirements",
+            doc_id=doc["_id"],
+            doc=doc,
+        ).get_result()
         self.set_header("Content-type", "application/json")
         self.write({"message": "Lock info updated"})
 
@@ -189,8 +197,10 @@ class SampleRequirementsDraftDataHandler(SampleRequirementsBaseHandler):
 
         self._update_last_modified(doc)
 
-        cc_db = self.application.sample_requirements_db
-        cc_db.save(doc)
+        self.appliction.cloudant.post_document(
+            db="sample_requirements",
+            doc=doc,
+        ).get_result()
         self.set_header("Content-type", "application/json")
         self.write({"message": "Draft created"})
 
@@ -236,8 +246,11 @@ class SampleRequirementsDraftDataHandler(SampleRequirementsBaseHandler):
 
         self._update_last_modified(latest_doc)
 
-        cc_db = self.application.sample_requirements_db
-        cc_db.save(latest_doc)
+        self.application.cloudant.put_document(
+            db="sample_requirements",
+            doc_id=latest_doc["_id"],
+            doc=latest_doc,
+        ).get_result()
         msg = "Draft successfully saved at {}".format(
             datetime.datetime.now().strftime("%H:%M:%S")
         )
@@ -276,8 +289,11 @@ class SampleRequirementsDraftDataHandler(SampleRequirementsBaseHandler):
                     "Error: Attempting to delete a draft locked by someone else."
                 )
 
-        cc_db = self.application.sample_requirements_db
-        cc_db.delete(latest_doc)
+        self.application.cloudant.delete_document(
+            db="sample_requirements",
+            doc_id=latest_doc["_id"],
+            rev=latest_doc["_rev"],
+        ).get_result()
         msg = "Draft successfully deleted at {}".format(
             datetime.datetime.now().strftime("%H:%M:%S")
         )
@@ -502,8 +518,11 @@ class SampleRequirementsPublishDataHandler(SampleRequirementsBaseHandler):
         doc["Issued by user email"] = user_email
         doc["Issued at"] = datetime.datetime.now().isoformat()
 
-        cc_db = self.application.sample_requirements_db
-        cc_db.save(doc)
+        self.application.cloudant.put_document(
+            db="sample_requirements",
+            doc_id=doc["_id"],
+            doc=doc,
+        ).get_result()
         self.write({"message": "New sample requirements published"})
 
 

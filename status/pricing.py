@@ -778,8 +778,8 @@ class AgreementsDBHandler(SafeHandler):
             doc["signed_by"] = self.get_current_user().name
             doc["signed_at"] = int(datetime.datetime.now().timestamp() * 1000)
         # probably add a try-except here in the future
-        self.application.cloudant.put_document(
-            db="agreements", doc_id=doc["_id"], document=doc
+        self.application.cloudant.post_document(
+            db="agreements", document=doc
         ).get_result()
 
 

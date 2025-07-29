@@ -42,15 +42,15 @@ class FlowcellHandler(SafeHandler):
 
     def _get_project_id_by_name(self, project_name):
         if project_name not in self._project_names:
-            view = self.application.projects_db.view("project/project_name")[
-                project_name
-            ]
+            view = self.application.cloudant.post_view(
+                db="projects",
+                ddoc="projects",
+                view="name_to_id",
+                key=project_name,
+            ).get_result()["rows"]
             # should be only one row, if not - will overwrite
-            for row in view.rows:
-                doc_id = row.value
-                project_doc = self.application.projects_db.get(doc_id)
-                project_id = project_doc.get("project_id")
-                self._project_names[project_name] = project_id
+            for row in view:
+                self._project_names[project_name] = row["value"]
         return self._project_names.get(project_name, "")
 
     def _get_project_list(self, flowcell):
@@ -68,27 +68,35 @@ class FlowcellHandler(SafeHandler):
 
     def find_DB_entry(self, flowcell_id):
         # Returns Runid (key), contents (complex)
-        view = self.application.x_flowcells_db.view(
-            "info/summary2_full_id", key=flowcell_id
-        )
+        view = self.application.cloudant.post_view(
+            db="x_flowcells",
+            ddoc="info",
+            view="summary2_full_id",
+            key=flowcell_id,
+        ).get_result()["rows"]
 
-        if view.rows:
-            return view.rows[0]
+        if view:
+            return view[0]
 
         # No hit for a full name, check if the short name is found:
-        complete_flowcell_rows = self.application.x_flowcells_db.view(
-            "info/short_name_to_full_name", key=flowcell_id
-        ).rows
+        complete_flowcell_rows = self.application.cloudant.post_view(
+            db="x_flowcells",
+            ddoc="info",
+            view="short_name_to_full_name",
+            key=flowcell_id,
+        ).get_result()["rows"]
 
         if complete_flowcell_rows:
-            complete_flowcell_id = complete_flowcell_rows[0].value
-            view = self.application.x_flowcells_db.view(
-                "info/summary2_full_id",
+            complete_flowcell_id = complete_flowcell_rows[0]["value"]
+            view = self.application.cloudant.post_view(
+                db="x_flowcells",
+                ddoc="info",
+                view="summary2_full_id",
                 key=complete_flowcell_id,
-            )
+            ).get_result()["rows"]
 
-            if view.rows:
-                return view.rows[0]
+            if view:
+                return view[0]
 
         return False
 
@@ -119,25 +127,25 @@ class FlowcellHandler(SafeHandler):
             return
         else:
             # replace '__' in project name
-            entry.value["plist"] = self._get_project_list(entry.value)
+            entry["value"]["plist"] = self._get_project_list(entry["value"])
             # list of project_names -> to create links to project page and bioinfo tab
             project_names = {
                 project_name: self._get_project_id_by_name(project_name)
-                for project_name in entry.value["plist"]
+                for project_name in entry["value"]["plist"]
             }
             # Prepare summary table for total project/sample yields in each lane
             fc_project_yields = dict()
             fc_sample_yields = dict()
-            for lane_nr in sorted(entry.value.get("lanedata", {}).keys()):
+            for lane_nr in sorted(entry["value"].get("lanedata", {}).keys()):
                 fc_project_yields_lane_list = []
                 fc_sample_yields_lane_list = []
-                lane_details = entry.value["lane"][lane_nr]
+                lane_details = entry["value"]["lane"][lane_nr]
                 total_lane_yield = int(
-                    entry.value["lanedata"][lane_nr]["clustersnb"].replace(",", "")
+                    entry["value"]["lanedata"][lane_nr]["clustersnb"].replace(",", "")
                 )
                 unique_projects = list(set(lane["Project"] for lane in lane_details))
                 unique_samples = list(set(lane["SampleName"] for lane in lane_details))
-                threshold = thresholds.get(entry.value.get("run_mode", ""), 0)
+                threshold = thresholds.get(entry["value"].get("run_mode", ""), 0)
                 for proj in unique_projects:
                     if proj == "default":
                         modified_proj_name = "undetermined"
@@ -282,7 +290,7 @@ class FlowcellHandler(SafeHandler):
             self.write(
                 t.generate(
                     gs_globals=self.application.gs_globals,
-                    flowcell=entry.value,
+                    flowcell=entry["value"],
                     flowcell_id=flowcell_id,
                     thresholds=thresholds,
                     fc_project_yields=fc_project_yields,
@@ -290,42 +298,76 @@ class FlowcellHandler(SafeHandler):
                     project_names=project_names,
                     user=self.get_current_user(),
                     statusdb_url=self.settings["couch_url"],
-                    statusdb_id=entry.id,
+                    statusdb_id=entry["id"],
                 )
             )
 
 
-def get_view_val(key: str, view) -> Optional[dict]:
+def get_view_val(key: str, view, db_conn) -> Optional[dict]:
     """Get the value of a specified key from a view"""
 
-    matching_rows = [row for row in view.rows if row.key == key]
+    matching_rows = db_conn.post_view(
+        **view,
+        key=key,
+    ).get_result()["rows"]
 
     if len(matching_rows) == 1:
-        return matching_rows[0].value
+        return matching_rows[0]["value"]
     elif len(matching_rows) == 0:
         return None
     else:
         raise AssertionError(
-            f"Multiple matching rows found for key {key} in view {view.view.name}"
+            f"Multiple matching rows found for key {key} in view {view['view']}"
         )
 
 
 def fetch_ont_run_stats(
     run_name: str,
-    view_all_stats,
-    view_args,
-    view_project,
-    view_mux_scans,
-    view_pore_count_history,
+    db_conn,
+    all_stats: Optional[dict] = None,
 ) -> dict:
     """Take a run name and different db views that uses run name as key.
     Return a dict containing all the relevant info to show on the flowcells page.
     """
 
+    view_all_stats = {
+        "db": "nanopore_runs",
+        "ddoc": "info",
+        "view": "all_stats",
+        "descending": True,
+    }
+    view_args = {
+        "db": "nanopore_runs",
+        "ddoc": "info",
+        "view": "args",
+        "descending": True,
+    }
+    view_project = {
+        "db": "projects",
+        "ddoc": "project",
+        "view": "id_name_dates",
+        "descending": True,
+    }
+    view_mux_scans = {
+        "db": "nanopore_runs",
+        "ddoc": "info",
+        "view": "mux_scans",
+        "descending": True,
+    }
+    view_pore_count_history = {
+        "db": "nanopore_runs",
+        "ddoc": "info",
+        "view": "pore_count_history",
+        "descending": True,
+    }
     run_dict = {}
     run_dict["run_name"] = run_name
-    all_stats = get_view_val(run_name, view_all_stats)
-    args = get_view_val(run_name, view_args)
+    if all_stats:
+        # If all_stats is provided, use it directly
+        run_dict.update(all_stats)
+    else:
+        all_stats = get_view_val(run_name, view_all_stats, db_conn)
+    args = get_view_val(run_name, view_args, db_conn)
     run_dict.update(all_stats)
 
     walk_str2int(run_dict)
@@ -410,7 +452,7 @@ def fetch_ont_run_stats(
 
     ## Try to get a flow cell QC value
     # First-hand try to get the QC from the pore count history
-    pore_count_history = get_view_val(run_name, view_pore_count_history)
+    pore_count_history = get_view_val(run_name, view_pore_count_history, db_conn)
     if (
         pore_count_history
         and len(pore_count_history) > 0
@@ -430,7 +472,7 @@ def fetch_ont_run_stats(
 
     if qc:
         # Calculate the mux diff
-        mux_scans = get_view_val(run_name, view_mux_scans)
+        mux_scans = get_view_val(run_name, view_mux_scans, db_conn)
         if mux_scans and len(mux_scans) > 0:
             first_mux = int(mux_scans[0]["total_pores"])
             run_dict["first_mux_vs_qc"] = round((first_mux / qc) * 100, 2)
@@ -446,9 +488,9 @@ def fetch_ont_run_stats(
     if match:
         run_dict["project"] = match.group(0).upper()
         try:
-            run_dict["project_name"] = (
-                view_project[run_dict["project"]].rows[0].value["project_name"]
-            )
+            run_dict["project_name"] = view_project[run_dict["project"]].rows[0][
+                "value"
+            ]["project_name"]
         except:
             # If the project ID can't fetch a project name, leave empty
             run_dict["project_name"] = ""
@@ -499,24 +541,34 @@ class ElementFlowcellHandler(SafeHandler):
         )
 
 
-def get_project_ids_from_names(project_names: list, projects_db) -> list[dict]:
+def get_project_ids_from_names(project_names: list, db_conn) -> list[dict]:
     """Given a list of project names, perform a lookup to the projects db and return a json-style list of projects"""
     projects = []
-    for project_name in project_names:
-        rows = projects_db.view("projects/name_to_id")[project_name].rows
-        if rows:
-            projects.append({"project_id": rows[0].value, "project_name": project_name})
+    rows = db_conn.post_view(
+        db="projects",
+        ddoc="projects",
+        view="name_to_id",
+        keys=project_names,
+    ).get_result()["rows"]
+    if rows:
+        for row in rows:
+            projects.append({"project_id": row["value"], "project_name": row["key"]})
 
     return projects
 
 
-def get_project_names_from_ids(project_ids: list, projects_db) -> list[dict]:
+def get_project_names_from_ids(project_ids: list, db_conn) -> list[dict]:
     """Given a list of project ids, perform a lookup to the projects db and return a json-style list of projects"""
     projects = []
-    for project_id in project_ids:
-        rows = projects_db.view("projects/id_to_name")[project_id].rows
-        if rows:
-            projects.append({"project_id": project_id, "project_name": rows[0].value})
+    rows = db_conn.post_view(
+        db="projects",
+        ddoc="projects",
+        view="id_to_name",
+        keys=project_ids,
+    ).get_result()["rows"]
+    if rows:
+        for row in rows:
+            projects.append({"project_id": row["key"], "project_name": rows["value"]})
 
     return projects
 
@@ -528,11 +580,15 @@ class ElementFlowcellDataHandler(SafeHandler):
     """
 
     def get(self, name):
-        rows = self.application.element_runs_db.view("info/id", include_docs=True)[
-            name
-        ].rows
+        rows = self.application.cloudant.post_view(
+            db="element_runs",
+            ddoc="info",
+            view="id",
+            key=name,
+            include_docs=True,
+        ).get_result()["rows"]
         if rows:
-            flowcell = rows[0].doc
+            flowcell = rows[0]["doc"]
 
             # Collect all project names
             project_names = []
@@ -559,7 +615,7 @@ class ElementFlowcellDataHandler(SafeHandler):
                 ]
                 project_names = list(set(project_names_with_duplicates))
                 projects = get_project_ids_from_names(
-                    project_names, self.application.projects_db
+                    project_names, self.application.cloudant
                 )
             else:
                 project_ids = []
@@ -577,10 +633,11 @@ class ElementFlowcellDataHandler(SafeHandler):
 
                 project_ids = list(set(project_ids))
                 projects = get_project_names_from_ids(
-                    project_ids, self.application.projects_db
+                    project_ids, self.application.cloudant
                 )
 
             flowcell["projects"] = projects
+            print(f"Projects: {projects}")
 
             self.write(flowcell)
         else:
@@ -595,42 +652,26 @@ class ONTFlowcellHandler(SafeHandler):
         super(SafeHandler, self).__init__(application, request, **kwargs)
 
     def fetch_ont_flowcell(self, run_name):
-        view_all_stats = self.application.nanopore_runs_db.view(
-            "info/all_stats", descending=True
-        )
-        view_args = self.application.nanopore_runs_db.view("info/args", descending=True)
-        view_project = self.application.projects_db.view(
-            "project/id_name_dates", descending=True
-        )
-        view_mux_scans = self.application.nanopore_runs_db.view(
-            "info/mux_scans", descending=True
-        )
-        view_pore_count_history = self.application.nanopore_runs_db.view(
-            "info/pore_count_history", descending=True
-        )
-
         return fetch_ont_run_stats(
             run_name=run_name,
-            view_all_stats=view_all_stats,
-            view_args=view_args,
-            view_project=view_project,
-            view_mux_scans=view_mux_scans,
-            view_pore_count_history=view_pore_count_history,
+            db_conn=self.application.cloudant,
         )
 
     def fetch_barcodes(self, run_name: str) -> dict:
         """Returns dictionary whose keys are barcode IDs and whose values are dicts containing
         barcode metrics from the last data acquisition snapshot of the MinKNOW reports.
         """
+        view_barcodes = self.application.cloudant.post_view(
+            db="nanopore_runs",
+            ddoc="info",
+            view="barcodes",
+            key=run_name,
+        ).get_result()
+        rows = view_barcodes["rows"]
 
-        view_barcodes = self.application.nanopore_runs_db.view(
-            "info/barcodes", descending=True
-        )
-        rows = view_barcodes[run_name].rows
-
-        if rows and rows[0].value:
+        if rows and rows[0]["value"]:
             # Load the barcode metrics into a pandas DataFrame
-            df = pd.DataFrame.from_dict(rows[0].value, orient="index")
+            df = pd.DataFrame.from_dict(rows[0]["value"], orient="index")
 
             # Format a subset of all columns as integers
             integer_columns = df.columns.drop("barcode_alias")
@@ -701,12 +742,18 @@ class ONTFlowcellHandler(SafeHandler):
             return None
 
     def fetch_args(self, run_name):
-        view_args = self.application.nanopore_runs_db.view("info/args", descending=True)
-        rows = view_args[run_name].rows
+        view_args = self.application.cloudant.post_view(
+            db="nanopore_runs",
+            ddoc="info",
+            view="args",
+            descending=True,
+            key=run_name,
+        ).get_result()
+        rows = view_args["rows"]
 
         entries = []
         if rows:
-            args = rows[0].value
+            args = rows[0]["value"]
 
             group = r"([^\s=]+)"  # Text component of cmd argument
 

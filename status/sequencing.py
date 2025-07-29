@@ -1,5 +1,6 @@
 """Handlers related to data sequencing statistics."""
 
+# TODO Delete this file in future, as it does not seem to be used anymore.
 import json
 from collections import defaultdict
 from datetime import datetime

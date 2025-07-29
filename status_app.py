@@ -43,10 +43,7 @@ from status.flowcell import (
     ONTToulligQCReportHandler,
 )
 from status.flowcells import (
-    FlowcellDemultiplexHandler,
     FlowcellLinksDataHandler,
-    FlowcellQ30Handler,
-    FlowcellQCHandler,
     FlowcellsDataHandler,
     FlowcellSearchHandler,
     FlowcellsHandler,
@@ -192,7 +189,7 @@ from status.util import (
     DataHandler,
     LastPSULRunHandler,
     MainHandler,
-    UpdatedDocumentsDatahandler,
+    # UpdatedDocumentsDatahandler, #TODO Delete this in the future since it looks to be unused
 )
 from status.worksets import (
     ClosedWorksetsHandler,
@@ -268,9 +265,6 @@ class Application(tornado.web.Application):
             ("/api/v1/flowcells", FlowcellsDataHandler),
             ("/api/v1/flowcell_info2/([^/]*)$", FlowcellsInfoDataHandler),
             ("/api/v1/flowcell_info/([^/]*)$", OldFlowcellsInfoDataHandler),
-            ("/api/v1/flowcell_qc/([^/]*)$", FlowcellQCHandler),
-            ("/api/v1/flowcell_demultiplex/([^/]*)$", FlowcellDemultiplexHandler),
-            ("/api/v1/flowcell_q30/([^/]*)$", FlowcellQ30Handler),
             ("/api/v1/flowcell_links/([^/]*)$", FlowcellLinksDataHandler),
             ("/api/v1/flowcell_search/([^/]*)$", FlowcellSearchHandler),
             ("/api/v1/flowcell_yield/([^/]*)$", DataFlowcellYieldHandler),
@@ -303,7 +297,7 @@ class Application(tornado.web.Application):
             ("/api/v1/instrument_yield.png", InstrumentYieldPlotHandler),
             ("/api/v1/invoicing_notes/([^/]*)", InvoicingNotesHandler),
             ("/api/v1/lanes_ordered", LanesOrderedDataHandler),
-            ("/api/v1/last_updated", UpdatedDocumentsDatahandler),
+            # ("/api/v1/last_updated", UpdatedDocumentsDatahandler),
             ("/api/v1/last_psul", LastPSULRunHandler),
             ("/api/v1/latest_sticky_run_note/([^/]*)", LatestStickyNoteHandler),
             ("/api/v1/latest_sticky_run_note", LatestStickyNotesMultipleHandler),

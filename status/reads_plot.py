@@ -19,10 +19,14 @@ class DataFlowcellYieldHandler(SafeHandler):
             first_term, second_term = search_string.split("-")
 
         docs = [
-            x.value
-            for x in self.application.x_flowcells_db.view("plot/reads_yield")[
-                first_term : second_term + "ZZZZ"
-            ].rows
+            x["value"]
+            for x in self.application.cloudant.post_view(
+                db="x_flowcells",
+                ddoc="plot",
+                view="reads_yield",
+                start_key=[first_term],
+                end_key=[second_term + "ZZZZ"],
+            ).get_result()["rows"]
         ]
 
         for doc in docs:

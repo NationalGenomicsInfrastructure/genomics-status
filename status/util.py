@@ -167,11 +167,15 @@ class BaseHandler(tornado.web.RequestHandler):
             user_details = {
                 "userpreset": {"Hardcoded One": {}}
             }  # Just to show something locally
-        rows = app.gs_users_db.view("authorized/users", include_docs=True)[
-            user_email
-        ].rows
+        rows = app.cloudant.post_view(
+            db="gs_users",
+            ddoc="authorized",
+            view="users",
+            key=user_email,
+            include_docs=True,
+        ).get_result()["rows"]
         if len(rows) == 1:
-            user_details = dict(rows[0].doc)
+            user_details = dict(rows[0]["doc"])
 
         return user_details
 
@@ -218,27 +222,31 @@ class MainHandler(UnsafeHandler):
         t = self.application.loader.load("index.html")
         user = self.get_current_user()
         # Avoids pulling all historic data by assuming we have less than 30 NAS:es
-        view = self.application.server_status_db.view(
-            "nases/by_timestamp", descending=True, limit=30
-        )
-        latest = max([parser.parse(row.key) for row in view.rows])
+        view_rows = self.application.cloudant.post_view(
+            db="server_status",
+            ddoc="nases",
+            view="by_timestamp",
+            descending=True,
+            limit=30,
+        ).get_result()["rows"]
+        latest = max([parser.parse(row["key"]) for row in view_rows])
         # assuming that status db is not being updated more often than every 5 minutes
         reduced_rows = [
             row
-            for row in view.rows
-            if latest - parser.parse(row.key) <= timedelta(minutes=5)
+            for row in view_rows
+            if latest - parser.parse(row["key"]) <= timedelta(minutes=5)
         ]
         instruments = self.application.server_status["instruments"]
         server_status = {}
         for row in reduced_rows:
-            server = row.value.get("name")
+            server = row["value"].get("name")
             if server is None:
                 continue
             if server not in server_status:
-                server_status[server] = row.value
+                server_status[server] = row["value"]
                 server_status[server]["instrument"] = instruments.get(server, "-")
                 used_percentage = float(
-                    row.value.get("used_percentage", "0").replace("%", "")
+                    row["value"].get("used_percentage", "0").replace("%", "")
                 )
                 if used_percentage > 60:
                     server_status[server]["css_class"] = "q-warning"
@@ -307,6 +315,7 @@ class DataHandler(UnsafeHandler):
         self.write(json.dumps({"api": api, "pages": pages}))
 
 
+# TODO Delete this in the future, it is not used anymore and is quite outdated.
 class UpdatedDocumentsDatahandler(SafeHandler):
     """Serves a list of references to the last updated documents in the
     databases Status gets data from.

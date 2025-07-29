@@ -3,6 +3,7 @@ import json
 import traceback
 
 import dateutil
+from ibmcloudant.cloudant_v1 import BulkDocs
 
 from status.reports import MultiQCReportHandler
 from status.util import SafeHandler
@@ -21,7 +22,6 @@ class BioinfoAnalysisHandler(SafeHandler):
     URL: /api/v1/bioinfo/([^/]*)"""
 
     def post(self, project_id):
-        v = self.application.bioinfo_db.view("full_doc/pj_run_lane_sample_to_doc")
         user = self.get_current_user()
         data = json.loads(self.request.body)
         saved_data = {}
@@ -29,18 +29,24 @@ class BioinfoAnalysisHandler(SafeHandler):
         assert_project_id(project_id)
         # Fetching documents one by one generates too many requests to statusdb
         # Hopefully fetching all documents at once doesn't require too much memory
-        view = v[[project_id, "", "", ""] : [project_id, "Z", "Z", "Z"]]
+        view_rows = self.application.cloudant.post_view(
+            db="bioinfo_analysis",
+            ddoc="full_doc",
+            view="pj_run_lane_sample_to_doc",
+            start_key=[project_id, "", "", ""],
+            end_key=[project_id, "Z", "Z", "Z"],
+        ).get_result()["rows"]
         cached_view = {}
-        for row in view.rows:
-            if tuple(row.key) in cached_view:
-                cached_view[tuple(row.key)].append(row)
+        for row in view_rows:
+            if tuple(row["key"]) in cached_view:
+                cached_view[tuple(row["key"])].append(row)
             else:
-                cached_view[tuple(row.key)] = [row]
+                cached_view[tuple(row["key"])] = [row]
         for run_id in data:
             ## why run_id is a string??
             project, sample, run, lane = run_id.split(",")
             for row in cached_view[(project, run, lane, sample)]:
-                original_doc = row.value
+                original_doc = row["value"]
                 timestamp = datetime.datetime.now().isoformat()
                 # if the doc wasn't change, skip it
                 changed = False
@@ -78,7 +84,9 @@ class BioinfoAnalysisHandler(SafeHandler):
 
         # couchdb bulk update
         try:
-            save_result = self.application.bioinfo_db.update(to_save)
+            save_result = self.application.cloudant.post_bulk_docs(
+                db="bioinfo_analysis", bulk_docs=BulkDocs(docs=to_save, new_edits=True)
+            ).get_result()
         except Exception:
             self.set_status(400)
             self.finish(
@@ -87,7 +95,7 @@ class BioinfoAnalysisHandler(SafeHandler):
             return None
         neg_save_res = []
         for res in save_result:
-            if not res[0]:
+            if "ok" not in res:
                 neg_save_res.append(res[1])
         self.set_status(200)
         self.set_header("Content-type", "application/json")
@@ -95,16 +103,21 @@ class BioinfoAnalysisHandler(SafeHandler):
 
     def get(self, project_id):
         t = self.application.loader.load("bioinfo_tab.html")
-        view = self.application.bioinfo_db.view("full_doc/project_to_doc")
         bioinfo_data = {"sample_run_lane_view": {}, "run_lane_sample_view": {}}
         project_closed = False
         edit_history = {}
-        for row in view[project_id].rows:
-            flowcell_id = row.value.get("run_id")
-            instrument_type = row.value.get("instrument_type", "illumina")
-            lane_id = row.value.get("lane")
-            sample_id = row.value.get("sample")
-            changes = row.value.get("values", {})
+        view_rows = self.application.cloudant.post_view(
+            db="bioinfo_analysis",
+            ddoc="full_doc",
+            view="project_to_doc",
+            key=project_id,
+        ).get_result()["rows"]
+        for row in view_rows:
+            flowcell_id = row["value"].get("run_id")
+            instrument_type = row["value"].get("instrument_type", "illumina")
+            lane_id = row["value"].get("lane")
+            sample_id = row["value"].get("sample")
+            changes = row["value"].get("values", {})
             last_timestamp = max(list(changes))
             bioinfo_qc = changes.get(last_timestamp, {})
             bioinfo_data["instrument_type"] = instrument_type
@@ -229,22 +242,14 @@ class BioinfoAnalysisHandler(SafeHandler):
                 sample_delivery_date = ""
             sample["datadelivered"] = sample_delivery_date
 
-        try:
-            project_info = (
-                self.application.projects_db.view("project/summary")["open", project_id]
-                .rows[0]
-                .value
-            )
-            project_closed = False
-        except:
-            project_info = (
-                self.application.projects_db.view("project/summary")[
-                    "closed", project_id
-                ]
-                .rows[0]
-                .value
-            )
-            project_closed = True
+        project_row = self.application.cloudant.post_view(
+            db="projects",
+            ddoc="project",
+            view="summary",
+            keys=[["open", project_id], ["closed", project_id]],
+        ).get_result()["rows"][0]
+        project_info = project_row["value"]
+        project_closed = True if project_row["key"][0] == "closed" else False
 
         project_name = project_info.get("project_name")
         application = project_info.get("application")
