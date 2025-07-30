@@ -53,60 +53,39 @@
                         {% end %}
                     </td>
                     <td class="sample_name">
-                        {% if ont_flowcells[onefc].get("sample_name") %}
-                            {% if find_id(ont_flowcells[onefc]['sample_name'], 'sample') %}
-                                <a class="text-decoration-none" href="
-                                https://ngi-lims-
-                                {% if gs_globals['prod'] %}
-                                    prod
-                                {% else %}
-                                    stage
-                                {% end %}
-                                .scilifelab.se/clarity/search?scope=Sample&query=
-                                {{ find_id(ont_flowcells[onefc]['sample_name'], 'sample') }}
-                                ">
-                                {{ ont_flowcells[onefc]["sample_name"] }}
-                                </a>
-                            {% elif find_id(ont_flowcells[onefc]['sample_name'], 'pool') %}
-                                <a class="text-decoration-none" href="
-                                https://ngi-lims-
-                                {% if gs_globals['prod'] %}
-                                    prod
-                                {% else %}
-                                    stage
-                                {% end %}
-                                    .scilifelab.se/clarity/search?scope=Sample&query=
-                                {{ find_id(ont_flowcells[onefc]['sample_name'], 'pool') }}
-                                ">
-                                {{ ont_flowcells[onefc]["sample_name"] }}
-                                </a>
+                        {% if ont_flowcells[onefc].get('sample_link') %}
+                            <a class="text-decoration-none" href="
+                            https://ngi-lims-
+                            {% if gs_globals['prod'] %}
+                                prod
                             {% else %}
-                                {{ ont_flowcells[onefc]["sample_name"] }}
+                                stage
                             {% end %}
+                            .scilifelab.se/clarity/search?scope=Sample&query=
+                            {{ ont_flowcells[onefc].get('sample_link') }}
+                            ">
+                            {{ ont_flowcells[onefc].get("sample_name") }}
+                            </a>
                         {% else %}
-                            {{ "" }}
+                            {{ ont_flowcells[onefc].get("sample_name") }}
                         {% end %}
                     </td>
                     <td class="experiment_name">
-                        {% if ont_flowcells[onefc].get("experiment_name") %}
-                            {% if find_id(ont_flowcells[onefc]['experiment_name'], 'step') %}
-                                <a class="text-decoration-none" href="
-                                https://ngi-lims-
-                                {% if gs_globals['prod'] %}
-                                    prod
-                                {% else %}
-                                    stage
-                                {% end %}
-                                .scilifelab.se/clarity/work/
-                                {{ find_id(ont_flowcells[onefc]['experiment_name'], 'step').split('-')[-1] }}
-                                ">
-                                {{ ont_flowcells[onefc]["experiment_name"] }}
-                                </a>
+                        {% if ont_flowcells[onefc].get('experiment_link') %}
+                            <a class="text-decoration-none" href="
+                            https://ngi-lims-
+                            {% if gs_globals['prod'] %}
+                                prod
                             {% else %}
-                                {{ ont_flowcells[onefc]["experiment_name"] }}
+                                stage
                             {% end %}
+                            .scilifelab.se/clarity/work/
+                            {{ ont_flowcells[onefc]['experiment_link'] }}
+                            ">
+                            {{ ont_flowcells[onefc].get("experiment_name") }}
+                            </a>
                         {% else %}
-                            {{ "" }}
+                            {{ ont_flowcells[onefc].get("experiment_name") }}
                         {% end %}
                     </td>
                     <td class="project">

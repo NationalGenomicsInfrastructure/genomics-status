@@ -168,6 +168,9 @@ class FlowcellsHandler(SafeHandler):
                     f"{int(fc['basecalled_pass_bases']) / (int(fc['basecalled_pass_bases']) + int(fc['basecalled_fail_bases'])) * 100:.2f}"
                 )
 
+            # Get project info
+            print("yay")
+
         return ont_flowcells
 
     def list_element_flowcells(self):
@@ -195,7 +198,6 @@ class FlowcellsHandler(SafeHandler):
                 unfetched_runs=None,
                 element_fcs=element_fcs,
                 form_date=LatestRunningNoteHandler.formatDate,
-                find_id=find_id,
                 all=all,
             )
         )
