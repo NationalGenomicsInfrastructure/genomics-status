@@ -168,8 +168,32 @@ class FlowcellsHandler(SafeHandler):
                     f"{int(fc['basecalled_pass_bases']) / (int(fc['basecalled_pass_bases']) + int(fc['basecalled_fail_bases'])) * 100:.2f}"
                 )
 
-            # Get project info
-            print("yay")
+            # Get project names and IDs
+            try:
+                sample_data = fc["lims"]["loading"][-1]["sample_data"]
+            except KeyError:
+                continue
+            else:
+                projects = {}
+                for sample_dict in sample_data:
+                    if sample_dict["project_id"] not in projects.keys():
+                        projects[sample_dict["project_id"]] = sample_dict[
+                            "project_name"
+                        ]
+                fc["projects"] = projects
+
+                # Get library name and ID
+                if "ont_pool_name" in sample_data[0]:
+                    library_name = sample_data[0]["ont_pool_name"]
+                    library_id = sample_data[0]["ont_pool_id"]
+                else:
+                    library_name = sample_data[0]["sample_name"]
+                    library_id = sample_data[0]["sample_id"]
+                fc["library_name"] = library_name
+                fc["library_id"] = library_id
+
+                # Get step ID
+                fc["step_id"] = fc["lims"]["loading"][-1]["step_id"]
 
         return ont_flowcells
 

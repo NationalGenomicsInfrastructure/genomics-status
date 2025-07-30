@@ -9,8 +9,8 @@
         <thead style="vertical-align: top">
             <tr class="sticky darkth">
                 <th class="sort" data-sort="run_name">Run name</th>
-                <th class="sort" data-sort="sample_name">MinKNOW sample</th>
-                <th class="sort" data-sort="experiment_name">MinKNOW experiment</th>
+                <th class="sort" data-sort="library">Library</th>
+                <th class="sort" data-sort="lims_step">LIMS step</th>
                 <th class="sort" data-sort="project">Project</th>
                 <th class="sort" data-sort="barcoding_kit">Barcoding Kit</th>
                 <th class="sort text-center" data-sort="flow_cell_qc">Flow cell QC</th>
@@ -25,8 +25,8 @@
         <tfoot>
             <tr class="darkth">
                 <th class="sort searchable" data-sort="run_name">Run name</th>
-                <th class="sort searchable" data-sort="sample_name">MinKNOW Sample</th>
-                <th class="sort searchable" data-sort="experiment_name">MinKNOW Experiment</th>
+                <th class="sort searchable" data-sort="library">Library</th>
+                <th class="sort searchable" data-sort="lims_step">LIMS step</th>
                 <th class="sort searchable" data-sort="project">Project</th>
                 <th class="sort searchable" data-sort="barcoding_kit">Barcoding Kit</th>
                 <th class="sort" data-sort="flow_cell_qc"></th>
@@ -52,8 +52,8 @@
                             <abbr title="Run interrupted"><span class="fa fa-file-dashed-line"></span></abbr>
                         {% end %}
                     </td>
-                    <td class="sample_name">
-                        {% if ont_flowcells[onefc].get('sample_link') %}
+                    <td class="library">
+                        {% if ont_flowcells[onefc].get('library_id') %}
                             <a class="text-decoration-none" href="
                             https://ngi-lims-
                             {% if gs_globals['prod'] %}
@@ -62,16 +62,16 @@
                                 stage
                             {% end %}
                             .scilifelab.se/clarity/search?scope=Sample&query=
-                            {{ ont_flowcells[onefc].get('sample_link') }}
+                            {{ ont_flowcells[onefc].get('library_id') }}
                             ">
-                            {{ ont_flowcells[onefc].get("sample_name") }}
+                            {{ ont_flowcells[onefc].get("library_name") }}
                             </a>
                         {% else %}
-                            {{ ont_flowcells[onefc].get("sample_name") }}
+                            {{ ont_flowcells[onefc].get("library_name") }}
                         {% end %}
                     </td>
-                    <td class="experiment_name">
-                        {% if ont_flowcells[onefc].get('experiment_link') %}
+                    <td class="lims_step">
+                        {% if ont_flowcells[onefc].get('step_id') %}
                             <a class="text-decoration-none" href="
                             https://ngi-lims-
                             {% if gs_globals['prod'] %}
@@ -80,18 +80,22 @@
                                 stage
                             {% end %}
                             .scilifelab.se/clarity/work/
-                            {{ ont_flowcells[onefc]['experiment_link'] }}
+                            {{ ont_flowcells[onefc]['step_id'] }}
                             ">
-                            {{ ont_flowcells[onefc].get("experiment_name") }}
+                            {{ ont_flowcells[onefc].get("step_id") }}
                             </a>
                         {% else %}
-                            {{ ont_flowcells[onefc].get("experiment_name") }}
+                            {{ ont_flowcells[onefc].get("step_id") }}
                         {% end %}
                     </td>
                     <td class="project">
-                        <a class="text-decoration-none" href="/project/notImplemented">
-                        notImplemented
-                        </a>
+                        {% if ont_flowcells[onefc].get('projects') %}
+                            {% for project_id, project_name in ont_flowcells[onefc]['projects'].items() %}
+                                <samp style="max-width:50px;">
+                                    <a class="text-decoration-none" href="/project/{{ project_id }}">{{ project_name }}</a>
+                                </samp><br>
+                            {% end %}
+                        {% end %}
                     </td>
                     <td class="barcoding_kit">{{ ont_flowcells[onefc].get("barcoding_kit", "") }}</td>
                     <td class="flow_cell_qc text-center">
