@@ -10,104 +10,87 @@ from genologics_sql import utils as geno_utils
 from status.running_notes import LatestRunningNoteHandler
 from status.util import SafeHandler
 
-# Control names can be found in the table controltype in the lims backend. Will continue to check against this list for now, should
-# consider incorporating a check against this table directly into the queries in the future
-control_names = [
-    "AM7852",
-    "E.Coli genDNA",
-    "Endogenous Positive Control",
-    "Exogenous Positive Control",
-    "Human Brain Reference RNA",
-    "lambda DNA",
-    "mQ Negative Control",
-    "NA10860",
-    "NA11992",
-    "NA11993",
-    "NA12878",
-    "NA12891",
-    "NA12892",
-    "No Amplification Control",
-    "No Reverse Transcriptase Control",
-    "No Template Control",
-    "PhiX v3",
-    "Universal Human Reference RNA",
-    "lambda DNA (qPCR)",
-]
+
+class QueuesBaseHandler(SafeHandler):
+    """Base class that other queue handlers should inherit from.
+
+    Contains common methods and properties used across different queue handlers.
+    """
+
+    def _get_lims_cursor(self):
+        """Return a cursor to the LIMS database."""
+        connection = psycopg2.connect(
+            user=self.application.lims_conf["username"],
+            host=self.application.lims_conf["url"],
+            database=self.application.lims_conf["db"],
+            password=self.application.lims_conf["password"],
+        )
+        return connection.cursor()
+
+    def get_proj_details(self, project_id):
+        proj_doc = self.application.cloudant.post_view(
+            db="projects",
+            ddoc="project",
+            view="project_id",
+            key=project_id,
+            include_docs=True,
+        ).get_result()["rows"][0]["doc"]
+        proj_details = {}
+        proj_details["library_type"] = proj_doc["details"].get(
+            "library_construction_method", ""
+        )
+        proj_details["sequencing_platform"] = proj_doc["details"].get(
+            "sequencing_platform", ""
+        )
+        proj_details["flowcell"] = proj_doc["details"].get("flowcell", "")
+        queued_date = proj_doc["details"].get("queued", "")
+        if not queued_date:
+            queued_date = proj_doc.get("project_summary", {}).get("queued", "")
+        proj_details["queued_date"] = queued_date
+        proj_details["setup"] = proj_doc["details"].get("sequencing_setup", "")
+        proj_details["lanes"] = proj_doc["details"].get(
+            "sequence_units_ordered_(lanes)", ""
+        )
+        proj_details["flowcell_option"] = proj_doc["details"].get("flowcell_option", "")
+        proj_details["name"] = proj_doc["project_name"]
+        proj_details["total_num_samples"] = proj_doc["no_of_samples"]
+        proj_details["oldest_sample_queued_date"] = proj_doc.get(
+            "project_summary", {}
+        ).get("queued", "")
+        return proj_details
+
+    def get_control_names(self):
+        """Fetches control names from the database."""
+        cursor = self._get_lims_cursor()
+        query = "SELECT name FROM controltype;"
+        cursor.execute(query)
+        rows = cursor.fetchall()
+        return [row[0] for row in rows]
+
+    def fetch_queue_definitions(self, queue):
+        """Fetches queue definitions from the Couchdb."""
+        queue_def_doc = self.application.cloudant.get_document(
+            db="gs_configs",
+            doc_id="queue_definitions",
+        ).get_result()
+        return queue_def_doc["queues"][queue] if queue in queue_def_doc["queues"] else {}
 
 
-def get_proj_details(db_conn, project_id):
-    proj_doc = db_conn.post_view(
-        db="projects",
-        ddoc="project",
-        view="project_id",
-        key=project_id,
-        include_docs=True,
-    ).get_result()["rows"][0]["doc"]
-    proj_details = {}
-    proj_details["library_type"] = proj_doc["details"].get(
-        "library_construction_method", ""
-    )
-    proj_details["sequencing_platform"] = proj_doc["details"].get(
-        "sequencing_platform", ""
-    )
-    proj_details["flowcell"] = proj_doc["details"].get("flowcell", "")
-    queued_date = proj_doc["details"].get("queued", "")
-    if not queued_date:
-        queued_date = proj_doc.get("project_summary", {}).get("queued", "")
-    proj_details["queued_date"] = queued_date
-    proj_details["setup"] = proj_doc["details"].get("sequencing_setup", "")
-    proj_details["lanes"] = proj_doc["details"].get(
-        "sequence_units_ordered_(lanes)", ""
-    )
-    proj_details["flowcell_option"] = proj_doc["details"].get("flowcell_option", "")
-    proj_details["name"] = proj_doc["project_name"]
-    proj_details["total_num_samples"] = proj_doc["no_of_samples"]
-    proj_details["oldest_sample_queued_date"] = proj_doc.get("project_summary", {}).get(
-        "queued", ""
-    )
-    return proj_details
-
-
-class qPCRPoolsDataHandler(SafeHandler):
+class qPCRPoolsDataHandler(QueuesBaseHandler):
     """Serves a page with qPCR queues from LIMS listed
     URL: /api/v1/qpcr_pools
     """
 
     def get(self):
-        unwanted_in_lib_val = [
-            "Illumina TruSeq PCR-free",
-            "Illumina DNA PCR-free FLEX",
-            "SMARTer ThruPLEX DNA-seq (small genome)",
-            "SMARTer ThruPLEX DNA-seq (complex genome, metagenomes)",
-            "SMARTer ThruPLEX DNA-seq (ChIP)",
-            "Illumina TruSeq Stranded mRNA (polyA)",
-            "Illumina TruSeq Stranded total RNA",
-            "SMARTer Total Stranded RNA-seq, Pico input mammalian",
-            "SMARTer Total Stranded RNA-seq, Pico input mammalian - V3",
-            "Illumina TruSeq small RNA",
-            "QIAseq miRNA low input",
-            "Visium Spatial Gene Expression",
-            "RAD-seq",
-            "ATAC-seq",
-            "Dovetail OmniC",
-            "Dovetail MicroC",
-            "Arima HiC (standard)",
-            "Arima HiC (low input)",
-            "16S",
-            "Amplicon indexing (without cleanup)",
-            "Amplicon indexing (with cleanup)",
-            "Special",
-            "ONT ligation - DNA",
-            "ONT PCR - DNA",
-            "ONT cDNA PCR - RNA",
-            "ONT direct cDNA - RNA",
-            "ONT direct RNA - RNA",
-            "10X Chromium: 5GEX (GEM-X)",
-            "10X Chromium",
-        ]
-
-        queues = {}
-        # query for Miseq and NovaSeq
+        unwanted_in_lib_val = (
+            self.application.cloudant.get_document(
+                db="gs_configs",
+                doc_id="queue_definitions",
+            )
+            .get_result()
+            .get("unwanted_in_qPCR_LibraryValidation", [])
+        )
+        control_names = self.get_control_names()
         query = (
             "select art.artifactid, art.name, CAST(st.lastmodifieddate as DATE), st.generatedbyid, ct.name, ctp.wellxposition, ctp.wellyposition, s.projectid "
             "from artifact art, stagetransition st, container ct, containerplacement ctp, sample s, artifact_sample_map asm "
@@ -115,32 +98,27 @@ class qPCRPoolsDataHandler(SafeHandler):
             "and ctp.processartifactid=st.artifactid and ctp.containerid=ct.containerid and s.processid=asm.processid and asm.artifactid=art.artifactid "
             "group by art.artifactid, CAST(st.lastmodifieddate as DATE), st.generatedbyid, ct.name, ctp.wellxposition, ctp.wellyposition, s.projectid;"
         )
-        # Queue = 1002, stepid in the query
-        queues["MiSeq"] = query.format(1002)
-        # Queue = 1666, stepid in the query
-        queues["NovaSeq"] = query.format(1666)
-        # Queue = 2102, stepid in the query
-        queues["NextSeq"] = query.format(2102)
-        # Queue = 3055, stepid in the query
-        queues["NovaSeqXPlus"] = query.format(3055)
-        # Queue 41, but query is slightly different to use protocolid for Library Validation QC which is 8 and, also to exclude the controls
-        queues["LibraryValidation"] = (
+        lib_validation_query = (
             "select  st.artifactid, art.name, st.lastmodifieddate, st.generatedbyid, ct.name, ctp.wellxposition, ctp.wellyposition, s.projectid, e.udfvalue "
             "from artifact art, stagetransition st, container ct, containerplacement ctp, sample s, artifact_sample_map asm, entity_udf_view e where "
-            "art.artifactid=st.artifactid and st.stageid in (select stageid from stage where membershipid in (select sectionid from workflowsection where protocolid=8)) "
+            "art.artifactid=st.artifactid and st.stageid in (select stageid from stage where membershipid in (select sectionid from workflowsection where protocolid={})) "
             "and st.workflowrunid>0 and st.completedbyid is null and ctp.processartifactid=st.artifactid and ctp.containerid=ct.containerid and s.processid=asm.processid "
             f"and asm.artifactid=art.artifactid and art.name not in {tuple(control_names)} and s.projectid=e.attachtoid and e.udfname='Library construction method'"
             "group by st.artifactid, art.name, st.lastmodifieddate, st.generatedbyid, ct.name, ctp.wellxposition, ctp.wellyposition, s.projectid, e.udfvalue;"
         )
 
+        queues = {}
+        queue_defs = self.fetch_queue_definitions("qPCR")
+        for key, value in queue_defs.items():
+            if key != "LibraryValidation":
+                queues[key] = query.format(value["stepid"])
+            else:
+                # Library validation has a different query
+                # Queue 41, but query is slightly different to use protocolid for Library Validation QC which is 8 and, also to exclude the controls
+                queues[key] = lib_validation_query.format(value["protocolid"])
+
         methods = queues.keys()
-        connection = psycopg2.connect(
-            user=self.application.lims_conf["username"],
-            host=self.application.lims_conf["url"],
-            database=self.application.lims_conf["db"],
-            password=self.application.lims_conf["password"],
-        )
-        cursor = connection.cursor()
+        cursor = self._get_lims_cursor()
         pools = {}
         for method in methods:
             pools[method] = {}
@@ -166,9 +144,7 @@ class qPCRPoolsDataHandler(SafeHandler):
                             # showing up in Library validation as instructed by the lab
                             pools[method][container]["samples"].pop()
                             continue
-                        proj_details = get_proj_details(
-                            self.application.cloudant, project
-                        )
+                        proj_details = self.get_proj_details(project)
                         if (
                             proj_details["library_type"]
                             not in pools[method][container]["library_types"]
@@ -210,7 +186,7 @@ class qPCRPoolsDataHandler(SafeHandler):
                         # We do not want the projects P28910, N.egative_00_00 and P28911, P.ositive_00_00
                         # showing up in Library validation as instructed by the lab
                         continue
-                    proj_details = get_proj_details(self.application.cloudant, project)
+                    proj_details = self.get_proj_details(project)
                     latest_running_note = (
                         LatestRunningNoteHandler.get_latest_running_note(
                             self.application, "project", project
@@ -250,7 +226,7 @@ class qPCRPoolsHandler(SafeHandler):
         )
 
 
-class SequencingQueuesDataHandler(SafeHandler):
+class SequencingQueuesDataHandler(QueuesBaseHandler):
     """Serves a page with sequencing queues from LIMS listed
     URL: /api/v1/sequencing_queues
     """
@@ -292,32 +268,12 @@ class SequencingQueuesDataHandler(SafeHandler):
         )
 
         # sequencing queues are currently taken as the following
-        queues = {}
-        # Miseq- Step 7: Denature, Dilute and load sample
-        queues["MiSeq: Denature, Dilute and Load Sample"] = "55"
-        # NextSeq- Step 7: Load to Flowcell
-        queues["NextSeq: Load to Flowcell"] = "2109"
-        # Novaseq Step 11: Load to flow cell
-        queues["NovaSeq: Load to Flowcell"] = "1662"
-        # Novaseq Step 7: Define Run Format
-        queues["NovaSeq: Define Run Format"] = "1659"
-        # Novaseq Step 8: Make Bulk Pool for Novaseq Standard
-        queues["NovaSeq: Make Bulk Pool for Standard"] = "1655"
-        # Novaseq Step 10: Make Bulk Pool for Novaseq Xp
-        queues["NovaSeq : Make Bulk Pool for Xp"] = "1656"
-        # NovaseqXPlus Step 6: Make Bulk Pool (NovaSeqXPlus) v1.0
-        queues["NovaSeqXPlus : Make Bulk Pool (NovaSeqXPlus) v1.0"] = "3056"
-        # NovaSeqXPlus Step 8:  Load to Flowcell (NovaSeqXPlus) v1.0
-        queues["NovaSeqXPlus : Load to Flowcell (NovaSeqXPlus) v1.0"] = "3058"
+        queue_defs = self.fetch_queue_definitions("sequencing")
+        queues = {key: value["stepid"] for key, value in queue_defs.items()}
 
         methods = queues.keys()
-        connection = psycopg2.connect(
-            user=self.application.lims_conf["username"],
-            host=self.application.lims_conf["url"],
-            database=self.application.lims_conf["db"],
-            password=self.application.lims_conf["password"],
-        )
-        cursor = connection.cursor()
+        cursor = self._get_lims_cursor()
+        control_names = self.get_control_names()
         pool_groups = {}
         for method in methods:
             pool_groups[method] = {}
@@ -333,7 +289,7 @@ class SequencingQueuesDataHandler(SafeHandler):
                 project = "P" + str(record[5])
                 final_loading_conc = "TBD"
                 if project not in pool_groups[method]:
-                    proj_details = get_proj_details(self.application.cloudant, project)
+                    proj_details = self.get_proj_details(project)
                     pool_groups[method][project] = {
                         "name": proj_details["name"],
                         "setup": proj_details["setup"],
@@ -488,31 +444,18 @@ class SequencingQueuesHandler(SafeHandler):
         )
 
 
-class WorksetQueuesDataHandler(SafeHandler):
+class WorksetQueuesDataHandler(QueuesBaseHandler):
     """Serves all the samples that need to be added to worksets in LIMS
     URL: /api/v1/workset_queues
     """
 
     def get(self):
-        queues = {}
-        queues["TruSeqRNAprep"] = "311"
-        queues["TruSeqRNAprepV2"] = "2301"
-        queues["TruSeqSmallRNA"] = "410"
-        queues["TruSeqDNAPCR_free"] = "407"
-        queues["ThruPlex"] = "451"
-        queues["Genotyping"] = "901"
-        queues["RadSeq"] = "1201"
-        queues["SMARTerPicoRNA"] = "1551"
-        queues["ChromiumGenomev2"] = "1801"
+        queue_defs = self.fetch_queue_definitions("workset")
+        queues = {key: value["stepid"] for key, value in queue_defs.items()}
 
         methods = queues.keys()
-        connection = psycopg2.connect(
-            user=self.application.lims_conf["username"],
-            host=self.application.lims_conf["url"],
-            database=self.application.lims_conf["db"],
-            password=self.application.lims_conf["password"],
-        )
-        cursor = connection.cursor()
+        cursor = self._get_lims_cursor()
+        control_names = self.get_control_names()
         pools = {}
 
         for method in methods:
@@ -540,7 +483,7 @@ class WorksetQueuesDataHandler(SafeHandler):
                             2
                         ].isoformat()
                 else:
-                    proj_details = get_proj_details(self.application.cloudant, project)
+                    proj_details = self.get_proj_details(project)
                     oldest_sample_queued_date = record[2].isoformat()
                     latest_running_note = (
                         LatestRunningNoteHandler.get_latest_running_note(
@@ -575,25 +518,18 @@ class WorksetQueuesHandler(SafeHandler):
         )
 
 
-class LibraryPoolingQueuesDataHandler(SafeHandler):
+class LibraryPoolingQueuesDataHandler(QueuesBaseHandler):
     """Serves all the samples that need to be added to worksets in LIMS
     URL: /api/v1/libpooling_queues
     """
 
     def get(self):
-        queues = {}
-        queues["MiSeq"] = "52"
-        queues["NovaSeq"] = "1652"
-        queues["NextSeq"] = "2104"
+        queue_defs = self.fetch_queue_definitions("library_pooling")
+        queues = {key: value["stepid"] for key, value in queue_defs.items()}
 
         methods = queues.keys()
-        connection = psycopg2.connect(
-            user=self.application.lims_conf["username"],
-            host=self.application.lims_conf["url"],
-            database=self.application.lims_conf["db"],
-            password=self.application.lims_conf["password"],
-        )
-        cursor = connection.cursor()
+        cursor = self._get_lims_cursor()
+        control_names = self.get_control_names()
         pools = {}
 
         query = (
@@ -614,9 +550,7 @@ class LibraryPoolingQueuesDataHandler(SafeHandler):
                 if container in pools[method]:
                     pools[method][container]["samples"].append({"name": name})
                     if project not in pools[method][container]["projects"]:
-                        proj_details = get_proj_details(
-                            self.application.cloudant, project
-                        )
+                        proj_details = self.get_proj_details(project)
                         if (
                             proj_details["library_type"]
                             not in pools[method][container]["library_types"]
@@ -631,7 +565,7 @@ class LibraryPoolingQueuesDataHandler(SafeHandler):
                             "name"
                         ]
                 else:
-                    proj_details = get_proj_details(self.application.cloudant, project)
+                    proj_details = self.get_proj_details(project)
                     pools[method][container] = {
                         "samples": [{"name": name}],
                         "library_types": [proj_details["library_type"]],
