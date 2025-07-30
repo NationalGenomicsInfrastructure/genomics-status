@@ -5,46 +5,72 @@
 
     <div class="row">
 
-      <div class="col-md-4 borderRight" style="width: 35rem;">
+      <div class="col-md-4 borderRight" style="width: 40rem;">
         {% if flowcell.get('project') %}
           <h4 class = "mt-3 mb-2">Project</h4>
           <dl class="dl-ont">
-            <dt>Project ID</dt>				<dd><a href="/project/{{ flowcell.get('project') }}">{{ flowcell.get("project") }}</a></dd>
-            <dt>Project name</dt>	    <dd> {{ flowcell.get("project_name") }} </dd>
+            <dt>Project ID</dt>				<dd><a href="/project/{{ flowcell.get('project') }}">{{ flowcell.get("project","-") }}</a></dd>
+            <dt>Project name</dt>	    <dd> {{ flowcell.get("project_name","-") }} </dd>
           </dl>
         {% end %}
         <h4 class = "mt-3 mb-2">Time and status</h4>
         <dl class="dl-ont">
-          <dt>Run status</dt>				<dd> {{ flowcell.get("TACA_run_status") }} </dd>
-          <dt>Start date</dt>				<dd> {{ flowcell.get("start_date") }} </dd>
-          <dt>End date</dt>					<dd> {{ flowcell.get("end_date") }} </dd>
+          <dt>Run status</dt>				  <dd> {{ flowcell.get("TACA_run_status","-") }} </dd>
+          <dt>Start date</dt>				  <dd> {{ flowcell.get("start_date","-") }} </dd>
+          <dt>End date</dt>					  <dd> {{ flowcell.get("end_date","-") }} </dd>
         </dl>
         <h4 class = "mt-3 mb-2">MinKNOW identifiers</h4>
         <dl class="dl-ont">
-          <dt>Experiment name</dt>  <dd> {{ flowcell.get("experiment_name") }} </dd>
-          <dt>Sample name</dt>		  <dd> {{ flowcell.get("sample_name") }} </dd>
-          <dt>Run name</dt>	        <dd> {{ flowcell.get("run_name") }} </dd>
-          <dt>Run ID</dt>		        <dd> {{ flowcell.get("run_id") }} </dd>
+          <dt>MinKNOW experiment</dt> <dd> {{ flowcell.get("experiment_name","-") }} </dd>
+          <dt>MinKNOW sample</dt>		  <dd> {{ flowcell.get("sample_name","-") }} </dd>
+          <dt>Run name</dt>	          <dd> {{ flowcell.get("run_name","-") }} </dd>
+          <dt>Run ID</dt>		          <dd> {{ flowcell.get("run_id","-") }} </dd>
         </dl>
         <h4 class = "mt-3 mb-2">Hardware</h4>
         <dl class="dl-ont">
-          <dt>Flowcell type</dt>	  <dd> {{ flowcell.get("flow_cell_type") }} </dd>
-          <dt>Flowcell ID</dt>		  <dd> {{ flowcell.get("flow_cell_id") }} </dd>
-          <dt>Prep kit</dt>	        <dd> {{ flowcell.get("prep_kit") }} </dd>
-          <dt>Barcoding kit</dt>		<dd> {{ flowcell.get("barcoding_kit") }} </dd>
+          <dt>Flowcell type</dt>	    <dd> {{ flowcell.get("flow_cell_type","-") }} </dd>
+          <dt>Flowcell ID</dt>		    <dd> {{ flowcell.get("flow_cell_id","-") }} </dd>
+          <dt>Prep kit</dt>	          <dd> {{ flowcell.get("prep_kit","-") }} </dd>
+          <dt>Barcoding kit</dt>	    <dd> {{ flowcell.get("barcoding_kit","-") }} </dd>
         </dl>
         <h4 class = "mt-3 mb-2">Sequencing stats</h4>
         <dl class="dl-ont">
-          <dt>Yield passed</dt>				<dd> {{ flowcell.get("basecalled_pass_bases_str") }} </dd>
-          <dt>Read count passed</dt>	<dd> {{ flowcell.get("basecalled_pass_read_count_str") }} </dd>
-          <dt>N50 passed</dt>				  <dd> {{ flowcell.get("n50_str") }} </dd>
-          <dt>% Pass/Fail</dt>		    <dd> {{ flowcell.get("accuracy") }} </dd>
+          <dt>Yield passed</dt>				<dd> {{ flowcell.get("basecalled_pass_bases_str","-") }} </dd>
+          <dt>Read count passed</dt>	<dd> {{ flowcell.get("basecalled_pass_read_count_str","-") }} </dd>
+          <dt>N50 passed</dt>				  <dd> {{ flowcell.get("n50_str","-") }} </dd>
+          <dt>Pass/Fail (%)</dt>		  <dd> {{ flowcell.get("accuracy","-") }} </dd>
         </dl>
-
+        <h4 class = "mt-3 mb-2">Custom metrics</h4>
+        <dl class="dl-ont">
+          <dt>
+            <abbr data-toggle="tooltip" data-html="true" title="Number of pores found at first MUX scan compared to QC">
+              1st MUX scan vs QC (%)
+            </abbr>
+          </dt> 
+          <dd> {{ flowcell.get("pore_activity").get("first_mux_vs_qc","-") }} </dd>
+          <dt>
+            <abbr data-toggle="tooltip" data-html="true" title="Highest fraction pores in states<br><em>(sequencing + available) / total</em><br>for the 1st hour of the run">
+              Peak Pore Health (%)
+            </abbr>
+          </dt>
+          <dd> {{ flowcell.get("pore_activity").get("peak_pore_health_pc","-") }} </dd>
+          <dt>
+            <abbr data-toggle="tooltip" data-html="true" title="Highest fraction pores in states<br><em>sequencing / (sequencing + available)</em><br>for the 1st hour of the run">
+              Peak Pore Efficacy (%)
+            </abbr>
+          </dt>
+          <dd> {{ flowcell.get("pore_activity").get("peak_pore_efficacy_pc","-") }} </dd>
+          <dt>
+            <abbr data-toggle="tooltip" data-html="true" title="Timepoint at which 90% of the distribution of sequencing pores has been passed">
+              T90 (h)
+            </abbr>
+          </dt>
+          <dd> {{ flowcell.get("pore_activity").get("t90_h","-") }} </dd>
+        </dl>
       </div>
 
       {% if args %}
-        <div class="col-md-7 borderRight">
+        <div class="col-md-7 borderRight ml-5">
           <h4 class = "mt-3 mb-2">MinKNOW arguments</h4>
           <dl class="dl-ont-args mb-0">
             {% for e in args %}

@@ -492,11 +492,7 @@ def fetch_ont_run_stats(
                 "value"
             ]["project_name"]
         except:
-            # If the project ID can't fetch a project name, leave empty
-            run_dict["project_name"] = ""
-    else:
-        run_dict["project"] = ""
-        run_dict["project_name"] = ""
+            pass
 
     return run_dict
 

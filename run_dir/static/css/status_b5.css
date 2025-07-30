@@ -548,11 +548,11 @@ pre {
 .dl-ont > dt {
   float: left;
   text-align: left;
-  width: 10rem;
+  width: 15rem;
 }
 
 .dl-ont > dd {
-  margin-left: 11rem;
+  margin-left: 15rem;
   margin-bottom: 0rem;
 }
 
