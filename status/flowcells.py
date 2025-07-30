@@ -158,6 +158,15 @@ class FlowcellsHandler(SafeHandler):
                 )
             if fc.get("n50"):
                 fc["n50_Kbp"] = f"{int(fc['n50']) / 1e3:,.2f}"
+            if (
+                fc.get("basecalled_fail_bases")
+                and fc.get("basecalled_pass_bases")
+                and int(fc["basecalled_pass_bases"]) + int(fc["basecalled_fail_bases"])
+                > 0
+            ):
+                fc["accuracy"] = (
+                    f"{int(fc['basecalled_pass_bases']) / (int(fc['basecalled_pass_bases']) + int(fc['basecalled_fail_bases'])) * 100:.2f}"
+                )
 
         return ont_flowcells
 
