@@ -73,7 +73,9 @@ class QueuesBaseHandler(SafeHandler):
             db="gs_configs",
             doc_id="queue_definitions",
         ).get_result()
-        return queue_def_doc["queues"][queue] if queue in queue_def_doc["queues"] else {}
+        return (
+            queue_def_doc["queues"][queue] if queue in queue_def_doc["queues"] else {}
+        )
 
 
 class qPCRPoolsDataHandler(QueuesBaseHandler):
