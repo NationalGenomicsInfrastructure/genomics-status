@@ -146,6 +146,19 @@ class FlowcellsHandler(SafeHandler):
 
         ont_flowcells = {row["key"]: row["value"] for row in view_all_stats_rows}
 
+        # Format readability of quantitative data
+        for fc in ont_flowcells.values():
+            if fc.get("basecalled_pass_bases"):
+                fc["basecalled_pass_bases_Gbp"] = (
+                    f"{int(fc['basecalled_pass_bases']) / 1e9:,.2f}"
+                )
+            if fc.get("basecalled_pass_read_count"):
+                fc["basecalled_pass_read_count_M"] = (
+                    f"{int(fc['basecalled_pass_read_count']) / 1e6:,.2f}"
+                )
+            if fc.get("n50"):
+                fc["n50_Kbp"] = f"{int(fc['n50']) / 1e3:,.2f}"
+
         return ont_flowcells
 
     def list_element_flowcells(self):
