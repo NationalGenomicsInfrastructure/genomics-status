@@ -321,182 +321,6 @@ def get_view_val(key: str, view, db_conn) -> Optional[dict]:
         )
 
 
-def fetch_ont_run_stats(
-    run_name: str,
-    db_conn,
-    all_stats: Optional[dict] = None,
-) -> dict:
-    """Take a run name and different db views that uses run name as key.
-    Return a dict containing all the relevant info to show on the flowcells page.
-    """
-
-    view_all_stats = {
-        "db": "nanopore_runs",
-        "ddoc": "info",
-        "view": "all_stats",
-        "descending": True,
-    }
-    view_args = {
-        "db": "nanopore_runs",
-        "ddoc": "info",
-        "view": "args",
-        "descending": True,
-    }
-    view_project = {
-        "db": "projects",
-        "ddoc": "project",
-        "view": "id_name_dates",
-        "descending": True,
-    }
-    view_mux_scans = {
-        "db": "nanopore_runs",
-        "ddoc": "info",
-        "view": "mux_scans",
-        "descending": True,
-    }
-    view_pore_count_history = {
-        "db": "nanopore_runs",
-        "ddoc": "info",
-        "view": "pore_count_history",
-        "descending": True,
-    }
-    run_dict = {}
-    run_dict["run_name"] = run_name
-    if all_stats:
-        # If all_stats is provided, use it directly
-        run_dict.update(all_stats)
-    else:
-        all_stats = get_view_val(run_name, view_all_stats, db_conn)
-    args = get_view_val(run_name, view_args, db_conn)
-    run_dict.update(all_stats)
-
-    walk_str2int(run_dict)
-
-    # If run is ongoing, i.e. has no reports generated, extrapolate as much information as possible from file path
-    if (
-        run_dict["TACA_run_status"] == "ongoing"
-        or run_dict["TACA_run_status"] == "interrupted"
-    ):
-        run_dict["experiment_name"], run_dict["sample_name"], name = run_dict[
-            "TACA_run_path"
-        ].split("/")
-
-        (
-            run_date,
-            run_dict["start_time"],
-            instr_or_pos,
-            run_dict["flow_cell_id"],
-            run_dict["run_id"],
-        ) = name.split("_")
-        run_dict["start_date"] = datetime.strptime(str(run_date), "%Y%m%d").strftime(
-            "%Y-%m-%d"
-        )
-
-    # If run is finished, i.e. reports are generated
-    elif run_dict["TACA_run_status"] == "finished":
-        # Only try to calculate new metrics if run had basecalling enabled
-        if "--base_calling=on" in args:
-            # Calculate new metrics
-            run_dict["basecalled_bases"] = (
-                run_dict["basecalled_pass_bases"] + run_dict["basecalled_fail_bases"]
-            )
-
-            if run_dict["basecalled_pass_read_count"] <= 0:
-                run_dict["accuracy"] = 0
-            else:
-                run_dict["accuracy"] = round(
-                    run_dict["basecalled_pass_bases"]
-                    / run_dict["basecalled_bases"]
-                    * 100,
-                    2,
-                )
-
-            """ Convert metrics from integers to readable strings and appropriately scaled floats, e.g.
-            basecalled_pass_read_count =       int(    123 123 123 )
-            basecalled_pass_read_count_str =   str(    123.12 Mbp )
-            basecalled_pass_read_count_Gbp =   float(  0.123 )
-            """
-            metrics = [
-                "read_count",
-                "basecalled_pass_read_count",
-                "basecalled_fail_read_count",
-                "basecalled_bases",
-                "basecalled_pass_bases",
-                "basecalled_fail_bases",
-                "n50",
-            ]
-            for metric in metrics:
-                # Readable metrics, i.e. strings w. appropriate units
-                unit = "" if "count" in metric else "bp"
-
-                if run_dict[metric] == "":
-                    run_dict[metric] = 0
-
-                run_dict["_".join([metric, "str"])] = add_prefix(
-                    input_int=run_dict[metric], unit=unit
-                )
-
-                # Formatted metrics, i.e. floats transformed to predetermined unit
-                if "count" in metric:
-                    unit = "M"
-                    divby = 10**6
-                elif "n50" in metric:
-                    unit = "Kbp"
-                    divby = 10**3
-                elif "bases" in metric:
-                    unit = "Gbp"
-                    divby = 10**9
-                else:
-                    continue
-                run_dict["_".join([metric, unit])] = round(run_dict[metric] / divby, 2)
-
-    ## Try to get a flow cell QC value
-    # First-hand try to get the QC from the pore count history
-    pore_count_history = get_view_val(run_name, view_pore_count_history, db_conn)
-    if (
-        pore_count_history
-        and len(pore_count_history) > 0
-        and pore_count_history[0]["type"] == "qc"
-    ):
-        qc = run_dict["pore_count_history"][0]["num_pores"]
-    else:
-        # Second-hand try to get the QC from LIMS (now outdated)
-        try:
-            last_lims_qc = all_stats["lims"]["loading"][-1]["qc"]
-            if last_lims_qc != "None":
-                qc = last_lims_qc
-            else:
-                qc = None
-        except KeyError:
-            qc = None
-
-    if qc:
-        # Calculate the mux diff
-        mux_scans = get_view_val(run_name, view_mux_scans, db_conn)
-        if mux_scans and len(mux_scans) > 0:
-            first_mux = int(mux_scans[0]["total_pores"])
-            run_dict["first_mux_vs_qc"] = round((first_mux / qc) * 100, 2)
-
-    # Try to find project name. ID string should be present in MinKNOW field "experiment name" by convention
-    query = re.compile(r"(p|P)\d{5,6}")
-
-    # Search experiment and sample names for P-number to link to project
-    match = query.search(str(run_dict["experiment_name"]))
-    if not match:
-        match = query.search(str(run_dict["sample_name"]))
-
-    if match:
-        run_dict["project"] = match.group(0).upper()
-        try:
-            run_dict["project_name"] = view_project[run_dict["project"]].rows[0][
-                "value"
-            ]["project_name"]
-        except:
-            pass
-
-    return run_dict
-
-
 class ONTMinKNOWReportHandler(SafeHandler):
     """Serves a page showing the MinKNOW .html report of a given run"""
 
@@ -647,11 +471,81 @@ class ONTFlowcellHandler(SafeHandler):
     def __init__(self, application, request, **kwargs):
         super(SafeHandler, self).__init__(application, request, **kwargs)
 
-    def fetch_ont_flowcell(self, run_name):
-        return fetch_ont_run_stats(
-            run_name=run_name,
-            db_conn=self.application.cloudant,
+    def get_fc_stats(self, run_name: str) -> dict:
+        return_dict = self.application.cloudant.post_view(
+            db="nanopore_runs",
+            ddoc="info",
+            view="all_stats",
+            key=run_name,
+        ).get_result()["rows"][0]["value"]
+
+        return_dict["run_name"] = run_name
+
+        return_dict["accuracy"] = (
+            f"{int(return_dict['basecalled_pass_bases']) / (int(return_dict['basecalled_pass_bases']) + int(return_dict['basecalled_fail_bases'])) * 100:.2f}"
         )
+
+        key2unit = {
+            "read_count": "",
+            "basecalled_pass_read_count": "",
+            "basecalled_fail_read_count": "",
+            "basecalled_pass_bases": "bp",
+            "basecalled_fail_bases": "bp",
+            "n50": "bp",
+        }
+
+        for key, unit in key2unit.items():
+            if return_dict[key] == "":
+                return_dict[key] = 0
+
+            # Add string representation of metrics with appropriate units
+            return_dict[f"{key}_str"] = int2formatted_str(
+                input_int=return_dict[key], unit=unit
+            )
+
+        return return_dict
+
+    def get_fc_qc(self, run_name: str):
+        return_dict = {}
+
+        pore_count_history = self.application.cloudant.post_view(
+            db="nanopore_runs",
+            ddoc="info",
+            view="pore_count_history",
+            key=run_name,
+        ).get_result()["rows"][0]["value"]
+
+        if (
+            pore_count_history
+            and len(pore_count_history) > 0
+            and pore_count_history[0]["type"] == "qc"
+        ):
+            qc = int(pore_count_history[0]["num_pores"])
+            return_dict["qc"] = qc
+
+            # Calculate the mux diff
+            mux_scans = self.application.cloudant.post_view(
+                db="nanopore_runs",
+                ddoc="info",
+                view="mux_scans",
+                key=run_name,
+            ).get_result()["rows"][0]["value"]
+            if mux_scans and len(mux_scans) > 0:
+                first_mux = int(mux_scans[0]["total_pores"])
+                return_dict["first_mux_vs_qc"] = round((first_mux / qc) * 100, 2)
+
+        return return_dict
+
+    def collect_fc_info(self, run_name: str) -> dict:
+        """Take a run name and different db views that uses run name as key.
+        Return a dict containing all the relevant info to show on the flowcells page.
+        """
+
+        fc = {}
+        fc.update(self.get_fc_stats(run_name))
+        fc.update(self.get_fc_qc(run_name))
+
+        return fc
 
     def fetch_barcodes(self, run_name: str) -> dict:
         """Returns dictionary whose keys are barcode IDs and whose values are dicts containing
@@ -795,7 +689,7 @@ class ONTFlowcellHandler(SafeHandler):
         self.write(
             t.generate(
                 gs_globals=self.application.gs_globals,
-                flowcell=self.fetch_ont_flowcell(name),
+                flowcell=self.collect_fc_info(name),
                 barcodes=self.fetch_barcodes(name),
                 args=self.fetch_args(name),
                 has_minknow_report=os.path.exists(
@@ -815,30 +709,31 @@ class ONTFlowcellHandler(SafeHandler):
         )
 
 
-def add_prefix(input_int: int, unit: str):
-    """Convert integer to prefix string w. appropriate prefix"""
+def int2formatted_str(input_int: int, unit: str):
+    """Convert integer to string w. appropriate prefixed unit."""
     input_int = int(input_int)
 
-    dict_magnitude_to_unit = {
+    magnitude2prefixed_unit = {
         1: unit,
-        10**3: "K" + unit,
-        10**6: "M" + unit,
-        10**9: "G" + unit,
-        10**12: "T" + unit,
+        1e3: "K" + unit,
+        1e6: "M" + unit,
+        1e9: "G" + unit,
+        1e12: "T" + unit,
     }
 
-    for magnitude, unit in dict_magnitude_to_unit.items():
-        if input_int > magnitude * 1000:
+    # Find the largest magnitude / prefix that is smaller than the input_int
+    for magnitude, prefixed_unit in magnitude2prefixed_unit.items():
+        if input_int > magnitude * 1e3:
             continue
         else:
             break
 
-    if input_int > 1000:
+    if input_int > 1e3:
         output_int = round(input_int / magnitude, 2)
     else:
         output_int = input_int
 
-    output_str = " ".join([str(output_int), unit])
+    output_str = " ".join([str(output_int), prefixed_unit])
     return output_str
 
 
