@@ -12,7 +12,6 @@
                 <th class="sort" data-sort="library">Library</th>
                 <th class="sort" data-sort="lims_step">LIMS step</th>
                 <th class="sort" data-sort="project">Project</th>
-                <th class="sort" data-sort="barcoding_kit">Barcoding Kit</th>
                 <th class="sort text-center" data-sort="flow_cell_qc">Flow cell QC</th>
                 <th class="sort text-center" data-sort="load_fmol">Loading (fmol)</th>
                 <th class="sort text-center" data-sort="reloadings">Reloadings</th>
@@ -28,7 +27,6 @@
                 <th class="sort searchable" data-sort="library">Library</th>
                 <th class="sort searchable" data-sort="lims_step">LIMS step</th>
                 <th class="sort searchable" data-sort="project">Project</th>
-                <th class="sort searchable" data-sort="barcoding_kit">Barcoding Kit</th>
                 <th class="sort" data-sort="flow_cell_qc"></th>
                 <th class="sort" data-sort="load_fmol"></th>
                 <th class="sort" data-sort="reloadings"></th>
@@ -64,10 +62,10 @@
                             .scilifelab.se/clarity/search?scope=Sample&query=
                             {{ ont_flowcells[onefc].get('library_id') }}
                             ">
-                            {{ ont_flowcells[onefc].get("library_name") }}
+                            {{ ont_flowcells[onefc].get("library_name","") }}
                             </a>
                         {% else %}
-                            {{ ont_flowcells[onefc].get("library_name") }}
+                            {{ ont_flowcells[onefc].get("library_name","") }}
                         {% end %}
                     </td>
                     <td class="lims_step">
@@ -80,12 +78,12 @@
                                 stage
                             {% end %}
                             .scilifelab.se/clarity/work/
-                            {{ ont_flowcells[onefc]['step_id'] }}
+                            {{ ont_flowcells[onefc]['step_id'][3:] }}
                             ">
-                            {{ ont_flowcells[onefc].get("step_id") }}
+                            {{ ont_flowcells[onefc].get("step_id","") }}
                             </a>
                         {% else %}
-                            {{ ont_flowcells[onefc].get("step_id") }}
+                            {{ ont_flowcells[onefc].get("step_id","") }}
                         {% end %}
                     </td>
                     <td class="project">
@@ -97,7 +95,6 @@
                             {% end %}
                         {% end %}
                     </td>
-                    <td class="barcoding_kit">{{ ont_flowcells[onefc].get("barcoding_kit", "") }}</td>
                     <td class="flow_cell_qc text-center">
                         {# First-hand: Try to fetch the QC value from the automatically collected instrument logs #}
                         {% try %}
