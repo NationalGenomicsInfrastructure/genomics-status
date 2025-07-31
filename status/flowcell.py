@@ -541,22 +541,6 @@ class ElementFlowcellHandler(SafeHandler):
         )
 
 
-def get_project_ids_from_names(project_names: list, db_conn) -> list[dict]:
-    """Given a list of project names, perform a lookup to the projects db and return a json-style list of projects"""
-    projects = []
-    rows = db_conn.post_view(
-        db="projects",
-        ddoc="projects",
-        view="name_to_id",
-        keys=project_names,
-    ).get_result()["rows"]
-    if rows:
-        for row in rows:
-            projects.append({"project_id": row["value"], "project_name": row["key"]})
-
-    return projects
-
-
 def get_project_names_from_ids(project_ids: list, db_conn) -> list[dict]:
     """Given a list of project ids, perform a lookup to the projects db and return a json-style list of projects"""
     projects = []
@@ -568,7 +552,7 @@ def get_project_names_from_ids(project_ids: list, db_conn) -> list[dict]:
     ).get_result()["rows"]
     if rows:
         for row in rows:
-            projects.append({"project_id": row["key"], "project_name": rows["value"]})
+            projects.append({"project_id": row["key"], "project_name": row["value"]})
 
     return projects
 
@@ -591,53 +575,18 @@ class ElementFlowcellDataHandler(SafeHandler):
             flowcell = rows[0]["doc"]
 
             # Collect all project names
-            project_names = []
+            project_ids = self.application.cloudant.post_view(
+                db="element_runs",
+                ddoc="names",
+                view="project_ids_list",
+                key=name,
+            ).get_result()["rows"][0]["value"]
 
-            demultiplexing_done = False
-            if (
-                flowcell.get("Element", {})
-                .get("Demultiplex_Stats", {})
-                .get("Index_Assignment")
-            ):
-                demultiplexing_done = True
-
-            if demultiplexing_done:
-                samples_with_duplicates = [
-                    sample
-                    for sample in flowcell.get("Element", {})
-                    .get("Demultiplex_Stats", {})
-                    .get("Index_Assignment", [])
-                ]
-                project_names_with_duplicates = [
-                    sample.get("Project").replace("__", ".")
-                    for sample in samples_with_duplicates
-                    if sample.get("Project")
-                ]
-                project_names = list(set(project_names_with_duplicates))
-                projects = get_project_ids_from_names(
-                    project_names, self.application.cloudant
-                )
-            else:
-                project_ids = []
-                for sample in (
-                    flowcell.get("instrument_generated_files", {})
-                    .get("RunManifest.json", {})
-                    .get("Samples", [])
-                ):
-                    sample_name = sample.get("SampleName")
-                    # Check that the sample name is on the format PX..X_Y..Y"
-                    if re.match(r"^P\d+_\d+$", sample_name):
-                        # Parse out the PXXXXXX number from the sample name on the format "
-                        project_id = sample_name.split("_")[0]
-                        project_ids.append(project_id)
-
-                project_ids = list(set(project_ids))
-                projects = get_project_names_from_ids(
-                    project_ids, self.application.cloudant
-                )
+            projects = get_project_names_from_ids(
+                project_ids, self.application.cloudant
+            )
 
             flowcell["projects"] = projects
-            print(f"Projects: {projects}")
 
             self.write(flowcell)
         else:
