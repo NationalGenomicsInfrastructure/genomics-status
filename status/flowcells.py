@@ -19,33 +19,6 @@ application_log = logging.getLogger("tornado.application")
 lims = lims.Lims(BASEURI, USERNAME, PASSWORD)
 
 
-def find_id(stringable, pattern_type: str) -> re.match:
-    """Looks for a specific pattern in a stringable object and returns the match.
-
-    project: e.g. P12345
-    sample: e.g. P12345_1001
-    pool: e.g. 2-123456
-    step: e.g. 24-123456
-
-    """
-
-    string = str(stringable)
-
-    patterns = {
-        "project": re.compile(r"P[1-9]\d{4,}"),
-        "sample": re.compile(r"P\d+_[1-9]\d{2,3}"),
-        "pool": re.compile(r"2-[1-9]\d{4,}"),
-        "step": re.compile(r"24-[1-9]\d{4,}"),
-    }
-
-    match = re.match(patterns[pattern_type], string)
-
-    if match:
-        return match.group()
-    else:
-        return None
-
-
 class FlowcellsHandler(SafeHandler):
     """Serves a page which lists all flowcells with some brief info.
     By default shows only flowcells form the last 6 months, use the parameter
