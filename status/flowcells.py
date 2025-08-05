@@ -104,7 +104,7 @@ class FlowcellsHandler(SafeHandler):
 
         return OrderedDict(sorted(temp_flowcells.items(), reverse=True))
 
-    def list_ont_flowcells(self):
+    def list_ont_flowcells(self, unfetched_runs):
         """Load the rows of the nanopore_runs:info/all_stats view
         and convert into {run_name: stats} dict.
         """
@@ -116,58 +116,64 @@ class FlowcellsHandler(SafeHandler):
             descending=True,
         ).get_result()["rows"]
 
-        ont_flowcells = {row["key"]: row["value"] for row in view_all_stats_rows}
+        ont_runs = {row["key"]: row["value"] for row in view_all_stats_rows}
 
         # Format readability of quantitative data
-        for fc in ont_flowcells.values():
-            if fc.get("basecalled_pass_bases"):
-                fc["basecalled_pass_bases_Gbp"] = (
-                    f"{int(fc['basecalled_pass_bases']) / 1e9:,.2f}"
-                )
-            if fc.get("basecalled_pass_read_count"):
-                fc["basecalled_pass_read_count_M"] = (
-                    f"{int(fc['basecalled_pass_read_count']) / 1e6:,.2f}"
-                )
-            if fc.get("n50"):
-                fc["n50_Kbp"] = f"{int(fc['n50']) / 1e3:,.2f}"
-            if (
-                fc.get("basecalled_fail_bases")
-                and fc.get("basecalled_pass_bases")
-                and int(fc["basecalled_pass_bases"]) + int(fc["basecalled_fail_bases"])
-                > 0
-            ):
-                fc["accuracy"] = (
-                    f"{int(fc['basecalled_pass_bases']) / (int(fc['basecalled_pass_bases']) + int(fc['basecalled_fail_bases'])) * 100:.2f}"
-                )
-
-            # Get project names and IDs
+        for run_name, all_stats in ont_runs.items():
             try:
-                sample_data = fc["lims"]["loading"][-1]["sample_data"]
-            except KeyError:
-                continue
-            else:
-                projects = {}
-                for sample_dict in sample_data:
-                    if sample_dict["project_id"] not in projects.keys():
-                        projects[sample_dict["project_id"]] = sample_dict[
-                            "project_name"
-                        ]
-                fc["projects"] = projects
+                if all_stats.get("basecalled_pass_bases"):
+                    all_stats["basecalled_pass_bases_Gbp"] = (
+                        f"{int(all_stats['basecalled_pass_bases']) / 1e9:,.2f}"
+                    )
+                if all_stats.get("basecalled_pass_read_count"):
+                    all_stats["basecalled_pass_read_count_M"] = (
+                        f"{int(all_stats['basecalled_pass_read_count']) / 1e6:,.2f}"
+                    )
+                if all_stats.get("n50"):
+                    all_stats["n50_Kbp"] = f"{int(all_stats['n50']) / 1e3:,.2f}"
+                if (
+                    all_stats.get("basecalled_fail_bases")
+                    and all_stats.get("basecalled_pass_bases")
+                    and int(all_stats["basecalled_pass_bases"])
+                    + int(all_stats["basecalled_fail_bases"])
+                    > 0
+                ):
+                    all_stats["accuracy"] = (
+                        f"{int(all_stats['basecalled_pass_bases']) / (int(all_stats['basecalled_pass_bases']) + int(all_stats['basecalled_fail_bases'])) * 100:.2f}"
+                    )
 
-                # Get library name and ID
-                if "ont_pool_name" in sample_data[0]:
-                    library_name = sample_data[0]["ont_pool_name"]
-                    library_id = sample_data[0]["ont_pool_id"]
+                # Get project names and IDs
+                try:
+                    sample_data = all_stats["lims"]["loading"][-1]["sample_data"]
+                except KeyError:
+                    continue
                 else:
-                    library_name = sample_data[0]["sample_name"]
-                    library_id = sample_data[0]["sample_id"]
-                fc["library_name"] = library_name
-                fc["library_id"] = library_id
+                    projects = {}
+                    for sample_dict in sample_data:
+                        if sample_dict["project_id"] not in projects.keys():
+                            projects[sample_dict["project_id"]] = sample_dict[
+                                "project_name"
+                            ]
+                    all_stats["projects"] = projects
 
-                # Get step ID
-                fc["step_id"] = fc["lims"]["loading"][-1]["step_id"]
+                    # Get library name and ID
+                    if "ont_pool_name" in sample_data[0]:
+                        library_name = sample_data[0]["ont_pool_name"]
+                        library_id = sample_data[0]["ont_pool_id"]
+                    else:
+                        library_name = sample_data[0]["sample_name"]
+                        library_id = sample_data[0]["sample_id"]
+                    all_stats["library_name"] = library_name
+                    all_stats["library_id"] = library_id
 
-        return ont_flowcells
+                    # Get step ID
+                    all_stats["step_id"] = all_stats["lims"]["loading"][-1]["step_id"]
+
+            except Exception as e:
+                application_log.warning(f"Error parsing {run_name}: {e}", exc_info=True)
+                unfetched_runs.append(run_name)
+
+        return ont_runs
 
     def list_element_flowcells(self):
         return self.application.cloudant.post_view(
@@ -181,8 +187,9 @@ class FlowcellsHandler(SafeHandler):
         # Default is to NOT show all flowcells
         all = self.get_argument("all", False)
         t = self.application.loader.load("flowcells.html")
+        unfetched_runs = []
         fcs = self.list_flowcells(all=all)
-        ont_fcs = self.list_ont_flowcells()
+        ont_fcs = self.list_ont_flowcells(unfetched_runs)
         element_fcs = self.list_element_flowcells()
         self.write(
             t.generate(
@@ -191,7 +198,7 @@ class FlowcellsHandler(SafeHandler):
                 user=self.get_current_user(),
                 flowcells=fcs,
                 ont_flowcells=ont_fcs,
-                unfetched_runs=None,
+                unfetched_runs=unfetched_runs,
                 element_fcs=element_fcs,
                 form_date=LatestRunningNoteHandler.formatDate,
                 all=all,
