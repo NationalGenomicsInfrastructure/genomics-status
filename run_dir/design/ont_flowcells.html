@@ -41,7 +41,7 @@
             {% for onefc in ont_flowcells %}
                 <tr>
                     <td class = run_name>
-                        <a class="text-decoration-none" href="/flowcells_ont/{{ onefc }}">{{ onefc }}</a>
+                        <a class="text-decoration-none" href="/flowcells_ont/{{ onefc }}" target="_blank">{{ onefc }}</a>
                         {% if ont_flowcells.get(onefc).get('TACA_run_status') == 'finished' %}
                             <abbr title="Run completed"><span class="fa fa-check-circle"></span></abbr>
                         {% elif ont_flowcells.get(onefc).get('TACA_run_status') == 'ongoing' %}
@@ -61,7 +61,7 @@
                             {% end %}
                             .scilifelab.se/clarity/search?scope=Sample&query=
                             {{ ont_flowcells[onefc].get('library_id') }}
-                            ">
+                            " target="_blank">
                             {{ ont_flowcells[onefc].get("library_name","") }}
                             </a>
                         {% else %}
@@ -79,7 +79,7 @@
                             {% end %}
                             .scilifelab.se/clarity/work/
                             {{ ont_flowcells[onefc]['step_id'][3:] }}
-                            ">
+                            " target="_blank">
                             {{ ont_flowcells[onefc].get("step_id","") }}
                             </a>
                         {% else %}
@@ -90,7 +90,7 @@
                         {% if ont_flowcells[onefc].get('projects') %}
                             {% for project_id, project_name in ont_flowcells[onefc]['projects'].items() %}
                                 <samp style="max-width:50px;">
-                                    <a class="text-decoration-none" href="/project/{{ project_id }}">{{ project_name }}</a>
+                                    <a class="text-decoration-none" href="/project/{{ project_id }}" target="_blank">{{ project_name }}</a>
                                 </samp><br>
                             {% end %}
                         {% end %}
