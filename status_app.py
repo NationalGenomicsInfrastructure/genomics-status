@@ -229,7 +229,7 @@ class Application(tornado.web.Application):
 
         self.gs_globals["font_awesome_url"] = settings.get("font_awesome_url", None)
         self.gs_globals["prod"] = True
-        if "dev" in settings.get("couch_url"): 
+        if "dev" in settings.get("couch_url"):
             self.gs_globals["prod"] = False
 
         handlers = [
