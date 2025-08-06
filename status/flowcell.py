@@ -481,58 +481,76 @@ class ONTFlowcellHandler(SafeHandler):
 
         return_dict["run_name"] = run_name
 
-        return_dict["accuracy"] = (
-            f"{int(return_dict['basecalled_pass_bases']) / (int(return_dict['basecalled_pass_bases']) + int(return_dict['basecalled_fail_bases'])) * 100:.2f}"
-        )
+        # Some metrics can only be calculated for a finished run
+        if "basecalled_pass_bases" in return_dict:
+            # Accuracy
+            return_dict["accuracy"] = (
+                f"{int(return_dict['basecalled_pass_bases']) / (int(return_dict['basecalled_pass_bases']) + int(return_dict['basecalled_fail_bases'])) * 100:.2f}"
+            )
 
-        key2unit = {
-            "read_count": "",
-            "basecalled_pass_read_count": "",
-            "basecalled_fail_read_count": "",
-            "basecalled_pass_bases": "bp",
-            "basecalled_fail_bases": "bp",
-            "n50": "bp",
-        }
+            # Flatten custom metrics to prevent nested access calls
+            return_dict.update(return_dict["pore_activity"])
 
-        for key, unit in key2unit.items():
-            if return_dict[key] == "":
-                return_dict[key] = 0
+            # Number of reloadings
+            try:
+                return_dict["n_reloadings"] = len(
+                    return_dict["lims"]["reloading"][-1]["reload_fmols"]
+                )
+            except (KeyError, IndexError):
+                return_dict["n_reloadings"] = 0
 
             # Add string representation of metrics with appropriate units
-            return_dict[f"{key}_str"] = int2formatted_str(
-                input_int=return_dict[key], unit=unit
-            )
+            key2unit = {
+                "read_count": "",
+                "basecalled_pass_read_count": "",
+                "basecalled_fail_read_count": "",
+                "basecalled_pass_bases": "bp",
+                "basecalled_fail_bases": "bp",
+                "n50": "bp",
+            }
+
+            for key, unit in key2unit.items():
+                if return_dict[key] == "":
+                    return_dict[key] = 0
+
+                return_dict[f"{key}_str"] = int2formatted_str(
+                    input_int=return_dict[key], unit=unit
+                )
 
         return return_dict
 
     def get_fc_qc(self, run_name: str):
         return_dict = {}
 
-        pore_count_history = self.application.cloudant.post_view(
-            db="nanopore_runs",
-            ddoc="info",
-            view="pore_count_history",
-            key=run_name,
-        ).get_result()["rows"][0]["value"]
-
-        if (
-            pore_count_history
-            and len(pore_count_history) > 0
-            and pore_count_history[0]["type"] == "qc"
-        ):
-            qc = int(pore_count_history[0]["num_pores"])
-            return_dict["qc"] = qc
-
-            # Calculate the mux diff
-            mux_scans = self.application.cloudant.post_view(
+        try:
+            pore_count_history = self.application.cloudant.post_view(
                 db="nanopore_runs",
                 ddoc="info",
-                view="mux_scans",
+                view="pore_count_history",
                 key=run_name,
             ).get_result()["rows"][0]["value"]
-            if mux_scans and len(mux_scans) > 0:
-                first_mux = int(mux_scans[0]["total_pores"])
-                return_dict["first_mux_vs_qc"] = round((first_mux / qc) * 100, 2)
+
+            if (
+                pore_count_history
+                and len(pore_count_history) > 0
+                and pore_count_history[0]["type"] == "qc"
+            ):
+                qc = int(pore_count_history[0]["num_pores"])
+                return_dict["qc"] = qc
+
+                # Calculate the mux diff
+                mux_scans = self.application.cloudant.post_view(
+                    db="nanopore_runs",
+                    ddoc="info",
+                    view="mux_scans",
+                    key=run_name,
+                ).get_result()["rows"][0]["value"]
+                if mux_scans and len(mux_scans) > 0:
+                    first_mux = int(mux_scans[0]["total_pores"])
+                    return_dict["first_mux_vs_qc"] = round((first_mux / qc) * 100, 2)
+
+        except IndexError:
+            pass
 
         return return_dict
 

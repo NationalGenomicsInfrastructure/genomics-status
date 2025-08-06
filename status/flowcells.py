@@ -142,6 +142,15 @@ class FlowcellsHandler(SafeHandler):
                         f"{int(all_stats['basecalled_pass_bases']) / (int(all_stats['basecalled_pass_bases']) + int(all_stats['basecalled_fail_bases'])) * 100:.2f}"
                     )
 
+                # QC
+                try:
+                    if all_stats["pore_count_history"][0]["type"] == "qc":
+                        all_stats["qc"] = all_stats["pore_count_history"][0][
+                            "num_pores"
+                        ]
+                except (KeyError, IndexError):
+                    pass
+
                 # Get project names and IDs
                 try:
                     sample_data = all_stats["lims"]["loading"][-1]["sample_data"]

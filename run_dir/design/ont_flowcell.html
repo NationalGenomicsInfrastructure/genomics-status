@@ -42,30 +42,32 @@
         </dl>
         <h4 class = "mt-3 mb-2">Custom metrics</h4>
         <dl class="dl-ont">
+          <dt>Prior QC</dt>           <dd> {{ flowcell.get("qc","-") }} </dd>
           <dt>
             <abbr data-toggle="tooltip" data-html="true" title="Number of pores found at first MUX scan compared to QC">
               1st MUX scan vs QC (%)
             </abbr>
           </dt> 
           <dd> {{ flowcell.get("first_mux_vs_qc","-") }} </dd>
+          <dt>Reloadings (#)</dt>     <dd> {{ flowcell.get("n_reloadings", "-") }} </dd>
           <dt>
             <abbr data-toggle="tooltip" data-html="true" title="Highest fraction pores in states<br><em>(sequencing + available) / total</em><br>for the 1st hour of the run">
               Peak Pore Health (%)
             </abbr>
           </dt>
-          <dd> {{ flowcell.get("pore_activity").get("peak_pore_health_pc","-") }} </dd>
+          <dd> {{ flowcell.get("peak_pore_health_pc","-") }} </dd>
           <dt>
             <abbr data-toggle="tooltip" data-html="true" title="Highest fraction pores in states<br><em>sequencing / (sequencing + available)</em><br>for the 1st hour of the run">
               Peak Pore Efficacy (%)
             </abbr>
           </dt>
-          <dd> {{ flowcell.get("pore_activity").get("peak_pore_efficacy_pc","-") }} </dd>
+          <dd> {{ flowcell.get("peak_pore_efficacy_pc","-") }} </dd>
           <dt>
             <abbr data-toggle="tooltip" data-html="true" title="Timepoint at which 90% of the distribution of sequencing pores has been passed">
               T90 (h)
             </abbr>
           </dt>
-          <dd> {{ flowcell.get("pore_activity").get("t90_h","-") }} </dd>
+          <dd> {{ flowcell.get("t90_h","-") }} </dd>
         </dl>
       </div>
 
