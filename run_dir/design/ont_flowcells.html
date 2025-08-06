@@ -6,7 +6,7 @@
 
     <table class="table table-striped table-bordered sortable" id="ont_fc_table">
 
-        <thead style="vertical-align: top">
+        <thead style="vertical-align: top; white-space: nowrap">
             <tr class="sticky darkth">
                 <th class="sort" data-sort="run_name">
                     <abbr data-toggle="tooltip" data-html="true" title="Follows format yymmdd_HHMM_position_flowcell_randomHash">
@@ -34,6 +34,7 @@
                 <th class="sort text-center" data-sort="basecalled_pass_bases_Gbp">Yield Passed (Gbp)</th>
                 <th class="sort text-center" data-sort="basecalled_pass_read_count_M">Read Count Passed (M)</th>
                 <th class="sort text-center" data-sort="n50_Kbp">N50 Passed (Kbp)</th>
+                <th class="sort" data-sort="latest_running_note">Latest running note</th>
             </tr>
         </thead>
         <tfoot>
@@ -48,13 +49,14 @@
                 <th class="sort" data-sort="basecalled_pass_bases_Gbp"></th>
                 <th class="sort" data-sort="basecalled_pass_read_count_M"></th>
                 <th class="sort" data-sort="n50_Kbp"></th>
+                <th class="sort" data-sort="latest_running_note"></th>
             </tr>
         </tfoot>
 
-        <tbody class="list">
+        <tbody class="list" style="vertical-align: top; width: 1%; white-space: nowrap">
             {% for onefc in ont_flowcells %}
                 <tr>
-                    <td class = run_name>
+                    <td>
                         <a class="text-decoration-none" href="/flowcells_ont/{{ onefc }}" target="_blank">{{ onefc }}</a>
                         {% if ont_flowcells.get(onefc).get('TACA_run_status') == 'finished' %}
                             <abbr title="Run completed"><span class="fa fa-check-circle"></span></abbr>
@@ -64,7 +66,7 @@
                             <abbr title="Run interrupted"><span class="fa fa-file-dashed-line"></span></abbr>
                         {% end %}
                     </td>
-                    <td class="library">
+                    <td>
                         {% if ont_flowcells[onefc].get('library_id') %}
                             <a class="text-decoration-none" href="
                             https://ngi-lims-
@@ -82,7 +84,7 @@
                             {{ ont_flowcells[onefc].get("library_name","") }}
                         {% end %}
                     </td>
-                    <td class="lims_step">
+                    <td>
                         {% if ont_flowcells[onefc].get('step_id') %}
                             <a class="text-decoration-none" href="
                             https://ngi-lims-
@@ -100,7 +102,7 @@
                             {{ ont_flowcells[onefc].get("step_id","") }}
                         {% end %}
                     </td>
-                    <td class="project">
+                    <td>
                         {% if ont_flowcells[onefc].get('projects') %}
                             {% for project_id, project_name in ont_flowcells[onefc]['projects'].items() %}
                                 <samp style="max-width:50px;">
@@ -109,12 +111,12 @@
                             {% end %}
                         {% end %}
                     </td>
-                    <td class="prep_kit">{{ ont_flowcells[onefc].get("prep_kit","") }}</td>
-                    <td class="flow_cell_qc text-center">
+                    <td>{{ ont_flowcells[onefc].get("prep_kit","") }}</td>
+                    <td class="text-center">
                         {{ ont_flowcells[onefc].get("qc","") }}
                     </td>
 
-                    <td class="load_fmol text-center">
+                    <td class="text-center">
                         {% try %}
                             {{ ont_flowcells[onefc]["lims"]["loading"][-1]["load_fmol"] }} 
                         {% except %}
@@ -122,12 +124,27 @@
                         {% end %}
                     </td>
 
-                    <td class="basecalled_pass_bases_Gbp text-center">
+                    <td class="text-center">
                         {{ ont_flowcells[onefc].get("basecalled_pass_bases_Gbp", "") }}
                     </td>
-                    <td class="basecalled_pass_read_count_M text-center">{{ ont_flowcells[onefc].get("basecalled_pass_read_count_M", "") }}</td>
-                    <td class="n50_Kbp text-center">
+                    <td class="text-center">{{ ont_flowcells[onefc].get("basecalled_pass_read_count_M", "") }}</td>
+                    <td class="text-center">
                         {{ ont_flowcells[onefc].get("n50_Kbp", "") }}
+                    </td>
+                    <td style="width: 100%" class="latest_running_note">
+                        {% if ont_flowcells[onefc].get('latest_running_note') %}
+                            {% set running_notes = ont_flowcells[onefc].get('latest_running_note') %}
+                            {% set latest_running_note_key = list(running_notes.keys())[0] %}
+                            <div class="card running-note-card">
+                                <div class='card-header'>
+                                <a class="text-decoration-none" href='mailto:{{ running_notes[latest_running_note_key]["email"].encode("ascii","ignore")}}'>{{ running_notes[latest_running_note_key]["user"]}}</a>  -  {{form_date(latest_running_note_key)}}
+                                {% if running_notes[latest_running_note_key]['categories'] %} - <span class="fillbadgecolour"> {{ running_notes[latest_running_note_key]['categories'] }} </span> {% end %}
+                                </div>
+                                <div class='card-body trunc-note-latest' style='white-space: pre-line'>
+                                    {{running_notes[latest_running_note_key]['note']}}
+                                </div>
+                            </div>
+                        {% end %}
                     </td>
                 </tr>
             {% end %}
@@ -152,7 +169,6 @@ function init_listjs_ont() {
         "paging":false,
         "info":false,
         "order": [[ 0, "desc" ]],
-        "autoWidth":true,
         dom: 'Bfrti',
         colReorder: true,
         buttons: [
@@ -173,6 +189,7 @@ function init_listjs_ont() {
 
     //Add the bootstrap classes to the search thingy
 
+    $('div.dataTables_filter input').addClass('form-control search search-query');
     $('#ont_fc_table_filter').addClass('form-inline float-right pt-1');
     $("#ont_fc_table_filter").appendTo($('#ont_page_title'));
     $('#ont_fc_table_filter label input').appendTo($('#ont_fc_table_filter'));
