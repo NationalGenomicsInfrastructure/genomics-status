@@ -592,6 +592,8 @@ class Application(tornado.web.Application):
             tornado.autoreload.watch("design/lanes_ordered.html")
             tornado.autoreload.watch("design/link_tab.html")
             tornado.autoreload.watch("design/ngisweden_stats.html")
+            tornado.autoreload.watch("design/ont_flowcell.html")
+            tornado.autoreload.watch("design/ont_flowcells.html")
             tornado.autoreload.watch("design/ont_trend_plot.html")
             tornado.autoreload.watch("design/qpcr_pools.html")
             tornado.autoreload.watch("design/pricing_products.html")
