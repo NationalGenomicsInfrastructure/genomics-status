@@ -8,12 +8,28 @@
 
         <thead style="vertical-align: top">
             <tr class="sticky darkth">
-                <th class="sort" data-sort="run_name">Run name</th>
-                <th class="sort" data-sort="library">Library</th>
-                <th class="sort" data-sort="lims_step">LIMS step</th>
+                <th class="sort" data-sort="run_name">
+                    <abbr data-toggle="tooltip" data-html="true" title="Follows format yymmdd_HHMM_position_flowcell_randomHash">
+                        Run Name
+                    </abbr>
+                </th>
+                <th class="sort" data-sort="library">
+                    <abbr data-toggle="tooltip" data-html="true" title="Name of the sequenced sample or pool in LIMS">
+                        Library
+                    </abbr>
+                </th>
+                <th class="sort" data-sort="lims_step">
+                    <abbr data-toggle="tooltip" data-html="true" title="ID of the LIMS step detailing the start of the sequencing run">
+                        LIMS step
+                    </abbr>
+                </th>
                 <th class="sort" data-sort="project">Project</th>
                 <th class="sort" data-sort="prep_kit">Prep Kit</th>
-                <th class="sort text-center" data-sort="flow_cell_qc">Prior QC</th>
+                <th class="sort text-center" data-sort="flow_cell_qc">
+                    <abbr data-toggle="tooltip" data-html="true" title="If a flowcell QC was performed prior to starting the run, its result is shown here.">
+                        Prior QC
+                    </abbr>
+                </th>
                 <th class="sort text-center" data-sort="load_fmol">Loading (fmol)</th>
                 <th class="sort text-center" data-sort="basecalled_pass_bases_Gbp">Yield Passed (Gbp)</th>
                 <th class="sort text-center" data-sort="basecalled_pass_read_count_M">Read Count Passed (M)</th>
