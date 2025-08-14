@@ -180,6 +180,7 @@ from status.suggestion_box import SuggestionBoxDataHandler, SuggestionBoxHandler
 from status.testing import TestDataHandler
 from status.user_management import (
     CurrentUserDataHandler,
+    RolesAndTeamsHandler,
     UserManagementDataHandler,
     UserManagementHandler,
 )
@@ -328,6 +329,7 @@ class Application(tornado.web.Application):
             ("/api/v1/presets/onloadcheck", PresetsOnLoadHandler),
             ("/api/v1/qpcr_pools", qPCRPoolsDataHandler),
             ("/api/v1/rna_report/([^/]*$)", ProjectRNAMetaDataHandler),
+            ("/api/v1/user_management/roles_teams", RolesAndTeamsHandler),
             ("/api/v1/running_notes/([^/]*)$", RunningNotesDataHandler),
             ("/api/v1/links/([^/]*)$", LinksDataHandler),
             ("/api/v1/sample_requirements", SampleRequirementsDataHandler),

@@ -83,7 +83,7 @@ class UserManagementDataHandler(SafeHandler):
                         db="gs_users",
                         document=user_doc,
                         doc_id=user_doc["_id"],
-                    )
+                    ).get_result()
                     if not response.get("ok", False):
                         self.set_status(400)
                         self.finish("User modification failed!")
@@ -112,9 +112,40 @@ class UserManagementDataHandler(SafeHandler):
             )
 
 
+class RolesAndTeamsHandler(SafeHandler):
+    """Serves available roles and teams data
+    URL: /api/v1/user_management/roles_teams
+    """
+
+    def get(self):
+        self.set_header("Content-type", "application/json")
+
+        # Check if user has permission to view roles and teams
+        current_user = self.get_current_user()
+        if not current_user or not current_user.is_admin:
+            self.set_status(403)
+            self.write({"error": "Insufficient permissions"})
+            return
+
+        try:
+            available_roles = self.application.genstat_defaults.get("roles", {})
+            # TODO: Fetch teams data
+            response_data = {
+                "roles": available_roles,
+            }
+
+            self.write(response_data)
+
+        except Exception as e:
+            self.set_status(500)
+            self.write(
+                {"error": "Failed to fetch roles and teams data", "details": str(e)}
+            )
+
+
 class CurrentUserDataHandler(SafeHandler):
     """Serves data for the current user
-    URL: /api/v1/user_management/users
+    URL: /api/v1/current_user
     """
 
     def get(self):
