@@ -133,7 +133,7 @@ class RolesAndTeamsHandler(SafeHandler):
             response_data = {
                 "roles": available_roles,
             }
-
+self.set_status(200)
             self.write(response_data)
 
         except Exception as e:
