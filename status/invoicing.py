@@ -291,7 +291,11 @@ class GenerateInvoiceHandler(AgreementsDBHandler, InvoicingDataHandler):
                 proj_doc["invoice_spec_downloaded"] = int(
                     datetime.datetime.now().timestamp() * 1000
                 )
-                self.application.projects_db.save(proj_doc)
+                self.application.cloudant.put_document(
+                    db="projects",
+                    document=proj_doc,
+                    doc_id=proj_doc["_id"],
+                ).get_result()
             df = pd.DataFrame(data, columns=col_headers)
             df.to_excel(excel_buff, index=False)
             excel_buff.seek(0)
