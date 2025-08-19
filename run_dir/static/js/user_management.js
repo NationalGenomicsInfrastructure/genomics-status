@@ -78,8 +78,9 @@ const vUserManagement = {
 
         init_datatable() {
             /* Just the ordinary datatable initializing. */
-            if ($.fn.dataTable.isDataTable( '#user_table')){
-                this.reset_datatable();
+            const existingFilter = $('#user_table_filter');
+            if (existingFilter.length > 0) {
+                existingFilter.remove();
             }
             this.dataTable = $('#user_table').DataTable({
                 "paging":false,
@@ -101,14 +102,6 @@ const vUserManagement = {
             $('#user_table_filter label').remove();
             $('#user_table_filter input').addClass('form-control p-2 mb-2 float-right');
             $("#user_table_filter input").attr("placeholder", "Search table...");
-        },
-        reset_datatable() {
-            /* A bit hacky way to get datatables to handle a DOM update:
-             *  - drop it and recreate it.
-             */
-            this.dataTable.destroy();
-            $('#user_table_filter').remove();
-            this.dataTable = null;
         },
         openModifyModal(username, info) {
             this.userModalData.username = username;
@@ -155,7 +148,6 @@ const vUserManagement = {
                 'initials' : initials
             })
             .then(response => {
-                this.reset_datatable();
                 this.fetchUsers();
             })
             .catch(error => {
@@ -234,19 +226,19 @@ const vUserManagement = {
                     </tr>
                     </tfoot>
                     <tbody class="list" id="user_table_body">
-                        <tr v-for="(info, name) in this.users" :key="name">
+                        <tr v-for="(info, email) in this.users" :key="email">
                             <td>
                                 <div class="btn-group">
-                                    <button class="btn btn-sm ml-2 btn-outline-primary btn-large" @click="openModifyModal(name, info)">
+                                    <button class="btn btn-sm ml-2 btn-outline-primary btn-large" @click="openModifyModal(email, info)">
                                         <i class="fa fa-wrench mr-1"></i>Modify
                                     </button>
                                     <button class="btn btn-sm btn-outline-danger btn-large delete-user-btn"
-                                            :disabled="name === this.user.email"
-                                            @click="openDeleteModal(name)">
+                                            :disabled="email === this.user.email"
+                                            @click="openDeleteModal(email)">
                                         <i class="fa fa-times mr-1"></i>Delete
                                     </button>
                                 </div>
-                                <span class="ml-3"> {{ name }} </span>
+                                <span class="ml-3"> {{ email }} </span>
                             </td>
                             <td>{{ info['name'] }}</td>
                             <td>{{ info['initials'] }}</td>
