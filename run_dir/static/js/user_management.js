@@ -148,7 +148,25 @@ const vUserManagement = {
                 'initials' : initials
             })
             .then(response => {
-                this.fetchUsers();
+                if (option === 'create') {
+                    // Trigger table reinitialization to get the ordering right
+                    this.fetchUsers();
+                }
+                else{
+                    if (option === 'modify') {
+                        // Update the user in the users list
+                        this.users[username] = {
+                            name: this.userModalData.name,
+                            initials: this.userModalData.initials,
+                            roles: this.userModalData.roles
+                        };
+                    } else if (option === 'delete') {
+                        // Remove the user from the users list
+                        delete this.users[username];
+                    }
+                    // Trigger Vue reactivity
+                    this.users = { ...this.users };
+                }
             })
             .catch(error => {
                 alert('Unable to submit running note, please try again or contact a system administrator.')
