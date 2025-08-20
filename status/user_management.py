@@ -16,7 +16,6 @@ class UserManagementHandler(SafeHandler):
             t.generate(
                 gs_globals=self.application.gs_globals,
                 user=self.get_current_user(),
-                roles=self.application.genstat_defaults["roles"],
             )
         )
 
@@ -43,6 +42,7 @@ class UserManagementDataHandler(SafeHandler):
 
             if add_roles:
                 view_result[row["key"]]["roles"] = row["value"].get("roles", [])
+                view_result[row["key"]]["teams"] = row["value"].get("teams", [])
 
         self.write(view_result)
 
@@ -129,9 +129,12 @@ class RolesAndTeamsHandler(SafeHandler):
 
         try:
             available_roles = self.application.genstat_defaults.get("roles", {})
-            # TODO: Fetch teams data
+            available_teams = self.application.cloudant.get_document(
+                db="gs_configs", doc_id="gs_teams"
+            ).get_result()['teams']
             response_data = {
                 "roles": available_roles,
+                "teams": available_teams,
             }
             self.set_status(200)
             self.write(response_data)
