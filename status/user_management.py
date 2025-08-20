@@ -131,7 +131,7 @@ class RolesAndTeamsHandler(SafeHandler):
             available_roles = self.application.genstat_defaults.get("roles", {})
             available_teams = self.application.cloudant.get_document(
                 db="gs_configs", doc_id="gs_teams"
-            ).get_result()['teams']
+            ).get_result()["teams"]
             response_data = {
                 "roles": available_roles,
                 "teams": available_teams,
