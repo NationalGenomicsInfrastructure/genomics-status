@@ -129,14 +129,14 @@ const vUserManagement = {
                 roles = this.newUserForm.roles;
                 name = this.newUserForm.name;
             }
-            if(option ==="modify"){
+            if(option === "modify"){
                 this.isModifying = true;
                 username = this.userModalData.username;
                 roles =  this.userModalData.roles;
                 name = this.userModalData.name;
                 initials= this.userModalData.initials;
             }
-            if(option ==="delete"){
+            if(option === "delete"){
                 this.isDeleting = true;
                 username = this.userModalData.username;
             }
@@ -169,7 +169,8 @@ const vUserManagement = {
                 }
             })
             .catch(error => {
-                alert('Unable to submit running note, please try again or contact a system administrator.')
+                alert('Unable to create/modify user, please try again or contact a system administrator.')
+                console.log('Error modifying user:', error);
             })
             .finally(() => {
                 this.isCreating = false;
