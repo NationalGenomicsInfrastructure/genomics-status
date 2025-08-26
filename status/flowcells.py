@@ -9,7 +9,7 @@ from dateutil.relativedelta import relativedelta
 from genologics import lims
 from genologics.config import BASEURI, PASSWORD, USERNAME
 
-from status.flowcell import thresholds
+from status.flowcell import get_project_names_from_ids, thresholds
 from status.running_notes import LatestRunningNoteHandler
 from status.util import SafeHandler
 
@@ -191,12 +191,35 @@ class FlowcellsHandler(SafeHandler):
         return ont_runs
 
     def list_element_flowcells(self):
-        return self.application.cloudant.post_view(
+        rows = self.application.cloudant.post_view(
             db="element_runs",
             ddoc="info",
             view="summary",
             descending=True,
         ).get_result()["rows"]
+
+        element_runs = {}
+        for row in rows:
+            run_name = row["key"]
+            values = row["value"]
+            project_ids = self.application.cloudant.post_view(
+                db="element_runs",
+                ddoc="names",
+                view="project_ids_list",
+                key=run_name,
+            ).get_result()["rows"][0]["value"]
+            values["projects"] = get_project_names_from_ids(
+                project_ids, self.application.cloudant
+            )
+
+            values["latest_running_note"] = (
+                LatestRunningNoteHandler.get_latest_running_note(
+                    self.application, "flowcell", run_name
+                )
+            )
+            element_runs[row["key"]] = row["value"]
+
+        return element_runs
 
     def get(self):
         # Default is to NOT show all flowcells
