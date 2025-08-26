@@ -202,6 +202,16 @@ class FlowcellsHandler(SafeHandler):
         for row in rows:
             run_name = row["key"]
             values = row["value"]
+            values["start_date"] = datetime.datetime.strptime(
+                run_name[:8], "%Y%m%d"
+            ).strftime("%Y-%m-%d")
+
+            cycles = values.get("Cycles", {})
+            cycles_str = f"{cycles.get('R1')}nt(R1)-{cycles.get('I1')}nt(I1)"
+            if cycles.get("R2"):
+                cycles_str += f"-{cycles.get('I2')}nt(I2)-{cycles.get('R2')}nt(R2)"
+            values["Cycles"] = cycles_str
+
             project_ids = self.application.cloudant.post_view(
                 db="element_runs",
                 ddoc="names",
@@ -217,7 +227,7 @@ class FlowcellsHandler(SafeHandler):
                     self.application, "flowcell", run_name
                 )
             )
-            element_runs[row["key"]] = row["value"]
+            element_runs[run_name] = values
 
         return element_runs
 

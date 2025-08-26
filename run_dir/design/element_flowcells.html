@@ -51,7 +51,7 @@
                            <abbr title="Run failed"><span class="fa fa-file-dashed-line"></span></abbr>
                         {% end %}
                     </td>
-                    <td class="start_date">{{ onefc[:8] }}</td>
+                    <td class="start_date">{{ element_fcs[onefc].get('start_date') }}</td>
                     <td>
                         {% if element_fcs[onefc].get('projects') %}
                             {% for project in element_fcs[onefc]['projects'] %}
