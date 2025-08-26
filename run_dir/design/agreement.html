@@ -31,7 +31,7 @@
     </div>
     <div {%if data.get('type', '')=='preview' %} class="first_page_preview" {% end %}>
       <h2>{%if data['origin']=='Agreement' %}
-      Agreement of commisioned activities
+      {{ template_text['title'] }}
       {% else %}
       Preliminary Quote
       {% end %}
