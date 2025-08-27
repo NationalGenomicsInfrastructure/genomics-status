@@ -12,7 +12,6 @@ import tornado.httpserver
 import tornado.ioloop
 import tornado.web
 import yaml
-from couchdb import Server
 from ibm_cloud_sdk_core.api_exception import ApiException
 from ibmcloudant import CouchDbSessionAuthenticator, cloudant_v1
 from tornado import template
@@ -180,7 +179,6 @@ from status.util import (
     DataHandler,
     LastPSULRunHandler,
     MainHandler,
-    # UpdatedDocumentsDatahandler, #TODO Delete this in the future since it looks to be unused
 )
 from status.worksets import (
     ClosedWorksetsHandler,
@@ -277,7 +275,6 @@ class Application(tornado.web.Application):
             ("/api/v1/instrument_names", InstrumentNamesHandler),
             ("/api/v1/invoicing_notes/([^/]*)", InvoicingNotesHandler),
             ("/api/v1/lanes_ordered", LanesOrderedDataHandler),
-            # ("/api/v1/last_updated", UpdatedDocumentsDatahandler),
             ("/api/v1/last_psul", LastPSULRunHandler),
             ("/api/v1/latest_sticky_run_note/([^/]*)", LatestStickyNoteHandler),
             ("/api/v1/latest_sticky_run_note", LatestStickyNotesMultipleHandler),
@@ -424,14 +421,6 @@ class Application(tornado.web.Application):
         self.loader = template.Loader("design")
 
         # Global connection to the database
-        couch = Server(settings.get("couch_server", None))
-        if couch:
-            self.flowcells_db = couch["flowcells"]
-            self.projects_db = couch["projects"]
-        else:
-            print(settings.get("couch_server", None))
-            raise OSError("Cannot connect to couchdb")
-
         cloudant = cloudant_v1.CloudantV1(
             authenticator=CouchDbSessionAuthenticator(
                 settings.get("username"), settings.get("password")
