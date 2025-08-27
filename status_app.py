@@ -12,7 +12,6 @@ import tornado.httpserver
 import tornado.ioloop
 import tornado.web
 import yaml
-from couchdb import Server
 from ibm_cloud_sdk_core.api_exception import ApiException
 from ibmcloudant import CouchDbSessionAuthenticator, cloudant_v1
 from tornado import template
@@ -155,16 +154,6 @@ from status.sensorpush import (
     SensorpushHandler,
     SensorpushWarningsDataHandler,
 )
-from status.sequencing import (
-    InstrumentClusterDensityDataHandler,
-    InstrumentClusterDensityPlotHandler,
-    InstrumentErrorrateDataHandler,
-    InstrumentErrorratePlotHandler,
-    InstrumentUnmatchedDataHandler,
-    InstrumentUnmatchedPlotHandler,
-    InstrumentYieldDataHandler,
-    InstrumentYieldPlotHandler,
-)
 from status.statistics import (
     ApplicationOpenProjectsHandler,
     ApplicationOpenSamplesHandler,
@@ -190,7 +179,6 @@ from status.util import (
     DataHandler,
     LastPSULRunHandler,
     MainHandler,
-    # UpdatedDocumentsDatahandler, #TODO Delete this in the future since it looks to be unused
 )
 from status.worksets import (
     ClosedWorksetsHandler,
@@ -282,23 +270,11 @@ class Application(tornado.web.Application):
             ("/api/v1/generate_invoice", GenerateInvoiceHandler),
             ("/api/v1/generate_invoice_spec", InvoiceSpecDateHandler),
             ("/api/v1/invoice_spec_list", InvoicingPageDataHandler),
-            ("/api/v1/instrument_cluster_density", InstrumentClusterDensityDataHandler),
-            (
-                "/api/v1/instrument_cluster_density.png",
-                InstrumentClusterDensityPlotHandler,
-            ),
-            ("/api/v1/instrument_error_rates", InstrumentErrorrateDataHandler),
-            ("/api/v1/instrument_error_rates.png", InstrumentErrorratePlotHandler),
             ("/api/v1/instrument_logs", DataInstrumentLogsHandler),
             ("/api/v1/instrument_logs/([^/]*)/([^/]*)$", DataInstrumentLogsHandler),
             ("/api/v1/instrument_names", InstrumentNamesHandler),
-            ("/api/v1/instrument_unmatched", InstrumentUnmatchedDataHandler),
-            ("/api/v1/instrument_unmatched.png", InstrumentUnmatchedPlotHandler),
-            ("/api/v1/instrument_yield", InstrumentYieldDataHandler),
-            ("/api/v1/instrument_yield.png", InstrumentYieldPlotHandler),
             ("/api/v1/invoicing_notes/([^/]*)", InvoicingNotesHandler),
             ("/api/v1/lanes_ordered", LanesOrderedDataHandler),
-            # ("/api/v1/last_updated", UpdatedDocumentsDatahandler),
             ("/api/v1/last_psul", LastPSULRunHandler),
             ("/api/v1/latest_sticky_run_note/([^/]*)", LatestStickyNoteHandler),
             ("/api/v1/latest_sticky_run_note", LatestStickyNotesMultipleHandler),
@@ -445,36 +421,6 @@ class Application(tornado.web.Application):
         self.loader = template.Loader("design")
 
         # Global connection to the database
-        couch = Server(settings.get("couch_server", None))
-        if couch:
-            self.agreements_db = couch["agreements"]
-            self.agreement_templates_db = couch["agreement_templates"]
-            self.analysis_db = couch["analysis"]
-            self.application_categories_db = couch["application_categories"]
-            self.bioinfo_db = couch["bioinfo_analysis"]
-            self.biomek_errs_db = couch["biomek_logs"]
-            self.cost_calculator_db = couch["cost_calculator"]
-            self.cronjobs_db = couch["cronjobs"]
-            self.element_runs_db = couch["element_runs"]
-            self.flowcells_db = couch["flowcells"]
-            self.gs_users_db = couch["gs_users"]
-            self.instruments_db = couch["instruments"]
-            self.instrument_logs_db = couch["instrument_logs"]
-            self.nanopore_runs_db = couch["nanopore_runs"]
-            self.people_assignments_db = couch["people_assignments"]
-            self.pricing_exchange_rates_db = couch["pricing_exchange_rates"]
-            self.projects_db = couch["projects"]
-            self.sample_requirements_db = couch["sample_requirements"]
-            self.sensorpush_db = couch["sensorpush"]
-            self.server_status_db = couch["server_status"]
-            self.suggestions_db = couch["suggestion_box"]
-            self.worksets_db = couch["worksets"]
-            self.x_flowcells_db = couch["x_flowcells"]
-            self.running_notes_db = couch["running_notes"]
-        else:
-            print(settings.get("couch_server", None))
-            raise OSError("Cannot connect to couchdb")
-
         cloudant = cloudant_v1.CloudantV1(
             authenticator=CouchDbSessionAuthenticator(
                 settings.get("username"), settings.get("password")
