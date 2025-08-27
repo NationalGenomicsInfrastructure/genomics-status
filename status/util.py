@@ -1,5 +1,6 @@
 import json
 import os
+import re
 import sys
 import urllib
 from datetime import datetime, timedelta
@@ -8,6 +9,9 @@ import requests
 import tornado.web
 import tornado.websocket
 from dateutil import parser
+from jwcrypto import jwk, jwt
+from jwcrypto.common import JWException
+from jwcrypto.jws import InvalidJWSSignature
 
 #########################
 #  Useful misc handlers #
@@ -30,6 +34,9 @@ ERROR_CODES = {
     504: "Gateway Timeout",
     511: "Network Authentication Required",
 }
+
+# Allowed: a string of max 25 with letters (upper/lower), digits, underscore (_), hyphen (-)
+key_id_regex = r"^[a-zA-Z0-9_\-\.]{1,25}$"
 
 
 class User:
@@ -62,6 +69,10 @@ class User:
     def is_proj_coord(self):
         return "proj_coord" in self.roles
 
+    @property
+    def is_api_user(self):
+        return "api_user" in self.roles
+
 
 class BaseHandler(tornado.web.RequestHandler):
     """Base Handler. Handlers should not inherit from this
@@ -90,7 +101,7 @@ class BaseHandler(tornado.web.RequestHandler):
                 "proj_coord",
             ]
             email = "Testing User!"
-        else:
+        elif self.get_secure_cookie("user"):
             name = (
                 str(self.get_secure_cookie("user"), "utf-8")
                 if self.get_secure_cookie("user")
@@ -110,6 +121,60 @@ class BaseHandler(tornado.web.RequestHandler):
                 if self.get_secure_cookie("email")
                 else None
             )
+        else:
+            auth_header = self.request.headers.get("Authorization", None)
+            if not auth_header or not auth_header.startswith("Bearer "):
+                self.set_status(401)
+                self.write({"error": "Unauthorized"})
+                return
+
+            token = auth_header.split(" ", 1)[1]
+            try:
+                token_obj = jwt.JWT(jwt=token)
+                header = token_obj.token.jose_header
+                key_id = header.get("kid")
+                if not key_id:
+                    self.set_status(401)
+                    self.write({"error": "Token missing 'kid' header"})
+                    return
+            except Exception:
+                self.set_status(401)
+                self.write({"error": "Invalid token header"})
+                return
+
+            if not re.match(key_id_regex, key_id):
+                self.set_status(401)
+                self.write({"error": "Invalid 'kid' header format"})
+                return
+
+            keys = self.application.cloudant.post_view(
+                db="gs_users",
+                ddoc="authorized",
+                view="api_users",
+                key=key_id,
+            ).get_result()["rows"]
+            if not keys:
+                self.set_status(401)
+                self.write({"error": "Unauthorized machine ID"})
+                return
+
+            public_key = jwk.JWK.from_pem(keys[0]["value"]["public_key"].encode())
+            owner = keys[0]["value"].get("owner", "Unknown")
+            try:
+                verified_payload = jwt.JWT(jwt=token, key=public_key)
+                if (
+                    "sub" not in verified_payload.claims
+                    and verified_payload.claims["sub"] is not owner
+                ):
+                    self.set_status(401)
+                    self.write({"error": "Errors with 'sub' claim"})
+                    return
+                name = owner
+                email = None
+                roles = ["api_user"]
+            except (InvalidJWSSignature, JWException):
+                return None
+
         user = User(name, email, roles)
         if user.name:
             return user
@@ -178,6 +243,12 @@ class BaseHandler(tornado.web.RequestHandler):
             user_details = dict(rows[0]["doc"])
 
         return user_details
+
+    def get_login_url(self):
+        # If API client (likely uses JWT), don't redirect — return 401 instead
+        if "Authorization" in self.request.headers:
+            return None
+        return super().get_login_url()
 
 
 class SafeHandler(BaseHandler):
