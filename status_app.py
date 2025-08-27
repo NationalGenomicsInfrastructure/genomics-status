@@ -155,16 +155,6 @@ from status.sensorpush import (
     SensorpushHandler,
     SensorpushWarningsDataHandler,
 )
-from status.sequencing import (
-    InstrumentClusterDensityDataHandler,
-    InstrumentClusterDensityPlotHandler,
-    InstrumentErrorrateDataHandler,
-    InstrumentErrorratePlotHandler,
-    InstrumentUnmatchedDataHandler,
-    InstrumentUnmatchedPlotHandler,
-    InstrumentYieldDataHandler,
-    InstrumentYieldPlotHandler,
-)
 from status.statistics import (
     ApplicationOpenProjectsHandler,
     ApplicationOpenSamplesHandler,
@@ -282,20 +272,9 @@ class Application(tornado.web.Application):
             ("/api/v1/generate_invoice", GenerateInvoiceHandler),
             ("/api/v1/generate_invoice_spec", InvoiceSpecDateHandler),
             ("/api/v1/invoice_spec_list", InvoicingPageDataHandler),
-            ("/api/v1/instrument_cluster_density", InstrumentClusterDensityDataHandler),
-            (
-                "/api/v1/instrument_cluster_density.png",
-                InstrumentClusterDensityPlotHandler,
-            ),
-            ("/api/v1/instrument_error_rates", InstrumentErrorrateDataHandler),
-            ("/api/v1/instrument_error_rates.png", InstrumentErrorratePlotHandler),
             ("/api/v1/instrument_logs", DataInstrumentLogsHandler),
             ("/api/v1/instrument_logs/([^/]*)/([^/]*)$", DataInstrumentLogsHandler),
             ("/api/v1/instrument_names", InstrumentNamesHandler),
-            ("/api/v1/instrument_unmatched", InstrumentUnmatchedDataHandler),
-            ("/api/v1/instrument_unmatched.png", InstrumentUnmatchedPlotHandler),
-            ("/api/v1/instrument_yield", InstrumentYieldDataHandler),
-            ("/api/v1/instrument_yield.png", InstrumentYieldPlotHandler),
             ("/api/v1/invoicing_notes/([^/]*)", InvoicingNotesHandler),
             ("/api/v1/lanes_ordered", LanesOrderedDataHandler),
             # ("/api/v1/last_updated", UpdatedDocumentsDatahandler),
