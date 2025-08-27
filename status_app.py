@@ -426,30 +426,8 @@ class Application(tornado.web.Application):
         # Global connection to the database
         couch = Server(settings.get("couch_server", None))
         if couch:
-            self.agreements_db = couch["agreements"]
-            self.agreement_templates_db = couch["agreement_templates"]
-            self.analysis_db = couch["analysis"]
-            self.application_categories_db = couch["application_categories"]
-            self.bioinfo_db = couch["bioinfo_analysis"]
-            self.biomek_errs_db = couch["biomek_logs"]
-            self.cost_calculator_db = couch["cost_calculator"]
-            self.cronjobs_db = couch["cronjobs"]
-            self.element_runs_db = couch["element_runs"]
             self.flowcells_db = couch["flowcells"]
-            self.gs_users_db = couch["gs_users"]
-            self.instruments_db = couch["instruments"]
-            self.instrument_logs_db = couch["instrument_logs"]
-            self.nanopore_runs_db = couch["nanopore_runs"]
-            self.people_assignments_db = couch["people_assignments"]
-            self.pricing_exchange_rates_db = couch["pricing_exchange_rates"]
             self.projects_db = couch["projects"]
-            self.sample_requirements_db = couch["sample_requirements"]
-            self.sensorpush_db = couch["sensorpush"]
-            self.server_status_db = couch["server_status"]
-            self.suggestions_db = couch["suggestion_box"]
-            self.worksets_db = couch["worksets"]
-            self.x_flowcells_db = couch["x_flowcells"]
-            self.running_notes_db = couch["running_notes"]
         else:
             print(settings.get("couch_server", None))
             raise OSError("Cannot connect to couchdb")
