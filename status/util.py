@@ -122,6 +122,8 @@ class BaseHandler(tornado.web.RequestHandler):
                 else None
             )
         else:
+            # Check for API user through JWT in Authorization header
+            # Signed JWT with ES256 expected
             auth_header = self.request.headers.get("Authorization", None)
             if not auth_header or not auth_header.startswith("Bearer "):
                 self.set_status(401)
@@ -132,6 +134,7 @@ class BaseHandler(tornado.web.RequestHandler):
             try:
                 token_obj = jwt.JWT(jwt=token)
                 header = token_obj.token.jose_header
+                # Get key ID from token header, same user can have multiple keys
                 key_id = header.get("kid")
                 if not key_id:
                     self.set_status(401)
@@ -162,6 +165,14 @@ class BaseHandler(tornado.web.RequestHandler):
             owner = keys[0]["value"].get("owner", "Unknown")
             try:
                 verified_payload = jwt.JWT(jwt=token, key=public_key)
+                if (
+                    verified_payload.claims["exp"]
+                    < datetime.now(datetime.timezone.utc).timestamp()
+                ):
+                    self.set_status(401)
+                    self.write("Token has expired")
+                    return
+                # If 'sub' claim is present, it must match owner
                 if (
                     "sub" not in verified_payload.claims
                     and verified_payload.claims["sub"] is not owner
