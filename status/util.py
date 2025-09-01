@@ -3,7 +3,7 @@ import os
 import re
 import sys
 import urllib
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 import requests
 import tornado.web
@@ -157,16 +157,11 @@ class BaseHandler(tornado.web.RequestHandler):
             owner = keys[0]["value"].get("owner", "Unknown")
             try:
                 verified_payload = jwt.JWT(jwt=token, key=public_key)
-                if (
-                    verified_payload.claims["exp"]
-                    < datetime.now(datetime.timezone.utc).timestamp()
-                ):
+                claims = json.loads(verified_payload.claims)
+                if claims["exp"] < datetime.now(timezone.utc).timestamp():
                     return None
                 # If 'sub' claim is present, it must match owner
-                if (
-                    "sub" in verified_payload.claims
-                    and verified_payload.claims["sub"] != owner
-                ):
+                if "sub" in claims and claims["sub"] != owner:
                     return None
                 name = owner
                 email = None
