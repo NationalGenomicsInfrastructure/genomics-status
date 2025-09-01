@@ -135,8 +135,6 @@ class BaseHandler(tornado.web.RequestHandler):
                 # Get key ID from token header, same user can have multiple keys
                 key_id = header.get("kid")
                 if not key_id:
-                    self.set_status(401)
-                    self.write({"error": "Token missing 'kid' header"})
                     return None
             except Exception:
                 return None
@@ -249,7 +247,7 @@ class BaseHandler(tornado.web.RequestHandler):
         # If we're trying to redirect to the dummy URL, return 401 instead
         if url.split("?")[0] == self.get_login_url():
             self.set_status(401)
-            self.finish({"error": "Unauthorized"})
+            self.finish(json.dumps({"error": ERROR_CODES[401], "status_code": 401}))
         else:
             super().redirect(url, *args, **kwargs)
 
