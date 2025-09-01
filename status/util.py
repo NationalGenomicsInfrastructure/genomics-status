@@ -126,9 +126,7 @@ class BaseHandler(tornado.web.RequestHandler):
             # Signed JWT with ES256 expected
             auth_header = self.request.headers.get("Authorization", None)
             if not auth_header or not auth_header.startswith("Bearer "):
-                self.set_status(401)
-                self.write({"error": "Unauthorized"})
-                return
+                return None
 
             token = auth_header.split(" ", 1)[1]
             try:
@@ -139,16 +137,12 @@ class BaseHandler(tornado.web.RequestHandler):
                 if not key_id:
                     self.set_status(401)
                     self.write({"error": "Token missing 'kid' header"})
-                    return
+                    return None
             except Exception:
-                self.set_status(401)
-                self.write({"error": "Invalid token header"})
-                return
+                return None
 
             if not re.match(key_id_regex, key_id):
-                self.set_status(401)
-                self.write({"error": "Invalid 'kid' header format"})
-                return
+                return None
 
             keys = self.application.cloudant.post_view(
                 db="gs_users",
@@ -157,9 +151,7 @@ class BaseHandler(tornado.web.RequestHandler):
                 key=key_id,
             ).get_result()["rows"]
             if not keys:
-                self.set_status(401)
-                self.write({"error": "Unauthorized machine ID"})
-                return
+                return None
 
             public_key = jwk.JWK.from_pem(keys[0]["value"]["public_key"].encode())
             owner = keys[0]["value"].get("owner", "Unknown")
@@ -169,17 +161,13 @@ class BaseHandler(tornado.web.RequestHandler):
                     verified_payload.claims["exp"]
                     < datetime.now(datetime.timezone.utc).timestamp()
                 ):
-                    self.set_status(401)
-                    self.write("Token has expired")
-                    return
+                    return None
                 # If 'sub' claim is present, it must match owner
                 if (
-                    "sub" not in verified_payload.claims
-                    and verified_payload.claims["sub"] is not owner
+                    "sub" in verified_payload.claims
+                    and verified_payload.claims["sub"] != owner
                 ):
-                    self.set_status(401)
-                    self.write({"error": "Errors with 'sub' claim"})
-                    return
+                    return None
                 name = owner
                 email = None
                 roles = ["api_user"]
@@ -257,9 +245,18 @@ class BaseHandler(tornado.web.RequestHandler):
 
     def get_login_url(self):
         # If API client (likely uses JWT), don't redirect — return 401 instead
-        if "Authorization" in self.request.headers:
-            return None
+        auth_header = self.request.headers.get("Authorization", None)
+        if auth_header and auth_header.startswith("Bearer "):
+            return "/unauthorized"
         return super().get_login_url()
+    
+    def redirect(self, url, *args, **kwargs):
+        # If we're trying to redirect to the dummy URL, return 401 instead
+        if url.split('?')[0] == self.get_login_url():
+            self.set_status(401)
+            self.finish({"error": "Unauthorized"})
+        else:
+            super().redirect(url, *args, **kwargs)
 
 
 class SafeHandler(BaseHandler):
