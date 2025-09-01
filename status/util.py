@@ -249,10 +249,10 @@ class BaseHandler(tornado.web.RequestHandler):
         if auth_header and auth_header.startswith("Bearer "):
             return "/unauthorized"
         return super().get_login_url()
-    
+
     def redirect(self, url, *args, **kwargs):
         # If we're trying to redirect to the dummy URL, return 401 instead
-        if url.split('?')[0] == self.get_login_url():
+        if url.split("?")[0] == self.get_login_url():
             self.set_status(401)
             self.finish({"error": "Unauthorized"})
         else:
