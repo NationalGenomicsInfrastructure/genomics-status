@@ -62,8 +62,18 @@ class RunningNotesDataHandler(SafeHandler):
             )
         else:
             if user.is_api_user:
-                user_name = note["user"]
-                user_email = note["email"]
+                user_email = data.get("email")
+                if user_email:
+                    user_details = self.get_user_details(self.application, user_email)
+                    if user_details:
+                        user_name = user_details.get("name")
+                    else:
+                        self.set_status(401)
+                        return self.write("Error: Invalid user")
+                else:
+                    self.set_status(401)
+                    return self.write("Error: Invalid user")
+
             else:
                 user_name = user.name
                 user_email = user.email
