@@ -12,7 +12,6 @@ import markdown
 import nest_asyncio
 import slack_sdk
 import tornado
-from ibmcloudant.cloudant_v1 import Document
 
 from status.util import SafeHandler
 
@@ -53,7 +52,7 @@ class RunningNotesDataHandler(SafeHandler):
     def post(self, partition_id):
         data = tornado.escape.json_decode(self.request.body)
         note = data.get("note", "")
-        category = data.get("categories", [])
+        categories = data.get("categories", [])
         note_type = data.get("note_type", "")
         user = self.get_current_user()
         if not note:
@@ -62,13 +61,20 @@ class RunningNotesDataHandler(SafeHandler):
                 "<html><body>No project id or note parameters found</body></html>"
             )
         else:
+            if user.is_api_user:
+                user_name = note["user"]
+                user_email = note["email"]
+            else:
+                user_name = user.name
+                user_email = user.email
+
             newNote = RunningNotesDataHandler.make_running_note(
                 self.application,
                 partition_id,
                 note,
-                category,
-                user.name,
-                user.email,
+                categories,
+                user_name,
+                user_email,
                 note_type,
             )
             self.set_status(201)
@@ -153,10 +159,8 @@ class RunningNotesDataHandler(SafeHandler):
             f"Running note to be created with id {newNote['_id']} by {user} at {created_time.isoformat()}"
         )
 
-        doc = Document().from_dict(newNote)
-
         response = application.cloudant.post_document(
-            db="running_notes", document=doc
+            db="running_notes", document=newNote
         ).get_result()
 
         if not response.get("ok"):
