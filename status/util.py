@@ -387,40 +387,6 @@ class DataHandler(UnsafeHandler):
         self.write(json.dumps({"api": api, "pages": pages}))
 
 
-# TODO Delete this in the future, it is not used anymore and is quite outdated.
-class UpdatedDocumentsDatahandler(SafeHandler):
-    """Serves a list of references to the last updated documents in the
-    databases Status gets data from.
-
-    Specify to get the <n> latest items by ?items=<n>.
-
-    Loaded through /api/v1/last_updated
-    """
-
-    def get(self):
-        num_items = int(self.get_argument("items", 25))
-        self.set_header("Content-type", "application/json")
-        self.write(json.dumps(self.list_updated(num_items)))
-
-    def list_updated(self, num_items=25):
-        last = []
-
-        view = self.application.projects_db.view(
-            "time/last_updated", limit=num_items, descending=True
-        )
-        for doc in view:
-            last.append((doc.key, doc.value, "Project information"))
-
-        view = self.application.flowcells_db.view(
-            "time/last_updated", limit=num_items, descending=True
-        )
-        for doc in view:
-            last.append((doc.key, doc.value, "Flowcell information"))
-
-        last = sorted(last, key=lambda tr: tr[0], reverse=True)
-        return last[:num_items]
-
-
 class NoCacheStaticFileHandler(tornado.web.StaticFileHandler):
     """Serves up static files without any tornado caching.
     https://gist.github.com/omarish/5499385
