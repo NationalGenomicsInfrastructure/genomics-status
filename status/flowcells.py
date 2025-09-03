@@ -151,6 +151,11 @@ class FlowcellsHandler(SafeHandler):
                 except (KeyError, IndexError):
                     pass
 
+                all_stats["latest_running_note"] = (
+                    LatestRunningNoteHandler.get_latest_running_note(
+                        self.application, "flowcell", run_name
+                    )
+                )
                 # Get project names and IDs
                 try:
                     sample_data = all_stats["lims"]["loading"][-1]["sample_data"]
@@ -177,12 +182,6 @@ class FlowcellsHandler(SafeHandler):
 
                     # Get step ID
                     all_stats["step_id"] = all_stats["lims"]["loading"][-1]["step_id"]
-
-                    all_stats["latest_running_note"] = (
-                        LatestRunningNoteHandler.get_latest_running_note(
-                            self.application, "flowcell", run_name
-                        )
-                    )
 
             except Exception as e:
                 application_log.warning(f"Error parsing {run_name}: {e}", exc_info=True)

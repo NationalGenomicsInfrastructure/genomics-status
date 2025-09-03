@@ -24,8 +24,8 @@ class DataFlowcellYieldHandler(SafeHandler):
                 db="x_flowcells",
                 ddoc="plot",
                 view="reads_yield",
-                start_key=[first_term],
-                end_key=[second_term + "ZZZZ"],
+                start_key=first_term,
+                end_key=second_term + "ZZZZ",
             ).get_result()["rows"]
         ]
 
