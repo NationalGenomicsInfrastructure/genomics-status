@@ -117,8 +117,7 @@ function build_series(data, key, name, view_type, filter_inst_type){
         var bioinfo_link="/bioinfo/"+data[d][0];
         var project_name = data[d][1].project_name;
         var date_close = data[d][1].close_date;
-        sequencing_platforms = ['NovaSeq 6000', 'NovaSeq X Plus', 'MiSeq', 'NextSeq'];	
-        console.log(data[d][1].sequencing_platform)
+        sequencing_platforms = ['NovaSeq 6000', 'NovaSeq X Plus', 'MiSeq', 'NextSeq', 'Aviti'];
 	    if (data[d][1].sequencing_platform == null && filter_inst_type.length > 0){
 	        continue;
 	    }
@@ -137,7 +136,10 @@ function build_series(data, key, name, view_type, filter_inst_type){
             continue;
         }else if (data[d][1].sequencing_platform.includes('NextSeq') && filter_inst_type.includes('NextSeq')){
             continue;
-        } 
+        }
+        else if (data[d][1].sequencing_platform.includes('Element AVITI') && filter_inst_type.includes('Element AVITI')){
+            continue;
+        }
         if (view_type == 'sequencing_platform'){
             if (data[d][1].sequencing_platform == null){
                 series_name = "Other/undefined";
@@ -149,6 +151,8 @@ function build_series(data, key, name, view_type, filter_inst_type){
                 series_name = "MiSeq";
             }else if (data[d][1].sequencing_platform.includes('NextSeq')){
                 series_name = "NextSeq";
+            }else if (data[d][1].sequencing_platform.includes('Element AVITI')){
+                series_name = "Aviti";
             }else{
                 series_name = "Other/undefined";
             }

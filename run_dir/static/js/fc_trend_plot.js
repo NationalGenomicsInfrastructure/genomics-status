@@ -181,19 +181,30 @@ function build_series(data, key, name, display_by, filter_inst_type, filter_inst
     var categories = [];
     for (d in data){
         var tmp=data[d].id.split('_');
-        var fcid=tmp[0]+'_'+tmp[tmp.length-1];
+        var fcid = "";
+        var flowcell_link="";
+        if(data[d].instrument.startsWith('AV')){
+            fcid = data[d].id;
+            flowcell_link="/flowcells_element/"+data[d].id;
+        }
+        else{
+            fcid = tmp[0]+'_'+tmp[tmp.length-1];
+            flowcell_link="/flowcell/"+fcid;
+        }
         var col_color = "";
         var series_name = "";
-        var flowcell_link="/flowcells/"+fcid;
         var bp_yield = data[d].total_yield;
         //Seq platform filter
         if (data[d].instrument.indexOf('M') != -1 && filter_inst_type.includes('M')){
             continue;
-        }else if (data[d].instrument.indexOf('A') != -1 && filter_inst_type.includes('A')){
+        }else if (data[d].instrument.startsWith('A') && !data[d].instrument.startsWith('AV') && filter_inst_type.includes('A')){
             continue;
         }else if (data[d].instrument.indexOf('VH') != -1 && filter_inst_type.includes('VH')){
             continue;
         }else if (data[d].instrument.indexOf('LH') != -1 && filter_inst_type.includes('LH')){
+            continue;
+        }
+        else if (data[d].instrument.startsWith('AV') && filter_inst_type.includes('AV')){
             continue;
         }
         // Set colours and the name of data series
@@ -240,6 +251,34 @@ function build_series(data, key, name, display_by, filter_inst_type, filter_inst
             if (data[d].cver.includes('25B')){
                 series_name = "25B";
                 }
+            if(data[d].cver.includes('600Cycles_High')){
+                series_name = "Aviti 600Cycles_High";
+            }
+            if(data[d].cver.includes('600Cycles_Med')){
+                series_name = "Aviti 600Cycles_Med";
+            }
+            if(data[d].cver.includes('600Cycles_Low')){
+                series_name = "Aviti 600Cycles_Low";
+            }
+            if(data[d].cver.includes('300Cycles_High')){
+                series_name = "Aviti 300Cycles_High";
+            }
+            if(data[d].cver.includes('300Cycles_Med')){
+                series_name = "Aviti 300Cycles_Med";
+            }
+            if(data[d].cver.includes('300Cycles_Low')){
+                series_name = "Aviti 300Cycles_Low";
+            }
+            if(data[d].cver.includes('150Cycles_High')){
+                series_name = "Aviti 150Cycles_High";
+            }
+            if(data[d].cver.includes('1500Cycles_Med')){
+                series_name = "Aviti 150Cycles_Med";
+            }
+            if(data[d].cver.includes('150Cycles_Low')){
+                series_name = "Aviti 150Cycles_Low";
+            }
+
             if (series_name == 'MiSeq Nano'){
                 col_color = color_by_chemistry('nano');
             }else{
@@ -258,13 +297,16 @@ function build_series(data, key, name, display_by, filter_inst_type, filter_inst
             col_color=color_by_type(data[d].instrument);
             if (data[d].instrument.indexOf('M') != -1){
                 series_name = "MiSeq";
-            }else if (data[d].instrument.indexOf('A') != -1){
+            }else if (data[d].instrument.startsWith('A') && !data[d].instrument.startsWith('AV')){
                 series_name = "NovaSeq 6000";
             }else if (data[d].instrument.indexOf('VH') != -1){
                 series_name = "NextSeq 2000";
             }else if (data[d].instrument.indexOf('LH') != -1){
                 series_name = "NovaSeqXPlus";
-            }else{
+            }else if (data[d].instrument.startsWith('AV')){
+                series_name = "Aviti";
+            }
+            else{
                 continue;
             }
         }
@@ -341,7 +383,7 @@ function color_by_instrument(instrument){
 function color_by_type(instrument){
     if (instrument.indexOf('M') != -1){
         return current_color_schemes[0](0).hex();
-    }else if (instrument.indexOf('A') != -1){
+    }else if (instrument.startsWith('A') && !instrument.startsWith('AV')){
         return current_color_schemes[0](1).hex();
     }else if (instrument.indexOf('VH') != -1){
         return current_color_schemes[0](2).hex();
