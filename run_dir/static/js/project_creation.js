@@ -315,6 +315,16 @@ const vProjectCreationForm = {
 const vFormField = {
     name: 'v-form-field',
     props: ['field', 'identifier'],
+    data() {
+        return {
+            cancelTokenSource: null,
+            highlightedIndex: -1,
+            inputChangeTimeout: null,
+            options: [],
+            showSuggestions: false,
+            suggestionsLoading: false,
+        };
+    },
     computed: {
         conditonalsApplied() {
             return this.$root.getConditionalsFor(this.identifier)
@@ -337,6 +347,7 @@ const vFormField = {
         },
         options() {
             let conditional_options = this.$root.getOptions(this.identifier);
+            console.log(`Options for field ${this.identifier}:`, conditional_options);
             if (conditional_options !== null) {
                 return conditional_options;
             }
@@ -355,6 +366,11 @@ const vFormField = {
         unallowed_option() {
             // Highlight if the selected value is not allowed (based on conditional logic)
             if (this.current_value === undefined) {
+                return false;
+            }
+
+            // Check if options is empty object
+            if (this.options === null || Object.keys(this.options).length === 0) {
                 return false;
             }
             return !(this.options.includes(this.current_value));
@@ -395,6 +411,81 @@ const vFormField = {
             return conditions.every(condition => condition === true);
         }
     },
+    methods: {
+        async onInputChange(event) {
+            // cancel previous request if it exists
+            if (this.cancelTokenSource) {
+                this.cancelTokenSource.cancel();
+            }
+
+            // Clear previous debounce timeout
+            if (this.inputChangeTimeout) {
+                clearTimeout(this.inputChangeTimeout);
+            }
+
+            this.cancelTokenSource = axios.CancelToken.source();
+
+            const newValue = event.target.value;
+            this.suggestionsLoading = true;
+            if (!newValue) {
+                this.options = [];
+                this.showSuggestions = false;
+                this.suggestionsLoading = false;
+                return;
+            }
+
+            // Call api to fetch suggestions
+            let url = `/api/v1/project_count_details?detail_key=${this.identifier}&search_string=${newValue}`;
+            this.inputChangeTimeout = setTimeout(() => {
+                axios
+                    .get(url, { cancelToken: this.cancelTokenSource.token })
+                    .then(response => {
+                        this.options = Object.entries(
+                            response.data
+                        ).sort((a, b) => b[1] - a[1])
+                        .slice(0, 10);
+                        this.showSuggestions = true;
+                        this.suggestionsLoading = false;
+                    })
+                    .catch(error => {
+                        if (axios.isCancel(error)) {
+                            console.log('Request cancelled:', error.message);
+                        } else {
+                            // Not important enough to annoy the user with an alert
+                            console.log('Error fetching suggestions. Please try again or contact a system adminstrator.');
+                            console.log(error)
+                        }
+                    })
+                }, 500);
+        },
+        selectOption(event, option) {
+            // Only proceed if left mouse button is clicked
+            console.log("Handling mousedown event")
+            if (event.button === 0) {
+                this.$root.formData[this.identifier] = option;
+                this.showSuggestions = false;
+                console.log("Inside button === 0")
+            }
+        },
+        highlightNext() {
+            if (this.options.length === 0) return;
+            this.highlightedIndex = (this.highlightedIndex + 1) % this.options.length;
+        },
+        highlightPrev() {
+            if (this.options.length === 0) return;
+            this.highlightedIndex = (this.highlightedIndex - 1 + this.options.length) % this.options.length;
+        },
+        selectHighlighted() {
+            if (this.highlightedIndex >= 0) {
+                this.$root.formData[this.identifier] = this.options[this.highlightedIndex];
+            }
+        },
+        hideSuggestions(){
+            setTimeout(() => {
+                this.showSuggestions = false;
+            }, 2000)
+        }
+    },
     mounted() {
         // Initialize the form data for this field
         if (this.form_type === 'boolean') {
@@ -425,13 +516,47 @@ const vFormField = {
                 </template>
 
                 <template v-if="this.form_type === 'datalist'">
-                    <input class="form-control" :list="identifier+'_list'" :aria-label="description" v-model="this.$root.formData[identifier]">
-                        <datalist :id="identifier+'_list'">
-                            <template v-for="option in options">
-                                <option :value="option">{{option}}</option>
+                    <input 
+                        class="form-control"
+                        :list="identifier+'_list'"
+                        :aria-label="description"
+                        v-model="this.$root.formData[identifier]"
+                    />
+                    <datalist :id="identifier+'_list'">
+                        <template v-for="option in options">
+                            <option :value="option">{{option}}</option>
+                        </template>
+                    </datalist>
+                </template>
+                <template v-if="this.form_type === 'custom_datalist'">
+                    <div class="custom-datalist">
+                        <input
+                            class="form-control"
+                            :aria-label="description"
+                            v-model="this.$root.formData[identifier]"
+                            @input="onInputChange"
+                            @blur="hideSuggestions"
+                        />
+                        <div
+                            v-if="showSuggestions && options.length > 0"
+                            style="width: inherit;"
+                            class="border border-secondary position-absolute bg-white"
+                            >
+                            <template v-if="this.suggestionsLoading">
+                                <div id="loading_spinner" style="text-align:center;"><span class='fa fa-sync fa-spin'></span> Loading suggestions...</div>
                             </template>
-                        </datalist>
-                    </select>
+                            <template v-else>
+                                <p
+                                    v-for="(option, index) in options"
+                                    :key="index"
+                                    @mousedown="selectOption($event, option[0])"
+                                    class="fs-4 my-0 ml-3 pr-3"
+                                >
+                                    {{ option[0] }} ({{ option[1] }})
+                                </p>
+                            </template>
+                        </div>
+                    </div>
                 </template>
 
                 <template v-else-if="this.form_type === 'string'">

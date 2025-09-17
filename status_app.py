@@ -99,6 +99,7 @@ from status.project_cards import ProjectCardsHandler, ProjectCardsWebSocket
 from status.project_creation import (
     ProjectCreationFormDataHandler,
     ProjectCreationHandler,
+    ProjectCreationCountDetailsDataHandler,
 )
 from status.projects import (
     CaliperImageHandler,
@@ -322,6 +323,7 @@ class Application(tornado.web.Application):
                 ProjectPeopleAssignmentDataHandler,
             ),
             ("/api/v1/project/([^/]*)/tickets", ProjectTicketsDataHandler),
+            ("/api/v1/project_count_details", ProjectCreationCountDetailsDataHandler),
             ("/api/v1/project_creation_form", ProjectCreationFormDataHandler),
             ("/api/v1/projects_fields", ProjectsFieldsDataHandler),
             ("/api/v1/project_summary/([^/]*)$", ProjectDataHandler),
