@@ -303,7 +303,7 @@ const vProjectCreationForm = {
                                 </div>
                             </template>
                         </template>
-                        <button type="submit" class="btn btn-lg btn-primary mt-3">Submit</button>
+                        <button type="submit" class="btn btn-lg btn-primary mt-3">Create Project</button>
                     </form>
                 </template>
             </div>
@@ -320,8 +320,8 @@ const vFormField = {
             cancelTokenSource: null,
             highlightedIndex: -1,
             inputChangeTimeout: null,
-            options: [],
             showSuggestions: false,
+            suggestions: [],
             suggestionsLoading: false,
         };
     },
@@ -428,7 +428,7 @@ const vFormField = {
             const newValue = event.target.value;
             this.suggestionsLoading = true;
             if (!newValue) {
-                this.options = [];
+                this.suggestions = [];
                 this.showSuggestions = false;
                 this.suggestionsLoading = false;
                 return;
@@ -440,7 +440,7 @@ const vFormField = {
                 axios
                     .get(url, { cancelToken: this.cancelTokenSource.token })
                     .then(response => {
-                        this.options = Object.entries(
+                        this.suggestions = Object.entries(
                             response.data
                         ).sort((a, b) => b[1] - a[1])
                         .slice(0, 10);
@@ -467,19 +467,6 @@ const vFormField = {
                 console.log("Inside button === 0")
             }
         },
-        highlightNext() {
-            if (this.options.length === 0) return;
-            this.highlightedIndex = (this.highlightedIndex + 1) % this.options.length;
-        },
-        highlightPrev() {
-            if (this.options.length === 0) return;
-            this.highlightedIndex = (this.highlightedIndex - 1 + this.options.length) % this.options.length;
-        },
-        selectHighlighted() {
-            if (this.highlightedIndex >= 0) {
-                this.$root.formData[this.identifier] = this.options[this.highlightedIndex];
-            }
-        },
         hideSuggestions(){
             setTimeout(() => {
                 this.showSuggestions = false;
@@ -492,6 +479,30 @@ const vFormField = {
             this.$root.formData[this.identifier] = false;
         } else {
             this.$root.formData[this.identifier] = '';
+        }
+
+        if (this.form_type === 'custom_datalist') {
+            let url = `/api/v1/project_count_details?detail_key=${this.identifier}`;
+            this.inputChangeTimeout = setTimeout(() => {
+                axios
+                    .get(url,)
+                    .then(response => {
+                        this.suggestions = Object.entries(
+                            response.data
+                        ).sort((a, b) => b[1] - a[1])
+                        this.showSuggestions = true;
+                        this.suggestionsLoading = false;
+                    })
+                    .catch(error => {
+                        if (axios.isCancel(error)) {
+                            console.log('Request cancelled:', error.message);
+                        } else {
+                            // Not important enough to annoy the user with an alert
+                            console.log('Error fetching suggestions. Please try again or contact a system adminstrator.');
+                            console.log(error)
+                        }
+                    })
+                }, 500);
         }
     },
     template:
@@ -529,41 +540,30 @@ const vFormField = {
                     </datalist>
                 </template>
                 <template v-if="this.form_type === 'custom_datalist'">
-                    <div class="custom-datalist">
+                    <div class="datalist">
                         <input
                             class="form-control"
                             :aria-label="description"
                             v-model="this.$root.formData[identifier]"
-                            @input="onInputChange"
-                            @blur="hideSuggestions"
+                            :list="identifier+'_list'"
+                            placeholder="Type to search..."
                         />
-                        <div
-                            v-if="showSuggestions && options.length > 0"
-                            style="width: inherit;"
-                            class="border border-secondary position-absolute bg-white"
+                        <datalist :id="identifier+'_list'">
+                            <option
+                                v-for="(option, index) in suggestions"
+                                :key="index"
+                                :value="option[0]"
                             >
-                            <template v-if="this.suggestionsLoading">
-                                <div id="loading_spinner" style="text-align:center;"><span class='fa fa-sync fa-spin'></span> Loading suggestions...</div>
-                            </template>
-                            <template v-else>
-                                <p
-                                    v-for="(option, index) in options"
-                                    :key="index"
-                                    @mousedown="selectOption($event, option[0])"
-                                    class="fs-4 my-0 ml-3 pr-3"
-                                >
-                                    {{ option[0] }} ({{ option[1] }})
-                                </p>
-                            </template>
-                        </div>
+                                {{option[0]}} ({{option[1]}})
+                            </option>
+                        </datalist>
                     </div>
                 </template>
-
-                <template v-else-if="this.form_type === 'string'">
+                <template v-if="this.form_type === 'string'">
                     <input class="form-control" :type="text" :name="identifier" :id="identifier" :placeholder="description" v-model="this.$root.formData[identifier]">
                 </template>
 
-                <template v-else-if="this.form_type === 'boolean'">
+                <template v-if="this.form_type === 'boolean'">
                     <div class="form-check form-switch">
                         <label :for="identifier" class="form-check-label">{{ label }}</label>
                         <input class="form-check-input" type="checkbox" :name="identifier" :id="identifier" :placeholder="description" v-model="this.$root.formData[identifier]">
@@ -1135,7 +1135,8 @@ const vUpdateFormField = {
                         <option value="string">String</option>
                         <option value="boolean">Boolean</option>
                         <option value="select">Select</option>
-                        <option value="datalist">Datalist</option>
+                        <option value="datalist">Datalist (must select value in list)</option>
+                        <option value="custom_datalist">Custom Datalist (fetch most used suggestions)</option>
                     </select>
                 </div>
                 <div>
@@ -1150,10 +1151,6 @@ const vUpdateFormField = {
                     <div>
                         <label :for="identifier + '_pattern'" class="form-label">Pattern</label>
                         <input :id="identifier + '_pattern'" class="form-control" type="string" v-model="this.new_json_schema['properties'][identifier]['pattern']" :disabled="!edit_mode">
-                    </div>
-                    <div class="form-check form-switch">
-                        <label :for="identifier + '_ngi_form_get_suggestions'" class="form-check-label">Get Suggestions (will fetch used values to suggest)</label>
-                        <input :for="identifier + '_ngi_form_get_suggestions'" class="form-check-input" type="checkbox" v-model="this.new_json_schema['properties'][identifier]['ngi_form_get_suggestions']" :disabled="!edit_mode">
                     </div>
                 </template>
                 <div>
