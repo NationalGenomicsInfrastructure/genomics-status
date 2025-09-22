@@ -575,7 +575,10 @@ const vFormField = {
                     <strong>Conditional logic applied:</strong>
                     <ul v-for="condition in this.conditonalsApplied">
                         <li>
-                            {{condition.description}} -> Allowed values: {{condition.options}}
+                            "{{condition.description}}":
+                            <template v-for="property_value, property_name in condition.condition.properties">
+                                {{property_name}} in {{property_value.enum}} -> Allowed values: {{condition.options}}
+                            </template>
                         </li>
                     </ul>
                 </template>
@@ -938,7 +941,7 @@ const vConditionalEditFormSingleCondition = {
     },
     template:
     /*html*/`
-        <template v-if="property_index === 0">
+        <template v-if="property_index === 0" :class="{'mt-3': conditional_index > 0}">
             <h4 v-if="condition_type === 'if'">
                 If <span class="fw-bold">{{propertyReferenceLabel}}</span> is any of
                 <button v-if="edit_mode" class="btn btn-outline-danger btn-sm ml-2" @click.prevent="removeProperty">
@@ -947,20 +950,6 @@ const vConditionalEditFormSingleCondition = {
             </h4>
             <h4 v-else>
                 Then <span class="fw-bold">{{propertyReferenceLabel}}</span> has to be one of
-                <button v-if="edit_mode" class="btn btn-outline-danger btn-sm ml-2" @click.prevent="removeProperty">
-                    Remove Property <i class="fa-solid fa-trash"></i>
-                </button>
-            </h4>
-        </template>
-        <template v-else>
-            <h4 v-if="condition_type === 'if'" class="mt-3">
-                AND <span class="fw-bold">{{propertyReferenceLabel}}</span> is any of
-                <button v-if="edit_mode" class="btn btn-outline-danger btn-sm ml-2" @click.prevent="removeProperty">
-                    Remove Property <i class="fa-solid fa-trash"></i>
-                </button>
-            </h4>
-            <h4 v-else class="mt-3">
-                AND <span class="fw-bold">{{propertyReferenceLabel}}</span> has to be one of
                 <button v-if="edit_mode" class="btn btn-outline-danger btn-sm ml-2" @click.prevent="removeProperty">
                     Remove Property <i class="fa-solid fa-trash"></i>
                 </button>
