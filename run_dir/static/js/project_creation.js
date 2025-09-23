@@ -1,74 +1,27 @@
 // Import Ajv from the CDN
 import Ajv from 'https://cdn.jsdelivr.net/npm/ajv@8.17.1/+esm';
 
-const vProjectCreationForm = {
+const vProjectCreationMain = {
     data() {
         return {
-          conditionalLogic: [],
-          error_messages: [],
-          formData: {},
-          isInspectingForm: false,
-          json_form: {},
-          new_json_form: {},
-          initiated: false,
-          showDebug: false,
-          validation_errors: [],
-          validation_errors_per_field: {}
+            error_messages: [],
+            /* Maybe some of these attributes are more suitable in the vProjectCreationForm component 
+            but it would be quite a lot of work to move it.*/
+            conditionalLogic: [],
+            formData: {},
+            isInspectingForm: false,
+            json_form: {},
+            new_json_form: {},
+            initiated: false,
+            showDebug: false,
+            validation_errors: [],
+            validation_errors_per_field: {}
         }
     },
     computed: {
-        description() {
-            return this.getValue(this.json_form, 'description');
-        },
-        instruction() {
-            return this.getValue(this.json_form, 'instruction');
-        },
         json_schema() {
-            return this.getValue(this.json_form, 'json_schema');
+            return this.$root.getValue(this.$root.json_form, 'json_schema');
         },
-        new_json_schema() {
-            return this.getValue(this.new_json_form, 'json_schema');
-        },
-        fields() {
-            if (this.json_schema === undefined) {
-                return []
-            }
-            return this.getValue(this.json_schema, 'properties');
-        },
-        fields_per_group() {
-            // group fields by their group identifier
-            if (this.json_schema === undefined) {
-                return {}
-            }
-
-            // iterate over the this.fields and group them by their group identifier
-            const groupedFields = {};
-            Object.keys(this.fields).forEach(field => {
-                const fieldGroup = this.fields[field].ngi_form_group;
-                if (fieldGroup === undefined) {
-                    // If no group is defined, assign to a default group
-                    if (groupedFields['unassigned'] === undefined) {
-                        groupedFields['unassigned'] = {};
-                    }
-                    groupedFields['unassigned'][field] = this.fields[field];
-                } else {
-                    if (groupedFields[fieldGroup] === undefined) {
-                        groupedFields[fieldGroup] = {};
-                    }
-                    groupedFields[fieldGroup][field] = this.fields[field];
-                }
-            });
-            return groupedFields;
-        },
-        form_groups() {
-            if (this.json_form === undefined) {
-                return []
-            }
-            return this.getValue(this.json_form, 'form_groups');
-        },
-        title() {
-            return this.getValue(this.json_form, 'title');
-        }
     },
     methods: {
         evaluateCondition(condition) {
@@ -92,19 +45,12 @@ const vProjectCreationForm = {
             axios
                 .get(url)
                 .then(response => {
-                    this.json_form = response.data.form
+                    this.$root.json_form = response.data.form
                 })
                 .catch(error => {
-                    this.error_messages.push('Error fetching form. Please try again or contact a system adminstrator.');
+                    this.$root.error_messages.push('Error fetching form. Please try again or contact a system adminstrator.');
                     console.log(error)
                 })
-        },
-        fields_for_given_group(group_identifier) {
-            // Get the fields for a specific group
-            if (this.fields_per_group[group_identifier] === undefined) {
-                return {}
-            }
-            return this.fields_per_group[group_identifier];
         },
         getConditionalsFor(field_identifier) {
             // Get the conditional logic for a specific field
@@ -157,33 +103,13 @@ const vProjectCreationForm = {
                 }
             });
         },
-        startInspectingForm(){
-            // Only allow it to be iniatied once.
-            if (!this.initiated) {
-                this.isInspectingForm = true;
-                this.new_json_form = JSON.parse(JSON.stringify(this.$root.json_form));
-                this.initiated = true;
-            }
-        },
-        submitForm() {
-            axios
-                .post('/api/v1/submit_project_form', this.json_form)
-                .then(response => {
-                    alert('Form submitted successfully!');
-                    console.log(response.data);
-                })
-                .catch(error => {
-                    this.error_messages.push('Error submitting form. Please try again or contact a system administrator.');
-                    console.log(error);
-                });
-        },
         updateOptions() {
             this.conditionalLogic = [];
             if (this.json_schema.allOf === undefined) {
                 return
             }
             this.json_schema.allOf.forEach(rule => {
-                if (this.evaluateCondition(rule.if)) {
+                if (this.$root.evaluateCondition(rule.if)) {
                     Object.keys(rule.then.properties).forEach(field => {
                         this.conditionalLogic.push({
                             field,
@@ -198,7 +124,7 @@ const vProjectCreationForm = {
         updateOptionsAndValidate() {
             this.updateOptions();
             // Apply options in cases where only one option is available
-            this.setValuesBasedOnConditionals();
+            this.$root.setValuesBasedOnConditionals();
             // Validate the form data against the JSON schema
             this.validate_form_with_schema();
         },
@@ -236,9 +162,6 @@ const vProjectCreationForm = {
             const validate = ajv.compile(this.new_json_schema);
         }
     },
-    mounted() {
-        this.fetch_form()
-    },
     watch: {
         formData: {
             deep: true,
@@ -248,17 +171,114 @@ const vProjectCreationForm = {
             deep: true,
             handler: 'validateNew()'
         }
+    }
+}
+
+
+const vProjectCreationForm = {
+    name: 'v-project-creation-form',
+    data() {
+        return {
+            showDebug: false,
+        }
+    },
+    computed: {
+        description() {
+            return this.$root.getValue(this.$root.json_form, 'description');
+        },
+        instruction() {
+            return this.$root.getValue(this.$root.json_form, 'instruction');
+        },
+        json_form() {
+            return this.$root.json_form;
+        },
+        new_json_schema() {
+            return this.$root.getValue(this.$root.new_json_form, 'json_schema');
+        },
+        fields() {
+            if (this.$root.json_schema === undefined) {
+                return []
+            }
+            return this.$root.getValue(this.$root.json_schema, 'properties');
+        },
+        fields_per_group() {
+            // group fields by their group identifier
+            if (this.$root.json_schema === undefined) {
+                return {}
+            }
+
+            // iterate over the this.fields and group them by their group identifier
+            const groupedFields = {};
+            Object.keys(this.fields).forEach(field => {
+                const fieldGroup = this.fields[field].ngi_form_group;
+                if (fieldGroup === undefined) {
+                    // If no group is defined, assign to a default group
+                    if (groupedFields['unassigned'] === undefined) {
+                        groupedFields['unassigned'] = {};
+                    }
+                    groupedFields['unassigned'][field] = this.fields[field];
+                } else {
+                    if (groupedFields[fieldGroup] === undefined) {
+                        groupedFields[fieldGroup] = {};
+                    }
+                    groupedFields[fieldGroup][field] = this.fields[field];
+                }
+            });
+            return groupedFields;
+        },
+        form_groups() {
+            if (this.$root.json_form === undefined) {
+                return []
+            }
+            return this.$root.getValue(this.$root.json_form, 'form_groups');
+        },
+        title() {
+            return this.$root.getValue(this.$root.json_form, 'title');
+        }
+    },
+    methods: {
+        fields_for_given_group(group_identifier) {
+            // Get the fields for a specific group
+            if (this.fields_per_group[group_identifier] === undefined) {
+                return {}
+            }
+            return this.fields_per_group[group_identifier];
+        },
+        startInspectingForm(){
+            // Only allow it to be iniatied once.
+            if (!this.initiated) {
+                this.isInspectingForm = true;
+                this.new_json_form = JSON.parse(JSON.stringify(this.$root.json_form));
+                this.initiated = true;
+            }
+        },
+        submitForm() {
+            axios
+                .post('/api/v1/submit_project_form', this.$root.json_form)
+                .then(response => {
+                    alert('Form submitted successfully!');
+                    console.log(response.data);
+                })
+                .catch(error => {
+                    this.$root.error_messages.push('Error submitting form. Please try again or contact a system administrator.');
+                    console.log(error);
+                });
+        },
+
+    },
+    mounted() {
+        this.$root.fetch_form()
     },
     template: 
         /*html*/`
         <div class="container">
             <div class="row mt-5">
-                <template v-if="error_messages.length > 0">
+                <template v-if="this.$root.error_messages.length > 0">
                     <div class="alert alert-danger" role="alert">
-                        <h3 v-for="error in error_messages">{{ error }}</h3>
+                        <h3 v-for="error in this.$root.error_messages">{{ error }}</h3>
                     </div>
                 </template>
-                <template v-if="json_form === {}">
+                <template v-if="this.json_form === {}">
                     <div class="alert alert-info" role="alert">
                         <h3>Loading...</h3>
                     </div>
@@ -278,9 +298,9 @@ const vProjectCreationForm = {
                         <div class="card-body">
                             <h2 class="card-title"> Debug information </h2>
                             <h3>Form Data</h3>
-                            <pre>{{ formData }}</pre>
+                            <pre>{{ this.$root.formData }}</pre>
                             <h3>conditionalLogic</h3>
-                            <pre>{{ conditionalLogic }}</pre>
+                            <pre>{{ this.$root.conditionalLogic }}</pre>
                             <button class="btn btn-primary" @click="validate_form_with_schema">
                                 <i class="fa fa-check mr-2"></i>Validate Form
                             </button>
@@ -308,8 +328,7 @@ const vProjectCreationForm = {
                 </template>
             </div>
         </div>
-        <v-create-form></v-create-form>
-        `
+    `
 }
 
 const vFormField = {
@@ -347,7 +366,6 @@ const vFormField = {
         },
         options() {
             let conditional_options = this.$root.getOptions(this.identifier);
-            console.log(`Options for field ${this.identifier}:`, conditional_options);
             if (conditional_options !== null) {
                 return conditional_options;
             }
@@ -460,7 +478,6 @@ const vFormField = {
         },
         selectOption(event, option) {
             // Only proceed if left mouse button is clicked
-            console.log("Handling mousedown event")
             if (event.button === 0) {
                 this.$root.formData[this.identifier] = option;
                 this.showSuggestions = false;
@@ -585,6 +602,22 @@ const vFormField = {
             </div>
         </template>`
 }
+
+const vCreateFormList = {
+    name: 'v-create-form-list',
+    data() {
+        return {
+            forms: [],
+        }
+    },
+    template:
+    /*html*/`
+        <div class="container">
+            <h2>Hello World</h2>
+        </div>
+        `
+}
+
 
 const vCreateForm = {
     name: 'v-create-form',
@@ -1323,10 +1356,12 @@ const vVisibleIfConditionEditForm = {
         `
 }
 
-const app = Vue.createApp(vProjectCreationForm)
+const app = Vue.createApp(vProjectCreationMain)
+app.component('v-project-creation-form', vProjectCreationForm)
 app.component('v-conditional-edit-form-single-condition', vConditionalEditFormSingleCondition)
 app.component('v-visible-if-condition-edit-form', vVisibleIfConditionEditForm)
 app.component('v-form-field', vFormField)
+app.component('v-create-form-list', vCreateFormList)
 app.component('v-create-form', vCreateForm)
 app.component('v-update-form-field', vUpdateFormField)
 app.component('v-conditional-edit-form', vConditionalEditForm)
