@@ -45,6 +45,7 @@ class ProjectCreationFormDataHandler(SafeHandler):
 
         return self.write({"form": all_valid_docs["rows"][0]["doc"]})
 
+
 class LocalCacheEntry:
     def __init__(self, data):
         self.data = data
