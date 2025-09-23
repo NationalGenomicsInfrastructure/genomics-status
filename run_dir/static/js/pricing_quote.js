@@ -101,9 +101,6 @@ app.component('v-pricing-quote', {
           if(this.noQCProj){
             msg_display += '\n\n'+ first_page_text['specific_conditions']['no-qc_conditions']
           }
-          if(this.$root.price_type==='full_cost'){
-            msg_display += '\n\n'+ first_page_text['specific_conditions']['full_cost_conditions']
-          }
           return marked(msg_display, { sanitize: true })
         },
         has_admin_control(){
