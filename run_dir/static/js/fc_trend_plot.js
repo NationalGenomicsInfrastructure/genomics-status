@@ -285,7 +285,7 @@ function build_series(data, key, name, display_by, filter_inst_type, filter_inst
                 col_color = color_by_chemistry(data[d].cver);
             }
         }else if (color_type == 'month'){
-            series_name = data[d].id.substr(0,4);
+            series_name = data[d].id.substring(0,4);
             col_color=color_by_month(data[d].id);
         }else if (color_type == 'inst'){
             series_name = data[d].instrument;
@@ -394,11 +394,11 @@ function color_by_type(instrument){
     }
 }
 function color_by_month(id){
-    return current_color_schemes[3](window.current_months_list.indexOf(id.substr(0,4))).hex()
+    return current_color_schemes[3](window.current_months_list.indexOf(id.substring(0,4))).hex()
 }
 
 function color_by_chemistry(series_name){
-    version = window.current_plot_data[d].instrument.substr(0,1) + series_name;
+    version = window.current_plot_data[d].instrument.substring(0,1) + series_name;
     var id = window.current_chemistries_list.indexOf(version);
 	return current_color_schemes[2](id).hex();
 }
@@ -414,11 +414,11 @@ function get_parameters(){
         var dp=$('#inp_date_1').val();
         if (dp != ''){
             y_m_d=dp.split('-');
-            first_half=y_m_d[0].substr(2,2) + y_m_d[1] + y_m_d[2];
+            first_half=y_m_d[0].substring(2,4) + y_m_d[1] + y_m_d[2];
         }else{
             first_date=new Date();
             first_date.setYear(first_date.getYear()-1);
-            first_half=first_date.toISOString().substr(2,2) + first_date.toISOString().substr(5,2) + first_date.toISOString().substr(8,2);
+            first_half=first_date.toISOString().substring(2,4) + first_date.toISOString().substring(5,7) + first_date.toISOString().substring(8,10);
         }
         dp=$('#inp_date_2').val();
         if (dp != ''){
@@ -426,7 +426,7 @@ function get_parameters(){
             second_half=y_m_d[0].substr(2,2) + y_m_d[1] + y_m_d[2];
         }else{
             second_date=new Date();
-            second_half=second_date.toISOString().substr(2,2) + second_date.toISOString().substr(5,2) + second_date.toISOString().substr(8,2);
+            second_half=second_date.toISOString().substring(2,4) + second_date.toISOString().substring(5,7) + second_date.toISOString().substring(8,10);
         }
         search_string=first_half + '-' + second_half;
 
@@ -490,9 +490,9 @@ function init_page_js(){
     weekStart: 1,
     daysOfWeekHighlighted: "0,6" });
         var my_date=new Date();
-        $('#inp_date_2').val(my_date.toISOString().substr(0,10));
+        $('#inp_date_2').val(my_date.toISOString().substring(0,10));
         my_date.setYear(my_date.getFullYear()-1);
-        $('#inp_date_1').val(my_date.toISOString().substr(0,10));
+        $('#inp_date_1').val(my_date.toISOString().substring(0,10));
     $('#submit_interval').click(function(e){
         e.preventDefault();
         window.current_plot_data=null;
@@ -542,8 +542,8 @@ function init_page_js(){
 function update_months_list(){
     window.current_months_list=[];
     for (d in window.current_plot_data){
-        if (window.current_months_list.indexOf(window.current_plot_data[d].id.substr(0,4)) == -1){
-            window.current_months_list.push(window.current_plot_data[d].id.substr(0,4));
+        if (window.current_months_list.indexOf(window.current_plot_data[d].id.substring(0,4)) == -1){
+            window.current_months_list.push(window.current_plot_data[d].id.substring(0,4));
         }
     }
 }
@@ -564,7 +564,7 @@ function update_chemistries_list(){
         } else if (window.current_plot_data[d].mode == '4'){
             version = 'Mmicro'
         } else {
-            version = window.current_plot_data[d].instrument.substr(0,1) + window.current_plot_data[d].cver;
+            version = window.current_plot_data[d].instrument.substring(0,1) + window.current_plot_data[d].cver;
         }
         if ( window.current_chemistries_list.indexOf(version) == -1){
             window.current_chemistries_list.push(version);

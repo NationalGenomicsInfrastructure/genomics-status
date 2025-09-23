@@ -40,6 +40,14 @@ class DataFlowcellYieldHandler(SafeHandler):
         ]
         docs.extend(aviti_fcs)
 
+        def parse_id_date(doc_id):
+            date_run = doc_id.split("_")[0]
+            if len(date_run) == 6:  # YYMMDD
+                return datetime.datetime.strptime(date_run, "%y%m%d")
+            elif len(date_run) == 8:  # YYYYMMDD
+                return datetime.datetime.strptime(date_run, "%Y%m%d")
+
+        docs.sort(key=lambda d: parse_id_date(d["id"]))
         for doc in docs:
             fc_yield = int(doc.get("total_yield")) / 1000000
             doc["total_yield"] = fc_yield
