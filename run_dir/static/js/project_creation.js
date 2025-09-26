@@ -9,6 +9,7 @@ const vProjectCreationMain = {
             but it would be quite a lot of work to move it.*/
             conditionalLogic: [],
             formData: {},
+            forms: [],
             isInspectingForm: false,
             json_form: {},
             new_json_form: {},
@@ -36,6 +37,18 @@ const vProjectCreationMain = {
                 }
                 return true;
             });
+        },
+        fetch_list_of_forms() {
+            let url = '/api/v1/project_creation_forms'
+            axios
+                .get(url)
+                .then(response => {
+                    this.$root.forms = response.data.forms
+                })
+                .catch(error => {
+                    this.$root.error_messages.push('Error fetching list of forms. Please try again or contact a system adminstrator.');
+                    console.log(error)
+                })
         },
         fetch_form(version) {
             let url = '/api/v1/project_creation_form'
@@ -605,15 +618,37 @@ const vFormField = {
 
 const vCreateFormList = {
     name: 'v-create-form-list',
-    data() {
-        return {
-            forms: [],
-        }
+    mounted() {
+        this.$root.fetch_list_of_forms()
     },
     template:
     /*html*/`
         <div class="container">
-            <h2>Hello World</h2>
+            <h1>Project creation forms</h1>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Version</th>
+                        <th>Description</th>
+                        <th>Owner Email</th>
+                        <th>Status</th>
+                        <th>Created</th>
+                        <th>Links</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-for="form in this.$root.forms" :key="form.id">
+                        <td>{{ form.value.title }}</td>
+                        <td>{{ form.value.version }}</td>
+                        <td>{{ form.value.description}}</td>
+                        <td>{{ form.value.owner.email }}</td>
+                        <td>{{ form.value.status }}</td>
+                        <td>{{ form.value.created }}</td>
+                        <td><a :href="'/project_creation_edit_form?form_id=' + form.id">Edit</a></td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
         `
 }

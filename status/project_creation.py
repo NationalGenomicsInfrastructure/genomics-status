@@ -45,6 +45,43 @@ class ProjectCreationFormDataHandler(SafeHandler):
 
         return self.write({"form": all_valid_docs["rows"][0]["doc"]})
 
+class ProjectCreationFormMultipleDataHandler(SafeHandler):
+    def get(self):
+        # Fetch list of all forms from couchdb using cloudant
+
+        forms_view = self.application.cloudant.post_view(
+            db="project_creation_forms",
+            ddoc="summary",
+            view="all",
+            include_docs=False,
+        ).get_result()
+
+        self.set_header("Content-type", "application/json")
+
+        if not forms_view or "rows" not in forms_view:
+            self.set_status(400)
+            return self.write("Error: no valid forms found")
+
+        if len(forms_view["rows"]) == 0:
+            self.set_status(400)
+            return self.write("Error: no valid forms found")
+
+        forms = forms_view["rows"]
+
+        return self.write({"forms": forms})
+
+
+class ProjectCreationFormHandler(SafeHandler):
+    def get(self):
+        t = self.application.loader.load("project_creation_form.html")
+
+        self.write(
+            t.generate(
+                gs_globals=self.application.gs_globals,
+                user=self.get_current_user(),
+            )
+        )
+
 
 class LocalCacheEntry:
     def __init__(self, data):
