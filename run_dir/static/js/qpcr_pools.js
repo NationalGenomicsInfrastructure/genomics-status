@@ -86,12 +86,18 @@ function load_table() {
               let note = pobj['latest_running_note'];
               let ndate = undefined;
               for (date_key in note) { ndate = date_key; break; }
-              notedate = new Date(ndate);
-              to_return = to_return + '<div class="card running-note-card">' +
-              '<div class="card-header">'+
-              note[ndate]['user']+' - '+notedate.toDateString()+', ' + notedate.toLocaleTimeString(notedate)+
-              ' - '+ generate_category_label(note[ndate]['categories']) +
-            '</div><div class="card-body">'+make_markdown(note[ndate]['note'])+'</pre></div></div>';
+              if (ndate===undefined){
+                to_return = to_return + '<div class="text-muted"><em>No running notes</em></div>';
+              }
+              else {
+                var notedate = new Date(ndate);
+                notedate = new Date(ndate);
+                to_return = to_return + '<div class="card running-note-card">' +
+                '<div class="card-header">'+
+                note[ndate]['user']+' - '+notedate.toDateString()+', ' + notedate.toLocaleTimeString(notedate)+
+                ' - '+ generate_category_label(note[ndate]['categories']) +
+              '</div><div class="card-body">'+make_markdown(note[ndate]['note'])+'</pre></div></div>';
+              }
             });
             return to_return;
           }));
