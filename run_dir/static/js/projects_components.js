@@ -1196,6 +1196,19 @@ export const vProjectCards = {
                                 </div>
                             </template>
                         </div>
+                        <div class="col">
+                            <h4>Sequencing Platform</h4>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" role="switch" id="sequencing_platform_all_switch" v-model="this.$root.all_filters['sequencing_platform']['include_all']"/>
+                                <label class="form-check-label" for="sequencing_platform_all_switch">All</label>
+                            </div>
+                            <template v-for="(nr_with_sequencing_platform, sequencing_platform) in this.$root.allValues('sequencing_platform')">
+                                <div class="form-check" @click="(event) => selectFilterValue(event, 'sequencing_platform', sequencing_platform)">
+                                    <input class="form-check-input" type="checkbox" :id="'sequencing_platform_filter_'+sequencing_platform" :value="sequencing_platform" v-model="this.$root.all_filters['sequencing_platform']['filter_values']" :disabled="this.$root.all_filters['sequencing_platform']['include_all']"/>
+                                    <label class="form-check-label" :for="'sequencing_platform_filter_' + sequencing_platform">{{ sequencing_platform }} ({{this.$root.nrVisibleWith('sequencing_platform', sequencing_platform)}}/{{nr_with_sequencing_platform}})</label>
+                                </div>
+                            </template>
+                        </div>
                     </div>
                 </form>
             </div>
