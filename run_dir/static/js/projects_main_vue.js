@@ -82,6 +82,14 @@ const vProjectsStatus = {
                     'filter_values': [],
                     'include_all': true,
                     'is_list': false
+                },
+                'sequencing_platform': {
+                    'title': 'Sequencing Platform',
+                    'key': 'sequencing_platform',
+                    'secondary_key': null,
+                    'filter_values': [],
+                    'include_all': true,
+                    'is_list': false
                 }
             }
         }
