@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "../base.html" %}
 
 <!--
 Template file: project_creation.html
@@ -10,7 +10,7 @@ Title: Project Creation
 {% block stuff %}
 
 <div id="v_project_creation">
-    <v-project-creation-form></v-project-creation-form>
+    <v-project-creation-form init_edit_mode="{{edit_mode}}" version_id="{{version_id}}"></v-project-creation-form>
 </div>
 {% end %}
 
