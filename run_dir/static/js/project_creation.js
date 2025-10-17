@@ -13,13 +13,19 @@ const vProjectCreationMain = {
             isInspectingForm: false,
             json_form: {},
             new_json_form: {},
-            initiated: false,
+            edit_initiated: false,
             showDebug: false,
             validation_errors: [],
             validation_errors_per_field: {}
         }
     },
     computed: {
+        fields() {
+            if (this.json_schema === undefined) {
+                return []
+            }
+            return this.getValue(this.json_schema, 'properties');
+        },
         json_schema() {
             return this.$root.getValue(this.$root.json_form, 'json_schema');
         },
@@ -116,6 +122,18 @@ const vProjectCreationMain = {
                 }
             });
         },
+        startInspectingForm(){
+            this.isInspectingForm = true;
+            // Only allow it to be iniatied once.
+            if (!this.edit_initiated) {
+                this.new_json_form = JSON.parse(JSON.stringify(this.$root.json_form));
+                this.edit_initiated = true;
+            }
+        },
+        stopInspectingForm(){
+            // Do not reset the form, just stop inspecting it.
+            this.isInspectingForm = false;
+        },
         updateOptions() {
             this.conditionalLogic = [];
             if (this.json_schema.allOf === undefined) {
@@ -190,9 +208,12 @@ const vProjectCreationMain = {
 
 const vProjectCreationForm = {
     name: 'v-project-creation-form',
+    props: ['form_loaded', 'init_edit_mode', 'version_id'],
     data() {
         return {
             showDebug: false,
+            toplevel_edit_mode: false,
+            is_trying_out_form: false,
         }
     },
     computed: {
@@ -208,33 +229,26 @@ const vProjectCreationForm = {
         new_json_schema() {
             return this.$root.getValue(this.$root.new_json_form, 'json_schema');
         },
-        fields() {
-            if (this.$root.json_schema === undefined) {
-                return []
-            }
-            return this.$root.getValue(this.$root.json_schema, 'properties');
-        },
         fields_per_group() {
             // group fields by their group identifier
             if (this.$root.json_schema === undefined) {
                 return {}
             }
 
-            // iterate over the this.fields and group them by their group identifier
             const groupedFields = {};
-            Object.keys(this.fields).forEach(field => {
-                const fieldGroup = this.fields[field].ngi_form_group;
+            Object.keys(this.$root.fields).forEach(field => {
+                const fieldGroup = this.$root.fields[field].ngi_form_group;
                 if (fieldGroup === undefined) {
                     // If no group is defined, assign to a default group
                     if (groupedFields['unassigned'] === undefined) {
                         groupedFields['unassigned'] = {};
                     }
-                    groupedFields['unassigned'][field] = this.fields[field];
+                    groupedFields['unassigned'][field] = this.$root.fields[field];
                 } else {
                     if (groupedFields[fieldGroup] === undefined) {
                         groupedFields[fieldGroup] = {};
                     }
-                    groupedFields[fieldGroup][field] = this.fields[field];
+                    groupedFields[fieldGroup][field] = this.$root.fields[field];
                 }
             });
             return groupedFields;
@@ -257,14 +271,6 @@ const vProjectCreationForm = {
             }
             return this.fields_per_group[group_identifier];
         },
-        startInspectingForm(){
-            // Only allow it to be iniatied once.
-            if (!this.initiated) {
-                this.isInspectingForm = true;
-                this.new_json_form = JSON.parse(JSON.stringify(this.$root.json_form));
-                this.initiated = true;
-            }
-        },
         submitForm() {
             axios
                 .post('/api/v1/submit_project_form', this.$root.json_form)
@@ -280,7 +286,12 @@ const vProjectCreationForm = {
 
     },
     mounted() {
-        this.$root.fetch_form()
+        if (!this.form_loaded) {
+            this.$root.fetch_form(this.version_id);
+        }
+        if (this.init_edit_mode.toLowerCase() === 'true') {
+            this.toplevel_edit_mode = true;
+        }
     },
     template: 
         /*html*/`
@@ -300,6 +311,7 @@ const vProjectCreationForm = {
                     <div class="row">
                         <div class="col-auto">
                             <h1>{{ title }}</h1>
+                            <h2 v-if='this.toplevel_edit_mode' class="text-danger"> Edit Mode Enabled </h2>
                         </div>
                         <div class="col-auto ml-auto">
                             <button class="btn btn-sm btn-secondary" @click="showDebug = !showDebug">
@@ -323,21 +335,31 @@ const vProjectCreationForm = {
                     <p>{{ description }}</p>
                     <p>{{ instruction }}</p>
 
-                    <form @submit.prevent="submitForm" class="mt-3 mb-5">
-                        <template v-for="(form_group, group_identifier) in form_groups" :key="group_identifier">
-                            <template v-if="Object.keys(this.fields_for_given_group(group_identifier)).length !== 0">
-                                <div class="mb-5">
-                                    <h3>{{form_group.display_name}}</h3>
-                                    <template v-for="(field, identifier) in this.fields_for_given_group(group_identifier)" :key="identifier">
-                                        <template v-if="field.ngi_form_type !== undefined">
-                                            <v-form-field :field="field" :identifier="identifier"></v-form-field>
+                    <template v-if="this.toplevel_edit_mode && !this.is_trying_out_form">
+                        <button class="btn btn-lg btn-primary" @click="this.is_trying_out_form = true">Open form</button>
+                    </template>
+                    <template v-else>
+                        <button class="btn btn-lg btn-primary" @click="this.is_trying_out_form = false">Close form</button>
+
+                        <form @submit.prevent="submitForm" class="mt-3 mb-5">
+                            <template v-for="(form_group, group_identifier) in form_groups" :key="group_identifier">
+                                <template v-if="Object.keys(this.fields_for_given_group(group_identifier)).length !== 0">
+                                    <div class="mb-5">
+                                        <h3>{{form_group.display_name}}</h3>
+                                        <template v-for="(field, identifier) in this.fields_for_given_group(group_identifier)" :key="identifier">
+                                            <template v-if="field.ngi_form_type !== undefined">
+                                                <v-form-field :field="field" :identifier="identifier"></v-form-field>
+                                            </template>
                                         </template>
-                                    </template>
-                                </div>
+                                    </div>
+                                </template>
                             </template>
-                        </template>
-                        <button type="submit" class="btn btn-lg btn-primary mt-3">Create Project</button>
-                    </form>
+                            <button type="submit" class="btn btn-lg btn-primary mt-3" :disabled="toplevel_edit_mode">Create Project</button>
+                        </form>
+                    </template>
+                    <template v-if="this.toplevel_edit_mode">
+                        <v-create-form></v-create-form>
+                    </template>
                 </template>
             </div>
         </div>
@@ -645,7 +667,7 @@ const vCreateFormList = {
                         <td>{{ form.value.owner.email }}</td>
                         <td>{{ form.value.status }}</td>
                         <td>{{ form.value.created }}</td>
-                        <td><a :href="'/project_creation_edit_form?form_id=' + form.id">Edit</a></td>
+                        <td><a :href="'/project_creation?edit_mode=true&version_id=' + form.id">Edit</a></td>
                     </tr>
                 </tbody>
             </table>
@@ -753,6 +775,7 @@ const vCreateForm = {
             this.allOf.push(newProperty);
         },
         saveForm() {
+            // TODO
             this.$root.json_form = this.$root.new_json_form;
         }
     },
@@ -761,10 +784,11 @@ const vCreateForm = {
         <div class="container">
             <div class="row mt-5">
                 <template v-if="!this.$root.isInspectingForm">
-                    <button class="btn btn-lg btn-primary mt-3" @click="this.$root.startInspectingForm">Inspect form details</button>
+                    <button class="btn btn-lg btn-primary mt-3" @click.prevent="this.$root.startInspectingForm">Inspect form details</button>
                 </template>
                 <template v-else>
-                    <div class="row">
+                    <button class="btn btn-lg btn-primary mt-3" @click.prevent="this.$root.stopInspectingForm">Close form details</button>
+                    <div class="row mt-3 mb-3">
                         <div class="col-auto">
                             <h1>Update Form:</h1>
                         </div>
@@ -780,7 +804,7 @@ const vCreateForm = {
                     <template v-if="showDebug" class="card">
                         <pre>{{ this.$root.new_json_form }}</pre>
                     </template>
-                    <div>
+                    <div class="ml-3">
                         <h2 class="mt-3">Fields<button v-if="this.display_fields" class="btn btn-secondary ml-2" @click.prevent="this.display_fields = false">Hide fields</button></h2>
                         <template v-if="this.display_fields">
                             <template v-for="(field, identifier) in fields" :key="identifier">
@@ -801,8 +825,7 @@ const vCreateForm = {
                             <button class="btn btn-primary" @click.prevent="this.display_fields = true">Show fields</button>
                         </template>
                     </div>
-
-                    <div>
+                    <div class="ml-3">
                         <h2 class="mt-3">Conditional logic <button v-if="this.display_conditional_logic" class="btn btn-secondary" @click.prevent="this.display_conditional_logic = false">Hide conditional logic</button></h2>
                         <template v-if="this.display_conditional_logic">
                             <template v-for="(conditional, conditional_index) in this.allOf">
