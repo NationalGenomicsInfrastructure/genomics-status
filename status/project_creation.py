@@ -5,50 +5,85 @@ from status.util import SafeHandler
 
 
 class ProjectCreationHandler(SafeHandler):
+    """Handler used to render the project creation page using the valid form."""
+
     def get(self):
-        t = self.application.loader.load("project_creation.html")
+        t = self.application.loader.load("project_creation/project_creation.html")
+
+        edit_mode_arg = self.get_query_argument("edit_mode", default=None)
+
+        edit_mode = False
+        if edit_mode_arg:
+            current_user = self.get_current_user()
+            if current_user.is_proj_coord or current_user.is_admin:
+                # Allow edit mode only for project coordinators and admins
+                edit_mode = True
+
+        version_id = self.get_query_argument("version_id", default=None)
+        if not edit_mode:
+            version_id = None
 
         self.write(
             t.generate(
                 gs_globals=self.application.gs_globals,
                 user=self.get_current_user(),
+                edit_mode=edit_mode,
+                version_id=version_id,
             )
         )
 
 
 class ProjectCreationFormDataHandler(SafeHandler):
+    """API Handler to get the latest or specific version of the project creation form."""
+
     def get(self):
-        # Fetch latest form from couchdb using cloudant
+        # If version argument is provided, return that specific form
+        version = self.get_query_argument("version", default=None)
+        if version:
+            form_doc = self.application.cloudant.get_document(
+                db="project_creation_forms", doc_id=version
+            ).get_result()
 
-        all_valid_docs = self.application.cloudant.post_view(
-            db="project_creation_forms",
-            ddoc="by_creation_date",
-            view="valid",
-            limit=1,
-            descending=True,
-            include_docs=True,
-        ).get_result()
+            self.set_header("Content-type", "application/json")
 
-        self.set_header("Content-type", "application/json")
+            if not form_doc:
+                self.set_status(400)
+                return self.write("Error: no valid form found for the given version")
 
-        if not all_valid_docs or "rows" not in all_valid_docs:
-            self.set_status(400)
-            return self.write("Error: no valid forms found")
+            return self.write({"form": form_doc})
+        else:
+            # Fetch latest form from couchdb using cloudant
+            all_valid_docs = self.application.cloudant.post_view(
+                db="project_creation_forms",
+                ddoc="by_creation_date",
+                view="valid",
+                limit=1,
+                descending=True,
+                include_docs=True,
+            ).get_result()
 
-        if len(all_valid_docs["rows"]) == 0:
-            self.set_status(400)
-            return self.write("Error: no valid forms found")
+            self.set_header("Content-type", "application/json")
 
-        if "doc" not in all_valid_docs["rows"][0]:
-            self.set_status(400)
-            return self.write("Error: no valid forms found. Doc is missing")
+            if not all_valid_docs or "rows" not in all_valid_docs:
+                self.set_status(400)
+                return self.write("Error: no valid forms found")
 
-        return self.write({"form": all_valid_docs["rows"][0]["doc"]})
+            if len(all_valid_docs["rows"]) == 0:
+                self.set_status(400)
+                return self.write("Error: no valid forms found")
 
-class ProjectCreationFormMultipleDataHandler(SafeHandler):
+            if "doc" not in all_valid_docs["rows"][0]:
+                self.set_status(400)
+                return self.write("Error: no valid forms found. Doc is missing")
+
+            return self.write({"form": all_valid_docs["rows"][0]["doc"]})
+
+
+class ProjectCreationListFormsDataHandler(SafeHandler):
+    """API Handler to get a list of all project creation forms."""
+
     def get(self):
         # Fetch list of all forms from couchdb using cloudant
-
         forms_view = self.application.cloudant.post_view(
             db="project_creation_forms",
             ddoc="summary",
@@ -71,19 +106,22 @@ class ProjectCreationFormMultipleDataHandler(SafeHandler):
         return self.write({"forms": forms})
 
 
-class ProjectCreationFormHandler(SafeHandler):
-    def get(self):
-        t = self.application.loader.load("project_creation_form.html")
+class ProjectCreationListFormsHandler(SafeHandler):
+    """Handler to render a list of all project creation forms."""
 
+    def get(self):
+        # Render the template with the list of forms
+        t = self.application.loader.load("project_creation/list_forms.html")
         self.write(
             t.generate(
-                gs_globals=self.application.gs_globals,
-                user=self.get_current_user(),
+                gs_globals=self.application.gs_globals, user=self.get_current_user()
             )
         )
 
 
 class LocalCacheEntry:
+    """Class to hold cached data with a timestamp."""
+
     def __init__(self, data):
         self.data = data
         self.timestamp = datetime.datetime.now()
@@ -96,6 +134,8 @@ class LocalCacheEntry:
 
 
 class ProjectCreationCountDetailsDataHandler(SafeHandler):
+    """API Handler to get the count of projects created per detail value for a given detail key."""
+
     LocalCache = {}
 
     def collect_results_from_db(
