@@ -39,6 +39,8 @@ class ProjectCreationFormDataHandler(SafeHandler):
     def get(self):
         # If version argument is provided, return that specific form
         version = self.get_query_argument("version", default=None)
+        if version == "None":
+            version = None
         if version:
             form_doc = self.application.cloudant.get_document(
                 db="project_creation_forms", doc_id=version
