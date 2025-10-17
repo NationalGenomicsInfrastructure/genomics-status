@@ -7,7 +7,7 @@ from status.util import SafeHandler
 class DataFlowcellYieldHandler(SafeHandler):
     """Handles the api call to reads_plot data
 
-    Loaded through /api/v1/reads_plot/([^/]*)$
+    Loaded through /api/v1/flowcell_yield/([^/]*)$
     """
 
     def get(self, search_string=None):
@@ -19,12 +19,35 @@ class DataFlowcellYieldHandler(SafeHandler):
             first_term, second_term = search_string.split("-")
 
         docs = [
-            x.value
-            for x in self.application.x_flowcells_db.view("plot/reads_yield")[
-                first_term : second_term + "ZZZZ"
-            ].rows
+            x["value"]
+            for x in self.application.cloudant.post_view(
+                db="x_flowcells",
+                ddoc="plot",
+                view="reads_yield",
+                start_key=first_term,
+                end_key=second_term + "ZZZZ",
+            ).get_result()["rows"]
         ]
+        aviti_fcs = [
+            x["value"]
+            for x in self.application.cloudant.post_view(
+                db="element_runs",
+                ddoc="info",
+                view="reads_yield",
+                start_key="20" + first_term,
+                end_key="20" + second_term + "ZZZZ",
+            ).get_result()["rows"]
+        ]
+        docs.extend(aviti_fcs)
 
+        def parse_id_date(doc_id):
+            date_run = doc_id.split("_")[0]
+            if len(date_run) == 6:  # YYMMDD
+                return datetime.datetime.strptime(date_run, "%y%m%d")
+            elif len(date_run) == 8:  # YYYYMMDD
+                return datetime.datetime.strptime(date_run, "%Y%m%d")
+
+        docs.sort(key=lambda d: parse_id_date(d["id"]))
         for doc in docs:
             fc_yield = int(doc.get("total_yield")) / 1000000
             doc["total_yield"] = fc_yield

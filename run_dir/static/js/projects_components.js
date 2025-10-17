@@ -1,3 +1,6 @@
+import { vPricingQuote } from './pricing_quote_components.js'
+import { vPricingMain } from './pricing_main_components.js'
+
 export const vProjectDataField = {
     name: 'v-project-data-field-tooltip',
     // A single dt field with a dd field
@@ -40,7 +43,10 @@ export const vProjectDetails = {
             show_link_form: false,
             proj_links: [],
             link_error: '',
-            visible_info_ids: []
+            visible_info_ids: [],
+            new_link_type: '',
+            new_link_name: '',
+            pricing_app: null
         }
     },
     computed: {
@@ -52,11 +58,6 @@ export const vProjectDetails = {
         },
         project_data_exists() {
             return this.project_data != undefined
-        },
-        running_notes() {
-            if (this.project_id in this.$root.running_notes) {
-                return this.$root.running_notes[this.project_id]
-            }
         },
         project_samples() {
             return this.$root.project_samples[this.project_id]
@@ -81,6 +82,16 @@ export const vProjectDetails = {
             }
         }
     },
+    watch: {
+        new_link_type(newVal, oldVal) {
+            if (newVal === 'project_folder') {
+                this.new_link_name = 'Project Folder';
+            }
+            else if (newVal !== 'project_folder' && this.new_link_name === 'Project Folder') {
+                this.new_link_name = '';
+            }
+        }
+    },
     methods: {
         switchTab(tab_name) {
             // Check if disabled
@@ -96,6 +107,9 @@ export const vProjectDetails = {
             this.$refs[tab_name].classList.add('show', 'active');
             this.$refs[tab_name + '-btn'].classList.add('active');
             this.active_tab = tab_name;
+            if(tab_name == 'project-agreements-pane'){
+                this.mount_pricing_app();
+            }
         },
         pressEnter(event) {
             // Check if typing in input
@@ -179,6 +193,22 @@ export const vProjectDetails = {
         },
         isVisibleInfo(link_id) {
             return this.visible_info_ids.includes(link_id)
+        },
+        mount_pricing_app() {
+            if(!this.pricing_app){
+                this.pricing_app = Vue.createApp(vPricingMain);
+                this.pricing_app.config.globalProperties.Origin = "Agreement" ;
+                this.pricing_app.config.globalProperties.is_proj_coord = this.user.roles.includes("proj_coord");
+                this.pricing_app.config.globalProperties.project_id=this.project_id;
+                this.pricing_app.component('v-pricing-quote', vPricingQuote);
+                this.pricing_app.mount(this.$refs.pricing_quote_main);
+            }
+        },
+        unmount_pricing_app() {
+            if(this.pricing_app){
+                this.pricing_app.unmount();
+                this.pricing_app = null;
+            }
         }
     },
     created: function() {
@@ -213,7 +243,7 @@ export const vProjectDetails = {
                     </div>
                     <div class="row">
                         <h3 :class="{'mt-3': true, 'ml-3': as_modal, 'col-auto': true}">
-                            <a :href="'/project/' + project_id" class="text-decoration-none"  style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis">
+                            <a :href="'/project/' + project_id" class="text-decoration-none"  style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis" target="_blank">
                                 <i class="fa-regular fa-arrow-up-right-from-square"></i> Old Project Page
                             </a>
                         </h3>
@@ -601,14 +631,20 @@ export const vProjectDetails = {
                         <li class="nav-item" role="presentation">
                             <button class="nav-link" ref="project-user-communication-pane-btn" @click="switchTab('project-user-communication-pane')" type="button" role="tab" aria-controls="project-user-communication-pane" aria-selected="false">User communication</button>
                         </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" ref="project-agreements-pane-btn" @click="switchTab('project-agreements-pane')" type="button" role="tab" aria-controls="project-agreements-pane" aria-selected="false">Agreements</button>
+                        </li>
                     </ul>
                     <div class="tab-content" id="myTabContent">
                         <div class="tab-pane fade show active" ref="project-running-notes-pane" role="tabpanel" aria-labelledby="project-running-notes-pane-btn" tabindex="0">
-                            <v-running-notes-tab :user="this.user" ref="project-running-notes-pane-component" :partition_id="project_id" :all_users="this.$root.all_users" note_type="project"></v-running-notes-tab>
+                            <v-running-notes-tab ref="project-running-notes-pane-component" :partition_id="project_id" note_type="project"></v-running-notes-tab>
                         </div>
                         <div class="tab-pane fade" ref="project-details-pane" role="tabpanel" aria-labelledby="project-details-pane-btn" tabindex="0"><h1 class="mt-4"><i class="fa-light fa-triangle-person-digging mr-2"></i>Under construction</h1></div>
                         <div class="tab-pane fade" ref="project-samples-pane" role="tabpanel" aria-labelledby="project-samples-pane-btn" tabindex="0"><h1 class="mt-4"><i class="fa-light fa-triangle-person-digging mr-2"></i>Under construction</h1></div>
                         <div class="tab-pane fade" ref="project-user-communication-pane" role="tabpanel" aria-labelledby="project-user-communication-pane-btn" tabindex="0"><h1 class="mt-4"><i class="fa-light fa-triangle-person-digging mr-2"></i>Under construction</h1></div>
+                        <div class="tab-pane fade" ref="project-agreements-pane" role="tabpanel" aria-labelledby="project-agreements-pane-btn" tabindex="0">
+                            <div class="container-fluid mt-3" ref="pricing_quote_main"></div>
+                        </div>
                     </div>
                 </div>
 
@@ -643,6 +679,7 @@ export const vProjectCard = {
             return new Promise((resolve, reject) => {
                 // Remove modal-open class from body
                 this.$root.open_modal_card = this;
+                this.$refs.project_details_component.unmount_pricing_app();
 
                 $(this.$el).on('hidden.bs.modal', function (e) {
                     resolve();
@@ -656,16 +693,21 @@ export const vProjectCard = {
             this.$nextTick(function () {
                 // Add modal-open class to body
                 this.$root.open_modal_card = this;
+                this.$refs.project_details_component.switchTab('project-running-notes-pane');
                 this.modal.show();
             })
         },
         pressEnter(event) {
             this.$refs.project_details_component.pressEnter(event);
+        },
+        handleModalHidden(event) {
+            this.closeModal();
         }
     },
     mounted: function() {
         // Init bootstrap modal
         this.modal = new bootstrap.Modal(this.$refs.modal);
+        this.$refs.modal.addEventListener('hidden.bs.modal', this.handleModalHidden);
     },
     template: 
     /*html*/`
@@ -674,7 +716,7 @@ export const vProjectCard = {
             <div class="d-flex justify-content-between align-center mb-3">
                 <h5 class="my-1">
                     <a class="text-decoration-none" href='#' @click.prevent=openModal>
-                        {{ project_name }}
+                        {{project_id }}, {{ project_name }}
                     </a>
 
                 </h5>
@@ -1151,6 +1193,19 @@ export const vProjectCards = {
                                 <div class="form-check" @click="(event) => selectFilterValue(event, 'people_assigned', person_assigned)">
                                     <input class="form-check-input" type="checkbox" :id="'people_assigned_filter_'+person_assigned" :value="person_assigned" v-model="this.$root.all_filters['people_assigned']['filter_values']" :disabled="this.$root.all_filters['people_assigned']['include_all']"/>
                                     <label class="form-check-label" :for="'people_assigned_filter_' + person_assigned">{{ this.person_assigned_name(person_assigned) }} ({{this.$root.nrVisibleWith('people_assigned', person_assigned)}}/{{nr_with_person_assigned}})</label>
+                                </div>
+                            </template>
+                        </div>
+                        <div class="col">
+                            <h4>Sequencing Platform</h4>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" role="switch" id="sequencing_platform_all_switch" v-model="this.$root.all_filters['sequencing_platform']['include_all']"/>
+                                <label class="form-check-label" for="sequencing_platform_all_switch">All</label>
+                            </div>
+                            <template v-for="(nr_with_sequencing_platform, sequencing_platform) in this.$root.allValues('sequencing_platform')">
+                                <div class="form-check" @click="(event) => selectFilterValue(event, 'sequencing_platform', sequencing_platform)">
+                                    <input class="form-check-input" type="checkbox" :id="'sequencing_platform_filter_'+sequencing_platform" :value="sequencing_platform" v-model="this.$root.all_filters['sequencing_platform']['filter_values']" :disabled="this.$root.all_filters['sequencing_platform']['include_all']"/>
+                                    <label class="form-check-label" :for="'sequencing_platform_filter_' + sequencing_platform">{{ sequencing_platform }} ({{this.$root.nrVisibleWith('sequencing_platform', sequencing_platform)}}/{{nr_with_sequencing_platform}})</label>
                                 </div>
                             </template>
                         </div>

@@ -3,39 +3,19 @@
 import datetime
 import json
 import logging
-import re
 from collections import OrderedDict
 
-import pandas as pd
 from dateutil.relativedelta import relativedelta
 from genologics import lims
 from genologics.config import BASEURI, PASSWORD, USERNAME
 
-from status.flowcell import fetch_ont_run_stats, thresholds
+from status.flowcell import get_project_names_from_ids, thresholds
 from status.running_notes import LatestRunningNoteHandler
 from status.util import SafeHandler
 
 application_log = logging.getLogger("tornado.application")
 
 lims = lims.Lims(BASEURI, USERNAME, PASSWORD)
-
-
-def find_id(stringable, pattern_type: str) -> re.match:
-    string = str(stringable)
-
-    patterns = {
-        "project": re.compile(r"P[1-9]\d{4,}"),
-        "sample": re.compile(r"P\d+_[1-9]\d{2,3}"),
-        "pool": re.compile(r"2-[1-9]\d{4,}"),
-        "step": re.compile(r"24-[1-9]\d{4,}"),
-    }
-
-    match = re.match(patterns[pattern_type], string)
-
-    if match:
-        return match.group()
-    else:
-        return None
 
 
 class FlowcellsHandler(SafeHandler):
@@ -47,127 +27,216 @@ class FlowcellsHandler(SafeHandler):
     def list_flowcells(self, all=False):
         temp_flowcells = {}
         if all:
-            fc_view = self.application.flowcells_db.view(
-                "info/summary", descending=True
-            )
+            fc_view = self.application.cloudant.post_view(
+                db="flowcells",
+                ddoc="info",
+                view="summary",
+                descending=True,
+            ).get_result()["rows"]
             for row in fc_view:
-                temp_flowcells[row.key] = row.value
+                temp_flowcells[row["key"]] = row["value"]
 
-            xfc_view = self.application.x_flowcells_db.view(
-                "info/summary", descending=True
-            )
+            xfc_view = self.application.cloudant.post_view(
+                db="x_flowcells",
+                ddoc="info",
+                view="summary",
+                descending=True,
+            ).get_result()["rows"]
         else:
             # fc_view are from 2016 and older so only include xfc_view here
             half_a_year_ago = (
                 datetime.datetime.now() - relativedelta(months=6)
             ).strftime("%y%m%d")
-            xfc_view = self.application.x_flowcells_db.view(
-                "info/summary", descending=True, endkey=half_a_year_ago
-            )
+            xfc_view = self.application.cloudant.post_view(
+                db="x_flowcells",
+                ddoc="info",
+                view="summary",
+                descending=True,
+                end_key=half_a_year_ago,
+            ).get_result()["rows"]
         note_keys = []
         for row in xfc_view:
             try:
-                row.value["startdate"] = datetime.datetime.strptime(
-                    row.value["startdate"], "%y%m%d"
+                row["value"]["startdate"] = datetime.datetime.strptime(
+                    row["value"]["startdate"], "%y%m%d"
                 ).strftime("%Y-%m-%d")
             except ValueError:
                 try:
-                    row.value["startdate"] = datetime.datetime.strptime(
-                        row.value["startdate"], "%Y-%m-%dT%H:%M:%SZ"
+                    row["value"]["startdate"] = datetime.datetime.strptime(
+                        row["value"]["startdate"], "%Y-%m-%dT%H:%M:%SZ"
                     ).strftime("%Y-%m-%d")
                 except ValueError:
-                    row.value["startdate"] = datetime.datetime.strptime(
-                        row.value["startdate"].split()[0], "%m/%d/%Y"
+                    row["value"]["startdate"] = datetime.datetime.strptime(
+                        row["value"]["startdate"].split()[0], "%m/%d/%Y"
                     ).strftime("%Y-%m-%d")
 
             # Lanes were previously in the wrong order
-            row.value["lane_info"] = OrderedDict(sorted(row.value["lane_info"].items()))
-            note_key = row.key
+            row["value"]["lane_info"] = OrderedDict(
+                sorted(row["value"]["lane_info"].items())
+            )
+            note_key = row["key"]
             # NovaSeqXPlus has whole year in name
-            if "LH" in row.value["instrument"]:
-                note_key = f"{row.value['run id'].split('_')[0]}_{row.value['run id'].split('_')[-1]}"
+            if "LH" in row["value"]["instrument"]:
+                note_key = f"{row['value']['run id'].split('_')[0]}_{row['value']['run id'].split('_')[-1]}"
             note_keys.append(note_key)
-            temp_flowcells[row.key] = row.value
+            temp_flowcells[row["key"]] = row["value"]
 
-        notes = self.application.running_notes_db.view(
-            "latest_note_previews/flowcell",
+        notes = self.application.cloudant.post_view(
+            db="running_notes",
+            ddoc="latest_note_previews",
+            view="flowcell",
             reduce=True,
             group=True,
             keys=list(note_keys),
-        )
+        ).get_result()["rows"]
         for row in notes:
-            key = row.key
+            key = row["key"]
             # NovaSeqXPlus FCs have the complete year in the date as part of the name, which is shortened in
             # some views in x_flowcells db but not in running_notes db. Hence why we require a sort of
             # translation as below
-            if len(row.key.split("_")[0]) > 6:
-                elem = row.key.split("_")
+            if len(row["key"].split("_")[0]) > 6:
+                elem = row["key"].split("_")
                 elem[0] = elem[0][2:]
                 key = "_".join(elem)
             temp_flowcells[key]["latest_running_note"] = {
-                row.value["created_at_utc"]: row.value
+                row["value"]["created_at_utc"]: row["value"]
             }
 
         return OrderedDict(sorted(temp_flowcells.items(), reverse=True))
 
-    def list_ont_flowcells(self):
-        """Fetch dictionary of the form {ont_run_name : ont_run_stats_dict}"""
+    def list_ont_flowcells(self, unfetched_runs):
+        """Load the rows of the nanopore_runs:info/all_stats view
+        and convert into {run_name: stats} dict.
+        """
 
-        view_all_stats = self.application.nanopore_runs_db.view(
-            "info/all_stats", descending=True
-        )
-        view_args = self.application.nanopore_runs_db.view("info/args", descending=True)
-        view_project = self.application.projects_db.view(
-            "project/id_name_dates", descending=True
-        )
-        view_mux_scans = self.application.nanopore_runs_db.view(
-            "info/mux_scans", descending=True
-        )
-        view_pore_count_history = self.application.nanopore_runs_db.view(
-            "info/pore_count_history", descending=True
-        )
+        view_all_stats_rows = self.application.cloudant.post_view(
+            db="nanopore_runs",
+            ddoc="info",
+            view="all_stats",
+            descending=True,
+        ).get_result()["rows"]
 
-        ont_flowcells = OrderedDict()
+        ont_runs = {row["key"]: row["value"] for row in view_all_stats_rows}
 
-        unfetched_runs = []
-        for row in view_all_stats.rows:
+        # Format readability of quantitative data
+        for run_name, all_stats in ont_runs.items():
             try:
-                ont_flowcells[row.key] = fetch_ont_run_stats(
-                    run_name=row.key,
-                    view_all_stats=view_all_stats,
-                    view_args=view_args,
-                    view_project=view_project,
-                    view_mux_scans=view_mux_scans,
-                    view_pore_count_history=view_pore_count_history,
+                if all_stats.get("basecalled_pass_bases"):
+                    all_stats["basecalled_pass_bases_Gbp"] = (
+                        f"{int(all_stats['basecalled_pass_bases']) / 1e9:,.2f}"
+                    )
+                if all_stats.get("basecalled_pass_read_count"):
+                    all_stats["basecalled_pass_read_count_M"] = (
+                        f"{int(all_stats['basecalled_pass_read_count']) / 1e6:,.2f}"
+                    )
+                if all_stats.get("n50"):
+                    all_stats["n50_Kbp"] = f"{int(all_stats['n50']) / 1e3:,.2f}"
+                if (
+                    all_stats.get("basecalled_fail_bases")
+                    and all_stats.get("basecalled_pass_bases")
+                    and int(all_stats["basecalled_pass_bases"])
+                    + int(all_stats["basecalled_fail_bases"])
+                    > 0
+                ):
+                    all_stats["accuracy"] = (
+                        f"{int(all_stats['basecalled_pass_bases']) / (int(all_stats['basecalled_pass_bases']) + int(all_stats['basecalled_fail_bases'])) * 100:.2f}"
+                    )
+
+                # QC
+                try:
+                    if all_stats["pore_count_history"][0]["type"] == "qc":
+                        all_stats["qc"] = all_stats["pore_count_history"][0][
+                            "num_pores"
+                        ]
+                except (KeyError, IndexError):
+                    pass
+
+                all_stats["latest_running_note"] = (
+                    LatestRunningNoteHandler.get_latest_running_note(
+                        self.application, "flowcell", run_name
+                    )
                 )
-            except Exception:
-                unfetched_runs.append(row.key)
-                application_log.exception(f"Failed to fetch run {row.key}")
+                # Get project names and IDs
+                try:
+                    sample_data = all_stats["lims"]["loading"][-1]["sample_data"]
+                except KeyError:
+                    continue
+                else:
+                    projects = {}
+                    for sample_dict in sample_data:
+                        if sample_dict["project_id"] not in projects.keys():
+                            projects[sample_dict["project_id"]] = sample_dict[
+                                "project_name"
+                            ]
+                    all_stats["projects"] = projects
 
-        if ont_flowcells:
-            try:
-                # Use Pandas dataframe for column-wise operations, every db entry becomes a row
-                df = pd.DataFrame.from_dict(ont_flowcells, orient="index")
+                    # Get library name and ID
+                    if "ont_pool_name" in sample_data[0]:
+                        library_name = sample_data[0]["ont_pool_name"]
+                        library_id = sample_data[0]["ont_pool_id"]
+                    else:
+                        library_name = sample_data[0]["sample_name"]
+                        library_id = sample_data[0]["sample_id"]
+                    all_stats["library_name"] = library_name
+                    all_stats["library_id"] = library_id
 
-                # Empty values are replaced with empty strings
-                df.fillna("", inplace=True)
+                    # Get step ID
+                    all_stats["step_id"] = all_stats["lims"]["loading"][-1]["step_id"]
 
-                # Convert back to dictionary and return
-                ont_flowcells = df.to_dict(orient="index")
-            except Exception:
-                application_log.exception("Failed to compile ONT flowcell dataframe")
+            except Exception as e:
+                application_log.warning(f"Error parsing {run_name}: {e}", exc_info=True)
+                unfetched_runs.append(run_name)
 
-        return ont_flowcells, unfetched_runs
+        return ont_runs
 
     def list_element_flowcells(self):
-        return self.application.element_runs_db.view("info/summary", descending=True)
+        rows = self.application.cloudant.post_view(
+            db="element_runs",
+            ddoc="info",
+            view="summary",
+            descending=True,
+        ).get_result()["rows"]
+
+        element_runs = {}
+        for row in rows:
+            run_name = row["key"]
+            values = row["value"]
+            values["start_date"] = datetime.datetime.strptime(
+                run_name[:8], "%Y%m%d"
+            ).strftime("%Y-%m-%d")
+
+            cycles = values.get("Cycles", {})
+            cycles_str = f"{cycles.get('R1')}nt(R1)-{cycles.get('I1')}nt(I1)"
+            if cycles.get("R2"):
+                cycles_str += f"-{cycles.get('I2')}nt(I2)-{cycles.get('R2')}nt(R2)"
+            values["Cycles"] = cycles_str
+
+            project_ids = self.application.cloudant.post_view(
+                db="element_runs",
+                ddoc="names",
+                view="project_ids_list",
+                key=run_name,
+            ).get_result()["rows"][0]["value"]
+            values["projects"] = get_project_names_from_ids(
+                project_ids, self.application.cloudant
+            )
+
+            values["latest_running_note"] = (
+                LatestRunningNoteHandler.get_latest_running_note(
+                    self.application, "flowcell", run_name
+                )
+            )
+            element_runs[run_name] = values
+
+        return element_runs
 
     def get(self):
         # Default is to NOT show all flowcells
         all = self.get_argument("all", False)
         t = self.application.loader.load("flowcells.html")
+        unfetched_runs = []
         fcs = self.list_flowcells(all=all)
-        ont_fcs, unfetched_runs = self.list_ont_flowcells()
+        ont_fcs = self.list_ont_flowcells(unfetched_runs)
         element_fcs = self.list_element_flowcells()
         self.write(
             t.generate(
@@ -176,11 +245,10 @@ class FlowcellsHandler(SafeHandler):
                 user=self.get_current_user(),
                 flowcells=fcs,
                 ont_flowcells=ont_fcs,
+                unfetched_runs=unfetched_runs,
                 element_fcs=element_fcs,
                 form_date=LatestRunningNoteHandler.formatDate,
-                find_id=find_id,
                 all=all,
-                unfetched_runs=unfetched_runs,
             )
         )
 
@@ -197,12 +265,22 @@ class FlowcellsDataHandler(SafeHandler):
 
     def list_flowcells(self):
         flowcells = {}
-        fc_view = self.application.flowcells_db.view("info/summary", descending=True)
+        fc_view = self.application.cloudant.post_view(
+            db="flowcells",
+            ddoc="info",
+            view="summary",
+            descending=True,
+        ).get_result()["rows"]
         for row in fc_view:
-            flowcells[row.key] = row.value
-        xfc_view = self.application.x_flowcells_db.view("info/summary", descending=True)
+            flowcells[row["key"]] = row["value"]
+        xfc_view = self.application.cloudant.post_view(
+            db="x_flowcells",
+            ddoc="info",
+            view="summary",
+            descending=True,
+        ).get_result()["rows"]
         for row in xfc_view:
-            flowcells[row.key] = row.value
+            flowcells[row["key"]] = row["value"]
 
         return OrderedDict(sorted(flowcells.items()))
 
@@ -220,33 +298,44 @@ class FlowcellsInfoDataHandler(SafeHandler):
 
     @staticmethod
     def get_flowcell_info(application, flowcell):
-        fc_view = application.flowcells_db.view("info/summary2", descending=True)
-        xfc_view = application.x_flowcells_db.view(
-            "info/summary2_full_id", descending=True
-        )
+        fc_view_row = application.cludant.post_view(
+            db="flowcells", ddoc="info", view="summary2", descending=True, key=flowcell
+        ).get_result()["rows"]
+        xfc_view_row = application.cloudant.post_view(
+            db="x_flowcells",
+            ddoc="info",
+            view="summary2_full_id",
+            descending=True,
+            key=flowcell,
+        ).get_result()["rows"]
         flowcell_info = None
-        for row in fc_view[flowcell]:
-            flowcell_info = row.value
+        for row in fc_view_row:
+            flowcell_info = row["value"]
             break
-        for row in xfc_view[flowcell]:
-            flowcell_info = row.value
+        for row in xfc_view_row:
+            flowcell_info = row["value"]
             break
         if flowcell_info is not None:
             return flowcell_info
         else:
             # No hit for a full name, check if the short name is found:
-            complete_flowcell_rows = application.x_flowcells_db.view(
-                "info/short_name_to_full_name", key=flowcell
-            ).rows
+            complete_flowcell_rows = application.cloudant.post_view(
+                db="x_flowcells",
+                ddoc="info",
+                view="short_name_to_full_name",
+                key=flowcell,
+            ).get_result()["rows"]
 
             if complete_flowcell_rows:
-                complete_flowcell_id = complete_flowcell_rows[0].value
-                view = application.x_flowcells_db.view(
-                    "info/summary2_full_id",
+                complete_flowcell_id = complete_flowcell_rows[0]["value"]
+                view = application.cloudant.post_view(
+                    db="x_flowcells",
+                    ddoc="info",
+                    view="summary2_full_id",
                     key=complete_flowcell_id,
-                )
-                if view.rows:
-                    return view.rows[0].value
+                ).get_result()["rows"]
+                if view:
+                    return view[0]["value"]
         return flowcell_info
 
 
@@ -277,22 +366,40 @@ class FlowcellSearchHandler(SafeHandler):
             FlowcellSearchHandler.cached_fc_list is None
             or FlowcellSearchHandler.last_fetched < t_threshold
         ):
-            fc_view = self.application.flowcells_db.view("info/id", descending=True)
-            FlowcellSearchHandler.cached_fc_list = [row.key for row in fc_view]
+            fc_view = self.application.cloudant.post_view(
+                db="flowcells",
+                ddoc="info",
+                view="id",
+                descending=True,
+            ).get_result()["rows"]
+            FlowcellSearchHandler.cached_fc_list = [row["key"] for row in fc_view]
 
-            xfc_view = self.application.x_flowcells_db.view("info/id", descending=True)
-            FlowcellSearchHandler.cached_xfc_list = [row.key for row in xfc_view]
+            xfc_view = self.application.cloudant.post_view(
+                db="x_flowcells",
+                ddoc="info",
+                view="id",
+                descending=True,
+            ).get_result()["rows"]
+            FlowcellSearchHandler.cached_xfc_list = [row["key"] for row in xfc_view]
 
-            ont_fc_view = self.application.nanopore_runs_db.view(
-                "names/name", descending=True
-            )
-            FlowcellSearchHandler.cached_ont_fc_list = [row.key for row in ont_fc_view]
+            ont_fc_view = self.application.cloudant.post_view(
+                db="nanopore_runs",
+                ddoc="names",
+                view="name",
+                descending=True,
+            ).get_result()["rows"]
+            FlowcellSearchHandler.cached_ont_fc_list = [
+                row["key"] for row in ont_fc_view
+            ]
 
-            element_fc_view = self.application.element_runs_db.view(
-                "info/name", descending=True
-            )
+            element_fc_view = self.application.cloudant.post_view(
+                db="element_runs",
+                ddoc="info",
+                view="name",
+                descending=True,
+            ).get_result()["rows"]
             FlowcellSearchHandler.cached_element_fc_list = [
-                row.key for row in element_fc_view
+                row["key"] for row in element_fc_view
             ]
 
             FlowcellSearchHandler.last_fetched = datetime.datetime.now()
@@ -359,70 +466,16 @@ class OldFlowcellsInfoDataHandler(SafeHandler):
         self.write(json.dumps(self.flowcell_info(flowcell)))
 
     def flowcell_info(self, flowcell):
-        fc_view = self.application.flowcells_db.view("info/summary", descending=True)
-        for row in fc_view[flowcell]:
-            flowcell_info = row.value
-            break
+        fc_view = self.application.cloudant.post_view(
+            db="flowcells",
+            ddoc="info",
+            view="summary",
+            descending=True,
+            key=flowcell,
+        ).get_result()["rows"]
+        flowcell_info = fc_view[0]["value"] if fc_view else None
 
         return flowcell_info
-
-
-class FlowcellQCHandler(SafeHandler):
-    """Serves QC data for each lane in a given flowcell.
-
-    Loaded through /api/v1/flowcell_qc/([^/]*)$ url
-    """
-
-    def get(self, flowcell):
-        self.set_header("Content-type", "application/json")
-        self.write(json.dumps(self.list_sample_runs(flowcell), deprecated=True))
-
-    def list_sample_runs(self, flowcell):
-        lane_qc = OrderedDict()
-        lane_view = self.application.flowcells_db.view("lanes/qc")
-        for row in lane_view[[flowcell, ""] : [flowcell, "Z"]]:
-            lane_qc[row.key[1]] = row.value
-
-        return lane_qc
-
-
-class FlowcellDemultiplexHandler(SafeHandler):
-    """Serves demultiplex yield data for each lane in a given flowcell.
-
-    Loaded through /api/v1/flowcell_demultiplex/([^/]*)$ url
-    """
-
-    def get(self, flowcell):
-        self.set_header("Content-type", "application/json")
-        self.write(json.dumps(self.lane_stats(flowcell), deprecated=True))
-
-    def lane_stats(self, flowcell):
-        lane_qc = OrderedDict()
-        lane_view = self.application.flowcells_db.view("lanes/demultiplex")
-        for row in lane_view[[flowcell, ""] : [flowcell, "Z"]]:
-            lane_qc[row.key[1]] = row.value
-
-        return lane_qc
-
-
-class FlowcellQ30Handler(SafeHandler):
-    """Serves the percentage ofr reads over Q30 for each lane in the given
-    flowcell.
-
-    Loaded through /api/v1/flowcell_q30/([^/]*)$ url
-    """
-
-    def get(self, flowcell):
-        self.set_header("Content-type", "application/json")
-        self.write(json.dumps(self.lane_q30(flowcell), deprecated=True))
-
-    def lane_q30(self, flowcell):
-        lane_q30 = OrderedDict()
-        lane_view = self.application.flowcells_db.view("lanes/gtq30", group_level=3)
-        for row in lane_view[[flowcell, ""] : [flowcell, "Z"]]:
-            lane_q30[row.key[2]] = row.value["sum"] / row.value["count"]
-
-        return lane_q30
 
 
 class FlowcellLinksDataHandler(SafeHandler):
@@ -508,38 +561,51 @@ class ReadsTotalHandler(SafeHandler):
                 )
             )
         else:
-            xfc_view = self.application.x_flowcells_db.view(
-                "samples/lane_clusters", reduce=False
-            )
-            bioinfo_view = self.application.bioinfo_db.view("latest_data/sample_id")
-            fc_view = self.application.x_flowcells_db.view(
-                "info/summary", descending=True
-            )
+            xfc_view = self.application.cloudant.post_view(
+                db="x_flowcells",
+                ddoc="samples",
+                view="lane_clusters",
+                start_key=query,
+                end_key=f"{query}Z",
+                reduce=False,
+            ).get_result()["rows"]
 
-            for row in xfc_view[query : f"{query}Z"]:
-                if row.key not in data:
-                    data[row.key] = []
+            for row in xfc_view:
+                if row["key"] not in data:
+                    data[row["key"]] = []
                 # To add correct threshold values
-                fc_long_name = row.value["fcp"].split(":")[0]
+                fc_long_name = row["value"]["fcp"].split(":")[0]
                 fc_date_run = fc_long_name.split("_")[0]
                 if len(fc_date_run) > 6:
                     fc_date_run = fc_date_run[-6:]
                 fc_short_name = fc_date_run + "_" + fc_long_name.split("_")[-1]
-                for info_row in fc_view[fc_short_name]:
-                    row.value["run_mode"] = info_row.value["run_mode"]
-                    row.value["longer_read_length"] = info_row.value[
+                fc_view = self.application.cloudant.post_view(
+                    db="x_flowcells",
+                    ddoc="info",
+                    view="summary",
+                    key=fc_short_name,
+                    descending=True,
+                ).get_result()["rows"]
+                for info_row in fc_view:
+                    row["value"]["run_mode"] = info_row["value"]["run_mode"]
+                    row["value"]["longer_read_length"] = info_row["value"][
                         "longer_read_length"
                     ]
-                data[row.key].append(row.value)
+                data[row["key"]].append(row["value"])
 
             # To check if sample is failed on lane level
-            for row in bioinfo_view[
-                [query, None, None, None] : [f"{query}Z", "ZZ", "ZZ", "ZZ"]
-            ]:
-                if row.key[3] in data:
-                    for fcl in data[row.key[3]]:
-                        if row.key[1] + ":" + row.key[2] == fcl["fcp"]:
-                            fcl["sample_status"] = row.value["sample_status"]
+            bioinfo_view = self.application.cloudant.post_view(
+                db="bioinfo_analysis",
+                ddoc="latest_data",
+                view="sample_id",
+                start_key=[query, None, None, None],
+                end_key=[f"{query}Z", "ZZ", "ZZ", "ZZ"],
+            ).get_result()["rows"]
+            for row in bioinfo_view:
+                if row["key"][3] in data:
+                    for fcl in data[row["key"][3]]:
+                        if row["key"][1] + ":" + row["key"][2] == fcl["fcp"]:
+                            fcl["sample_status"] = row["value"]["sample_status"]
                             break  # since the row is already found
             for key in sorted(data.keys()):
                 ordereddata[key] = sorted(data[key], key=lambda d: d["fcp"])

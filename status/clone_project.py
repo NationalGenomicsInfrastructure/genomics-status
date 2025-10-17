@@ -154,13 +154,12 @@ class LIMSProjectCloningHandler(SafeHandler):
             projectid = project_identifier
         else:
             try:
-                projectid = (
-                    self.application.projects_db.view("projects/name_to_id")[
-                        project_identifier
-                    ]
-                    .rows[0]
-                    .value
-                )
+                projectid = self.application.cloudant.post_view(
+                    db="projects",
+                    ddoc="name_to_id",
+                    view="name_to_id",
+                    key=project_identifier,
+                ).get_result()["rows"][0]["value"]
             except IndexError:
                 pass
         return projectid

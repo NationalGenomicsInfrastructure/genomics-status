@@ -31,7 +31,7 @@
     </div>
     <div {%if data.get('type', '')=='preview' %} class="first_page_preview" {% end %}>
       <h2>{%if data['origin']=='Agreement' %}
-      Agreement of commisioned activities
+      {{ template_text['title'] }}
       {% else %}
       Preliminary Quote
       {% end %}
@@ -57,11 +57,6 @@
           {%for condition in data['agreement_conditions']%}
           <div class="small pt-2 pr-2">
             {% raw template_text['first_page_text']['specific_conditions'][condition]%}
-          </div>
-          {% end %}
-          {%if data['price_type']=='full_cost' %}
-          <div class="small pt-2 pr-2">
-            {% raw template_text['first_page_text']['specific_conditions']['full_cost_conditions']%}
           </div>
           {% end %}
           </dd>

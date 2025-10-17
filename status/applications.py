@@ -51,11 +51,16 @@ class ApplicationDataHandler(SafeHandler):
         if application == "null":
             application = None
         projects = []
-        project_view = self.application.projects_db.view(
-            "project/applications", reduce=False
-        )
-        for row in project_view[application]:
-            projects.append(row.value)
+        project_view = self.application.cloudant.post_view(
+            db="projects",
+            ddoc="project",
+            view="applications",
+            key=application,
+            reduce=False,
+        ).get_result()["rows"]
+
+        for row in project_view:
+            projects.append(row["value"])
 
         return projects
 
@@ -77,21 +82,33 @@ class ApplicationsDataHandler(SafeHandler):
     def list_applications_and_samples(self, start=None, end="z"):
         # Projects per application
         applications = Counter()
-        view = self.application.projects_db.view("project/date_applications")
-        for row in view[[start, ""] : [end, "z"]]:
-            if row.key[1] is None:
+        view = self.application.cloudant.post_view(
+            db="projects",
+            ddoc="project",
+            view="date_applications",
+            start_key=[start, ""],
+            end_key=[end, "z"],
+        ).get_result()["rows"]
+        for row in view:
+            if row["key"][1] is None:
                 # This corresponds to StatusDB:s notation
                 # and avoids conflict with 'None'.
                 applications["null"] += 1
             else:
-                applications[row.key[1]] += 1
+                applications[row["key"][1]] += 1
 
         # Samples per application
         samples = Counter()
-        view = self.application.projects_db.view("project/date_samples_applications")
-        for row in view[[start, ""] : [end, "z"]]:
-            if row.key[1] is None:
-                samples["null"] += row.value
+        view = self.application.cloudant.post_view(
+            db="projects",
+            ddoc="project",
+            view="date_samples_applications",
+            start_key=[start, ""],
+            end_key=[end, "z"],
+        ).get_result()["rows"]
+        for row in view:
+            if row["key"][1] is None:
+                samples["null"] += row["value"]
             else:
-                samples[row.key[1]] += row.value
+                samples[row["key"][1]] += row["value"]
         return {"applications": applications, "samples": samples}

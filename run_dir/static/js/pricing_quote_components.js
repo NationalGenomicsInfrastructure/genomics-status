@@ -1,9 +1,59 @@
-app.component('v-pricing-quote', {
+import { vPricingDataLoading, vPricingErrorDisplay, vExchangeRates, vProductsTable } from './pricing_main_components.js'
+import { vRunningNoteSingle } from './running_notes_component.js'
+
+export const vQuoteListProduct = {
+  /* Display products which are added to the quote */
+  name: 'v-quote-list-product',
+  props: ['product_id'],
+  computed: {
+      product() {
+          return this.$root.all_products[this.product_id]
+      },
+      productCost() {
+          // Returns a {'cost': cost, 'cost_academic': cost_academic, 'full_cost': full_cost}
+          return this.$root.productCost(this.product_id)
+      },
+      cost() {
+          return Math.round((this.product_count * this.productCost[this.$root.price_type]))
+      },
+      product_count() {
+          return this.$root.quote_prod_ids[this.product_id]
+      }
+  },
+  methods: {
+      remove_from_quote() {
+          delete this.$root.quote_prod_ids[this.product_id]
+      }
+  },
+  template: /*html*/`
+    <li class="row my-1 py-0 align-items-center">
+      <div class="col-1 pr-0 text-right">
+        <a href='#' @click.prevent="remove_from_quote"><i class="far fa-times-square fa-lg text-danger"></i></a>
+      </div>
+      <div class="col-2">
+        <input class="form-control py-1" v-model="this.$root.quote_prod_ids[product_id]" min=0 :data-product-id="product['REF_ID']" type=number>
+      </div>
+      <span class="col-6 quote_product_name">{{product.Name}}</span>
+      <span class="col-3 text-right font-monospace">{{cost}} SEK</span>
+    </li>
+  `
+}
+
+export const vPricingQuote = {
+    name: 'v-pricing-quote',
     /* Main component of the pricing quote page.
      *
      * Add products from the table to create a quote and switch between price types.
      */
     props: ['origin', 'is_proj_coord'],
+    components: {
+        'v-exchange-rates': vExchangeRates,
+        'v-pricing-data-loading': vPricingDataLoading,
+        'v-pricing-error-display': vPricingErrorDisplay,
+        'v-products-table': vProductsTable,
+        'v-quote-list-product': vQuoteListProduct,
+        'v-running-note-single': vRunningNoteSingle
+    },
     data() {
       return {
         md_message: '',
@@ -20,7 +70,9 @@ app.component('v-pricing-quote', {
         //added because the id wasn't displayed properly in loaded_version_desc otherwise
         proj_id: '',
         agrm_save_success_msg:'',
-        latest_cost_calculator: {}
+        latest_cost_calculator: {},
+        selected_timestamp: '',
+        invoicing_notes: []
       }
     },
     computed: {
@@ -30,7 +82,7 @@ app.component('v-pricing-quote', {
                     Object.keys(this.$root.quote_prod_ids).length)
         },
         any_special_addition() {
-            for ([index, label] of Object.entries(this.$root.quote_special_additions)){
+            for (const[index, label] of Object.entries(this.$root.quote_special_additions)){
               if(label.name!== ''){
                 this.active_cost_labels[index] = label
               }
@@ -42,10 +94,10 @@ app.component('v-pricing-quote', {
         },
         product_cost_sum() {
             /* calculate the cost of the products independent of any special items */
-            cost_sum = 0
-            cost_academic_sum = 0
-            full_cost_sum = 0
-            for ([prod_id, prod_count] of Object.entries(this.$root.quote_prod_ids)) {
+            let cost_sum = 0
+            let cost_academic_sum = 0
+            let full_cost_sum = 0
+            for (const [prod_id, prod_count] of Object.entries(this.$root.quote_prod_ids)) {
                 cost_sum += prod_count * this.$root.productCost(prod_id)['cost']
                 cost_academic_sum += prod_count * this.$root.productCost(prod_id)['cost_academic']
                 full_cost_sum +=  prod_count * this.$root.productCost(prod_id)['full_cost']
@@ -56,17 +108,17 @@ app.component('v-pricing-quote', {
                     'full_cost': full_cost_sum}
         },
         quote_cost() {
-            product_cost = this.product_cost_sum
-            cost_sum = product_cost['cost']
-            cost_academic_sum = product_cost['cost_academic']
-            full_cost_sum = product_cost['full_cost']
+            let product_cost = this.product_cost_sum
+            let cost_sum = product_cost['cost']
+            let cost_academic_sum = product_cost['cost_academic']
+            let full_cost_sum = product_cost['full_cost']
 
-            cost_sum_discount = 0
-            cost_academic_sum_discount = 0
-            full_cost_sum_discount = 0
+            let cost_sum_discount = 0
+            let cost_academic_sum_discount = 0
+            let full_cost_sum_discount = 0
 
             if (this.any_special_addition) {
-              for ([index, label] of Object.entries(this.active_cost_labels)){
+              for (const [index, label] of Object.entries(this.active_cost_labels)){
                 if(label.value !== ''){
                   cost_sum += label.value
                   cost_academic_sum += label.value
@@ -93,8 +145,8 @@ app.component('v-pricing-quote', {
                   }
         },
         compiledMarkdown() {
-          msg_display = this.md_src_message
-          first_page_text = this.template_text_data.first_page_text
+          let msg_display = this.md_src_message
+          let first_page_text = this.template_text_data.first_page_text
           if(this.applProj){
             msg_display += '\n\n'+ first_page_text['specific_conditions']['application_conditions']
           }
@@ -104,7 +156,7 @@ app.component('v-pricing-quote', {
           return marked(msg_display, { sanitize: true })
         },
         has_admin_control(){
-          return (this.origin === 'Agreement') && (this.is_proj_coord==='True')
+          return (this.origin === 'Agreement') && (this.is_proj_coord===true)
         },
         invoice_downloaded(){
           return this.proj_data['invoice_downloaded']!==''? true:false
@@ -117,20 +169,21 @@ app.component('v-pricing-quote', {
         },
     },
     created: async function() {
-        await Promise.all([
-          this.$root.fetchPublishedCostCalculator(true),
-          this.$root.fetchExchangeRates(),
-          this.fetch_latest_agreement_template_doc()
-        ])
+      await Promise.all([
+        this.$root.fetchPublishedCostCalculator(true),
+        this.$root.fetchExchangeRates(),
+        this.fetch_latest_agreement_template_doc()
+      ])
     },
     mounted: function () {
         this.get_project_specific_data()
+        this.get_invoicing_notes()
     },
     watch: {
         md_src_message() {
             this.add_to_md_text()
         },
-        agrm_save_success_msg(newVal, oldVal) {
+        agrm_save_success_msg(newVal) {
           if(newVal!=''){
             setTimeout(() => {
               this.agrm_save_success_msg = ''
@@ -139,15 +192,26 @@ app.component('v-pricing-quote', {
         }
     },
     methods: {
+        get_invoicing_notes(){
+          axios
+          .get('/api/v1/invoicing_notes/'+this.$root.project_id)
+          .then(response => {
+              this.invoicing_notes = response.data['invoicing_notes']
+          })
+          .catch(error => {
+              this.$root.error_messages.push('Unable to fetch invoicing notes, please try again or contact a system administrator.')
+              console.log('Unable to fetch invoicing notes', error)
+          })
+        },
         get_project_specific_data() {
           if(this.origin === 'Agreement'){
-            proj_id = document.querySelector('#pricing_quote_main').dataset.project
+            let proj_id = this.$root.project_id;
             axios
                 .get('/api/v1/project_summary/'+proj_id)
                 .then(response => {
-                    pdata = response.data
+                    const pdata = response.data
                     this.proj_data['ngi_project_id'] = proj_id + ', '+pdata['project_name']+ ' ('+pdata['order_details']['title']+')'
-                    pi_name = pdata['project_pi_name'] ? pdata['project_pi_name'] : ''
+                    let pi_name = pdata['project_pi_name'] ? pdata['project_pi_name'] : ''
                     this.proj_data['pi_name'] = pi_name.split(':')[0]
                     if(pdata['affiliation']){
                       this.proj_data['affiliation'] = pdata['affiliation']
@@ -249,18 +313,14 @@ app.component('v-pricing-quote', {
           this.active_cost_labels = {}
           this.$root.quote_special_percentage_value = 0.0
           this.$root.quote_special_percentage_label = ''
-          var timestamp_val = ""
-          var loaded_version = ""
-          var query_timestamp_radio = document.querySelector("input[name=saved_agreements_radio]:checked")
-          if (query_timestamp_radio){
-            timestamp_val = query_timestamp_radio.value
-            loaded_version = query_timestamp_radio.labels[0].innerText.split('\n')[0]
+          let timestamp_val = ""
+          let loaded_version = ""
+          let agreement_selected = {}
+          if (this.selected_timestamp){
+            timestamp_val = this.selected_timestamp
           }
           else if(timestamp_selected){
-            timestamp_val = timestamp_selected
-            agreement_selected =  this.saved_agreement_data['saved_agreements'][timestamp_selected]
-            loaded_version = this.timestamp_to_date(timestamp_selected) + ', ' + agreement_selected['created_by'] +
-                              ' ('+ agreement_selected['total_cost']+' SEK on cost calc v'+ agreement_selected['cost_calculator_version']+')'
+            timestamp_val = timestamp_selected            
           }
           else{
             alert("No agreement selected")
@@ -268,8 +328,13 @@ app.component('v-pricing-quote', {
           }
           if(timestamp_val!==""){
             this.loaded_timestamp = timestamp_val
+            this.selected_timestamp = timestamp_val
+            agreement_selected =  this.saved_agreement_data['saved_agreements'][timestamp_val]
+            loaded_version = this.timestamp_to_date(timestamp_val) + ', ' + agreement_selected['created_by'] +
+                              ' ('+ agreement_selected['total_cost']+' SEK on cost calc v'+ agreement_selected['cost_calculator_version']+')'
             var sel_data = this.saved_agreement_data['saved_agreements'][timestamp_val]
             if('cost_calculator_version' in sel_data){
+
               if(this.$root.published_cost_calculator["Version"]!==sel_data['cost_calculator_version']){
                 axios
                   .get('/api/v1/cost_calculator', {
@@ -308,7 +373,7 @@ app.component('v-pricing-quote', {
             this.add_to_md_text()
             this.$root.quote_prod_ids = sel_data['products_included']
             this.$root.fetchExchangeRates(sel_data['exchange_rate_issued_date'])
-            this.loaded_version_desc = 'Version: '+ loaded_version + ' \n' +
+            this.loaded_version_desc = 'Version: '+ loaded_version + ' <br>' +
                                     'Agreement_number: '+this.proj_id+'_'+timestamp_val
             if('template_text' in sel_data){
               this.template_text_data = sel_data['template_text']
@@ -324,14 +389,12 @@ app.component('v-pricing-quote', {
           this.$root.refresh_table = true
         },
         mark_agreement_signed(){
-          var query_timestamp_radio = document.querySelector("input[name=saved_agreements_radio]:checked")
-          var timestamp_val = query_timestamp_radio ? query_timestamp_radio.value : ""
-          if(timestamp_val!==""){
-            proj_id = this.proj_data['project_id']
+          if(this.selected_timestamp!==""){
+            let proj_id = this.proj_data['project_id']
             axios.post('/api/v1/mark_agreement_signed', {
                 proj_id: proj_id,
-                timestamp: timestamp_val
-            }).then(response => {
+                timestamp: this.selected_timestamp
+            }).then(() => {
                 this.get_saved_agreement_data(proj_id)
             })
             .catch(error => {
@@ -343,14 +406,13 @@ app.component('v-pricing-quote', {
         generate_invoice_spec(action_type){
           let timestamp_val = ""
           if(action_type === 'generate'){
-            let query_timestamp_radio = document.querySelector("input[name=saved_agreements_radio]:checked")
-            timestamp_val= query_timestamp_radio ? query_timestamp_radio.value : ""
+            timestamp_val= this.selected_timestamp
           }
           else if(action_type === 'invalidate'){
             timestamp_val = "No invoicing"
           }
           if(timestamp_val!==""){
-            proj_id = this.proj_data['project_id']
+            const proj_id = this.proj_data['project_id']
             axios.post('/api/v1/generate_invoice_spec', {
                 proj_id: proj_id,
                 timestamp: timestamp_val,
@@ -423,13 +485,13 @@ app.component('v-pricing-quote', {
           }
         },
         generate_quote:  function (type) {
-          agreement_data = {}
+          let agreement_data = {}
           agreement_data['type'] = type
-          product_list = {}
-          for (prod_id in this.$root.quote_prod_ids){
-            product = this.$root.all_products[prod_id]
-            prod_name = product['Name']+' ('+this.$root.quote_prod_ids[prod_id]+')'
-            prod_cost = Math.round((this.$root.productCost(prod_id)[this.$root.price_type] * this.$root.quote_prod_ids[prod_id]))
+          let product_list = {}
+          for (let prod_id in this.$root.quote_prod_ids){
+            let product = this.$root.all_products[prod_id]
+            let prod_name = product['Name']+' ('+this.$root.quote_prod_ids[prod_id]+')'
+            let prod_cost = Math.round((this.$root.productCost(prod_id)[this.$root.price_type] * this.$root.quote_prod_ids[prod_id]))
             product_list[prod_name] = prod_cost
           }
           agreement_data['price_breakup'] = product_list
@@ -459,12 +521,11 @@ app.component('v-pricing-quote', {
           if(this.origin === 'Agreement'){
             let timestamp = Date.now()
             if(type === 'display'){
-              let query_timestamp_radio = document.querySelector("input[name=saved_agreements_radio]:checked")
-              if(!query_timestamp_radio){
+              if(!this.selected_timestamp){
                 alert("No agreement selected")
                 return false
               }
-              timestamp = query_timestamp_radio.value
+              timestamp = this.selected_timestamp
             }
             this.proj_data['agreement_number'] = this.proj_data['project_id'] + '_'+ timestamp
             agreement_data['project_data'] = this.proj_data
@@ -665,7 +726,7 @@ app.component('v-pricing-quote', {
                 <div class="col ml-2">
                   <template v-for="(agreement, timestamp) in this.saved_agreement_data['saved_agreements']" :key="timestamp">
                         <div class="form-check m-2">
-                          <input class="form-check-input" type="radio" name="saved_agreements_radio" :id="timestamp" :value="timestamp" :checked="this.loaded_timestamp===timestamp">
+                          <input class="form-check-input" type="radio" name="saved_agreements_radio" :id="timestamp" :value="timestamp" v-model="selected_timestamp">
                           <label class="form-check-label" :for="timestamp">
                           <div v-bind:class="{ 'fw-bold' : timestamp === this.loaded_timestamp}"> {{ timestamp_to_date(timestamp) }}, {{ agreement['created_by']}} ({{ agreement['total_cost'] }} SEK on cost calc v{{ agreement['cost_calculator_version'] }})</div>
                           <p v-if="this.saved_agreement_data['signed']===timestamp" aria-hidden="true" class="m-2 text-danger fs-6">
@@ -730,9 +791,7 @@ app.component('v-pricing-quote', {
                   <h4>Preview <small>Using template: {{this.template_text_data.doc_id}}-{{this.template_text_data.edition}}</small></h4>
                 </div>
                 <div class="card-body mx-2">
-                  <div class="pb-2 text-muted" style="white-space: pre;">
-                    {{ this.loaded_version_desc }}
-                  </div>
+                  <div class="pb-2 text-muted text-wrap"  v-html="this.loaded_version_desc"></div>
                   <div class="md_display_box bg-white border" v-html="md_message"></div>
                   <template v-if="this.any_quote">
                     <div class="pt-4" id="current_quote">
@@ -749,7 +808,7 @@ app.component('v-pricing-quote', {
                           <template v-if="any_special_addition">
                             <li class="row my-2 align-items-center" v-for="(label, index) in this.active_cost_labels" :key="index" >
                               <span class="col-1 pr-0 text-right">
-                                <a href='#' @click="remove_cost_label(index)" @click.prevent="activeNews(1)">
+                                <a href='#' @click.prevent="remove_cost_label(index)">
                                   <i class="far fa-times-square fa-lg text-danger"></i>
                                 </a>
                               </span>
@@ -762,7 +821,7 @@ app.component('v-pricing-quote', {
                           <template v-if="any_special_percentage">
                             <li class="row mt-4 mb-1 align-items-center">
                               <span class="col-1 pr-0 text-right">
-                                <a href='#' @click="reset_special_percentage" @click.prevent="activeNews(1)">
+                                <a href='#' @click.prevent="reset_special_percentage">
                                   <i class="far fa-times-square fa-lg text-danger"></i>
                                 </a>
                               </span>
@@ -808,12 +867,19 @@ app.component('v-pricing-quote', {
                 </div>
               </div>
               <div v-if="origin === 'Agreement'" class="ml-n1 mt-5">
-                <div class="card mt-5">
+                <div class="card mt-5" id="invoicing_notes">
                   <div class="card-header">
                     <h4>Invoicing Running Notes</h4>
                   </div>
                   <div class="card-body">
-                    <div id="invoicing_notes"></div>
+                    <template v-if="this.invoicing_notes && this.invoicing_notes.length > 0">
+                      <template v-for="running_note in invoicing_notes">
+                        <v-running-note-single :running_note_obj="running_note" :partition_id="this.proj_id" :compact="false"/>
+                      </template>
+                    </template>
+                    <template v-else>
+                      <div class="well">No invoicing running notes found.</div>
+                    </template>
                   </div>
                 </div>
               </div>
@@ -823,47 +889,8 @@ app.component('v-pricing-quote', {
             <div class="row" id="table_h_and_search">
               <h2 class="col mr-auto">Available Products</h2>
             </div>
-            <v-products-table :show_discontinued="this.$root.show_discontinued" :quotable="true" :refresh_table="this.$root.refresh_table"/>
+            <v-products-table :show_discontinued="this.$root.show_discontinued" :quotable="true" :refresh_table="this.$root.refresh_table" :id_add="this.$root.project_id"/>
           </div>
         </template>
       `
-})
-
-app.component('v-quote-list-product', {
-    /* Display products which are added to the quote */
-    props: ['product_id'],
-    computed: {
-        product() {
-            return this.$root.all_products[this.product_id]
-        },
-        productCost() {
-            // Returns a {'cost': cost, 'cost_academic': cost_academic, 'full_cost': full_cost}
-            return this.$root.productCost(this.product_id)
-        },
-        cost() {
-            return Math.round((this.product_count * this.productCost[this.$root.price_type]))
-        },
-        product_count() {
-            return this.$root.quote_prod_ids[this.product_id]
-        }
-    },
-    methods: {
-        remove_from_quote() {
-            delete this.$root.quote_prod_ids[this.product_id]
-        }
-    },
-    template: /*html*/`
-      <li class="row my-1 py-0 align-items-center">
-        <div class="col-1 pr-0 text-right">
-          <a href='#' @click="remove_from_quote" @click.prevent="activeNews(1)"><i class="far fa-times-square fa-lg text-danger"></i></a>
-        </div>
-        <div class="col-2">
-          <input class="form-control py-1" v-model="this.$root.quote_prod_ids[product_id]" min=0 :data-product-id="product['REF_ID']" type=number>
-        </div>
-        <span class="col-6 quote_product_name">{{product.Name}}</span>
-        <span class="col-3 text-right font-monospace">{{cost}} SEK</span>
-      </li>
-    `
-})
-
-app.mount('#pricing_quote_main')
+}

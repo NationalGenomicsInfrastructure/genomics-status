@@ -3,14 +3,15 @@
 
 Requires the settings.yaml configuration file used to parameterize genomics-status
 """
+
 import argparse
-import couchdb
 import logging
 import sys
-import yaml
-from requests.exceptions import HTTPError
 
+import yaml
 from atlassian import Jira
+from ibmcloudant import CouchDbSessionAuthenticator, cloudant_v1
+from requests.exceptions import HTTPError
 
 
 def main(config):
@@ -30,16 +31,27 @@ def main(config):
 
     # Connect to Jira
     jira_url = config.get("jira").get("url")
-    jira_user= config.get("jira").get("user")
-    jira_api_token = config.get("jira").get("api_token")    
+    jira_user = config.get("jira").get("user")
+    jira_api_token = config.get("jira").get("api_token")
     jira = Jira(url=jira_url, username=jira_user, password=jira_api_token)
 
     # Connect to StatusDB
-    s = couchdb.Server(config.get("couch_server"))
+    cloudant = cloudant_v1.CloudantV1(
+        authenticator=CouchDbSessionAuthenticator(
+            config.get("username"), config.get("password")
+        )
+    )
+    cloudant.set_service_url(config.get("couch_url"))
 
     # Get list of stored suggestions
-    sb_database = s["suggestion_box"]
-    unarchived_cards ={row.key: row.value for row in sb_database.view("card/unarchived_jira_cards").rows}
+    unarchived_cards = {
+        row["key"]: row["value"]
+        for row in cloudant.post_view(
+            db="suggestion_box",
+            ddoc="card",
+            view="unarchived_jira_cards",
+        ).get_result()["rows"]
+    }
 
     docs = []
     for doc_id, card_id in unarchived_cards.items():
@@ -47,9 +59,13 @@ def main(config):
             jira_card = jira.issue(card_id)
             closed = jira_card["fields"]["status"]["statusCategory"]["name"] == "Done"
             if closed:
-                doc = sb_database.get(doc_id)
+                doc = cloudant.get_document(
+                    db="suggestion_box", doc_id=doc_id
+                ).get_result()
                 doc["archived"] = closed
-                log.info(f"Card with key {jira_card['key']} and card_id {card_id} was archived")
+                log.info(
+                    f"Card with key {jira_card['key']} and card_id {card_id} was archived"
+                )
                 docs.append(doc)
         except HTTPError:
             log.warning(
@@ -58,7 +74,10 @@ def main(config):
             continue
 
     if docs:
-        sb_database.update(docs)
+        cloudant.post_bulk_docs(
+            db="suggestion_box",
+            bulk_docs=cloudant_v1.BulkDocs(docs=docs, new_edits=True),
+        ).get_result()
 
 
 if __name__ == "__main__":
@@ -67,10 +86,10 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     try:
-        with open(args.config, "r") as f:
-            config = yaml.load(f, Loader=yaml.FullLoader)
-    except IOError:
-        raise IOError(
+        with open(args.config) as f:
+            config = yaml.load(f, Loader=yaml.SafeLoader)
+    except OSError:
+        raise OSError(
             "Please make sure to specify a correct path to settings.yaml file"
         )
 

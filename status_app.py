@@ -12,7 +12,7 @@ import tornado.httpserver
 import tornado.ioloop
 import tornado.web
 import yaml
-from couchdb import Server
+from ibm_cloud_sdk_core.api_exception import ApiException
 from ibmcloudant import CouchDbSessionAuthenticator, cloudant_v1
 from tornado import template
 from tornado.log import LogFormatter
@@ -42,10 +42,7 @@ from status.flowcell import (
     ONTToulligQCReportHandler,
 )
 from status.flowcells import (
-    FlowcellDemultiplexHandler,
     FlowcellLinksDataHandler,
-    FlowcellQ30Handler,
-    FlowcellQCHandler,
     FlowcellsDataHandler,
     FlowcellSearchHandler,
     FlowcellsHandler,
@@ -144,6 +141,7 @@ from status.reports import (
     SingleCellSampleSummaryReportHandler,
 )
 from status.running_notes import (
+    InvoicingNotesHandler,
     LatestStickyNoteHandler,
     LatestStickyNotesMultipleHandler,
     RunningNotesDataHandler,
@@ -163,16 +161,6 @@ from status.sensorpush import (
     SensorpushHandler,
     SensorpushWarningsDataHandler,
 )
-from status.sequencing import (
-    InstrumentClusterDensityDataHandler,
-    InstrumentClusterDensityPlotHandler,
-    InstrumentErrorrateDataHandler,
-    InstrumentErrorratePlotHandler,
-    InstrumentUnmatchedDataHandler,
-    InstrumentUnmatchedPlotHandler,
-    InstrumentYieldDataHandler,
-    InstrumentYieldPlotHandler,
-)
 from status.statistics import (
     ApplicationOpenProjectsHandler,
     ApplicationOpenSamplesHandler,
@@ -186,14 +174,18 @@ from status.statistics import (
 )
 from status.suggestion_box import SuggestionBoxDataHandler, SuggestionBoxHandler
 from status.testing import TestDataHandler
-from status.user_management import UserManagementDataHandler, UserManagementHandler
+from status.user_management import (
+    CurrentUserDataHandler,
+    RolesAndTeamsHandler,
+    UserManagementDataHandler,
+    UserManagementHandler,
+)
 from status.user_preferences import UserPrefPageHandler, UserPrefPageHandler_b5
 from status.util import (
     BaseHandler,
     DataHandler,
     LastPSULRunHandler,
     MainHandler,
-    UpdatedDocumentsDatahandler,
 )
 from status.worksets import (
     ClosedWorksetsHandler,
@@ -233,7 +225,7 @@ class Application(tornado.web.Application):
 
         self.gs_globals["font_awesome_url"] = settings.get("font_awesome_url", None)
         self.gs_globals["prod"] = True
-        if "dev" in settings.get("couch_server"):
+        if "dev" in settings.get("couch_url"):
             self.gs_globals["prod"] = False
 
         handlers = [
@@ -256,6 +248,7 @@ class Application(tornado.web.Application):
             ("/api/v1/charon_summary/([^/]*)$", CharonProjectHandler),
             ("/api/v1/configs/([^/]*)$", ConfigDataHandler),
             ("/api/v1/cost_calculator", PricingDataHandler),
+            ("/api/v1/current_user", CurrentUserDataHandler),
             ("/api/v1/delete_invoice", DeleteInvoiceHandler),
             tornado.web.URLSpec(
                 "/api/v1/download_images/(?P<project>[^/]+)/(?P<type>[^/]+)",
@@ -268,9 +261,6 @@ class Application(tornado.web.Application):
             ("/api/v1/flowcells", FlowcellsDataHandler),
             ("/api/v1/flowcell_info2/([^/]*)$", FlowcellsInfoDataHandler),
             ("/api/v1/flowcell_info/([^/]*)$", OldFlowcellsInfoDataHandler),
-            ("/api/v1/flowcell_qc/([^/]*)$", FlowcellQCHandler),
-            ("/api/v1/flowcell_demultiplex/([^/]*)$", FlowcellDemultiplexHandler),
-            ("/api/v1/flowcell_q30/([^/]*)$", FlowcellQ30Handler),
             ("/api/v1/flowcell_links/([^/]*)$", FlowcellLinksDataHandler),
             ("/api/v1/flowcell_search/([^/]*)$", FlowcellSearchHandler),
             ("/api/v1/flowcell_yield/([^/]*)$", DataFlowcellYieldHandler),
@@ -287,22 +277,11 @@ class Application(tornado.web.Application):
             ("/api/v1/generate_invoice", GenerateInvoiceHandler),
             ("/api/v1/generate_invoice_spec", InvoiceSpecDateHandler),
             ("/api/v1/invoice_spec_list", InvoicingPageDataHandler),
-            ("/api/v1/instrument_cluster_density", InstrumentClusterDensityDataHandler),
-            (
-                "/api/v1/instrument_cluster_density.png",
-                InstrumentClusterDensityPlotHandler,
-            ),
-            ("/api/v1/instrument_error_rates", InstrumentErrorrateDataHandler),
-            ("/api/v1/instrument_error_rates.png", InstrumentErrorratePlotHandler),
             ("/api/v1/instrument_logs", DataInstrumentLogsHandler),
             ("/api/v1/instrument_logs/([^/]*)/([^/]*)$", DataInstrumentLogsHandler),
             ("/api/v1/instrument_names", InstrumentNamesHandler),
-            ("/api/v1/instrument_unmatched", InstrumentUnmatchedDataHandler),
-            ("/api/v1/instrument_unmatched.png", InstrumentUnmatchedPlotHandler),
-            ("/api/v1/instrument_yield", InstrumentYieldDataHandler),
-            ("/api/v1/instrument_yield.png", InstrumentYieldPlotHandler),
+            ("/api/v1/invoicing_notes/([^/]*)", InvoicingNotesHandler),
             ("/api/v1/lanes_ordered", LanesOrderedDataHandler),
-            ("/api/v1/last_updated", UpdatedDocumentsDatahandler),
             ("/api/v1/last_psul", LastPSULRunHandler),
             ("/api/v1/latest_sticky_run_note/([^/]*)", LatestStickyNoteHandler),
             ("/api/v1/latest_sticky_run_note", LatestStickyNotesMultipleHandler),
@@ -336,6 +315,7 @@ class Application(tornado.web.Application):
             ("/api/v1/presets/onloadcheck", PresetsOnLoadHandler),
             ("/api/v1/qpcr_pools", qPCRPoolsDataHandler),
             ("/api/v1/rna_report/([^/]*$)", ProjectRNAMetaDataHandler),
+            ("/api/v1/user_management/roles_teams", RolesAndTeamsHandler),
             ("/api/v1/running_notes/([^/]*)$", RunningNotesDataHandler),
             ("/api/v1/links/([^/]*)$", LinksDataHandler),
             ("/api/v1/sample_requirements", SampleRequirementsDataHandler),
@@ -453,36 +433,6 @@ class Application(tornado.web.Application):
         self.loader = template.Loader("design")
 
         # Global connection to the database
-        couch = Server(settings.get("couch_server", None))
-        if couch:
-            self.agreements_db = couch["agreements"]
-            self.agreement_templates_db = couch["agreement_templates"]
-            self.analysis_db = couch["analysis"]
-            self.application_categories_db = couch["application_categories"]
-            self.bioinfo_db = couch["bioinfo_analysis"]
-            self.biomek_errs_db = couch["biomek_logs"]
-            self.cost_calculator_db = couch["cost_calculator"]
-            self.cronjobs_db = couch["cronjobs"]
-            self.element_runs_db = couch["element_runs"]
-            self.flowcells_db = couch["flowcells"]
-            self.gs_users_db = couch["gs_users"]
-            self.instruments_db = couch["instruments"]
-            self.instrument_logs_db = couch["instrument_logs"]
-            self.nanopore_runs_db = couch["nanopore_runs"]
-            self.people_assignments_db = couch["people_assignments"]
-            self.pricing_exchange_rates_db = couch["pricing_exchange_rates"]
-            self.projects_db = couch["projects"]
-            self.sample_requirements_db = couch["sample_requirements"]
-            self.sensorpush_db = couch["sensorpush"]
-            self.server_status_db = couch["server_status"]
-            self.suggestions_db = couch["suggestion_box"]
-            self.worksets_db = couch["worksets"]
-            self.x_flowcells_db = couch["x_flowcells"]
-            self.running_notes_db = couch["running_notes"]
-        else:
-            print(settings.get("couch_server", None))
-            raise OSError("Cannot connect to couchdb")
-
         cloudant = cloudant_v1.CloudantV1(
             authenticator=CouchDbSessionAuthenticator(
                 settings.get("username"), settings.get("password")
@@ -492,29 +442,17 @@ class Application(tornado.web.Application):
         if cloudant:
             self.cloudant = cloudant
 
-        # Load columns and presets from genstat-defaults user in StatusDB
-        genstat_id_rows = self.gs_users_db.view("authorized/users")[
-            "genstat-defaults"
-        ].rows
-        for row in genstat_id_rows:
-            genstat_defaults_doc_id = row.get("value")
-
-        # It's important to check that this user exists!
-        if not genstat_defaults_doc_id:
-            raise RuntimeError(
-                "genstat-defaults user not found on {}, please "
-                "make sure that the user is available with the "
-                "corresponding defaults information.".format(
-                    settings.get("couch_server", None)
+        try:
+            self.genstat_defaults = self.cloudant.get_document(
+                db="gs_configs", doc_id="genstat_defaults"
+            ).get_result()
+        except ApiException as e:
+            if e.status_code == 404:
+                raise RuntimeError(
+                    "genstat-defaults doc not found in gs_configs, please "
+                    "make sure that the doc is available with the "
+                    "corresponding defaults information."
                 )
-            )
-        elif len(genstat_id_rows) > 1:
-            # Not sure this can actually happen, but worth checking
-            raise RuntimeError(
-                "Multiple genstat-default users found in the database, please fix"
-            )
-
-        self.genstat_defaults = self.gs_users_db[genstat_defaults_doc_id]
 
         # Load private instrument listing
         self.instrument_list = settings.get("instruments")
@@ -546,10 +484,6 @@ class Application(tornado.web.Application):
 
         # Load password seed
         self.password_seed = settings.get("password_seed")
-
-        # load logins for the genologics sftp
-        self.genologics_login = settings["sftp"]["login"]
-        self.genologics_pw = settings["sftp"]["password"]
 
         # Location of the psul log
         self.psul_log = settings.get("psul_log")
@@ -618,6 +552,8 @@ class Application(tornado.web.Application):
             tornado.autoreload.watch("design/lanes_ordered.html")
             tornado.autoreload.watch("design/link_tab.html")
             tornado.autoreload.watch("design/ngisweden_stats.html")
+            tornado.autoreload.watch("design/ont_flowcell.html")
+            tornado.autoreload.watch("design/ont_flowcells.html")
             tornado.autoreload.watch("design/ont_trend_plot.html")
             tornado.autoreload.watch("design/qpcr_pools.html")
             tornado.autoreload.watch("design/pricing_products.html")

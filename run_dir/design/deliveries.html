@@ -100,6 +100,9 @@ Description: Shows a table with all ongoing and incoming bioinformatics projects
           <a class="text-decoration-none" href="/bioinfo/{{ project_id }}" data-toggle="tooltip" title="Bioinfo Tab" class="bi-project-name">{{ project['project_name'] }}</a><br>
           <small>
             &nbsp; <span class="bi-project-facility badge {% if project['type'] == 'Application' %} bg-success {% else %} bg-primary {% end %}">{{ project.get('type') }}</span>
+            {% for platform in project.get('sequencing_platforms') %}
+            <span class="bi-project-facility badge bg-secondary">{{  platform }}</span>
+            {% end %}
             <span class="bi-project-application text-muted" data-toggle="tooltip" data-delay="500" title="Application">{{ project['application'] }}</span>
             &nbsp; <span class="bi-project-assigned text-muted" data-toggle="tooltip" data-delay="500" title="Bioinfo-responsible">{{ project['bioinfo_responsible'] }} </span>
               <select class="input-small edit-bi-project-assigned text-muted" style="display:none;">

@@ -12,8 +12,10 @@ def recover_logs(handler, search_string=None, inst_type="bravo"):
         if not search_string:
             # by default, return one week of logs
             return [
-                row.value
-                for row in handler.application.instrument_logs_db.view("time/last_week")
+                row["value"]
+                for row in handler.application.cloudant.post_view(
+                    db="instrument_logs", ddoc="time", view="last_week"
+                ).get_result()["rows"]
             ]
 
         else:
@@ -24,16 +26,22 @@ def recover_logs(handler, search_string=None, inst_type="bravo"):
             d2 = datetime.datetime.fromtimestamp(int(ts2))
 
             valid_rows = []
-            for row in handler.application.instrument_logs_db.view("time/timestamp"):
-                row_date = datetime.datetime.strptime(row.key, "%Y-%m-%dT%H:%M:%S.%f")
-                if row_date >= d1 and row_date <= d2:
-                    valid_rows.append(row.value)
+            for row in handler.application.cloudant.post_view(
+                db="instrument_logs",
+                ddoc="time",
+                view="timestamp",
+                start_key=d1.strftime("%Y-%m-%dT%H:%M:%S.%f"),
+                end_key=d2.strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            ).get_result()["rows"]:
+                valid_rows.append(row["value"])
 
             return valid_rows
     elif inst_type == "biomek":
         instruments_list = {
-            row.key: row.value
-            for row in handler.application.instruments_db.view("info/id_to_name").rows
+            row["key"]: row["value"]
+            for row in handler.application.cloudant.post_view(
+                db="instruments", ddoc="info", view="id_to_name"
+            ).get_result()["rows"]
         }
         # by default, return all logs from the last week
         date_earlier = (datetime.datetime.now() - relativedelta(weeks=1)).strftime(
@@ -50,18 +58,21 @@ def recover_logs(handler, search_string=None, inst_type="bravo"):
             date_later = datetime.datetime.fromtimestamp(int(ts2)).strftime(
                 "%Y-%m-%dT%H:%M:%SZ"
             )
-
-        for row in handler.application.biomek_errs_db.view(
-            "dates/timestamp", startkey=date_earlier, endkey=date_later
-        ):
+        for row in handler.application.cloudant.post_view(
+            db="biomek_logs",
+            ddoc="dates",
+            view="timestamp",
+            start_key=date_earlier,
+            end_key=date_later,
+        ).get_result()["rows"]:
             date = (
-                datetime.datetime.strptime(row.key, "%Y-%m-%dT%H:%M:%S.%fZ")
+                datetime.datetime.strptime(row["key"], "%Y-%m-%dT%H:%M:%S.%fZ")
                 .replace(tzinfo=tz.tzutc())
                 .astimezone(tz.tzlocal())
             )
-            inst = f"{instruments_list[row.value['inst_id']]}({row.value['inst_id']})"
-            method = row.value.get("method", "diff")
-            errs = row.value["errors"]
+            inst = f"{instruments_list[row['value']['inst_id']]}({row['value']['inst_id']})"
+            method = row["value"].get("method", "diff")
+            errs = row["value"]["errors"]
             valid_rows.append(
                 {
                     "timestamp": f"{date}",
@@ -112,5 +123,9 @@ class InstrumentNamesHandler(SafeHandler):
     def get(self):
         self.set_header("Content-type", "application/json")
         self.write(
-            json.dumps(self.application.instruments_db.view("info/id_to_name").rows)
+            json.dumps(
+                self.application.cloudant.post_view(
+                    db="instruments", ddoc="info", view="id_to_name"
+                ).get_result()["rows"]
+            )
         )

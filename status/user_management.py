@@ -1,5 +1,7 @@
 import json
 
+from ibm_cloud_sdk_core.api_exception import ApiException
+
 from status.util import SafeHandler
 
 
@@ -14,7 +16,6 @@ class UserManagementHandler(SafeHandler):
             t.generate(
                 gs_globals=self.application.gs_globals,
                 user=self.get_current_user(),
-                roles=self.application.genstat_defaults["roles"],
             )
         )
 
@@ -31,14 +32,17 @@ class UserManagementDataHandler(SafeHandler):
         if self.get_current_user().is_admin:
             add_roles = True
 
-        for row in self.application.gs_users_db.view("authorized/info"):
-            view_result[row.key] = {
-                "initials": row.value.get("initials", ""),
-                "name": row.value.get("name", ""),
+        for row in self.application.cloudant.post_view(
+            db="gs_users", ddoc="authorized", view="info"
+        ).get_result()["rows"]:
+            view_result[row["key"]] = {
+                "initials": row["value"].get("initials", ""),
+                "name": row["value"].get("name", ""),
             }
 
             if add_roles:
-                view_result[row.key]["roles"] = row.value.get("roles", [])
+                view_result[row["key"]]["roles"] = row["value"].get("roles", [])
+                view_result[row["key"]]["teams"] = row["value"].get("teams", [])
 
         self.write(view_result)
 
@@ -46,44 +50,53 @@ class UserManagementDataHandler(SafeHandler):
         data = json.loads(self.request.body)
         userToChange = data["username"]
 
-        view_result = self.application.gs_users_db.view(
-            "authorized/users", key=userToChange
-        )
-        idtoChange = view_result.rows[0].value if view_result.rows else ""
+        view_result = self.application.cloudant.post_view(
+            db="gs_users",
+            ddoc="authorized",
+            view="users",
+            key=userToChange,
+            include_docs=True,
+        ).get_result()["rows"]
+        user_doc = view_result[0]["doc"] if view_result else {}
         action = self.get_argument("action")
         if self.get_current_user().is_admin:
             if action == "create":
-                if idtoChange:
+                if user_doc:
                     self.set_status(409)
                     self.write("User already exists!")
                 else:
-                    try:
-                        self.application.gs_users_db.save(data)
-                    except Exception as e:
+                    response = self.application.cloudant.post_document(
+                        db="gs_users", document=data
+                    ).get_result()
+                    if not response.get("ok", False):
                         self.set_status(400)
-                        self.finish(e.message)
+                        self.finish("User creation failed!")
 
                     self.set_status(201)
                     self.write({"success": "success!!"})
             else:
-                user_doc = self.application.gs_users_db.get(idtoChange)
-                if action == "modify" and idtoChange:
+                if action == "modify" and user_doc:
                     user_doc["roles"] = data["roles"]
                     user_doc["name"] = data["name"]
                     user_doc["initials"] = data["initials"]
-                    try:
-                        self.application.gs_users_db.save(user_doc)
-                    except Exception as e:
+                    response = self.application.cloudant.put_document(
+                        db="gs_users",
+                        document=user_doc,
+                        doc_id=user_doc["_id"],
+                    ).get_result()
+                    if not response.get("ok", False):
                         self.set_status(400)
-                        self.finish(e.message)
+                        self.finish("User modification failed!")
 
                     self.set_status(201)
                     self.write({"success": "success!!"})
 
-                elif action == "delete" and idtoChange:
+                elif action == "delete" and user_doc:
                     try:
-                        self.application.gs_users_db.delete(user_doc)
-                    except Exception as e:
+                        response = self.application.cloudant.delete_document(
+                            db="gs_users", doc_id=user_doc["_id"], rev=user_doc["_rev"]
+                        )
+                    except ApiException as e:
                         self.set_status(400)
                         self.finish(e.message)
 
@@ -97,3 +110,58 @@ class UserManagementDataHandler(SafeHandler):
             self.finish(
                 "<html><body>Your user does not have permission to perform this operation!</body></html>"
             )
+
+
+class RolesAndTeamsHandler(SafeHandler):
+    """Serves available roles and teams data
+    URL: /api/v1/user_management/roles_teams
+    """
+
+    def get(self):
+        self.set_header("Content-type", "application/json")
+
+        # Check if user has permission to view roles and teams
+        current_user = self.get_current_user()
+        if not current_user or not current_user.is_admin:
+            self.set_status(403)
+            self.write({"error": "Insufficient permissions"})
+            return
+
+        try:
+            available_roles = self.application.genstat_defaults.get("roles", {})
+            available_teams = self.application.cloudant.get_document(
+                db="gs_configs", doc_id="gs_teams"
+            ).get_result()["teams"]
+            response_data = {
+                "roles": available_roles,
+                "teams": available_teams,
+            }
+            self.set_status(200)
+            self.write(response_data)
+
+        except Exception as e:
+            self.set_status(500)
+            self.write(
+                {"error": "Failed to fetch roles and teams data", "details": str(e)}
+            )
+
+
+class CurrentUserDataHandler(SafeHandler):
+    """Serves data for the current user
+    URL: /api/v1/current_user
+    """
+
+    def get(self):
+        self.set_header("Content-type", "application/json")
+        user = self.get_current_user()
+        if user:
+            self.write(
+                {
+                    "user": user.name,
+                    "email": user.email,
+                    "roles": user.roles,
+                }
+            )
+        else:
+            self.set_status(401)
+            self.write({"error": "Unauthorized"})

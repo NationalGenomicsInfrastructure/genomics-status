@@ -10,10 +10,6 @@ class DataDeliveryHandler(SafeHandler):
     """
 
     def get(self, search_string=None):
-        staged_files_sum_view = self.application.projects_db.view(
-            "project/staged_files_sum"
-        )
-
         today = datetime.date.today()
         if search_string:
             start_date, end_date = search_string.split("--")
@@ -22,12 +18,14 @@ class DataDeliveryHandler(SafeHandler):
             start_date = last_month.isoformat()
             end_date = today.isoformat()
 
-        docs = staged_files_sum_view.rows
+        docs = self.application.cloudant.post_view(
+            db="projects", ddoc="project", view="staged_files_sum"
+        ).get_result()["rows"]
         # Projects without close date are filtered out
         data = [
-            (d.key, d.value)
+            (d["key"], d["value"])
             for d in docs
-            if start_date <= d.value.get("close_date", "ZZZZ-ZZ-ZZ") < end_date
+            if start_date <= d["value"].get("close_date", "ZZZZ-ZZ-ZZ") < end_date
         ]
         data = sorted(data, key=lambda d: d[1].get("close_date"))
 

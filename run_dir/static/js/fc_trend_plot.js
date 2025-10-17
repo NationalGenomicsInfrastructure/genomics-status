@@ -181,19 +181,30 @@ function build_series(data, key, name, display_by, filter_inst_type, filter_inst
     var categories = [];
     for (d in data){
         var tmp=data[d].id.split('_');
-        var fcid=tmp[0]+'_'+tmp[tmp.length-1];
+        var fcid = "";
+        var flowcell_link="";
+        if(data[d].instrument.startsWith('AV')){
+            fcid = data[d].id;
+            flowcell_link="/flowcells_element/"+data[d].id;
+        }
+        else{
+            fcid = tmp[0]+'_'+tmp[tmp.length-1];
+            flowcell_link="/flowcell/"+fcid;
+        }
         var col_color = "";
         var series_name = "";
-        var flowcell_link="/flowcells/"+fcid;
         var bp_yield = data[d].total_yield;
         //Seq platform filter
         if (data[d].instrument.indexOf('M') != -1 && filter_inst_type.includes('M')){
             continue;
-        }else if (data[d].instrument.indexOf('A') != -1 && filter_inst_type.includes('A')){
+        }else if (data[d].instrument.startsWith('A') && !data[d].instrument.startsWith('AV') && filter_inst_type.includes('A')){
             continue;
         }else if (data[d].instrument.indexOf('VH') != -1 && filter_inst_type.includes('VH')){
             continue;
         }else if (data[d].instrument.indexOf('LH') != -1 && filter_inst_type.includes('LH')){
+            continue;
+        }
+        else if (data[d].instrument.startsWith('AV') && filter_inst_type.includes('AV')){
             continue;
         }
         // Set colours and the name of data series
@@ -240,13 +251,41 @@ function build_series(data, key, name, display_by, filter_inst_type, filter_inst
             if (data[d].cver.includes('25B')){
                 series_name = "25B";
                 }
+            if(data[d].cver.includes('600Cycles_High')){
+                series_name = "Aviti 600Cycles_High";
+            }
+            if(data[d].cver.includes('600Cycles_Med')){
+                series_name = "Aviti 600Cycles_Med";
+            }
+            if(data[d].cver.includes('600Cycles_Low')){
+                series_name = "Aviti 600Cycles_Low";
+            }
+            if(data[d].cver.includes('300Cycles_High')){
+                series_name = "Aviti 300Cycles_High";
+            }
+            if(data[d].cver.includes('300Cycles_Med')){
+                series_name = "Aviti 300Cycles_Med";
+            }
+            if(data[d].cver.includes('300Cycles_Low')){
+                series_name = "Aviti 300Cycles_Low";
+            }
+            if(data[d].cver.includes('150Cycles_High')){
+                series_name = "Aviti 150Cycles_High";
+            }
+            if(data[d].cver.includes('1500Cycles_Med')){
+                series_name = "Aviti 150Cycles_Med";
+            }
+            if(data[d].cver.includes('150Cycles_Low')){
+                series_name = "Aviti 150Cycles_Low";
+            }
+
             if (series_name == 'MiSeq Nano'){
                 col_color = color_by_chemistry('nano');
             }else{
                 col_color = color_by_chemistry(data[d].cver);
             }
         }else if (color_type == 'month'){
-            series_name = data[d].id.substr(0,4);
+            series_name = data[d].id.substring(0,4);
             col_color=color_by_month(data[d].id);
         }else if (color_type == 'inst'){
             series_name = data[d].instrument;
@@ -258,13 +297,16 @@ function build_series(data, key, name, display_by, filter_inst_type, filter_inst
             col_color=color_by_type(data[d].instrument);
             if (data[d].instrument.indexOf('M') != -1){
                 series_name = "MiSeq";
-            }else if (data[d].instrument.indexOf('A') != -1){
+            }else if (data[d].instrument.startsWith('A') && !data[d].instrument.startsWith('AV')){
                 series_name = "NovaSeq 6000";
             }else if (data[d].instrument.indexOf('VH') != -1){
                 series_name = "NextSeq 2000";
             }else if (data[d].instrument.indexOf('LH') != -1){
                 series_name = "NovaSeqXPlus";
-            }else{
+            }else if (data[d].instrument.startsWith('AV')){
+                series_name = "Aviti";
+            }
+            else{
                 continue;
             }
         }
@@ -341,7 +383,7 @@ function color_by_instrument(instrument){
 function color_by_type(instrument){
     if (instrument.indexOf('M') != -1){
         return current_color_schemes[0](0).hex();
-    }else if (instrument.indexOf('A') != -1){
+    }else if (instrument.startsWith('A') && !instrument.startsWith('AV')){
         return current_color_schemes[0](1).hex();
     }else if (instrument.indexOf('VH') != -1){
         return current_color_schemes[0](2).hex();
@@ -352,11 +394,11 @@ function color_by_type(instrument){
     }
 }
 function color_by_month(id){
-    return current_color_schemes[3](window.current_months_list.indexOf(id.substr(0,4))).hex()
+    return current_color_schemes[3](window.current_months_list.indexOf(id.substring(0,4))).hex()
 }
 
 function color_by_chemistry(series_name){
-    version = window.current_plot_data[d].instrument.substr(0,1) + series_name;
+    version = window.current_plot_data[d].instrument.substring(0,1) + series_name;
     var id = window.current_chemistries_list.indexOf(version);
 	return current_color_schemes[2](id).hex();
 }
@@ -372,11 +414,11 @@ function get_parameters(){
         var dp=$('#inp_date_1').val();
         if (dp != ''){
             y_m_d=dp.split('-');
-            first_half=y_m_d[0].substr(2,2) + y_m_d[1] + y_m_d[2];
+            first_half=y_m_d[0].substring(2,4) + y_m_d[1] + y_m_d[2];
         }else{
             first_date=new Date();
             first_date.setYear(first_date.getYear()-1);
-            first_half=first_date.toISOString().substr(2,2) + first_date.toISOString().substr(5,2) + first_date.toISOString().substr(8,2);
+            first_half=first_date.toISOString().substring(2,4) + first_date.toISOString().substring(5,7) + first_date.toISOString().substring(8,10);
         }
         dp=$('#inp_date_2').val();
         if (dp != ''){
@@ -384,7 +426,7 @@ function get_parameters(){
             second_half=y_m_d[0].substr(2,2) + y_m_d[1] + y_m_d[2];
         }else{
             second_date=new Date();
-            second_half=second_date.toISOString().substr(2,2) + second_date.toISOString().substr(5,2) + second_date.toISOString().substr(8,2);
+            second_half=second_date.toISOString().substring(2,4) + second_date.toISOString().substring(5,7) + second_date.toISOString().substring(8,10);
         }
         search_string=first_half + '-' + second_half;
 
@@ -448,9 +490,9 @@ function init_page_js(){
     weekStart: 1,
     daysOfWeekHighlighted: "0,6" });
         var my_date=new Date();
-        $('#inp_date_2').val(my_date.toISOString().substr(0,10));
+        $('#inp_date_2').val(my_date.toISOString().substring(0,10));
         my_date.setYear(my_date.getFullYear()-1);
-        $('#inp_date_1').val(my_date.toISOString().substr(0,10));
+        $('#inp_date_1').val(my_date.toISOString().substring(0,10));
     $('#submit_interval').click(function(e){
         e.preventDefault();
         window.current_plot_data=null;
@@ -500,8 +542,8 @@ function init_page_js(){
 function update_months_list(){
     window.current_months_list=[];
     for (d in window.current_plot_data){
-        if (window.current_months_list.indexOf(window.current_plot_data[d].id.substr(0,4)) == -1){
-            window.current_months_list.push(window.current_plot_data[d].id.substr(0,4));
+        if (window.current_months_list.indexOf(window.current_plot_data[d].id.substring(0,4)) == -1){
+            window.current_months_list.push(window.current_plot_data[d].id.substring(0,4));
         }
     }
 }
@@ -522,7 +564,7 @@ function update_chemistries_list(){
         } else if (window.current_plot_data[d].mode == '4'){
             version = 'Mmicro'
         } else {
-            version = window.current_plot_data[d].instrument.substr(0,1) + window.current_plot_data[d].cver;
+            version = window.current_plot_data[d].instrument.substring(0,1) + window.current_plot_data[d].cver;
         }
         if ( window.current_chemistries_list.indexOf(version) == -1){
             window.current_chemistries_list.push(version);

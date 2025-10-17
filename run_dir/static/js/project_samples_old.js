@@ -848,6 +848,9 @@ function load_samples_table(colOrder) {
                   }
                   tbl_row += '</td>';
                 }
+                else if (info[column_id] === undefined || info[column_id] === null || Object.keys(info[column_id]).length === 0){
+				          tbl_row += '<td class="'+column_id+'">'+'-</td>';
+			          }
               });
               tbl_row += '</tr>';
               tbl_body += tbl_row;

@@ -4,6 +4,7 @@ from genologics import lims
 from genologics.config import BASEURI, PASSWORD, USERNAME
 from genologics.entities import Project as LIMSProject
 from genologics.entities import Udfconfig
+from ibm_cloud_sdk_core.api_exception import ApiException
 
 from status.running_notes import LatestRunningNoteHandler
 from status.util import SafeHandler
@@ -42,28 +43,31 @@ class DeliveriesPageHandler(SafeHandler):
                 # still try to update everything
                 # but will print error anyway
                 self.set_status(400)
-                self.write(e.message)
+                self.write(str(e))
                 continue
 
         # update status db
         # if lims was not updated, after a while this change will be discarded
-        doc_id = None
-        view = self.application.projects_db.view("project/project_id")
-        for row in view[project_id]:
-            doc_id = row.value
-            break
-        if doc_id is None:
+        view_row = self.application.cloudant.post_view(
+            db="projects",
+            ddoc="project",
+            view="project_id",
+            key=project_id,
+            include_docs=True,
+        ).get_result()["rows"]
+        if not view_row:
             self.set_status(400)
             self.write("Status DB has not been updated: project not found")
             return
-
-        doc = self.application.projects_db.get(doc_id)
+        doc = view_row[0]["doc"]
         doc["project_summary"]["bioinfo_responsible"] = (
             responsible if responsible != "unassigned" else None
         )
         try:
-            self.application.projects_db.save(doc)
-        except Exception as e:
+            self.application.cloudant.put_document(
+                db="projects", document=doc, doc_id=doc["_id"]
+            )
+        except ApiException as e:
             self.set_status(400)
             self.write(e.message)
 
@@ -72,48 +76,53 @@ class DeliveriesPageHandler(SafeHandler):
 
     def get(self):
         # get project summary data
-        summary_view = self.application.projects_db.view(
-            "project/summary", descending=True
-        )
-        summary_view = summary_view[["open", "Z"] : ["open", ""]]
+        summary_view = self.application.cloudant.post_view(
+            db="projects",
+            ddoc="project",
+            view="summary",
+            descending=True,
+            start_key=["open", "Z"],
+            end_key=["open", ""],
+        ).get_result()["rows"]
         summary_data = {}
-        for project in summary_view:
+        for row in summary_view:
             # todo: check if this one works
-            if project.key[0] != "closed":
-                project_id = project.key[1]
-                summary_data[project_id] = project.value
+            if row["key"][0] != "closed":
+                project_id = row["key"][1]
+                summary_data[project_id] = row["value"]
 
-        # wtf don't they return json or anything normal
-        bioinfo_data_view = self.application.bioinfo_db.view(
-            "latest_data/sample_id_open"
-        )
+        bioinfo_data_view = self.application.cloudant.post_view(
+            db="bioinfo_analysis",
+            ddoc="latest_data",
+            view="sample_id_open",
+        ).get_result()["rows"]
         bioinfo_data = {}
 
         ongoing_deliveries = {}
         # make a normal dict from the view result
-        for row in bioinfo_data_view.rows:
-            project_id = row.key[0]
-            flowcell_id = row.key[1]
-            lane_id = row.key[2]
-            sample_id = row.key[3]
+        for row in bioinfo_data_view:
+            project_id, flowcell_id, lane_id, sample_id = row["key"]
+
             if project_id not in ongoing_deliveries and project_id in summary_data:
                 ongoing_deliveries[project_id] = {}
             # project_id, lane_id, sample_id, flowcell_id = row.key
             if project_id not in bioinfo_data:
                 bioinfo_data[project_id] = {
-                    flowcell_id: {lane_id: {sample_id: row.value}}
+                    flowcell_id: {lane_id: {sample_id: row["value"]}}
                 }
             elif flowcell_id not in bioinfo_data[project_id]:
                 bioinfo_data[project_id][flowcell_id] = {
-                    lane_id: {sample_id: row.value}
+                    lane_id: {sample_id: row["value"]}
                 }
             elif lane_id not in bioinfo_data[project_id][flowcell_id]:
-                bioinfo_data[project_id][flowcell_id][lane_id] = {sample_id: row.value}
+                bioinfo_data[project_id][flowcell_id][lane_id] = {
+                    sample_id: row["value"]
+                }
             elif sample_id not in bioinfo_data[project_id][flowcell_id][lane_id]:
-                bioinfo_data[project_id][flowcell_id][lane_id][sample_id] = row.value
+                bioinfo_data[project_id][flowcell_id][lane_id][sample_id] = row["value"]
             else:
                 bioinfo_data[project_id][flowcell_id][lane_id].update(
-                    {sample_id: row.value}
+                    {sample_id: row["value"]}
                 )
 
         projects_to_be_closed = 0
@@ -143,9 +152,9 @@ class DeliveriesPageHandler(SafeHandler):
 
         for project_id in ongoing_deliveries:
             if project_id in summary_data and project_id in bioinfo_data:
-                project = summary_data[project_id]
                 flowcells = bioinfo_data[project_id]
                 runs_bioinfo = {}
+                platforms = set()
                 for flowcell_id in flowcells:
                     number_of_flowcells += 1
                     flowcell_statuses = []
@@ -160,6 +169,7 @@ class DeliveriesPageHandler(SafeHandler):
                             # define bioinfo checklist
                             sample_data = flowcells[flowcell_id][lane_id][sample_id]
                             instrument_type = sample_data.get("instrument_type")
+                            platforms.add(sample_data.get("instrument"))
                             checklist = self.__fill_checklist(sample_data)
                             if checklist["total"] and len(checklist["total"]) == len(
                                 checklist["passed"]
@@ -276,6 +286,8 @@ class DeliveriesPageHandler(SafeHandler):
                 if bioinfo_responsible not in responsible_list:
                     responsible_list[bioinfo_responsible] = 0
                 responsible_list[bioinfo_responsible] += 1
+                if None in platforms:
+                    platforms.remove(None)
 
                 project_data = {
                     "project_name": summary_data[project_id]["project_name"],
@@ -286,6 +298,7 @@ class DeliveriesPageHandler(SafeHandler):
                     "bioinfo_responsible": bioinfo_responsible,
                     "runs": runs_bioinfo,
                     "latest_running_note": latest_running_note,
+                    "sequencing_platforms": list(platforms),
                 }
 
             else:

@@ -1,0 +1,51 @@
+channels:
+  - conda-forge
+dependencies:
+  - python=3.12
+  - pango
+  - pandas
+  - psycopg2
+  - open-fonts
+  - xorg-libxrender
+  - xorg-libxext
+  - xorg-libxau
+  - atlassian-python-api
+  - cffi
+  - python-couchdb
+  - ecdsa
+  - httplib2
+  - ibmcloudant
+  - markdown
+  - matplotlib
+  - numpy
+  - oauth2
+  - openpyxl
+  - pycryptodome
+  - pyparsing
+  - python-dateutil
+  - pytz
+  - pyyaml
+  - requests
+  - selenium
+  - setuptools
+  - simplejson
+  - six
+  - slack_sdk
+  - tornado
+  - weasyprint
+  - zenpy
+  - ipdb
+  - ruff
+  - selenium
+  - pre_commit
+  - pip:
+      - backports.ssl_match_hostname
+      - nest_asyncio
+      - utils
+      - git+https://github.com/SciLifeLab/genologics.git
+      - git+https://github.com/NationalGenomicsInfrastructure/genologics_sql.git
+platforms:
+  - linux-64 # For Linux
+  - osx-64  # For Apple Intel
+  - osx-arm64  # For Apple Silicon, e.g. M1/M2
+  - linux-aarch64  # aka arm64, use for Docker on Apple Silicon

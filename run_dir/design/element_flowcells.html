@@ -10,6 +10,7 @@
             <tr class="sticky darkth">
                 <th class="sort" data-sort="ngi_run_id">NGI Run ID</th>
                 <th class="sort" data-sort="start_date">Start date</th>
+                <th class="sort" data-sort="projects">Projects</th>
                 <th class="sort" data-sort="run_type">Run type</th>
                 <th class="sort" data-sort="side">Side</th>
                 <th class="sort" data-sort="cycles">Cycles</th>
@@ -17,57 +18,84 @@
                 <th class="sort" data-sort="kit_configuration">Kit Configuration</th>
                 <th class="sort" data-sort="chemistry_version">Chemistry Version</th>
                 <th class="sort text-center" data-sort="outcome">Outcome</th>
+                <th class="sort" data-sort="latest_running_note">Latest running note</th>
             </tr>
         </thead>
         <tfoot>
             <tr class="darkth">
                 <th class="sort searchable" data-sort="ngi_run_id">NGI Run ID</th>
                 <th class="sort searchable" data-sort="start_date">Start date</th>
+                <th class="sort searchable" data-sort="projects">Projects</th>
                 <th class="sort searchable" data-sort="run_type">Run type</th>
                 <th class="sort searchable" data-sort="side">Side</th>
                 <th class="sort searchable" data-sort="cycles">Cycles</th>
                 <th class="sort searchable" data-sort="throughput_selection">Throughput Selection</th>
                 <th class="sort searchable" data-sort="kit_configuration">Kit Configuration</th>
                 <th class="sort searchable" data-sort="chemistry_version">Chemistry Version</th>
-                <th class="sort text-center" data-sort="outcome">Outcome</th>
+                <th class="sort searchable" data-sort="outcome">Outcome</th>
+                <th class="sort searchable" data-sort="latest_running_note">Latest running note</th>
             </tr>
         </tfoot>
         <tbody class="list">
             {% for onefc in element_fcs %}
                 <tr>
                     <td class="ngi_run_id">
-                        <a class="text-decoration-none" href="/flowcells_element/{{ onefc.key }}">{{ onefc.key }}</a>
-                        {% if onefc.value.get('Outcome') == 'OutcomeCompleted' %}
+                        <a class="text-decoration-none" href="/flowcells_element/{{ onefc }}">{{ onefc }}</a>
+                        {% if element_fcs[onefc].get('Outcome') == 'OutcomeCompleted' %}
                             <abbr title="Run completed"><span class="fa fa-check-circle"></span></abbr>
-                        {% elif onefc.value.get('Outcome') == 'ongoing' %}
+                        {% elif element_fcs[onefc].get('Outcome') == 'ongoing' %}
                             <abbr title="Ongoing"><span class="fa fa-hourglass-half"></span></abbr>
-                        {% elif onefc.value.get('Outcome') == 'OutcomeStopped' %}
+                        {% elif element_fcs[onefc].get('Outcome') == 'OutcomeStopped' %}
                             <abbr title="Run stopped"><span class="fa fa-file-dashed-line"></span></abbr>
-                        {% elif onefc.value.get('Outcome') == 'OutcomeFailed' %}
+                        {% elif element_fcs[onefc].get('Outcome') == 'OutcomeFailed' %}
                            <abbr title="Run failed"><span class="fa fa-file-dashed-line"></span></abbr>
                         {% end %}
                     </td>
-                    <td class="start_date">{{ onefc.key[:8] }}</td>
+                    <td class="start_date">{{ element_fcs[onefc].get('start_date') }}</td>
+                    <td>
+                        {% if element_fcs[onefc].get('projects') %}
+                            {% for project in element_fcs[onefc]['projects'] %}
+                                <samp style="max-width:50px;">
+                                    <a class="text-decoration-none" href="/project/{{ project['project_id'] }}" target="_blank">{{ project['project_name'] }}</a>
+                                </samp><br>
+                            {% end %}
+                        {% end %}
+                    </td>
                     <td class="run_type">
-                        {{ onefc.value.get("RunType") }}
+                        {{ element_fcs[onefc].get("RunType") }}
                     </td>
                     <td class="side">
-                        {{ onefc.value.get("Side") }}
+                        {{ element_fcs[onefc].get("Side") }}
                     </td>
                     <td class="cycles">
-                        {{ onefc.value.get("Cycles") }}
+                        {{ element_fcs[onefc].get("Cycles") }}
                     </td>
                     <td class="throughput_selection">
-                        {{ onefc.value.get("ThroughputSelection") }}
+                        {{ element_fcs[onefc].get("ThroughputSelection") }}
                     </td>
                     <td class="kit_configuration">
-                        {{ onefc.value.get("KitConfiguration") }}
+                        {{ element_fcs[onefc].get("KitConfiguration") }}
                     </td>
                     <td class="chemistry_version">
-                        {{ onefc.value.get("ChemistryVersion") }}
+                        {{ element_fcs[onefc].get("ChemistryVersion") }}
                     </td>
                     <td class="outcome text-center">
-                        {{ onefc.value.get("Outcome") }}
+                        {{ element_fcs[onefc].get("Outcome") }}
+                    </td>
+                    <td style="width: 100%" class="latest_running_note">
+                        {% if element_fcs[onefc].get('latest_running_note') %}
+                            {% set running_notes = element_fcs[onefc].get('latest_running_note') %}
+                            {% set latest_running_note_key = list(running_notes.keys())[0] %}
+                            <div class="card running-note-card">
+                                <div class='card-header'>
+                                <a class="text-decoration-none" href='mailto:{{ running_notes[latest_running_note_key]["email"].encode("ascii","ignore")}}'>{{ running_notes[latest_running_note_key]["user"]}}</a>  -  {{form_date(latest_running_note_key)}}
+                                {% if running_notes[latest_running_note_key]['categories'] %} - <span class="fillbadgecolour"> {{ running_notes[latest_running_note_key]['categories'] }} </span> {% end %}
+                                </div>
+                                <div class='card-body trunc-note-latest' style='white-space: pre-line'>
+                                    {{running_notes[latest_running_note_key]['note']}}
+                                </div>
+                            </div>
+                        {% end %}
                     </td>
                 </tr>
             {% end %}

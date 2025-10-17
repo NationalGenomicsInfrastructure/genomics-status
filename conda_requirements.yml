@@ -9,5 +9,7 @@ dependencies:
   - xorg-libxrender
   - xorg-libxext
   - xorg-libxau
+  - glib
+  - pip
   - pip:
     - '-r requirements.txt'

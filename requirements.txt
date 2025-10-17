@@ -1,19 +1,17 @@
 atlassian-python-api
-backports.ssl-match-hostname>=3.5.0.1
 cffi
-CouchDB==1.1
-ecdsa>=0.13
+cryptography
 genologics @ git+https://github.com/SciLifeLab/genologics.git
 genologics_sql @ git+https://github.com/NationalGenomicsInfrastructure/genologics_sql.git
 httplib2>=0.10.3
 ibmcloudant>=0.9.1
+jwcrypto
 markdown
 matplotlib>=2.0.0
 nest_asyncio
 numpy>=1.12.1
 oauth2>=1.9.0.post1
 openpyxl
-pycryptodome>=3.6.1
 pyparsing>=2.2.0
 python-dateutil>=2.7.5
 pytz>=2018.9
@@ -21,10 +19,7 @@ PyYAML
 requests>=2.14.2
 selenium
 setuptools
-simplejson>=3.10.0
-six>=1.10.0
 slack_sdk
 tornado>=6.0.2
-utils>=0.9.0
 weasyprint==52.5
 Zenpy
