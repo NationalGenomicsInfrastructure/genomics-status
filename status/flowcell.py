@@ -1,7 +1,6 @@
 import os
 import re
 from datetime import datetime
-from typing import Optional
 
 import pandas as pd
 
@@ -293,7 +292,7 @@ class FlowcellHandler(SafeHandler):
             )
 
 
-def get_view_val(key: str, view) -> Optional[dict]:
+def get_view_val(key: str, view) -> dict | None:
     """Get the value of a specified key from a view"""
 
     matching_rows = [row for row in view.rows if row.key == key]
