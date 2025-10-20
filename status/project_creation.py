@@ -292,6 +292,7 @@ class ProjectCreationCountDetailsDataHandler(SafeHandler):
 
 class ProjectCreationIndividualDataFetchHandler(LIMSQueryBaseHandler):
     """API Handler to fetch data from LIMS based on provided field and value."""
+
     def post(self):
         data = json.loads(self.request.body)
         field, value = next(iter(data.items()))
