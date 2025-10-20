@@ -132,17 +132,10 @@ class LIMSProjectCloningHandler(SafeHandler):
             if check_if_new_name_exists:
                 return {"error": f"A project with the name {new_name} already exists"}
 
-            try:
-                new_project = Project.create(
-                    lims_instance,
-                    udfs=proj_values["udfs"],
-                    name=new_name,
-                    researcher=existing_project.researcher,
-                )
-            except requests.exceptions.HTTPError as e:
-                return {"error": e.message}
+            proj_values["name"] = new_name
+            proj_values["researcher"] = existing_project.researcher
 
-            return {"project_id": new_project.id, "project_name": new_project.name}
+            return self.create_project_in_lims(proj_values)
 
     def get_project_id(self, project_identifier):
         """Return projectid for the provided identifier"""
@@ -163,3 +156,20 @@ class LIMSProjectCloningHandler(SafeHandler):
             except IndexError:
                 pass
         return projectid
+
+    @staticmethod
+    def create_project_in_lims(proj_values):
+        """Create a new project in LIMS and return the project id and name"""
+        lims_instance = lims.Lims(BASEURI, USERNAME, PASSWORD)
+
+        try:
+            new_project = Project.create(
+                lims_instance,
+                udfs=proj_values["udfs"],
+                name=proj_values["name"],
+                researcher=proj_values["researcher"],
+            )
+        except requests.exceptions.HTTPError as e:
+            return {"error": e.message}
+
+        return {"project_id": new_project.id, "project_name": new_project.name}
