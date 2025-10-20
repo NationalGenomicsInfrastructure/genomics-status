@@ -95,8 +95,10 @@ from status.production import (
 from status.project_cards import ProjectCardsHandler, ProjectCardsWebSocket
 from status.project_creation import (
     ProjectCreationCountDetailsDataHandler,
+    ProjectCreationDataHandler,
     ProjectCreationFormDataHandler,
     ProjectCreationHandler,
+    ProjectCreationIndividualDataFetchHandler,
     ProjectCreationListFormsDataHandler,
     ProjectCreationListFormsHandler,
 )
@@ -352,6 +354,11 @@ class Application(tornado.web.Application):
                 YearDeliverytimeApplicationHandler,
             ),
             ("/api/v1/deliveries/set_bioinfo_responsible$", DeliveriesPageHandler),
+            ("/api/v1/submit_project_creation_form", ProjectCreationDataHandler),
+            (
+                "/api/v1/project_creation_data_fetch",
+                ProjectCreationIndividualDataFetchHandler,
+            ),
             ("/api/v1/suggestions", SuggestionBoxDataHandler),
             (r"/api/v1/test/(\w+)?", TestDataHandler),
             ("/api/v1/user_management/users", UserManagementDataHandler),

@@ -1,7 +1,12 @@
 import datetime
 import json
 
-from status.util import SafeHandler
+from genologics import lims
+from genologics.config import BASEURI, PASSWORD, USERNAME
+from genologics.entities import Researcher
+
+from status.clone_project import LIMSProjectCloningHandler
+from status.util import LIMSQueryBaseHandler, SafeHandler
 
 
 class ProjectCreationHandler(SafeHandler):
@@ -31,6 +36,65 @@ class ProjectCreationHandler(SafeHandler):
                 version_id=version_id,
             )
         )
+
+
+class ProjectCreationDataHandler(SafeHandler):
+    """
+    Handles the api call to submit project creation form data
+    Loaded through /api/v1/submit_project_creation_form
+    """
+
+    def post(self):
+        lims_instance = lims.Lims(BASEURI, USERNAME, PASSWORD)
+        try:
+            request_data = json.loads(self.request.body)
+            project_values = {}
+            researcher_name = request_data["form_data"].get("researcher_name")
+            researchers = (
+                request_data["form_data"].get("fetched_data").get("researcher_name")
+            )
+            researcher_id = next(
+                item["id"]
+                for item in researchers
+                if item["researcher_name"] == researcher_name
+            )
+            researcher = Researcher(lims_instance, id=researcher_id)
+
+            project_values["name"] = request_data["form_data"].get("project_name")
+            project_values["researcher"] = researcher
+            project_values["details"] = request_data["form_data"].get(
+                "project_details", {}
+            )
+            udf_mapping = {
+                "Library construction method": "library_construction_method",
+                "Library source": "library_source",
+                "Library strategy": "library_strategy",
+                "Library selection": "library_selection",
+                "Library prep option": "library_prep_option",
+                "Library prep option single cell (VDJ)": "library_prep_option_single_cell_vdj",
+                "Library prep option single cell (Feature)": "library_prep_option_single_cell_feature",
+                "Library prep option single cell (Hashing)": "library_prep_option_single_cell_hashing",
+                "Library prep option single cell (CITE)": "library_prep_option_single_cell_cite",
+            }
+            project_values["udfs"] = {}
+            for udf_key, form_key in udf_mapping.items():
+                project_values["udfs"][udf_key] = request_data["form_data"].get(
+                    form_key
+                )
+
+            created_project = LIMSProjectCloningHandler.create_project_in_lims(
+                project_values
+            )
+            if "error" in created_project:
+                self.set_status(400)
+                return self.write(json.dumps({"error": created_project["error"]}))
+            self.set_status(201)
+            return self.write(
+                json.dumps({"success": True, "project_id": created_project["id"]})
+            )
+        except json.JSONDecodeError:
+            self.set_status(400)
+            return self.write("Error: Invalid JSON data")
 
 
 class ProjectCreationFormDataHandler(SafeHandler):
@@ -224,3 +288,56 @@ class ProjectCreationCountDetailsDataHandler(SafeHandler):
 
         # Return the results as JSON
         self.write(json.dumps(results))
+
+
+class ProjectCreationIndividualDataFetchHandler(LIMSQueryBaseHandler):
+    """API Handler to fetch data from LIMS based on provided field and value."""
+    def post(self):
+        data = json.loads(self.request.body)
+        field, value = next(iter(data.items()))
+
+        if field == "user_account":
+            try:
+                researchers = self.get_researchers_in_account(value)
+            except ValueError:
+                self.set_status(400)
+                return self.write(
+                    json.dumps(
+                        {
+                            "error": "Account name not found in LIMS",
+                            "code": "MISSING_ACCOUNT_NAME",
+                        }
+                    )
+                )
+            return self.write({"result": researchers, "field": "researcher_name"})
+
+    def get_researchers_in_account(self, account_name: str) -> list[dict]:
+        """
+        Retrieve a list of researchers associated with a given lab account.
+
+        Args:
+            account_name (str): The name of the lab account.
+
+        Returns:
+            list[dict]: A list of dictionaries containing researcher names and IDs.
+
+        Raises:
+            ValueError: If no lab is found with the given name.
+        """
+        lims_instance = lims.Lims(BASEURI, USERNAME, PASSWORD)
+        labs = lims_instance.get_labs(name=account_name)
+        if not labs:
+            raise ValueError(f"No lab found with name {account_name}")
+
+        lab_id = labs[0].id
+        query = (
+            "select researcherid, firstname, lastname from researchers where labid=%s"
+        )
+        rows = self.get_query_result(query, (lab_id,))
+
+        researchers = []
+        for row in rows:
+            researcher_name = f"{row['firstname']} {row['lastname']}"
+            researchers.append({"researcher_name": researcher_name, "id": row["id"]})
+
+        return researchers
