@@ -62,25 +62,22 @@ class ProjectCreationDataHandler(SafeHandler):
 
             project_values["name"] = request_data["form_data"].get("project_name")
             project_values["researcher"] = researcher
-            project_values["details"] = request_data["form_data"].get(
-                "project_details", {}
-            )
-            udf_mapping = {
-                "Library construction method": "library_construction_method",
-                "Library source": "library_source",
-                "Library strategy": "library_strategy",
-                "Library selection": "library_selection",
-                "Library prep option": "library_prep_option",
-                "Library prep option single cell (VDJ)": "library_prep_option_single_cell_vdj",
-                "Library prep option single cell (Feature)": "library_prep_option_single_cell_feature",
-                "Library prep option single cell (Hashing)": "library_prep_option_single_cell_hashing",
-                "Library prep option single cell (CITE)": "library_prep_option_single_cell_cite",
-            }
             project_values["udfs"] = {}
-            for udf_key, form_key in udf_mapping.items():
-                project_values["udfs"][udf_key] = request_data["form_data"].get(
-                    form_key
-                )
+            latest_form = self.application.cloudant.post_view(
+                db="project_creation_forms",
+                ddoc="by_creation_date",
+                view="valid",
+                limit=1,
+                descending=True,
+                include_docs=True,
+            ).get_result()["rows"][0]["doc"]
+            properties = latest_form.get("json_schema", {}).get("properties", {})
+            for property_name, property_info in properties.items():
+                if "ngi_form_lims_udf" in property_info:
+                    udf_name = property_info["ngi_form_lims_udf"]
+                    project_values["udfs"][udf_name] = request_data["form_data"].get(
+                        property_name
+                    )
 
             created_project = LIMSProjectCloningHandler.create_project_in_lims(
                 project_values
