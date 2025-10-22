@@ -282,8 +282,15 @@ const vProjectCreationForm = {
                     form_metadata: form_metadata,
                 })
                 .then(response => {
-                    alert('Form submitted successfully!');
-                    console.log(response.data);
+                    console.log('Server response:', response.data);
+                    if (response.data.success && response.data.project_id) {
+                        alert(`Project created with ID: ${response.data.project_id}`);
+                        // Clear the form data
+                        this.$root.formData = {};
+                    }
+                    else{
+                        alert("Hmm, something went wrong and no project id was generated. Please contact a system administrator.");
+                    }
                 })
                 .catch(error => {
                     this.$root.error_messages.push('Error submitting form. Please try again or contact a system administrator.');

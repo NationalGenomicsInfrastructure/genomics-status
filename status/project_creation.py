@@ -46,8 +46,15 @@ class ProjectCreationDataHandler(SafeHandler):
 
     def post(self):
         lims_instance = lims.Lims(BASEURI, USERNAME, PASSWORD)
+        current_user = self.get_current_user()
+        if not (current_user.is_proj_coord or current_user.is_admin):
+            self.set_status(401)
+            return self.write(
+                "Error: You do not have the permissions for this operation!"
+            )
         try:
             request_data = json.loads(self.request.body)
+            # TODO: Find a place to save request_data["form_metadata"]
             project_values = {}
             researcher_name = request_data["form_data"].get("researcher_name")
             researchers = (
@@ -63,6 +70,7 @@ class ProjectCreationDataHandler(SafeHandler):
             project_values["name"] = request_data["form_data"].get("project_name")
             project_values["researcher"] = researcher
             project_values["udfs"] = {}
+            project_values["udfs"]["Project coordinator"] = current_user.name
             latest_form = self.application.cloudant.post_view(
                 db="project_creation_forms",
                 ddoc="by_creation_date",
@@ -87,7 +95,9 @@ class ProjectCreationDataHandler(SafeHandler):
                 return self.write(json.dumps({"error": created_project["error"]}))
             self.set_status(201)
             return self.write(
-                json.dumps({"success": True, "project_id": created_project["id"]})
+                json.dumps(
+                    {"success": True, "project_id": created_project["project_id"]}
+                )
             )
         except json.JSONDecodeError:
             self.set_status(400)
@@ -329,13 +339,13 @@ class ProjectCreationIndividualDataFetchHandler(LIMSQueryBaseHandler):
 
         lab_id = labs[0].id
         query = (
-            "select researcherid, firstname, lastname from researchers where labid=%s"
+            "select researcherid, firstname, lastname from researcher where labid=%s"
         )
         rows = self.get_query_result(query, (lab_id,))
 
         researchers = []
         for row in rows:
-            researcher_name = f"{row['firstname']} {row['lastname']}"
-            researchers.append({"researcher_name": researcher_name, "id": row["id"]})
+            researcher_name = f"{row[1]} {row[2]}"
+            researchers.append({"researcher_name": researcher_name, "id": f"{row[0]}"})
 
         return researchers

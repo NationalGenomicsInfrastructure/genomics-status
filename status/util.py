@@ -431,10 +431,13 @@ class LIMSQueryBaseHandler(SafeHandler):
         )
         return connection.cursor()
 
-    def get_query_result(self, query):
+    def get_query_result(self, query, params=None):
         """Execute a query and return the results as a list of dicts."""
         cursor = self._get_lims_cursor()
-        cursor.execute(query)
+        if params:
+            cursor.execute(query, params)
+        else:
+            cursor.execute(query)
         return cursor.fetchall()
 
 
