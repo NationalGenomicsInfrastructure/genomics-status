@@ -9,6 +9,21 @@ from status.clone_project import LIMSProjectCloningHandler
 from status.util import LIMSQueryBaseHandler, SafeHandler
 
 
+class ProjectCreationFormUtils:
+    """Utility class for project creation form operations."""
+
+    @staticmethod
+    def get_latest_proj_creation_form(cloudant_client):
+        return cloudant_client.post_view(
+            db="project_creation_forms",
+            ddoc="by_creation_date",
+            view="valid",
+            limit=1,
+            descending=True,
+            include_docs=True,
+        ).get_result()
+
+
 class ProjectCreationHandler(SafeHandler):
     """Handler used to render the project creation page using the valid form."""
 
@@ -71,14 +86,9 @@ class ProjectCreationDataHandler(SafeHandler):
             project_values["researcher"] = researcher
             project_values["udfs"] = {}
             project_values["udfs"]["Project coordinator"] = current_user.name
-            latest_form = self.application.cloudant.post_view(
-                db="project_creation_forms",
-                ddoc="by_creation_date",
-                view="valid",
-                limit=1,
-                descending=True,
-                include_docs=True,
-            ).get_result()["rows"][0]["doc"]
+            latest_form = ProjectCreationFormUtils.get_latest_proj_creation_form(
+                self.application.cloudant
+            )["rows"][0]["doc"]
             properties = latest_form.get("json_schema", {}).get("properties", {})
             for property_name, property_info in properties.items():
                 if "ngi_form_lims_udf" in property_info:
@@ -126,14 +136,9 @@ class ProjectCreationFormDataHandler(SafeHandler):
             return self.write({"form": form_doc})
         else:
             # Fetch latest form from couchdb using cloudant
-            all_valid_docs = self.application.cloudant.post_view(
-                db="project_creation_forms",
-                ddoc="by_creation_date",
-                view="valid",
-                limit=1,
-                descending=True,
-                include_docs=True,
-            ).get_result()
+            all_valid_docs = ProjectCreationFormUtils.get_latest_proj_creation_form(
+                self.application.cloudant
+            )
 
             self.set_header("Content-type", "application/json")
 
