@@ -272,11 +272,25 @@ const vProjectCreationForm = {
             return this.fields_per_group[group_identifier];
         },
         submitForm() {
+            const form_data = this.$root.formData;
+            const form_metadata = {};
+            form_metadata['title'] = this.$root.json_form['title'];
+            form_metadata['version'] = this.$root.json_form['version'];
             axios
-                .post('/api/v1/submit_project_form', this.$root.json_form)
+                .post('/api/v1/submit_project_creation_form', {
+                    form_data: form_data,
+                    form_metadata: form_metadata,
+                })
                 .then(response => {
-                    alert('Form submitted successfully!');
-                    console.log(response.data);
+                    console.log('Server response:', response.data);
+                    if (response.data.success && response.data.project_id) {
+                        alert(`Project created with ID: ${response.data.project_id}`);
+                        // Clear the form data
+                        this.$root.formData = {};
+                    }
+                    else{
+                        alert("Hmm, something went wrong and no project id was generated. Please contact a system administrator.");
+                    }
                 })
                 .catch(error => {
                     this.$root.error_messages.push('Error submitting form. Please try again or contact a system administrator.');
@@ -523,6 +537,48 @@ const vFormField = {
             setTimeout(() => {
                 this.showSuggestions = false;
             }, 2000)
+        },
+        fetch_data(field_identifier) {
+            let url = `/api/v1/project_creation_data_fetch`;
+            axios
+                .post(url,
+                    {
+                        [field_identifier]: this.$root.formData[field_identifier]
+                    }
+                )
+                .then(response => {
+                    if("result" in response.data){
+                        const result = response.data["result"];
+                        const display_in_field = response.data["field"]
+                        if(Array.isArray(result) && result.length > 0){
+                            if (this.$root.formData["fetched_data"] === undefined) {
+                                this.$root.formData["fetched_data"] = {};
+                            }
+                            this.$root.formData["fetched_data"][display_in_field] = result;
+                            const fieldSchema = this.$root.json_schema.properties[display_in_field];
+                            if (!fieldSchema.enum) {
+                                fieldSchema.enum = [];
+                            }
+                            // Clear existing enum and add new values
+                            fieldSchema.enum = result.map(r => r[display_in_field]);
+                        }
+                    }
+                })
+                .catch(error => {
+                    if (axios.isCancel(error)) {
+                        console.log('Request cancelled:', error.message);
+                    } else if (error.response && error.response.status === 400) {
+                        // Handle specific 400 errors
+                        const errorMessage = error.response.data?.message || error.response.data?.error || 'Bad request';
+                        const errorCode = error.response.data?.code;
+                        alert(`Error fetching suggestions: ${errorMessage} (Code: ${errorCode})`);
+                    } else {
+                        // Not important enough to annoy the user with an alert
+                        console.log('Error fetching suggestions. Please try again or contact a system adminstrator.');
+                        console.log(error)
+                        this.$root.error_messages.push('Error submitting form. Please try again or contact a system administrator.');
+                    }
+                })
         }
     },
     mounted() {
@@ -571,7 +627,11 @@ const vFormField = {
                     </template>
                 </div>
                 <template v-if="this.form_type === 'select'">
-                    <select class="form-select" :aria-label="description" v-model="this.$root.formData[identifier]">
+                    <select class="form-select"
+                            :aria-label="description"
+                            :class="{ 'bg-light text-muted': options.length === 0 }"
+                            v-model="this.$root.formData[identifier]"
+                            :disabled="options.length === 0">
                         <template v-for="option in options">
                             <option :value="option">{{option}}</option>
                         </template>
@@ -619,6 +679,19 @@ const vFormField = {
                     <div class="form-check form-switch">
                         <label :for="identifier" class="form-check-label">{{ label }}</label>
                         <input class="form-check-input" type="checkbox" :name="identifier" :id="identifier" :placeholder="description" v-model="this.$root.formData[identifier]">
+                    </div>
+                </template>
+                <template v-if="this.form_type === 'custom_string_data_fetch'">
+                    <div class="input-group mb-3">
+                        <input class="form-control"
+                                        :type="text"
+                                        class="form-control"
+                                        :name="identifier"
+                                        :id="identifier"
+                                        :placeholder="description"
+                                        v-model="this.$root.formData[identifier]"
+                                        list="identifier+'_list'">
+                        <button class="btn btn-secondary" type="button" @click.prevent="fetch_data(identifier)">Fetch suggestions</button>
                     </div>
                 </template>
 

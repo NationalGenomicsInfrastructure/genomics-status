@@ -5,6 +5,7 @@ import sys
 import urllib
 from datetime import datetime, timedelta, timezone
 
+import psycopg2
 import requests
 import tornado.web
 import tornado.websocket
@@ -415,6 +416,29 @@ class LastPSULRunHandler(SafeHandler):
 
         self.set_header("Content-type", "application/json")
         self.write(json.dumps(response))
+
+
+class LIMSQueryBaseHandler(SafeHandler):
+    """Base handler for LIMS queries."""
+
+    def _get_lims_cursor(self):
+        """Return a cursor to the LIMS database."""
+        connection = psycopg2.connect(
+            user=self.application.lims_conf["username"],
+            host=self.application.lims_conf["url"],
+            database=self.application.lims_conf["db"],
+            password=self.application.lims_conf["password"],
+        )
+        return connection.cursor()
+
+    def get_query_result(self, query, params=None):
+        """Execute a query and return the results as a list of dicts."""
+        cursor = self._get_lims_cursor()
+        if params:
+            cursor.execute(query, params)
+        else:
+            cursor.execute(query)
+        return cursor.fetchall()
 
 
 ########################
