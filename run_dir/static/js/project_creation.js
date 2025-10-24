@@ -10,11 +10,10 @@ const vProjectCreationMain = {
             conditionalLogic: [],
             formData: {},
             forms: [],
-            isInspectingForm: false,
             json_form: {},
             new_json_form: {},
-            edit_initiated: false,
             showDebug: false,
+            toplevel_edit_mode: false,
             validation_errors: [],
             validation_errors_per_field: {}
         }
@@ -65,6 +64,9 @@ const vProjectCreationMain = {
                 .get(url)
                 .then(response => {
                     this.$root.json_form = response.data.form
+                    if (this.$root.toplevel_edit_mode) {
+                        this.$root.new_json_form = JSON.parse(JSON.stringify(this.$root.json_form));
+                    }
                 })
                 .catch(error => {
                     this.$root.error_messages.push('Error fetching form. Please try again or contact a system adminstrator.');
@@ -121,18 +123,6 @@ const vProjectCreationMain = {
                     this.formData[field] = options[0];
                 }
             });
-        },
-        startInspectingForm(){
-            this.isInspectingForm = true;
-            // Only allow it to be iniatied once.
-            if (!this.edit_initiated) {
-                this.new_json_form = JSON.parse(JSON.stringify(this.$root.json_form));
-                this.edit_initiated = true;
-            }
-        },
-        stopInspectingForm(){
-            // Do not reset the form, just stop inspecting it.
-            this.isInspectingForm = false;
         },
         updateOptions() {
             this.conditionalLogic = [];
@@ -212,7 +202,6 @@ const vProjectCreationForm = {
     data() {
         return {
             showDebug: false,
-            toplevel_edit_mode: false,
             is_trying_out_form: false,
         }
     },
@@ -304,7 +293,7 @@ const vProjectCreationForm = {
             this.$root.fetch_form(this.version_id);
         }
         if (this.init_edit_mode.toLowerCase() === 'true') {
-            this.toplevel_edit_mode = true;
+            this.$root.toplevel_edit_mode = true;
         }
     },
     template: 
@@ -324,8 +313,12 @@ const vProjectCreationForm = {
                 <template v-else>
                     <div class="row">
                         <div class="col-auto">
-                            <h1>{{ title }}</h1>
-                            <h2 v-if='this.toplevel_edit_mode' class="text-danger"> Edit Mode Enabled </h2>
+                            <template v-if='this.$root.toplevel_edit_mode'>
+                                <h1 class="text-danger"> Modifying project creation form</h1>
+                            </template>
+                            <template v-else>
+                                <h1>{{ title }}</h1>
+                            </template>
                         </div>
                         <div class="col-auto ml-auto">
                             <button class="btn btn-sm btn-secondary" @click="showDebug = !showDebug">
@@ -346,16 +339,19 @@ const vProjectCreationForm = {
                         </div>
                     </div>
 
-                    <p>{{ description }}</p>
-                    <p>{{ instruction }}</p>
 
-                    <template v-if="this.toplevel_edit_mode && !this.is_trying_out_form">
-                        <button class="btn btn-lg btn-primary col-auto" @click="this.is_trying_out_form = true">Open form</button>
+
+                    <template v-if="this.$root.toplevel_edit_mode && !this.is_trying_out_form">
+                        <button class="btn btn-lg btn-primary col-auto" @click="this.is_trying_out_form = true">Display form</button>
                     </template>
                     <template v-else>
-                        <template v-if="this.toplevel_edit_mode">
+
+                        <template v-if="this.$root.toplevel_edit_mode">
                             <button class="btn btn-lg btn-primary col-auto" @click="this.is_trying_out_form = false">Close form</button>
+                            <h2 class="mt-2">{{ title }}</h2>
                         </template>
+                        <p>{{ description }}</p>
+                        <p>{{ instruction }}</p>
 
                         <form @submit.prevent="submitForm" class="mt-3 mb-5">
                             <template v-for="(form_group, group_identifier) in form_groups" :key="group_identifier">
@@ -373,7 +369,7 @@ const vProjectCreationForm = {
                             <button type="submit" class="btn btn-lg btn-success mt-3" :disabled="toplevel_edit_mode">Create Project in LIMS</button>
                         </form>
                     </template>
-                    <template v-if="this.toplevel_edit_mode">
+                    <template v-if="this.$root.toplevel_edit_mode">
                         <v-create-form></v-create-form>
                         <div class="card mt-4 mb-5">
                             <div class="card-body">
@@ -888,115 +884,109 @@ const vCreateForm = {
         /*html*/`
         <div class="container pb-5">
             <div class="row mt-5">
-                <template v-if="!this.$root.isInspectingForm">
-                    <button class="btn btn-lg btn-primary mt-3 col-auto" @click.prevent="this.$root.startInspectingForm">Inspect form details</button>
-                </template>
-                <template v-else>
-                    <button class="btn btn-lg btn-primary mt-3 col-auto" @click.prevent="this.$root.stopInspectingForm">Close form details</button>
-                    <div class="row mt-3 mb-3">
-                        <div class="col-auto">
-                            <h1>Update Form:</h1>
-                        </div>
-                        <div class="col-auto ml-auto">
-                            <button class="btn btn-sm btn-secondary" @click="edit_mode = !edit_mode">
-                                <i class="fa fa-bug mr-2"></i>Toggle Edit Mode
-                            </button>
-                            <button class="btn btn-sm btn-secondary ml-2" @click="showDebug = !showDebug">
-                                <i class="fa fa-bug mr-2"></i>Toggle Debug Info
-                            </button>
-                        </div>
+                <div class="row mt-3 mb-3">
+                    <div class="col-auto">
+                        <h1>Update Form:</h1>
                     </div>
-                    <template v-if="showDebug" class="card">
-                        <pre>{{ this.$root.new_json_form }}</pre>
+                    <div class="col-auto ml-auto">
+                        <button class="btn btn-sm btn-secondary" @click="edit_mode = !edit_mode">
+                            <i class="fa fa-bug mr-2"></i>Toggle Edit Mode
+                        </button>
+                        <button class="btn btn-sm btn-secondary ml-2" @click="showDebug = !showDebug">
+                            <i class="fa fa-bug mr-2"></i>Toggle Debug Info
+                        </button>
+                    </div>
+                </div>
+                <template v-if="showDebug" class="card">
+                    <pre>{{ this.$root.new_json_form }}</pre>
+                </template>
+                <div class="ml-3 pb-3 border-bottom">
+                    <h2 class="mt-3">Fields<button v-if="this.display_fields" class="btn btn-secondary ml-2" @click.prevent="this.display_fields = false">Hide fields</button></h2>
+                    <template v-if="this.display_fields">
+                        <template v-for="(field, identifier) in fields" :key="identifier">
+                            <template v-if="field.ngi_form_type !== undefined">
+                                <v-update-form-field :field="field" :identifier="identifier" :edit_mode="edit_mode"></v-update-form-field>
+                            </template>
+                        </template>
+                        <div v-if="edit_mode" class="mb-3">
+                            <h3>Add new field</h3>
+                            <div>
+                                <input class="form-control" type="text" placeholder="Field identifier" v-model="this.new_field">
+                                <button class="btn btn-primary mt-2" @click.prevent="this.addNewField()">Add new field</button>
+                            </div>
+                        </div>
+                        <button class="btn btn-danger" @click.prevent="this.display_fields = false">Hide fields</button>
                     </template>
-                    <div class="ml-3">
-                        <h2 class="mt-3">Fields<button v-if="this.display_fields" class="btn btn-secondary ml-2" @click.prevent="this.display_fields = false">Hide fields</button></h2>
-                        <template v-if="this.display_fields">
-                            <template v-for="(field, identifier) in fields" :key="identifier">
-                                <template v-if="field.ngi_form_type !== undefined">
-                                    <v-update-form-field :field="field" :identifier="identifier" :edit_mode="edit_mode"></v-update-form-field>
-                                </template>
-                            </template>
-                            <div v-if="edit_mode" class="mb-3">
-                                <h3>Add new field</h3>
-                                <div>
-                                    <input class="form-control" type="text" placeholder="Field identifier" v-model="this.new_field">
-                                    <button class="btn btn-primary mt-2" @click.prevent="this.addNewField()">Add new field</button>
-                                </div>
-                            </div>
-                            <button class="btn btn-danger" @click.prevent="this.display_fields = false">Hide fields</button>
-                        </template>
-                        <template v-else>
-                            <button class="btn btn-primary" @click.prevent="this.display_fields = true">Show fields</button>
-                        </template>
-                    </div>
-                    <div class="ml-3">
-                        <h2 class="mt-3">Conditional logic <button v-if="this.display_conditional_logic" class="btn btn-secondary" @click.prevent="this.display_conditional_logic = false">Hide conditional logic</button></h2>
-                        <template v-if="this.display_conditional_logic">
-                            <template v-for="(conditional, conditional_index) in this.allOf">
-                                <div class="border-bottom pb-5">
-                                    <v-conditional-edit-form
-                                        :conditional="conditional"
-                                        :conditional_index="conditional_index"
-                                        @remove-condition="removeCondition"
-                                        :edit_mode="this.edit_mode">
-                                    </v-conditional-edit-form>
-                                    <div v-if="edit_mode" class="row">
-                                        <div class="col-5">
-                                            <div class="input-group">
-                                                <select class="form-select" placeholder="test" v-model="this.new_composite_conditional_if[conditional_index]">
-                                                    <template v-for="identifier in Object.keys(this.$root.fields)">
-                                                        <option :value="identifier">{{identifier}}</option>
-                                                    </template>
-                                                </select>
-                                                <button class="btn btn-outline-primary" @click.prevent="this.addExtraConditionIf(conditional_index)">Add extra condition</button>
-                                            </div>
+                    <template v-else>
+                        <button class="btn btn-primary" @click.prevent="this.display_fields = true">Show fields</button>
+                    </template>
+                </div>
+                <div class="ml-3">
+                    <h2 class="mt-3">Conditional logic <button v-if="this.display_conditional_logic" class="btn btn-secondary" @click.prevent="this.display_conditional_logic = false">Hide conditional logic</button></h2>
+                    <template v-if="this.display_conditional_logic">
+                        <template v-for="(conditional, conditional_index) in this.allOf">
+                            <div class="border-bottom pb-5">
+                                <v-conditional-edit-form
+                                    :conditional="conditional"
+                                    :conditional_index="conditional_index"
+                                    @remove-condition="removeCondition"
+                                    :edit_mode="this.edit_mode">
+                                </v-conditional-edit-form>
+                                <div v-if="edit_mode" class="row">
+                                    <div class="col-5">
+                                        <div class="input-group">
+                                            <select class="form-select" placeholder="test" v-model="this.new_composite_conditional_if[conditional_index]">
+                                                <template v-for="identifier in Object.keys(this.$root.fields)">
+                                                    <option :value="identifier">{{identifier}}</option>
+                                                </template>
+                                            </select>
+                                            <button class="btn btn-outline-primary" @click.prevent="this.addExtraConditionIf(conditional_index)">Add extra condition</button>
                                         </div>
-                                        <div class="col-5 offset-2">
-                                            <div class="input-group">
-                                                <select class="form-select" placeholder="test" v-model="this.new_composite_conditional_then[conditional_index]">
-                                                    <template v-for="identifier in Object.keys(this.$root.fields)">
-                                                        <option :value="identifier">{{identifier}}</option>
-                                                    </template>
-                                                </select>
-                                                <button class="btn btn-outline-primary" @click.prevent="this.addExtraConditionThen(conditional_index)">Add extra condition</button>
-                                            </div>
+                                    </div>
+                                    <div class="col-5 offset-2">
+                                        <div class="input-group">
+                                            <select class="form-select" placeholder="test" v-model="this.new_composite_conditional_then[conditional_index]">
+                                                <template v-for="identifier in Object.keys(this.$root.fields)">
+                                                    <option :value="identifier">{{identifier}}</option>
+                                                </template>
+                                            </select>
+                                            <button class="btn btn-outline-primary" @click.prevent="this.addExtraConditionThen(conditional_index)">Add extra condition</button>
                                         </div>
                                     </div>
                                 </div>
-                            </template>
-                            <div v-if="edit_mode">
-                                <h3 class="mt-5 border-top pt-3">Add condition</h3>
-                                <div class="row">
-                                    <div class="col-5">
-                                        <select class="form-select" v-model="this.new_conditional_if">
-                                            <template v-for="identifier in Object.keys(this.$root.fields)">
-                                                <option :value="identifier">{{identifier}}</option>
-                                            </template>
-                                        </select>
-                                    </div>
-                                    <div class="col-2 text-center">
-                                        <h2><i class="fa-solid fa-arrow-right"></i></h2>
-                                    </div>
-                                    <div class="col-5">
-                                        <select class="form-select" v-model="this.new_conditional_then">
-                                            <template v-for="identifier in Object.keys(this.$root.fields)">
-                                                <option :value="identifier">{{identifier}}</option>
-                                            </template>
-                                        </select>
-                                    </div>
+                            </div>
+                        </template>
+                        <div v-if="edit_mode">
+                            <h3 class="mt-5 border-top pt-3">Add condition</h3>
+                            <div class="row">
+                                <div class="col-5">
+                                    <select class="form-select" v-model="this.new_conditional_if">
+                                        <template v-for="identifier in Object.keys(this.$root.fields)">
+                                            <option :value="identifier">{{identifier}}</option>
+                                        </template>
+                                    </select>
                                 </div>
-                                <button class="btn btn-primary" @click.prevent="this.addPropertyToCondition()">Add new condition</button>
+                                <div class="col-2 text-center">
+                                    <h2><i class="fa-solid fa-arrow-right"></i></h2>
+                                </div>
+                                <div class="col-5">
+                                    <select class="form-select" v-model="this.new_conditional_then">
+                                        <template v-for="identifier in Object.keys(this.$root.fields)">
+                                            <option :value="identifier">{{identifier}}</option>
+                                        </template>
+                                    </select>
+                                </div>
                             </div>
-                            <div class="mt-5 border-top pt-3">
-                                <button class="btn btn-danger" @click.prevent="this.display_conditional_logic = false">Hide conditional logic</button>
-                            </div>
-                        </template>
-                        <template v-else>
-                            <button class="btn btn-primary" @click.prevent="this.display_conditional_logic = true">Show conditional logic</button>
-                        </template>
-                    </div>
-                </template>
+                            <button class="btn btn-primary" @click.prevent="this.addPropertyToCondition()">Add new condition</button>
+                        </div>
+                        <div class="mt-5 border-top pt-3">
+                            <button class="btn btn-danger" @click.prevent="this.display_conditional_logic = false">Hide conditional logic</button>
+                        </div>
+                    </template>
+                    <template v-else>
+                        <button class="btn btn-primary" @click.prevent="this.display_conditional_logic = true">Show conditional logic</button>
+                    </template>
+                </div>
             </div>
         </div>
     `
