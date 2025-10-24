@@ -210,7 +210,6 @@ class LocalCacheEntry:
             datetime.datetime.now() - self.timestamp
         ).total_seconds() > expiry_seconds
 
-
 class ProjectCreationCountDetailsDataHandler(SafeHandler):
     """API Handler to get the count of projects created per detail value for a given detail key."""
 

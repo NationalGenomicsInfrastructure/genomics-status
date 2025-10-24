@@ -350,10 +350,12 @@ const vProjectCreationForm = {
                     <p>{{ instruction }}</p>
 
                     <template v-if="this.toplevel_edit_mode && !this.is_trying_out_form">
-                        <button class="btn btn-lg btn-primary" @click="this.is_trying_out_form = true">Open form</button>
+                        <button class="btn btn-lg btn-primary col-auto" @click="this.is_trying_out_form = true">Open form</button>
                     </template>
                     <template v-else>
-                        <button class="btn btn-lg btn-primary" @click="this.is_trying_out_form = false">Close form</button>
+                        <template v-if="this.toplevel_edit_mode">
+                            <button class="btn btn-lg btn-primary col-auto" @click="this.is_trying_out_form = false">Close form</button>
+                        </template>
 
                         <form @submit.prevent="submitForm" class="mt-3 mb-5">
                             <template v-for="(form_group, group_identifier) in form_groups" :key="group_identifier">
@@ -368,11 +370,27 @@ const vProjectCreationForm = {
                                     </div>
                                 </template>
                             </template>
-                            <button type="submit" class="btn btn-lg btn-primary mt-3" :disabled="toplevel_edit_mode">Create Project</button>
+                            <button type="submit" class="btn btn-lg btn-success mt-3" :disabled="toplevel_edit_mode">Create Project in LIMS</button>
                         </form>
                     </template>
                     <template v-if="this.toplevel_edit_mode">
                         <v-create-form></v-create-form>
+                        <div class="card mt-4 mb-5">
+                            <div class="card-body">
+                                <h2 class="card-title">Changes </h2>
+                                <div class="row">
+                                    <button class="btn btn-lg btn-primary mt-4 ml-3 col-2" @click="this.saveDraft">
+                                        <i class="fa-solid fa-floppy-disk mr-1"></i> Save draft
+                                    </button>
+                                    <button class="btn btn-lg btn-success mt-4 ml-2 col-2" @click="this.publishForm">
+                                        <i class="fa-solid fa-circle-check mr-1"></i> Publish form
+                                    </button>
+                                    <button class="btn btn-lg btn-danger mt-4 ml-2 col-2" @click="this.cancelDraft">
+                                        <i class="fa-solid fa-ban mr-1"></i> Cancel draft
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     </template>
                 </template>
             </div>
@@ -716,9 +734,23 @@ const vCreateFormList = {
     mounted() {
         this.$root.fetch_list_of_forms()
     },
+    computed: {
+        sorted_forms() {
+            // Sort forms by status and created date
+            return this.$root.forms.sort((a, b) => {
+                if (a.value.status === b.value.status) {
+                    return new Date(b.value.created) - new Date(a.value.created);
+                } else {
+                    // valid -> draft -> cancelled -> retired
+                    const status_order = ['valid', 'draft', 'cancelled', 'retired'];
+                    return status_order.indexOf(a.value.status) - status_order.indexOf(b.value.status);
+                }
+            });
+        }
+    },
     template:
     /*html*/`
-        <div class="container">
+        <div class="container pb-5">
             <h1>Project creation forms</h1>
             <table class="table">
                 <thead>
@@ -733,7 +765,7 @@ const vCreateFormList = {
                     </tr>
                 </thead>
                 <tbody>
-                    <tr v-for="form in this.$root.forms" :key="form.id">
+                    <tr v-for="form in this.sorted_forms" :key="form.id">
                         <td>{{ form.value.title }}</td>
                         <td>{{ form.value.version }}</td>
                         <td>{{ form.value.description}}</td>
@@ -854,13 +886,13 @@ const vCreateForm = {
     },
     template: 
         /*html*/`
-        <div class="container">
+        <div class="container pb-5">
             <div class="row mt-5">
                 <template v-if="!this.$root.isInspectingForm">
-                    <button class="btn btn-lg btn-primary mt-3" @click.prevent="this.$root.startInspectingForm">Inspect form details</button>
+                    <button class="btn btn-lg btn-primary mt-3 col-auto" @click.prevent="this.$root.startInspectingForm">Inspect form details</button>
                 </template>
                 <template v-else>
-                    <button class="btn btn-lg btn-primary mt-3" @click.prevent="this.$root.stopInspectingForm">Close form details</button>
+                    <button class="btn btn-lg btn-primary mt-3 col-auto" @click.prevent="this.$root.stopInspectingForm">Close form details</button>
                     <div class="row mt-3 mb-3">
                         <div class="col-auto">
                             <h1>Update Form:</h1>
@@ -963,9 +995,6 @@ const vCreateForm = {
                         <template v-else>
                             <button class="btn btn-primary" @click.prevent="this.display_conditional_logic = true">Show conditional logic</button>
                         </template>
-                    </div>
-                    <div v-if="edit_mode" class="row">
-                        <button class="btn btn-lg btn-primary mt-3" @click="this.saveForm">Save form</button>
                     </div>
                 </template>
             </div>
