@@ -905,7 +905,7 @@ const vCreateForm = {
                     <template v-if="this.display_fields">
                         <template v-for="(field, identifier) in fields" :key="identifier">
                             <template v-if="field.ngi_form_type !== undefined">
-                                <v-update-form-field :field="field" :identifier="identifier" :edit_mode="edit_mode"></v-update-form-field>
+                                <v-update-form-field :field="field" :identifier="identifier" :global_edit_mode="edit_mode"></v-update-form-field>
                             </template>
                         </template>
                         <div v-if="edit_mode" class="mb-3">
@@ -930,7 +930,7 @@ const vCreateForm = {
                                     :conditional="conditional"
                                     :conditional_index="conditional_index"
                                     @remove-condition="removeCondition"
-                                    :edit_mode="this.edit_mode">
+                                    :global_edit_mode="this.edit_mode">
                                 </v-conditional-edit-form>
                                 <div v-if="edit_mode" class="row">
                                     <div class="col-5">
@@ -977,8 +977,8 @@ const vCreateForm = {
                                     </select>
                                 </div>
                             </div>
-                            <button class="btn btn-primary" @click.prevent="this.addPropertyToCondition()">Add new condition</button>
                         </div>
+                        <button class="btn btn-primary" @click.prevent="this.addPropertyToCondition()">Add new condition</button>
                         <div class="mt-5 border-top pt-3">
                             <button class="btn btn-danger" @click.prevent="this.display_conditional_logic = false">Hide conditional logic</button>
                         </div>
@@ -994,11 +994,19 @@ const vCreateForm = {
 
 const vConditionalEditForm = {
     name: 'v-conditional-edit-form',
-    props: ['conditional', 'conditional_index', 'edit_mode'],
+    props: ['conditional', 'conditional_index', 'global_edit_mode'],
     emits: ['remove-condition'],
+    data() {
+        return {
+            field_edit_mode: false
+        }
+    },
     computed: {
         description() {
             return this.conditional.description;
+        },
+        edit_mode() {
+            return (this.field_edit_mode || this.global_edit_mode)
         },
         propertyKeyIf() {
             return Object.keys(this.conditional.if.properties);
@@ -1011,12 +1019,20 @@ const vConditionalEditForm = {
         /*html*/`
         <div class="pb-3">
             <div class="row">
-                <div class="col-12 mb-3">
-                    <h3 class="mt-5">{{conditional_index + 1}}. {{this.conditional.description}}
+                <div class="mb-3">
+                    <h3 class="mt-5 col-auto">{{conditional_index + 1}}. {{this.conditional.description}}
+                        <template v-if="edit_mode">
+                            <button @click="field_edit_mode = !field_edit_mode" class="btn btn-lg ml-1"><i class="fa-solid fa-check"></i></button>
+                        </template>
+                        <template v-else>
+                            <button @click="field_edit_mode = !field_edit_mode" class="btn btn-lg ml-1"><i class="fa-solid fa-pen-to-square"></i></button>
+                        </template>
+                    </h3>
+                    <div class="col-auto ml-auto">
                         <button v-if="edit_mode" class="btn btn-outline-danger" @click.prevent="$emit('remove-condition', conditional_index)">
                             Remove Condition <i class="fa-solid fa-trash ml-2"></i>
                         </button>
-                    </h3>
+                    </div>
                     <div v-if="edit_mode">
                         <label class="form-label">Condition name/description</label>
                         <input class="form-control" type="string" v-model="this.conditional.description"></input>
@@ -1116,10 +1132,6 @@ const vConditionalEditFormSingleCondition = {
         removeValue(index) {
             // Remove a value from the enum
             this.conditionProperties[this.property].enum.splice(index, 1);
-        },
-        removeProperty() {
-            // Remove the entire property from the condition
-            delete this.conditionProperties[this.property];
         }
     },
     template:
@@ -1127,15 +1139,9 @@ const vConditionalEditFormSingleCondition = {
         <template v-if="property_index === 0" :class="{'mt-3': conditional_index > 0}">
             <h4 v-if="condition_type === 'if'">
                 If <span class="fw-bold">{{propertyReferenceLabel}}</span> is any of
-                <button v-if="edit_mode" class="btn btn-outline-danger btn-sm ml-2" @click.prevent="removeProperty">
-                    Remove Property <i class="fa-solid fa-trash"></i>
-                </button>
             </h4>
             <h4 v-else>
                 Then <span class="fw-bold">{{propertyReferenceLabel}}</span> has to be one of
-                <button v-if="edit_mode" class="btn btn-outline-danger btn-sm ml-2" @click.prevent="removeProperty">
-                    Remove Property <i class="fa-solid fa-trash"></i>
-                </button>
             </h4>
         </template>
         <template v-if="showAllOptions && propertyReferenceIsEnum">
@@ -1196,15 +1202,19 @@ const vConditionalEditFormSingleCondition = {
 
 const vUpdateFormField = {
     name: 'v-update-form-field',
-    props: ['field', 'identifier', 'edit_mode'],
+    props: ['field', 'identifier', 'global_edit_mode'],
     data: function() {
         return {
+            field_edit_mode: false,
             show_allowed_values: false,
             selectedVisibleIfKey: '',
             visibleIfErrorMessage: ''
         }
     },
     computed: {
+        edit_mode() {
+            return (this.global_edit_mode || this.field_edit_mode)
+        },
         description() {
             return this.field.description;
         },
@@ -1284,7 +1294,14 @@ const vUpdateFormField = {
      template:
         /*html*/`
             <div class="mb-5">
-                <h2>{{this.label}}</h2>
+                <h2>{{this.label}}
+                <template v-if="field_edit_mode">
+                    <button @click="field_edit_mode = !field_edit_mode" class="btn btn-lg ml-1"><i class="fa-solid fa-check"></i></button>
+                </template>
+                <template v-else>
+                    <button @click="field_edit_mode = !field_edit_mode" class="btn btn-lg ml-1"><i class="fa-solid fa-pen-to-square"></i></button>
+                </template>
+                </h2>
                 <div>
                     <label :for="identifier" class="form-label">Identifier</label>
                     <input :id="identifier" class="form-control" type="string" v-model="identifier" :disabled="!edit_mode">
