@@ -328,8 +328,9 @@ function load_all_udfs(){
 
     // Display hidden single cell section if application is single cell
     let application = 'application' in data ? data['application'] : '';
-    
-    if(application.includes('single cell')){
+    let library_construction_method = 'library_construction_method' in data ? data['library_construction_method'].toLowerCase() : '';
+
+    if(application.includes('single cell') && !library_construction_method.includes('finished library')){
       $('.single_cell_udf').removeAttr('hidden');
     }
 
