@@ -13,8 +13,8 @@ class ProjectCreationFormUtils:
     """Utility class for project creation form operations."""
 
     @staticmethod
-    def get_latest_proj_creation_form(cloudant_client):
-        return cloudant_client.post_view(
+    def get_valid_proj_creation_form(cloudant_client):
+        all_valid_docs = cloudant_client.post_view(
             db="project_creation_forms",
             ddoc="by_creation_date",
             view="valid",
@@ -22,6 +22,17 @@ class ProjectCreationFormUtils:
             descending=True,
             include_docs=True,
         ).get_result()
+
+        if not all_valid_docs or "rows" not in all_valid_docs:
+            raise ValueError("Error: no valid forms found")
+
+        if len(all_valid_docs["rows"]) == 0:
+            raise ValueError("Error: no valid forms found")
+
+        if "doc" not in all_valid_docs["rows"][0]:
+            raise ValueError("Error: no valid forms found. Doc is missing")
+
+        return all_valid_docs["rows"][0]["doc"]
 
 
 class ProjectCreationHandler(SafeHandler):
@@ -86,9 +97,9 @@ class ProjectCreationDataHandler(SafeHandler):
             project_values["researcher"] = researcher
             project_values["udfs"] = {}
             project_values["udfs"]["Project coordinator"] = current_user.name
-            latest_form = ProjectCreationFormUtils.get_latest_proj_creation_form(
+            latest_form = ProjectCreationFormUtils.get_valid_proj_creation_form(
                 self.application.cloudant
-            )["rows"][0]["doc"]
+            )
             properties = latest_form.get("json_schema", {}).get("properties", {})
             for property_name, property_info in properties.items():
                 if "ngi_form_lims_udf" in property_info:
@@ -136,25 +147,128 @@ class ProjectCreationFormDataHandler(SafeHandler):
             return self.write({"form": form_doc})
         else:
             # Fetch latest form from couchdb using cloudant
-            all_valid_docs = ProjectCreationFormUtils.get_latest_proj_creation_form(
-                self.application.cloudant
-            )
+            try:
+                valid_doc = ProjectCreationFormUtils.get_valid_proj_creation_form(
+                    self.application.cloudant
+                )
+            except ValueError as e:
+                self.set_status(400)
+                return self.write({"error": str(e)})
 
             self.set_header("Content-type", "application/json")
 
-            if not all_valid_docs or "rows" not in all_valid_docs:
-                self.set_status(400)
-                return self.write("Error: no valid forms found")
+            return self.write({"form": valid_doc})
 
-            if len(all_valid_docs["rows"]) == 0:
-                self.set_status(400)
-                return self.write("Error: no valid forms found")
+    def post(self):
+        """An endpoint to handle all updates of drafts and valid forms.
 
-            if "doc" not in all_valid_docs["rows"][0]:
-                self.set_status(400)
-                return self.write("Error: no valid forms found. Doc is missing")
+        The only allowed transitions are:
+        draft -> draft
+        draft -> valid (this will change the currently valid one into retired)
+        draft -> retired
 
-            return self.write({"form": all_valid_docs["rows"][0]["doc"]})
+        """
+
+        # Get json form data
+        request_data = json.loads(self.request.body)
+        submitted_form_data = request_data.get("form", {})
+        doc_id = submitted_form_data.get("_id")
+
+        if not doc_id:
+            self.set_status(400)
+            return self.write("Error: no valid form ID found")
+
+        # Fetch corresponding document from database
+        form_doc = self.application.cloudant.get_document(
+            db="project_creation_forms", doc_id=doc_id
+        ).get_result()
+
+        # If no corresponding document, return an error
+        if not form_doc:
+            self.set_status(400)
+            return self.write("Error: no valid form found in the database")
+
+        if form_doc.get("status") != "draft":
+            self.set_status(400)
+            return self.write(
+                f"Error: invalid status transition: {form_doc.get('status')} -> {submitted_form_data.get('status')}"
+            )
+        else:
+            new_status = submitted_form_data.get("status")
+            if new_status not in ["draft", "valid", "retired"]:
+                self.set_status(400)
+                return self.write(
+                    f"Error: invalid status transition: {form_doc.get('status')} -> {new_status}"
+                )
+            if new_status == "draft":
+                # Draft -> draft "transition"
+                data_to_be_submitted = submitted_form_data
+                data_to_be_submitted = self._update_doc_data(
+                    data_to_be_submitted, "update"
+                )
+            elif new_status == "valid":
+                # draft -> valid "transition"
+                data_to_be_submitted = submitted_form_data
+                data_to_be_submitted["status"] = "valid"
+                data_to_be_submitted = self._update_doc_data(
+                    data_to_be_submitted, "publish"
+                )
+
+                # Make request to retire the currently valid form
+                # Fetch currently valid document
+                current_valid_form_doc = None
+                try:
+                    current_valid_form_doc = (
+                        ProjectCreationFormUtils.get_valid_proj_creation_form(
+                            self.application.cloudant
+                        )
+                    )
+                except ValueError:
+                    # We don't have to retire the old one then.
+                    pass
+
+                if current_valid_form_doc is not None:
+                    current_valid_form_doc["status"] = "retired"
+                    current_valid_form_doc = self._update_doc_data(
+                        current_valid_form_doc, "retire"
+                    )
+                    self.application.cloudant.post_document(
+                        db="project_creation_forms",
+                        document=current_valid_form_doc,
+                    )
+            else:
+                # Draft -> retired "transition"
+                data_to_be_submitted = submitted_form_data
+                data_to_be_submitted["status"] = "retired"
+                data_to_be_submitted = self._update_doc_data(
+                    data_to_be_submitted, "retire"
+                )
+
+            form_doc["status"] = new_status
+
+        self.application.cloudant.post_document(
+            db="project_creation_forms",
+            document=data_to_be_submitted,
+        )
+        self.set_status(200)
+
+    def _update_doc_data(self, form_doc, action_string):
+        # Update the document data with the new status
+        timestamp = datetime.datetime.now().isoformat()
+        current_user = self.get_current_user().email
+
+        form_doc["last_updated_at"] = timestamp
+        form_doc["last_updated_by"] = current_user
+        form_doc["event_log"] = form_doc.get("event_log", [])
+        form_doc["event_log"].append(
+            {
+                "timestamp": timestamp,
+                "user": current_user,
+                "action": action_string,
+                "status": form_doc["status"],
+            }
+        )
+        return form_doc
 
 
 class ProjectCreationListFormsDataHandler(SafeHandler):

@@ -105,6 +105,30 @@ const vProjectCreationMain = {
             }
             return undefined
         },
+        saveDraft() {
+            // Save the current new_json_form as a draft by using the generic save endpoint
+            // First make sure that the new_json_form is a draft
+            if (this.new_json_form.status !== 'draft') {
+                this.$root.error_messages.push('Can only save draft when the form is in draft status. Please use publish form to publish the form.');
+                return;
+            }
+            this.saveNewForm();
+        },
+        saveNewForm() {
+            // Save the current new_json_form using the generic save endpoint
+            axios
+                .post('/api/v1/project_creation_form', {
+                    form: this.new_json_form,
+                })
+                .then(response => {
+                    alert('Draft saved successfully.');
+                    this.fetch_form(response.data.version_id);
+                })
+                .catch(error => {
+                    this.$root.error_messages.push('Error saving draft. Please try again or contact a system adminstrator.');
+                    console.log(error)
+                })
+        },
         setValuesBasedOnConditionals() {
             // Check all fields in the form data, set values according to option if only one option is available
             Object.keys(this.formData).forEach(field => {
@@ -366,7 +390,7 @@ const vProjectCreationForm = {
                                     </div>
                                 </template>
                             </template>
-                            <button type="submit" class="btn btn-lg btn-success mt-3" :disabled="toplevel_edit_mode">Create Project in LIMS</button>
+                            <button type="submit" class="btn btn-lg btn-success mt-3" :disabled="this.$root.toplevel_edit_mode">Create Project in LIMS</button>
                         </form>
                     </template>
                     <template v-if="this.$root.toplevel_edit_mode">
@@ -375,13 +399,13 @@ const vProjectCreationForm = {
                             <div class="card-body">
                                 <h2 class="card-title">Changes </h2>
                                 <div class="row">
-                                    <button class="btn btn-lg btn-primary mt-4 ml-3 col-2" @click="this.saveDraft">
+                                    <button class="btn btn-lg btn-primary mt-4 ml-3 col-2" @click="this.$root.saveDraft">
                                         <i class="fa-solid fa-floppy-disk mr-1"></i> Save draft
                                     </button>
-                                    <button class="btn btn-lg btn-success mt-4 ml-2 col-2" @click="this.publishForm">
+                                    <button class="btn btn-lg btn-success mt-4 ml-2 col-2" @click="this.$root.publishForm">
                                         <i class="fa-solid fa-circle-check mr-1"></i> Publish form
                                     </button>
-                                    <button class="btn btn-lg btn-danger mt-4 ml-2 col-2" @click="this.cancelDraft">
+                                    <button class="btn btn-lg btn-danger mt-4 ml-2 col-2" @click="this.$root.cancelDraft">
                                         <i class="fa-solid fa-ban mr-1"></i> Cancel draft
                                     </button>
                                 </div>
@@ -742,6 +766,17 @@ const vCreateFormList = {
                     return status_order.indexOf(a.value.status) - status_order.indexOf(b.value.status);
                 }
             });
+        },
+        formIsEditable() {
+            // Returns true if the form is a draft,
+            // Also returns true if the form is valid and there is no other draft version
+            return (form) => {
+                if (form.value.status === 'draft') {
+                    return true;
+                }
+                const otherDrafts = this.$root.forms.filter(f => f.value.status === 'draft' && f.id !== form.id);
+                return form.value.status === 'valid' && otherDrafts.length === 0;
+            };
         }
     },
     template:
@@ -768,7 +803,7 @@ const vCreateFormList = {
                         <td>{{ form.value.owner.email }}</td>
                         <td>{{ form.value.status }}</td>
                         <td>{{ form.value.created }}</td>
-                        <td><a :href="'/project_creation?edit_mode=true&version_id=' + form.id">Edit</a></td>
+                        <td><a v-if="this.formIsEditable(form)" :href="'/project_creation?edit_mode=true&version_id=' + form.id">Edit</a></td>
                     </tr>
                 </tbody>
             </table>
@@ -887,11 +922,13 @@ const vCreateForm = {
                 <div class="row mt-3 mb-3">
                     <div class="col-auto">
                         <h1>Update Form:</h1>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" role="switch" id="globalEditModeSwitchTop" v-model="edit_mode">
+                            <label class="form-check-label" for="globalEditModeSwitchTop">Toggle Edit Mode</label>
+                        </div>
                     </div>
                     <div class="col-auto ml-auto">
-                        <button class="btn btn-sm btn-secondary" @click="edit_mode = !edit_mode">
-                            <i class="fa fa-bug mr-2"></i>Toggle Edit Mode
-                        </button>
+
                         <button class="btn btn-sm btn-secondary ml-2" @click="showDebug = !showDebug">
                             <i class="fa fa-bug mr-2"></i>Toggle Debug Info
                         </button>
@@ -978,7 +1015,7 @@ const vCreateForm = {
                                 </div>
                             </div>
                         </div>
-                        <button class="btn btn-primary" @click.prevent="this.addPropertyToCondition()">Add new condition</button>
+                        <button class="btn btn-primary mt-2" @click.prevent="this.addPropertyToCondition()">Add new condition</button>
                         <div class="mt-5 border-top pt-3">
                             <button class="btn btn-danger" @click.prevent="this.display_conditional_logic = false">Hide conditional logic</button>
                         </div>
