@@ -60,6 +60,9 @@ const vProjectCreationMain = {
             if (version !== undefined) {
                 url = url + '?version=' + version
             }
+            if (this.$root.toplevel_edit_mode) {
+                url = url + '&edit_mode=true'
+            }
             axios
                 .get(url)
                 .then(response => {
@@ -69,7 +72,12 @@ const vProjectCreationMain = {
                     }
                 })
                 .catch(error => {
-                    this.$root.error_messages.push('Error fetching form. Please try again or contact a system adminstrator.');
+                    if (this.$root.toplevel_edit_mode) {
+                        // If in edit mode, show a specific error message
+                        this.$root.error_messages.push('Error fetching form. This form might not be suitable for editing: ' + error.message);
+                    } else {
+                        this.$root.error_messages.push('Error fetching form. Please try again or contact a system adminstrator.');
+                    }
                     console.log(error)
                 })
         },
@@ -105,14 +113,34 @@ const vProjectCreationMain = {
             }
             return undefined
         },
+        /* Save draft methods */
+        cancelDraft() {
+            if (this.new_json_form.status !== 'draft') {
+                this.$root.error_messages.push('Can only cancel draft when the form is in draft status.');
+                return;
+            }
+            this.new_json_form.status = 'retired';
+            this.$root.saveNewForm();
+            // Redirect to form list using regular javascript
+            window.location.href = '/project_creation_forms';
+        },
         saveDraft() {
             // Save the current new_json_form as a draft by using the generic save endpoint
-            // First make sure that the new_json_form is a draft
-            if (this.new_json_form.status !== 'draft') {
-                this.$root.error_messages.push('Can only save draft when the form is in draft status. Please use publish form to publish the form.');
+            // First make sure that the new_json_form is a draft or valid
+            if (this.new_json_form.status !== 'draft' && this.new_json_form.status !== 'valid') {
+                this.$root.error_messages.push('Can only save draft when the form is in draft or valid status.');
                 return;
             }
             this.saveNewForm();
+        },
+        publishForm() {
+            if (this.new_json_form.status !== 'draft') {
+                this.$root.error_messages.push('Can only publish draft forms. Please save your changes before publishing.');
+                return;
+            }
+            this.new_json_form.status = 'valid';
+            this.$root.saveNewForm();
+            window.location.href = '/project_creation_forms';
         },
         saveNewForm() {
             // Save the current new_json_form using the generic save endpoint
@@ -122,7 +150,7 @@ const vProjectCreationMain = {
                 })
                 .then(response => {
                     alert('Draft saved successfully.');
-                    this.fetch_form(response.data.version_id);
+                    this.fetch_form(response.data.form._id);
                 })
                 .catch(error => {
                     this.$root.error_messages.push('Error saving draft. Please try again or contact a system adminstrator.');
@@ -148,6 +176,7 @@ const vProjectCreationMain = {
                 }
             });
         },
+
         updateOptions() {
             this.conditionalLogic = [];
             if (this.json_schema.allOf === undefined) {

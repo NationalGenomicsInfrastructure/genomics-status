@@ -34,6 +34,38 @@ class ProjectCreationFormUtils:
 
         return all_valid_docs["rows"][0]["doc"]
 
+    @staticmethod
+    def get_other_active_forms(cloudant_client):
+        """Fetch forms which are valid or drafts. This is useful to
+        limit the number of drafts to 1 and to disable editing of non-drafts.
+        """
+        all_active_docs = cloudant_client.post_view(
+            db="project_creation_forms",
+            ddoc="by_creation_date",
+            view="not_retired",
+            descending=True,
+            include_docs=False,
+        ).get_result()
+
+        if not all_active_docs or "rows" not in all_active_docs:
+            raise ValueError("Error: no active forms found")
+
+        return dict((row["id"], row["key"][0]) for row in all_active_docs["rows"])
+
+    @staticmethod
+    def can_edit_form(active_forms, version_id):
+        # If the requested version is the only thing in active_forms, it's fine
+        if version_id not in active_forms:
+            return False
+        # If the requested version is not in active_forms, it's not fine
+        if len(active_forms) == 1:
+            return True
+        # If there are multiple active forms, the requested one needs to be a draft
+        doc_status = active_forms[version_id]
+        if doc_status != "draft":
+            return False
+        return True
+
 
 class ProjectCreationHandler(SafeHandler):
     """Handler used to render the project creation page using the valid form."""
@@ -43,15 +75,26 @@ class ProjectCreationHandler(SafeHandler):
 
         edit_mode_arg = self.get_query_argument("edit_mode", default=None)
 
-        edit_mode = False
         if edit_mode_arg:
             current_user = self.get_current_user()
             if current_user.is_proj_coord or current_user.is_admin:
-                # Allow edit mode only for project coordinators and admins
                 edit_mode = True
 
-        version_id = self.get_query_argument("version_id", default=None)
-        if not edit_mode:
+            active_forms = ProjectCreationFormUtils.get_other_active_forms(
+                self.application.cloudant
+            )
+            version_id = self.get_query_argument("version_id", default=None)
+            if not version_id:
+                self.set_status(400)
+                return self.write(
+                    "Error: version_id is required if attempting to edit."
+                )
+
+            if not ProjectCreationFormUtils.can_edit_form(active_forms, version_id):
+                self.set_status(400)
+                return self.write("Error: this form is not editable.")
+        else:
+            edit_mode = False
             version_id = None
 
         self.write(
@@ -126,11 +169,12 @@ class ProjectCreationDataHandler(SafeHandler):
 
 
 class ProjectCreationFormDataHandler(SafeHandler):
-    """API Handler to get the latest or specific version of the project creation form."""
+    """API Handler to get or update the project creation form."""
 
     def get(self):
         # If version argument is provided, return that specific form
         version = self.get_query_argument("version", default=None)
+
         if version == "None":
             version = None
         if version:
@@ -167,6 +211,7 @@ class ProjectCreationFormDataHandler(SafeHandler):
         draft -> valid (this will change the currently valid one into retired)
         draft -> retired
 
+        valid -> draft (this will create a new draft based on the current valid form)
         """
 
         # Get json form data
@@ -188,7 +233,34 @@ class ProjectCreationFormDataHandler(SafeHandler):
             self.set_status(400)
             return self.write("Error: no valid form found in the database")
 
-        if form_doc.get("status") != "draft":
+        # Check that the form is editable and that the current user has permissions to edit it
+        active_forms = ProjectCreationFormUtils.get_other_active_forms(
+            self.application.cloudant
+        )
+
+        if not ProjectCreationFormUtils.can_edit_form(active_forms, doc_id):
+            self.set_status(400)
+            return self.write("Error: this form is not editable.")
+
+        if form_doc.get("status") == "valid":
+            # valid -> draft "transition"
+
+            # Make sure to remove the _id and _rev from the submitted form data
+            submitted_form_data.pop("_id", None)
+            submitted_form_data.pop("_rev", None)
+            # make sure that the new status is set to valid
+            if submitted_form_data.get("status") != "valid":
+                self.set_status(400)
+                return self.write(
+                    f"Error: invalid status transition: {form_doc.get('status')} -> {submitted_form_data.get('status')}"
+                )
+            # Got this far, should be fine.
+            data_to_be_submitted = submitted_form_data
+            data_to_be_submitted["status"] = "draft"
+            data_to_be_submitted = self._update_doc_data(
+                data_to_be_submitted, "create_draft"
+            )
+        elif form_doc.get("status") != "draft":
             self.set_status(400)
             return self.write(
                 f"Error: invalid status transition: {form_doc.get('status')} -> {submitted_form_data.get('status')}"
@@ -207,7 +279,7 @@ class ProjectCreationFormDataHandler(SafeHandler):
                     data_to_be_submitted, "update"
                 )
             elif new_status == "valid":
-                # draft -> valid "transition"
+                # draft -> valid transition
                 data_to_be_submitted = submitted_form_data
                 data_to_be_submitted["status"] = "valid"
                 data_to_be_submitted = self._update_doc_data(
@@ -215,6 +287,7 @@ class ProjectCreationFormDataHandler(SafeHandler):
                 )
 
                 # Make request to retire the currently valid form
+
                 # Fetch currently valid document
                 current_valid_form_doc = None
                 try:
@@ -224,7 +297,7 @@ class ProjectCreationFormDataHandler(SafeHandler):
                         )
                     )
                 except ValueError:
-                    # We don't have to retire the old one then.
+                    # If there is no valid one, we don't have to retire anything
                     pass
 
                 if current_valid_form_doc is not None:
@@ -237,7 +310,7 @@ class ProjectCreationFormDataHandler(SafeHandler):
                         document=current_valid_form_doc,
                     )
             else:
-                # Draft -> retired "transition"
+                # Draft -> retired transition
                 data_to_be_submitted = submitted_form_data
                 data_to_be_submitted["status"] = "retired"
                 data_to_be_submitted = self._update_doc_data(
@@ -246,11 +319,20 @@ class ProjectCreationFormDataHandler(SafeHandler):
 
             form_doc["status"] = new_status
 
-        self.application.cloudant.post_document(
+        return_val = self.application.cloudant.post_document(
             db="project_creation_forms",
             document=data_to_be_submitted,
         )
+
+        if return_val:
+            if return_val.result:
+                new_id = return_val.result.get("id")
+                # To make sure the new draft version is loaded
+                if new_id and form_doc["_id"] != new_id:
+                    data_to_be_submitted["_id"] = new_id
+
         self.set_status(200)
+        self.write({"form": data_to_be_submitted})
 
     def _update_doc_data(self, form_doc, action_string):
         # Update the document data with the new status
@@ -323,6 +405,7 @@ class LocalCacheEntry:
         return (
             datetime.datetime.now() - self.timestamp
         ).total_seconds() > expiry_seconds
+
 
 class ProjectCreationCountDetailsDataHandler(SafeHandler):
     """API Handler to get the count of projects created per detail value for a given detail key."""
