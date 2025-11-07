@@ -847,6 +847,7 @@ const vCreateForm = {
         return {
             display_conditional_logic: false,
             display_fields: false,
+            display_metadata: false,
             edit_mode: false,
             new_composite_conditional_if: [],
             new_composite_conditional_then: [],
@@ -856,15 +857,30 @@ const vCreateForm = {
         }
     },
     computed: {
-        newForm() {
-            return this.$root.getValue(this.$root.new_json_form, 'json_schema');
+        allOf() {
+            return this.$root.getValue(this.newForm, 'allOf');
         },
+
         fields() {
             return this.$root.getValue(this.newForm, 'properties');
         },
-        allOf() {
-            return this.$root.getValue(this.newForm, 'allOf');
-        }
+        newForm() {
+            return this.$root.getValue(this.$root.new_json_form, 'json_schema');
+        },
+        // Metadata fields
+        description() {
+            return this.$root.getValue(this.$root.new_json_form, 'description');
+        },
+        form_groups() {
+            return this.$root.getValue(this.$root.new_json_form, 'form_groups');
+        },
+        instruction() {
+            return this.$root.getValue(this.$root.new_json_form, 'instruction');
+        },
+        title() {
+            return this.$root.getValue(this.$root.new_json_form, 'title');
+        },
+
     },
     methods: {
         removeCondition(conditional_index) {
@@ -967,6 +983,27 @@ const vCreateForm = {
                     <pre>{{ this.$root.new_json_form }}</pre>
                 </template>
                 <div class="ml-3 pb-3 border-bottom">
+                    <h2 class="mt-3">Form Metadata<button v-if="this.display_metadata" class="btn btn-secondary ml-2" @click.prevent="this.display_metadata = false">Hide metadata</button></h2>
+                    <template v-if="this.display_metadata">
+                        <div>
+                            <label :for="title" class="form-label">Title</label>
+                            <input :id="title" class="form-control" type="string" v-model="this.title" :disabled="!edit_mode">
+                        </div>
+                        <div>
+                            <label :for="description" class="form-label">Description</label>
+                            <input :id="description" class="form-control" type="string" v-model="this.description" :disabled="!edit_mode">
+                        </div>
+                        <div>
+                            <label :for="instruction" class="form-label">Instruction</label>
+                            <input :id="instruction" class="form-control" type="string" v-model="this.instruction" :disabled="!edit_mode">
+                        </div>
+                        <v-form-groups-editor :form_groups="this.form_groups" :edit_mode="edit_mode"></v-form-groups-editor>
+                    </template>
+                    <template v-else>
+                        <button class="btn btn-primary" @click.prevent="this.display_metadata = true">Show metadata</button>
+                    </template>
+                </div>
+                <div class="ml-3 pb-3 border-bottom">
                     <h2 class="mt-3">Fields<button v-if="this.display_fields" class="btn btn-secondary ml-2" @click.prevent="this.display_fields = false">Hide fields</button></h2>
                     <template v-if="this.display_fields">
                         <template v-for="(field, identifier) in fields" :key="identifier">
@@ -1057,6 +1094,129 @@ const vCreateForm = {
         </div>
     `
 }
+
+const vFormGroupsEditor = {
+    name: 'v-form-groups-editor',
+    props: {
+        form_groups: {
+            type: Object,
+            required: true
+        },
+        edit_mode: {
+            type: Boolean,
+            default: false
+        }
+    },
+    data() {
+        return {
+            newGroupIdentifier: '',
+            newGroupDisplayName: '',
+            field_edit_mode: false
+        }
+    },
+    computed: {
+        computed_edit_mode() {
+            // Let's consider all form groups one field
+            return this.field_edit_mode || this.edit_mode;
+        },
+        sortedFormGroups() {
+            // Sort groups by position for a consistent display order
+            if (this.form_groups) {
+                return Object.entries(this.form_groups).sort(([, a], [, b]) => a.position - b.position);
+            }
+            return [];
+        },
+        nextPosition() {
+            const positions = Object.values(this.form_groups).map(g => g.position);
+            return positions.length > 0 ? Math.max(...positions) + 1 : 0;
+        }
+    },
+    methods: {
+        addGroup() {
+            const identifier = this.newGroupIdentifier.trim();
+            if (identifier && !this.form_groups[identifier]) {
+                this.form_groups[identifier] = {
+                    display_name: this.newGroupDisplayName,
+                    position: this.nextPosition
+                };
+                // Reset input fields
+                this.newGroupIdentifier = '';
+                this.newGroupDisplayName = '';
+            } else {
+                alert('Group identifier cannot be empty and must be unique.');
+            }
+        },
+        moveDown(identifier) {
+            const group = this.form_groups[identifier];
+            if (group) {
+                const currentPosition = group.position;
+                const nextGroup = Object.entries(this.form_groups).find(([_, g]) => g.position === currentPosition + 1);
+                if (nextGroup) {
+                    // Swap positions
+                    this.form_groups[identifier].position = currentPosition + 1;
+                    this.form_groups[nextGroup[0]].position = currentPosition;
+                }
+            }
+        },
+        moveUp(identifier) {
+            const group = this.form_groups[identifier];
+            if (group) {
+                const currentPosition = group.position;
+                const previousGroup = Object.entries(this.form_groups).find(([_, g]) => g.position === currentPosition - 1);
+                if (previousGroup) {
+                    // Swap positions
+                    this.form_groups[identifier].position = currentPosition - 1;
+                    this.form_groups[previousGroup[0]].position = currentPosition;
+                }
+            }
+        },
+        removeGroup(identifier) {
+            if (confirm(`Are you sure you want to delete the group "${identifier}"?`)) {
+                delete this.form_groups[identifier];
+            }
+        }
+    },
+    template: /*html*/`
+    <h2 class="mt-3">Form Groups
+            <button @click="field_edit_mode = !field_edit_mode" class="btn btn-lg ml-1"><i class="fa-solid fa-pen-to-square"></i></button>
+    </h2>
+        <div class="ml-3 pb-3 border-bottom">
+            <div v-for="[identifier, group] in sortedFormGroups" :key="identifier" class="mb-3 p-3 border rounded">
+                <h5>{{ identifier }}</h5>
+                <div class="form-group">
+                    <label>Display Name</label>
+                    <input type="text" class="form-control" v-model="group.display_name" :disabled="!computed_edit_mode">
+                </div>
+                <div class="form-group mt-2">
+                    <label>Position</label>
+                    <input type="number" class="form-control" v-model.number="group.position" disabled>
+                </div>
+                <button v-if="computed_edit_mode" class="btn btn-danger btn-sm mt-2" @click="removeGroup(identifier)">
+                    <i class="fa-solid fa-trash mr-1"></i> Remove Group
+                </button>
+                <div v-if="computed_edit_mode" class="btn btn-secondary btn-sm mt-2 ml-2" @click="moveUp(identifier)">
+                    <i class="fa-solid fa-arrow-up mr-1"></i> Move Up
+                </div>
+                <div v-if="computed_edit_mode" class="btn btn-secondary btn-sm mt-2 ml-2" @click="moveDown(identifier)">
+                    <i class="fa-solid fa-arrow-down mr-1"></i> Move Down
+                </div>
+            </div>
+
+            <div v-if="computed_edit_mode" class="mt-4">
+                <h3>Add New Group</h3>
+                <div class="form-group">
+                    <label>Identifier</label>
+                    <input type="text" class="form-control" v-model="newGroupIdentifier" placeholder="e.g., project_summary">
+                </div>
+                <div class="form-group mt-2">
+                    <label>Display Name</label>
+                    <input type="text" class="form-control" v-model="newGroupDisplayName" placeholder="e.g., Project Summary">
+                </div>
+                <button class="btn btn-primary mt-2" @click="addGroup">Add Group</button>
+            </div>
+        </div>
+    `
+};
 
 const vConditionalEditForm = {
     name: 'v-conditional-edit-form',
@@ -1594,6 +1754,7 @@ app.component('v-project-creation-form', vProjectCreationForm)
 app.component('v-conditional-edit-form-single-condition', vConditionalEditFormSingleCondition)
 app.component('v-visible-if-condition-edit-form', vVisibleIfConditionEditForm)
 app.component('v-form-field', vFormField)
+app.component('v-form-groups-editor', vFormGroupsEditor)
 app.component('v-create-form-list', vCreateFormList)
 app.component('v-create-form', vCreateForm)
 app.component('v-update-form-field', vUpdateFormField)
