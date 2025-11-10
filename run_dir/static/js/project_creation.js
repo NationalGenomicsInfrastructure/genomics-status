@@ -849,6 +849,9 @@ const vCreateForm = {
             display_fields: false,
             display_metadata: false,
             edit_mode: false,
+            edit_mode_description: false,
+            edit_mode_title: false,
+            edit_mode_instruction: false,
             new_composite_conditional_if: [],
             new_composite_conditional_then: [],
             new_conditional_if: '',
@@ -860,7 +863,15 @@ const vCreateForm = {
         allOf() {
             return this.$root.getValue(this.newForm, 'allOf');
         },
-
+        computed_edit_mode_description() {
+            return this.edit_mode || this.edit_mode_description;
+        },
+        computed_edit_mode_title() {
+            return this.edit_mode || this.edit_mode_title;
+        },
+        computed_edit_mode_instruction() {
+            return this.edit_mode || this.edit_mode_instruction;
+        },
         fields() {
             return this.$root.getValue(this.newForm, 'properties');
         },
@@ -986,16 +997,43 @@ const vCreateForm = {
                     <h2 class="mt-3">Form Metadata<button v-if="this.display_metadata" class="btn btn-secondary ml-2" @click.prevent="this.display_metadata = false">Hide metadata</button></h2>
                     <template v-if="this.display_metadata">
                         <div>
-                            <label :for="title" class="form-label">Title</label>
-                            <input :id="title" class="form-control" type="string" v-model="this.title" :disabled="!edit_mode">
+                            <h5 class="mb-1">Title
+                                <button @click="edit_mode_title = !edit_mode_title" class="btn btn-lg ml-1">
+                                    <template v-if="!edit_mode_title">
+                                        <i class="fa-solid fa-pen-to-square"></i>
+                                    </template>
+                                    <template v-else>
+                                        <i class="fa-solid fa-check"></i>
+                                    </template>
+                                </button>
+                            </h5>
+                            <input :id="title" class="form-control" type="string" v-model="this.title" :disabled="!computed_edit_mode_title">
                         </div>
                         <div>
-                            <label :for="description" class="form-label">Description</label>
-                            <input :id="description" class="form-control" type="string" v-model="this.description" :disabled="!edit_mode">
+                            <h5 class="mb-1">Description
+                                <button @click="edit_mode_description = !edit_mode_description" class="btn btn-lg ml-1">
+                                    <template v-if="!edit_mode_description">
+                                        <i class="fa-solid fa-pen-to-square"></i>
+                                    </template>
+                                    <template v-else>
+                                        <i class="fa-solid fa-check"></i>
+                                    </template>
+                                </button>
+                            </h5>
+                            <input :id="description" class="form-control" type="string" v-model="this.description" :disabled="!computed_edit_mode_description">
                         </div>
                         <div>
-                            <label :for="instruction" class="form-label">Instruction</label>
-                            <input :id="instruction" class="form-control" type="string" v-model="this.instruction" :disabled="!edit_mode">
+                            <h5 class="mb-1">Instruction
+                                <button @click="edit_mode_instruction = !edit_mode_instruction" class="btn btn-lg ml-1">
+                                    <template v-if="!edit_mode_instruction">
+                                        <i class="fa-solid fa-pen-to-square"></i>
+                                    </template>
+                                    <template v-else>
+                                        <i class="fa-solid fa-check"></i>
+                                    </template>
+                                </button>
+                            </h5>
+                            <input :id="instruction" class="form-control" type="string" v-model="this.instruction" :disabled="!computed_edit_mode_instruction">
                         </div>
                         <v-form-groups-editor :form_groups="this.form_groups" :edit_mode="edit_mode"></v-form-groups-editor>
                     </template>
@@ -1177,9 +1215,16 @@ const vFormGroupsEditor = {
         }
     },
     template: /*html*/`
-    <h2 class="mt-3">Form Groups
-            <button @click="field_edit_mode = !field_edit_mode" class="btn btn-lg ml-1"><i class="fa-solid fa-pen-to-square"></i></button>
-    </h2>
+        <h2 class="mt-3">Form Groups
+            <button @click="field_edit_mode = !field_edit_mode" class="btn btn-lg ml-1">
+                <template v-if="!field_edit_mode">
+                    <i class="fa-solid fa-pen-to-square"></i>
+                </template>
+                <template v-else>
+                    <i class="fa-solid fa-check"></i>
+                </template>
+            </button>
+        </h2>
         <div class="ml-3 pb-3 border-bottom">
             <div v-for="[identifier, group] in sortedFormGroups" :key="identifier" class="mb-3 p-3 border rounded">
                 <h5>{{ identifier }}</h5>
