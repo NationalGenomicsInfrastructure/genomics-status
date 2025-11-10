@@ -1439,6 +1439,9 @@ const vConditionalEditFormSingleCondition = {
             // Access the correct condition properties based on condition_type
             return this.conditional[this.condition_type].properties;
         },
+        containsReplicates() {
+            return this.enumValues.length !== new Set(this.enumValues).size;
+        },
         enumValues() {
             // Get the enum values for the current property
             if (this.conditionProperties[this.property].enum === undefined) {
@@ -1510,36 +1513,41 @@ const vConditionalEditFormSingleCondition = {
             </template>
         </template>
         <template v-else>
-            <template v-for="(value, index) in enumValues">
-                <div class="mb-3">
-                    <template v-if="!edit_mode">
-                        <p>{{value}}</p>
-                    </template>
-                    <template v-else-if="propertyReferenceIsEnum">
-                        <div class="input-group">
-                            <select class="form-select" v-model="enumValues[index]">
-                                <template v-for="option in propertyReference.enum">
-                                    <option :value="option">{{option}}</option>
-                                </template>
-                            </select>
-                            <button v-if="edit_mode" class="btn btn-outline-danger col-auto" @click.prevent="removeValue(index)"><i class="fa-solid fa-trash"></i></button>
-                        </div>
-                    </template>
-                    <template v-else-if="propertyReferenceIsBoolean">
-                        <div class="form-check form-switch">
-                            <label :for="'boolean_switch_condition' + conditional_index + '_enumIndex' + index" class="form-check-label">{{enumValues[index]}}</label>
-                            <input :id="'boolean_switch_condition' + conditional_index + '_enumIndex' + index" class="form-check-input" type="checkbox" v-model="enumValues[index]">
-                        </div>
-                        <button v-if="edit_mode" class="btn btn-outline-danger col-auto ml-2" @click.prevent="removeValue(index)"><i class="fa-solid fa-trash ml-2"></i></button>
-                    </template>
-                    <template v-else>
-                        <div class="input-group">
-                            <input class="form-control col-auto" type="string" v-model="enumValues[index]">
-                            <button v-if="edit_mode" class="btn btn-outline-danger col-auto" @click.prevent="removeValue(index)"><i class="fa-solid fa-trash"></i></button>
-                        </div>
-                    </template>
-                </div>
-            </template>
+            <div class="p-3" :class="{'alert-danger': this.containsReplicates}">
+                <template v-if="this.containsReplicates">
+                    <p>The values contain at least one duplicated value!</p>
+                </template>
+                <template v-for="(value, index) in enumValues">
+                    <div class="mb-3">
+                        <template v-if="!edit_mode">
+                            <p>{{value}}</p>
+                        </template>
+                        <template v-else-if="propertyReferenceIsEnum">
+                            <div class="input-group">
+                                <select class="form-select" v-model="enumValues[index]">
+                                    <template v-for="option in propertyReference.enum">
+                                        <option :value="option">{{option}}</option>
+                                    </template>
+                                </select>
+                                <button v-if="edit_mode" class="btn btn-outline-danger col-auto" @click.prevent="removeValue(index)"><i class="fa-solid fa-trash"></i></button>
+                            </div>
+                        </template>
+                        <template v-else-if="propertyReferenceIsBoolean">
+                            <div class="form-check form-switch">
+                                <label :for="'boolean_switch_condition' + conditional_index + '_enumIndex' + index" class="form-check-label">{{enumValues[index]}}</label>
+                                <input :id="'boolean_switch_condition' + conditional_index + '_enumIndex' + index" class="form-check-input" type="checkbox" v-model="enumValues[index]">
+                            </div>
+                            <button v-if="edit_mode" class="btn btn-outline-danger col-auto ml-2" @click.prevent="removeValue(index)"><i class="fa-solid fa-trash ml-2"></i></button>
+                        </template>
+                        <template v-else>
+                            <div class="input-group">
+                                <input class="form-control col-auto" type="string" v-model="enumValues[index]">
+                                <button v-if="edit_mode" class="btn btn-outline-danger col-auto" @click.prevent="removeValue(index)"><i class="fa-solid fa-trash"></i></button>
+                            </div>
+                        </template>
+                    </div>
+                </template>
+            </div>
         </template>
         <template v-if="showAllOptions">
             <a v-if="edit_mode" href="#" @click.prevent="showAllOptions = !showAllOptions">Show only selected options</a>
