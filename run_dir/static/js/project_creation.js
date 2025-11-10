@@ -784,6 +784,7 @@ const vCreateFormList = {
         this.$root.fetch_list_of_forms()
     },
     computed: {
+
         draftForm() {
             // Return the single draft form or None
             let draft_form = this.$root.forms.find(form => form.value.status === 'draft');
@@ -818,6 +819,17 @@ const vCreateFormList = {
             return valid_form ? valid_form : null;
         }
     },
+    methods: {
+        dateFormatter(dateString) {
+            const date = new Date(dateString);
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            return `${year}-${month}-${day}T${hours}:${minutes}`;
+        }
+    },
     template:
     /*html*/`
         <div class="container pb-5">
@@ -827,8 +839,8 @@ const vCreateFormList = {
                     <div class="card">
                         <div class="card-body">
                             <h4 class="card-title">Valid Form: </h4>
-                            <h5 class="card-subtitle mb-2 text-muted">{{ validForm.value.title }}: {{ validForm.value.version }}</h5>
-                            <p class="card-text">Created {{ validForm.value.created }} by {{ validForm.value.owner.email }}</p>
+                            <h5 class="card-subtitle mb-2 text-muted">{{ validForm.value.title }}:</h5>
+                            <p class="card-text">Created {{ dateFormatter(validForm.value.created) }} by {{ validForm.value.owner.email }}</p>
                             <a class="btn btn-primary" v-if="this.formIsEditable(validForm)" :href="'/project_creation?edit_mode=true&version_id=' + validForm.id">Edit</a>
                         </div>
                     </div>
@@ -837,8 +849,8 @@ const vCreateFormList = {
                     <div class="card">
                         <div class="card-body">
                             <h4 class="card-title">Draft Form: </h4>
-                            <h5 class="card-subtitle mb-2 text-muted">{{ draftForm.value.title }}: {{ draftForm.value.version }}</h5>
-                            <p class="card-text">Created {{ draftForm.value.created }} by {{ draftForm.value.owner.email }}</p>
+                            <h5 class="card-subtitle mb-2 text-muted">{{ draftForm.value.title }}:</h5>
+                            <p class="card-text">Created {{ dateFormatter(draftForm.value.created) }} by {{ draftForm.value.owner.email }}</p>
                             <a class="btn btn-primary" v-if="this.formIsEditable(draftForm)" :href="'/project_creation?edit_mode=true&version_id=' + draftForm.id">Edit</a>
                         </div>
                     </div>
@@ -850,22 +862,20 @@ const vCreateFormList = {
                 <table class="table">
                     <thead>
                         <tr>
-                            <th>Title</th>
-                            <th>Version</th>
-                            <th>Description</th>
-                            <th>Owner Email</th>
                             <th>Status</th>
                             <th>Created</th>
+                            <th>Owner Email</th>
+                            <th>Title</th>
+                            <th>ID</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr v-for="form in this.sortedForms" :key="form.id">
-                            <td>{{ form.value.title }}</td>
-                            <td>{{ form.value.version }}</td>
-                            <td>{{ form.value.description}}</td>
-                            <td>{{ form.value.owner.email }}</td>
                             <td>{{ form.value.status }}</td>
-                            <td>{{ form.value.created }}</td>
+                            <td>{{ dateFormatter(form.value.created) }}</td>
+                            <td>{{ form.value.owner.email }}</td>
+                            <td>{{ form.value.title }}</td>
+                            <td>{{ form.id }}</td>
                         </tr>
                     </tbody>
                 </table>
