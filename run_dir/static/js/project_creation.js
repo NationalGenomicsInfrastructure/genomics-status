@@ -1014,12 +1014,27 @@ const vCreateForm = {
                                     <li><strong>Identifier</strong>: The unique ID for the field.</li>
                                     <li><strong>Group</strong>: Which form group the field belongs to.</li>
                                     <li><strong>Description</strong>: Help text that appears below the field.</li>
-                                    <li><strong>Form Type</strong>: The type of input, such as <code>String</code>, <code>Boolean</code> (checkbox), <code>Select</code> (dropdown), or <code>Datalist</code>.</li>
+                                    <li><strong>Type</strong>: The type of input, only a subset of json schema types are allowed: <code>String</code>, <code>Number</code> and <code>Boolean</code></li>
+                                    <li><strong>Form Type</strong>: How the field should be displayed in the form, such as <code>String</code>, <code>Boolean</code> (checkbox), <code>Select</code> (dropdown), or <code>Datalist</code>. See section about Form Type below for a longer explanation.</li>
                                     <li><strong>Label</strong>: The display name for the field shown to the user.</li>
                                     <li><strong>LIMS UDF</strong>: The name of the UDF in LIMS where the data will be stored.</li>
                                     <li><strong>Allowed Values</strong>: For <code>Select</code> and <code>Datalist</code> types, you can define the list of options available to the user.</li>
                                     <li><strong>Visibility</strong>: You can add rules to show or hide a field based on the values of other fields.</li>
                                 </ul>
+                                <div class="ml-3">
+                                    <h5>Form Type</h5>
+                                    <p>Each field can be of different form types, which determine how the field is displayed in the form. The available form types are:</p>
+                                    <ul>
+                                        <li><strong>String</strong>: A text input.</li>
+                                        <li><strong>Number</strong>: A numeric input field.</li>
+                                        <li><strong>Boolean</strong>: A checkbox input.</li>
+                                        <li><strong>Select</strong>: A dropdown list or predefined options. Only predefined options are allowed.</li>
+                                        <li><strong>Datalist</strong>: Text input, automatically filtering a list of predefined options. As with select, only predefined options are allowed.</li>
+                                        <li><strong>Custom Datalist</strong>: Text input, automatically filtering a list of options. The options are dynamically fetched from the database, based on the recent years projects.
+                                        The values are cached for 24 hours, so they are not always completely up to date. Only fields that are output from the couchdb view details_count can be used with this form type.
+                                        </li>
+                                    </ul>
+                                </div>
 
                                 <h3>Conditional Logic</h3>
                                 <p>This section defines the dynamic behavior of the form. It consists of a set of rules in an "if-then" format.</p>
@@ -1034,6 +1049,7 @@ const vCreateForm = {
                                     <li><strong>Add more complexity</strong>: A single "if" or "then" can depend on multiple fields.</li>
                                     <li><strong>Remove a condition</strong>: Delete an entire rule.</li>
                                 </ul>
+                                <p>When creating a conditional, note the "show all options" option that will give you a better overview of which options are available for each field.</p>
 
                                 <h3>Saving Your Changes</h3>
                                 <p>At the bottom of the page, you will find buttons to manage your changes:</p>
