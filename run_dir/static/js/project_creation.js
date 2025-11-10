@@ -848,7 +848,6 @@ const vCreateForm = {
             display_conditional_logic: false,
             display_fields: false,
             display_metadata: false,
-            edit_mode: false,
             edit_mode_description: false,
             edit_mode_title: false,
             edit_mode_instruction: false,
@@ -863,15 +862,6 @@ const vCreateForm = {
     computed: {
         allOf() {
             return this.$root.getValue(this.newForm, 'allOf');
-        },
-        computed_edit_mode_description() {
-            return this.edit_mode || this.edit_mode_description;
-        },
-        computed_edit_mode_title() {
-            return this.edit_mode || this.edit_mode_title;
-        },
-        computed_edit_mode_instruction() {
-            return this.edit_mode || this.edit_mode_instruction;
         },
         fields() {
             return this.$root.getValue(this.newForm, 'properties');
@@ -987,11 +977,7 @@ const vCreateForm = {
                                 <p>This guide explains how to modify a project creation form. The modification interface is divided into several sections: <strong>Form Metadata</strong>, <strong>Fields</strong>, and <strong>Conditional Logic</strong>.</p>
 
                                 <h3>Edit Mode</h3>
-                                <p>To prevent accidental changes, most parts of the form are in a read-only state by default. To make changes, you need to enable "Edit Mode".</p>
-                                <ul>
-                                    <li><strong>Global Edit Mode</strong>: At the top of the "Update Form" section, there is a "Toggle Edit Mode" switch. Turning this on enables editing for all sections and fields simultaneously.</li>
-                                    <li><strong>Section/Field Edit Mode</strong>: Each section and field has its own edit button (a pencil icon <i class="fa-solid fa-pen-to-square"></i>). Clicking this button enables editing only for that specific item. Click the checkmark icon (<i class="fa-solid fa-check"></i>) to leave edit mode for that item.</li>
-                                </ul>
+                                Each section and field has its own edit button (a pencil icon <i class="fa-solid fa-pen-to-square"></i>). Clicking this button enables editing only for that specific item. Click the checkmark icon (<i class="fa-solid fa-check"></i>) to leave edit mode for that item.</li>
 
                                 <h3>Form Metadata</h3>
                                 <p>This section allows you to edit the general information about the form.</p>
@@ -1060,10 +1046,6 @@ const vCreateForm = {
                                 </ul>
                             </div>
                         </div>
-                        <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" role="switch" id="globalEditModeSwitchTop" v-model="edit_mode">
-                            <label class="form-check-label" for="globalEditModeSwitchTop">Toggle Edit Mode</label>
-                        </div>
                     </div>
                     <div class="col-auto ml-auto">
 
@@ -1089,7 +1071,7 @@ const vCreateForm = {
                                     </template>
                                 </button>
                             </h5>
-                            <input :id="title" class="form-control" type="string" v-model="this.title" :disabled="!computed_edit_mode_title">
+                            <input :id="title" class="form-control" type="string" v-model="this.title" :disabled="!edit_mode_title">
                         </div>
                         <div>
                             <h5 class="mb-1">Description
@@ -1102,7 +1084,7 @@ const vCreateForm = {
                                     </template>
                                 </button>
                             </h5>
-                            <input :id="description" class="form-control" type="string" v-model="this.description" :disabled="!computed_edit_mode_description">
+                            <input :id="description" class="form-control" type="string" v-model="this.description" :disabled="!edit_mode_description">
                         </div>
                         <div>
                             <h5 class="mb-1">Instruction
@@ -1115,9 +1097,9 @@ const vCreateForm = {
                                     </template>
                                 </button>
                             </h5>
-                            <input :id="instruction" class="form-control" type="string" v-model="this.instruction" :disabled="!computed_edit_mode_instruction">
+                            <input :id="instruction" class="form-control" type="string" v-model="this.instruction" :disabled="!edit_mode_instruction">
                         </div>
-                        <v-form-groups-editor :form_groups="this.form_groups" :edit_mode="edit_mode"></v-form-groups-editor>
+                        <v-form-groups-editor :form_groups="this.form_groups"></v-form-groups-editor>
                     </template>
                     <template v-else>
                         <button class="btn btn-primary" @click.prevent="this.display_metadata = true">Show metadata</button>
@@ -1128,10 +1110,10 @@ const vCreateForm = {
                     <template v-if="this.display_fields">
                         <template v-for="(field, identifier) in fields" :key="identifier">
                             <template v-if="field.ngi_form_type !== undefined">
-                                <v-update-form-field :field="field" :identifier="identifier" :global_edit_mode="edit_mode"></v-update-form-field>
+                                <v-update-form-field :field="field" :identifier="identifier"></v-update-form-field>
                             </template>
                         </template>
-                        <div v-if="edit_mode" class="mb-3">
+                        <div class="mb-3">
                             <h3>Add new field</h3>
                             <div>
                                 <input class="form-control" type="text" placeholder="Field identifier" v-model="this.new_field">
@@ -1152,10 +1134,9 @@ const vCreateForm = {
                                 <v-conditional-edit-form
                                     :conditional="conditional"
                                     :conditional_index="conditional_index"
-                                    @remove-condition="removeCondition"
-                                    :global_edit_mode="this.edit_mode">
+                                    @remove-condition="removeCondition">
                                 </v-conditional-edit-form>
-                                <div v-if="edit_mode" class="row">
+                                <div v-if="field_edit_mode" class="row">
                                     <div class="col-5">
                                         <div class="input-group">
                                             <select class="form-select" placeholder="test" v-model="this.new_composite_conditional_if[conditional_index]">
@@ -1179,7 +1160,7 @@ const vCreateForm = {
                                 </div>
                             </div>
                         </template>
-                        <div v-if="edit_mode">
+                        <div v-if="field_edit_mode">
                             <h3 class="mt-5 border-top pt-3">Add condition</h3>
                             <div class="row">
                                 <div class="col-5">
@@ -1221,10 +1202,6 @@ const vFormGroupsEditor = {
         form_groups: {
             type: Object,
             required: true
-        },
-        edit_mode: {
-            type: Boolean,
-            default: false
         }
     },
     data() {
@@ -1235,10 +1212,6 @@ const vFormGroupsEditor = {
         }
     },
     computed: {
-        computed_edit_mode() {
-            // Let's consider all form groups one field
-            return this.field_edit_mode || this.edit_mode;
-        },
         sortedFormGroups() {
             // Sort groups by position for a consistent display order
             if (this.form_groups) {
@@ -1312,24 +1285,24 @@ const vFormGroupsEditor = {
                 <h5>{{ identifier }}</h5>
                 <div class="form-group">
                     <label>Display Name</label>
-                    <input type="text" class="form-control" v-model="group.display_name" :disabled="!computed_edit_mode">
+                    <input type="text" class="form-control" v-model="group.display_name" :disabled="!field_edit_mode">
                 </div>
                 <div class="form-group mt-2">
                     <label>Position</label>
                     <input type="number" class="form-control" v-model.number="group.position" disabled>
                 </div>
-                <button v-if="computed_edit_mode" class="btn btn-danger btn-sm mt-2" @click="removeGroup(identifier)">
+                <button v-if="field_edit_mode" class="btn btn-danger btn-sm mt-2" @click="removeGroup(identifier)">
                     <i class="fa-solid fa-trash mr-1"></i> Remove Group
                 </button>
-                <div v-if="computed_edit_mode" class="btn btn-secondary btn-sm mt-2 ml-2" @click="moveUp(identifier)">
+                <div v-if="field_edit_mode" class="btn btn-secondary btn-sm mt-2 ml-2" @click="moveUp(identifier)">
                     <i class="fa-solid fa-arrow-up mr-1"></i> Move Up
                 </div>
-                <div v-if="computed_edit_mode" class="btn btn-secondary btn-sm mt-2 ml-2" @click="moveDown(identifier)">
+                <div v-if="field_edit_mode" class="btn btn-secondary btn-sm mt-2 ml-2" @click="moveDown(identifier)">
                     <i class="fa-solid fa-arrow-down mr-1"></i> Move Down
                 </div>
             </div>
 
-            <div v-if="computed_edit_mode" class="mt-4">
+            <div v-if="field_edit_mode" class="mt-4">
                 <h3>Add New Group</h3>
                 <div class="form-group">
                     <label>Identifier</label>
@@ -1347,7 +1320,7 @@ const vFormGroupsEditor = {
 
 const vConditionalEditForm = {
     name: 'v-conditional-edit-form',
-    props: ['conditional', 'conditional_index', 'global_edit_mode'],
+    props: ['conditional', 'conditional_index'],
     emits: ['remove-condition'],
     data() {
         return {
@@ -1357,9 +1330,6 @@ const vConditionalEditForm = {
     computed: {
         description() {
             return this.conditional.description;
-        },
-        edit_mode() {
-            return (this.field_edit_mode || this.global_edit_mode)
         },
         propertyKeyIf() {
             return Object.keys(this.conditional.if.properties);
@@ -1374,7 +1344,7 @@ const vConditionalEditForm = {
             <div class="row">
                 <div class="mb-3">
                     <h3 class="mt-5 col-auto">{{conditional_index + 1}}. {{this.conditional.description}}
-                        <template v-if="edit_mode">
+                        <template v-if="field_edit_mode">
                             <button @click="field_edit_mode = !field_edit_mode" class="btn btn-lg ml-1"><i class="fa-solid fa-check"></i></button>
                         </template>
                         <template v-else>
@@ -1382,11 +1352,11 @@ const vConditionalEditForm = {
                         </template>
                     </h3>
                     <div class="col-auto ml-auto">
-                        <button v-if="edit_mode" class="btn btn-outline-danger" @click.prevent="$emit('remove-condition', conditional_index)">
+                        <button v-if="field_edit_mode" class="btn btn-outline-danger" @click.prevent="$emit('remove-condition', conditional_index)">
                             Remove Condition <i class="fa-solid fa-trash ml-2"></i>
                         </button>
                     </div>
-                    <div v-if="edit_mode">
+                    <div v-if="field_edit_mode">
                         <label class="form-label">Condition name/description</label>
                         <input class="form-control" type="string" v-model="this.conditional.description"></input>
                     </div>
@@ -1401,7 +1371,7 @@ const vConditionalEditForm = {
                              :property="if_property"
                              :property_index="if_property_index"
                              :condition_type="'if'"
-                             :edit_mode="edit_mode">
+                             :edit_mode="field_edit_mode">
                         </v-conditional-edit-form-single-condition>
                     </template>
 
@@ -1412,12 +1382,12 @@ const vConditionalEditForm = {
                 <div class="col-5">
                     <template v-for="(then_property, then_property_index) in this.propertyKeyThen">
                         <v-conditional-edit-form-single-condition
-                            :conditional="this.conditional" 
-                            :conditional_index="this.conditional_index" 
-                            :property="then_property" 
+                            :conditional="this.conditional"
+                            :conditional_index="this.conditional_index"
+                            :property="then_property"
                             :property_index="then_property_index"
                             :condition_type="'then'"
-                            :edit_mode="edit_mode">
+                            :edit_mode="field_edit_mode">
                         </v-conditional-edit-form-single-condition>
                     </template>
                 </div>
@@ -1563,7 +1533,7 @@ const vConditionalEditFormSingleCondition = {
 
 const vUpdateFormField = {
     name: 'v-update-form-field',
-    props: ['field', 'identifier', 'global_edit_mode'],
+    props: ['field', 'identifier'],
     data: function() {
         return {
             field_edit_mode: false,
@@ -1573,9 +1543,6 @@ const vUpdateFormField = {
         }
     },
     computed: {
-        edit_mode() {
-            return (this.global_edit_mode || this.field_edit_mode)
-        },
         description() {
             return this.field.description;
         },
@@ -1665,11 +1632,11 @@ const vUpdateFormField = {
                 </h2>
                 <div>
                     <label :for="identifier" class="form-label">Identifier</label>
-                    <input :id="identifier" class="form-control" type="string" v-model="identifier" :disabled="!edit_mode">
+                    <input :id="identifier" class="form-control" type="string" v-model="identifier" :disabled="!field_edit_mode">
                 </div>
                 <div>
                     <label :for="identifier + '_ngi_form_group'" class="form-label">Group</label>
-                    <select :id="identifier + '_ngi_form_group'" class="form-control" v-model="this.new_json_schema['properties'][identifier]['ngi_form_group']" :disabled="!edit_mode">
+                    <select :id="identifier + '_ngi_form_group'" class="form-control" v-model="this.new_json_schema['properties'][identifier]['ngi_form_group']" :disabled="!field_edit_mode">
                         <template v-for="(form_group, group_identifier) in this.new_json_form['form_groups']">
                             <option :value="group_identifier">{{form_group.display_name}}</option>
                         </template>
@@ -1677,11 +1644,11 @@ const vUpdateFormField = {
                 </div>
                 <div>
                     <label :for="identifier + '_description'" class="form-label">Description</label>
-                    <input :id="identifier + '_description'" class="form-control" type="string" v-model="this.new_json_schema['properties'][identifier]['description']" :disabled="!edit_mode">
+                    <input :id="identifier + '_description'" class="form-control" type="string" v-model="this.new_json_schema['properties'][identifier]['description']" :disabled="!field_edit_mode">
                 </div>
                 <div>
                     <label :for="identifier + '_ngi_form_type'" class="form-label">Form Type</label>
-                    <select :id="identifier + '_ngi_form_type'" class="form-control" v-model="this.new_json_schema['properties'][identifier]['ngi_form_type']" :disabled="!edit_mode">
+                    <select :id="identifier + '_ngi_form_type'" class="form-control" v-model="this.new_json_schema['properties'][identifier]['ngi_form_type']" :disabled="!field_edit_mode">
                         <option value="string">String</option>
                         <option value="boolean">Boolean</option>
                         <option value="select">Select</option>
@@ -1691,16 +1658,16 @@ const vUpdateFormField = {
                 </div>
                 <div>
                     <label :for="identifier + '_ngi_form_label'" class="form-label">Label</label>
-                    <input :id="identifier + '_ngi_form_label'" class="form-control" type="string" v-model="this.new_json_schema['properties'][identifier]['ngi_form_label']" :disabled="!edit_mode">
+                    <input :id="identifier + '_ngi_form_label'" class="form-control" type="string" v-model="this.new_json_schema['properties'][identifier]['ngi_form_label']" :disabled="!field_edit_mode">
                 </div>
                 <div>
                     <label :for="identifier + '_ngi_form_lims_udf'" class="form-label">LIMS UDF</label>
-                    <input :id="identifier + '_ngi_form_lims_udf'" class="form-control" type="string" v-model="this.new_json_schema['properties'][identifier]['ngi_form_lims_udf']" :disabled="!edit_mode">
+                    <input :id="identifier + '_ngi_form_lims_udf'" class="form-control" type="string" v-model="this.new_json_schema['properties'][identifier]['ngi_form_lims_udf']" :disabled="!field_edit_mode">
                 </div>
                 <template v-if="(this.type === 'string') && (this.form_type !== 'select')">
                     <div>
                         <label :for="identifier + '_pattern'" class="form-label">Pattern</label>
-                        <input :id="identifier + '_pattern'" class="form-control" type="string" v-model="this.new_json_schema['properties'][identifier]['pattern']" :disabled="!edit_mode">
+                        <input :id="identifier + '_pattern'" class="form-control" type="string" v-model="this.new_json_schema['properties'][identifier]['pattern']" :disabled="!field_edit_mode">
                     </div>
                 </template>
                 <div>
@@ -1713,8 +1680,8 @@ const vUpdateFormField = {
                                     <h4>AND</h4>
                                 </template>
                                 <div class="offset-1 col-11">
-                                    <button v-if="edit_mode" class="btn btn-outline-danger" @click.prevent="delete this.new_json_schema['properties'][identifier]['ngi_form_visible_if']['properties'][condition_key]">Remove field<i class="fa-solid fa-trash ml-2"></i></button>
-                                    <v-visible-if-condition-edit-form :field_identifier="identifier" :condition_key="condition_key" :edit_mode="edit_mode"></v-visible-if-condition-edit-form>
+                                    <button v-if="field_edit_mode" class="btn btn-outline-danger" @click.prevent="delete this.new_json_schema['properties'][identifier]['ngi_form_visible_if']['properties'][condition_key]">Remove field<i class="fa-solid fa-trash ml-2"></i></button>
+                                    <v-visible-if-condition-edit-form :field_identifier="identifier" :condition_key="condition_key" :edit_mode="field_edit_mode"></v-visible-if-condition-edit-form>
                                 </div>
                             </template>
                         </div>
@@ -1727,7 +1694,7 @@ const vUpdateFormField = {
                             <h4>{{ this.visibleIfErrorMessage }}</h4>
                         </div>
                     </template>
-                    <div v-if="edit_mode" class="row">
+                    <div v-if="field_edit_mode" class="row">
                         <div class="col-6">
                             <div class="input-group">
                                 <select class="form-select" placeholder="test" v-model="this.selectedVisibleIfKey">
@@ -1735,7 +1702,7 @@ const vUpdateFormField = {
                                         <option :value="identifier">{{identifier}}</option>
                                     </template>
                                 </select>
-                                <button class="btn btn-primary" @click.prevent="this.add_visible_if()" :disabled="!edit_mode">Add conditional visibility</button>
+                                <button class="btn btn-primary" @click.prevent="this.add_visible_if()" :disabled="!field_edit_mode">Add conditional visibility</button>
                             </div>
                         </div>
                     </div>
@@ -1748,11 +1715,11 @@ const vUpdateFormField = {
                             <button class="btn btn-danger mb-2" @click.prevent="this.show_allowed_values = false">Hide allowed values</button>
                             <template v-for="(option, index) in this.new_json_schema['properties'][identifier]['enum']" :key="index">
                                 <div class="input-group mb-3">
-                                    <input :id="identifier + '_enum_'+index" class="form-control col-auto" type="string" v-model="this.new_json_schema['properties'][identifier]['enum'][index]" :disabled="!edit_mode">
-                                    <button v-if="edit_mode" class="btn btn-danger col-auto" @click.prevent="this.new_json_schema['properties'][identifier]['enum'].splice(index, 1)">Remove<i class="fa-solid fa-trash ml-2"></i></button>
+                                    <input :id="identifier + '_enum_'+index" class="form-control col-auto" type="string" v-model="this.new_json_schema['properties'][identifier]['enum'][index]" :disabled="!field_edit_mode">
+                                    <button v-if="field_edit_mode" class="btn btn-danger col-auto" @click.prevent="this.new_json_schema['properties'][identifier]['enum'].splice(index, 1)">Remove<i class="fa-solid fa-trash ml-2"></i></button>
                                 </div>
                             </template>
-                            <button v-if="edit_mode" class="btn btn-primary" @click.prevent="this.add_new_allowed()">Add new allowed value</button>
+                            <button v-if="field_edit_mode" class="btn btn-primary" @click.prevent="this.add_new_allowed()">Add new allowed value</button>
                         </template>
                         <template v-else>
                             <button class="btn btn-primary" @click.prevent="this.show_allowed_values = true">Show allowed values</button>
