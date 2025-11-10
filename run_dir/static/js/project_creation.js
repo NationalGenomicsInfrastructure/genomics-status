@@ -784,17 +784,10 @@ const vCreateFormList = {
         this.$root.fetch_list_of_forms()
     },
     computed: {
-        sorted_forms() {
-            // Sort forms by status and created date
-            return this.$root.forms.sort((a, b) => {
-                if (a.value.status === b.value.status) {
-                    return new Date(b.value.created) - new Date(a.value.created);
-                } else {
-                    // valid -> draft -> cancelled -> retired
-                    const status_order = ['valid', 'draft', 'cancelled', 'retired'];
-                    return status_order.indexOf(a.value.status) - status_order.indexOf(b.value.status);
-                }
-            });
+        draftForm() {
+            // Return the single draft form or None
+            let draft_form = this.$root.forms.find(form => form.value.status === 'draft');
+            return draft_form ? draft_form : null;
         },
         formIsEditable() {
             // Returns true if the form is a draft,
@@ -806,36 +799,77 @@ const vCreateFormList = {
                 const otherDrafts = this.$root.forms.filter(f => f.value.status === 'draft' && f.id !== form.id);
                 return form.value.status === 'valid' && otherDrafts.length === 0;
             };
+        },
+        sortedForms() {
+            // Sort forms by status and created date
+            return this.$root.forms.sort((a, b) => {
+                if (a.value.status === b.value.status) {
+                    return new Date(b.value.created) - new Date(a.value.created);
+                } else {
+                    // valid -> draft -> cancelled -> retired
+                    const status_order = ['valid', 'draft', 'cancelled', 'retired'];
+                    return status_order.indexOf(a.value.status) - status_order.indexOf(b.value.status);
+                }
+            });
+        },
+        validForm() {
+            // Return the single valid form
+            let valid_form = this.$root.forms.find(form => form.value.status === 'valid');
+            return valid_form ? valid_form : null;
         }
     },
     template:
     /*html*/`
         <div class="container pb-5">
             <h1>Project creation forms</h1>
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th>Title</th>
-                        <th>Version</th>
-                        <th>Description</th>
-                        <th>Owner Email</th>
-                        <th>Status</th>
-                        <th>Created</th>
-                        <th>Links</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr v-for="form in this.sorted_forms" :key="form.id">
-                        <td>{{ form.value.title }}</td>
-                        <td>{{ form.value.version }}</td>
-                        <td>{{ form.value.description}}</td>
-                        <td>{{ form.value.owner.email }}</td>
-                        <td>{{ form.value.status }}</td>
-                        <td>{{ form.value.created }}</td>
-                        <td><a v-if="this.formIsEditable(form)" :href="'/project_creation?edit_mode=true&version_id=' + form.id">Edit</a></td>
-                    </tr>
-                </tbody>
-            </table>
+            <div class="row mb-5">
+                <div class="col-6" v-if="validForm">
+                    <div class="card">
+                        <div class="card-body">
+                            <h4 class="card-title">Valid Form: </h4>
+                            <h5 class="card-subtitle mb-2 text-muted">{{ validForm.value.title }}: {{ validForm.value.version }}</h5>
+                            <p class="card-text">Created {{ validForm.value.created }} by {{ validForm.value.owner.email }}</p>
+                            <a class="btn btn-primary" v-if="this.formIsEditable(validForm)" :href="'/project_creation?edit_mode=true&version_id=' + validForm.id">Edit</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6" v-if="draftForm">
+                    <div class="card">
+                        <div class="card-body">
+                            <h4 class="card-title">Draft Form: </h4>
+                            <h5 class="card-subtitle mb-2 text-muted">{{ draftForm.value.title }}: {{ draftForm.value.version }}</h5>
+                            <p class="card-text">Created {{ draftForm.value.created }} by {{ draftForm.value.owner.email }}</p>
+                            <a class="btn btn-primary" v-if="this.formIsEditable(draftForm)" :href="'/project_creation?edit_mode=true&version_id=' + draftForm.id">Edit</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <h3>All Forms</h3>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Version</th>
+                            <th>Description</th>
+                            <th>Owner Email</th>
+                            <th>Status</th>
+                            <th>Created</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="form in this.sortedForms" :key="form.id">
+                            <td>{{ form.value.title }}</td>
+                            <td>{{ form.value.version }}</td>
+                            <td>{{ form.value.description}}</td>
+                            <td>{{ form.value.owner.email }}</td>
+                            <td>{{ form.value.status }}</td>
+                            <td>{{ form.value.created }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
         `
 }
