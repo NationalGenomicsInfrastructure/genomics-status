@@ -856,7 +856,8 @@ const vCreateForm = {
             new_composite_conditional_then: [],
             new_conditional_if: '',
             new_conditional_then: '',
-            showDebug: false
+            showDebug: false,
+            showHelp: false
         }
     },
     computed: {
@@ -977,7 +978,72 @@ const vCreateForm = {
             <div class="row mt-5">
                 <div class="row mt-3 mb-3">
                     <div class="col-auto">
-                        <h1>Update Form:</h1>
+                        <h1>Update Form:
+                            <button class="btn btn-light ml-2" @click="showHelp = !showHelp"><i class="fa fa-question"></i></button>
+                        </h1>
+                        <div v-if="showHelp" class="alert alert-info">
+                            <h2>Modifying a Project Creation Form</h2>
+
+                                <p>This guide explains how to modify a project creation form. The modification interface is divided into several sections: <strong>Form Metadata</strong>, <strong>Fields</strong>, and <strong>Conditional Logic</strong>.</p>
+
+                                <h3>Edit Mode</h3>
+                                <p>To prevent accidental changes, most parts of the form are in a read-only state by default. To make changes, you need to enable "Edit Mode".</p>
+                                <ul>
+                                    <li><strong>Global Edit Mode</strong>: At the top of the "Update Form" section, there is a "Toggle Edit Mode" switch. Turning this on enables editing for all sections and fields simultaneously.</li>
+                                    <li><strong>Section/Field Edit Mode</strong>: Each section and field has its own edit button (a pencil icon <i class="fa-solid fa-pen-to-square"></i>). Clicking this button enables editing only for that specific item. Click the checkmark icon (<i class="fa-solid fa-check"></i>) to leave edit mode for that item.</li>
+                                </ul>
+
+                                <h3>Form Metadata</h3>
+                                <p>This section allows you to edit the general information about the form.</p>
+                                <ul>
+                                    <li><strong>Title, Description, and Instruction</strong>: These are text fields that describe the form's purpose and provide guidance to the user. You can edit them by enabling their respective edit modes.</li>
+                                    <li><strong>Form Groups</strong>: Fields in the form are organized into groups. In this section, you can:
+                                        <ul>
+                                            <li><strong>Add a New Group</strong>: Provide a unique identifier and a display name.</li>
+                                            <li><strong>Edit a Group</strong>: Change the display name of an existing group.</li>
+                                            <li><strong>Reorder Groups</strong>: Use the "Move Up" and "Move Down" buttons to change the order in which groups appear on the form.</li>
+                                            <li><strong>Remove a Group</strong>: Delete a group. Note that fields within that group will become "unassigned" but will not be deleted.</li>
+                                        </ul>
+                                    </li>
+                                </ul>
+
+                                <h3>Fields</h3>
+                                <p>This section lists all the fields that make up the form. You can expand it to view and edit each field's properties.</p>
+                                <p>For each field, you can modify:</p>
+                                <ul>
+                                    <li><strong>Identifier</strong>: The unique ID for the field.</li>
+                                    <li><strong>Group</strong>: Which form group the field belongs to.</li>
+                                    <li><strong>Description</strong>: Help text that appears below the field.</li>
+                                    <li><strong>Form Type</strong>: The type of input, such as <code>String</code>, <code>Boolean</code> (checkbox), <code>Select</code> (dropdown), or <code>Datalist</code>.</li>
+                                    <li><strong>Label</strong>: The display name for the field shown to the user.</li>
+                                    <li><strong>LIMS UDF</strong>: The name of the UDF in LIMS where the data will be stored.</li>
+                                    <li><strong>Allowed Values</strong>: For <code>Select</code> and <code>Datalist</code> types, you can define the list of options available to the user.</li>
+                                    <li><strong>Visibility</strong>: You can add rules to show or hide a field based on the values of other fields.</li>
+                                </ul>
+
+                                <h3>Conditional Logic</h3>
+                                <p>This section defines the dynamic behavior of the form. It consists of a set of rules in an "if-then" format.</p>
+                                <ul>
+                                    <li><strong>If</strong>: A condition based on the value of one or more fields.</li>
+                                    <li><strong>Then</strong>: The consequence if the condition is met, which is usually to restrict the available options for another field.</li>
+                                </ul>
+                                <p>You can:</p>
+                                <ul>
+                                    <li><strong>Add a new condition</strong>: Define a new "if-then" rule from scratch.</li>
+                                    <li><strong>Modify an existing condition</strong>: Change the fields or values in the "if" or "then" part.</li>
+                                    <li><strong>Add more complexity</strong>: A single "if" or "then" can depend on multiple fields.</li>
+                                    <li><strong>Remove a condition</strong>: Delete an entire rule.</li>
+                                </ul>
+
+                                <h3>Saving Your Changes</h3>
+                                <p>At the bottom of the page, you will find buttons to manage your changes:</p>
+                                <ul>
+                                    <li><strong>Save draft</strong>: Saves your current changes as a draft. This does not affect the currently active form. It's recommended to save your progress often.</li>
+                                    <li><strong>Publish form</strong>: Makes your saved draft the new "valid" version of the form, replacing the previous one. You can only publish a saved draft.</li>
+                                    <li><strong>Cancel draft</strong>: Discards your draft. This action cannot be undone.</li>
+                                </ul>
+                            </div>
+                        </div>
                         <div class="form-check form-switch">
                             <input class="form-check-input" type="checkbox" role="switch" id="globalEditModeSwitchTop" v-model="edit_mode">
                             <label class="form-check-label" for="globalEditModeSwitchTop">Toggle Edit Mode</label>
