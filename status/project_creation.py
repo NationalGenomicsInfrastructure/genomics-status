@@ -257,6 +257,9 @@ class ProjectCreationFormDataHandler(SafeHandler):
             # Got this far, should be fine.
             data_to_be_submitted = submitted_form_data
             data_to_be_submitted["status"] = "draft"
+            data_to_be_submitted["created"] = datetime.datetime.now().isoformat()
+            data_to_be_submitted["owner"] = {"email": self.current_user.email}
+
             data_to_be_submitted = self._update_doc_data(
                 data_to_be_submitted, "create_draft"
             )
