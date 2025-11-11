@@ -11,6 +11,7 @@ const vProjectCreationMain = {
             formData: {},
             forms: [],
             json_form: {},
+            last_saved_draft_time: null,
             new_json_form: {},
             showDebug: false,
             toplevel_edit_mode: false,
@@ -124,14 +125,14 @@ const vProjectCreationMain = {
             // Redirect to form list using regular javascript
             window.location.href = '/project_creation_forms';
         },
-        saveDraft() {
+        saveDraft(background = false) {
             // Save the current new_json_form as a draft by using the generic save endpoint
             // First make sure that the new_json_form is a draft or valid
             if (this.new_json_form.status !== 'draft' && this.new_json_form.status !== 'valid') {
                 this.$root.error_messages.push('Can only save draft when the form is in draft or valid status.');
                 return;
             }
-            this.saveNewForm();
+            this.saveNewForm(background);
         },
         publishForm() {
             if (this.new_json_form.status !== 'draft') {
@@ -142,19 +143,24 @@ const vProjectCreationMain = {
             this.$root.saveNewForm();
             window.location.href = '/project_creation_forms';
         },
-        saveNewForm() {
+        saveNewForm(background = false) {
             // Save the current new_json_form using the generic save endpoint
             axios
                 .post('/api/v1/project_creation_form', {
                     form: this.new_json_form,
                 })
                 .then(response => {
-                    alert('Draft saved successfully.');
+                    if (!background) {
+                        alert('Draft saved successfully.');
+                    }
+                    this.last_saved_draft_time = Date.now();
                     this.fetch_form(response.data.form._id);
+                    return true
                 })
                 .catch(error => {
                     this.$root.error_messages.push('Error saving draft. Please try again or contact a system adminstrator.');
                     console.log(error)
+                    return false
                 })
         },
         setValuesBasedOnConditionals() {
@@ -455,6 +461,7 @@ const vFormField = {
             cancelTokenSource: null,
             highlightedIndex: -1,
             inputChangeTimeout: null,
+            showConditionals: false,
             showSuggestions: false,
             suggestions: [],
             suggestionsLoading: false,
@@ -706,7 +713,7 @@ const vFormField = {
                 </template>
 
                 <template v-if="this.form_type === 'datalist'">
-                    <input 
+                    <input
                         class="form-control"
                         :list="identifier+'_list'"
                         :aria-label="description"
@@ -764,15 +771,32 @@ const vFormField = {
 
                 <p class="fst-italic">{{ field.description }}</p>
                 <template v-if="this.conditonalsApplied.length > 0">
-                    <strong>Conditional logic applied:</strong>
-                    <ul v-for="condition in this.conditonalsApplied">
-                        <li>
-                            "{{condition.description}}":
-                            <template v-for="property_value, property_name in condition.condition.properties">
-                                {{property_name}} in {{property_value.enum}} -> Allowed values: {{condition.options}}
-                            </template>
-                        </li>
-                    </ul>
+                    <a href="#" @click.prevent="showConditionals = !showConditionals">Conditional logic applied:</a>
+                    <template v-if="showConditionals">
+                        <ul v-for="condition in this.conditonalsApplied">
+                            <li>
+                                <h5>{{condition.description}}:</h5>
+                                <template v-for="property_value, property_name, index in condition.condition.properties">
+                                    <div v-if="index > 0">
+                                        <strong>and</strong>
+                                    </div>
+                                    <div>
+                                        {{property_name}} is any of
+                                        <ul v-for="enum_value in property_value.enum">
+                                            <li>{{enum_value}}</li>
+                                        </ul>
+                                    </div>
+                                </template>
+                                <strong>then</strong>
+                                <div>
+                                    Allowed values are
+                                    <ul v-for="option in condition.options">
+                                        <li>{{option}}</li>
+                                    </ul>
+                                </div>
+                            </li>
+                        </ul>
+                    </template>
                 </template>
             </div>
         </template>`
@@ -889,6 +913,7 @@ const vCreateForm = {
     name: 'v-create-form',
     data() {
         return {
+            currentTime: new Date(),
             display_conditional_logic: false,
             display_fields: false,
             display_metadata: false,
@@ -906,6 +931,28 @@ const vCreateForm = {
     computed: {
         allOf() {
             return this.$root.getValue(this.newForm, 'allOf');
+        },
+        dateFormatAgo() {
+            // Format the date to show how long ago it was
+            const diffInSeconds = Math.floor((this.currentTime - new Date(this.$root.last_saved_draft_time)) / 1000);
+            // Current time is set when the component is mounted, while last_saved_draft_time is updated on save
+            // So negative time is very likely
+            if (diffInSeconds < 0) {
+                return 'very recently';
+            }
+            if (diffInSeconds < 60) {
+                return `${diffInSeconds} seconds ago`;
+            }
+            const diffInMinutes = Math.floor(diffInSeconds / 60);
+            if (diffInMinutes < 60) {
+                return `${diffInMinutes} minutes ago`;
+            }
+            const diffInHours = Math.floor(diffInMinutes / 60);
+            if (diffInHours < 24) {
+                return `${diffInHours} hours ago`;
+            }
+            const diffInDays = Math.floor(diffInHours / 24);
+            return `${diffInDays} days ago`;
         },
         fields() {
             return this.$root.getValue(this.newForm, 'properties');
@@ -991,10 +1038,44 @@ const vCreateForm = {
             };
             this.allOf.push(newProperty);
         },
-        saveForm() {
-            // TODO
-            this.$root.json_form = this.$root.new_json_form;
-        }
+    },
+    mounted() {
+        setInterval(() => {
+            this.currentTime = new Date();
+        }, 5000);
+    },
+    watch: {
+        // Auto save when sections are closed and when field edit modes are exited
+        display_conditional_logic(newValue) {
+            if (!newValue) {
+                this.$root.saveDraft(true);
+            }
+        },
+        display_fields(newValue) {
+            if (!newValue) {
+                this.$root.saveDraft(true);
+            }
+        },
+        display_metadata(newValue) {
+            if (!newValue) {
+                this.$root.saveDraft(true);
+            }
+        },
+        edit_mode_description(newValue) {
+            if (!newValue) {
+                this.$root.saveDraft(true);
+            }
+        },
+        edit_mode_instructions(newValue) {
+            if (!newValue) {
+                this.$root.saveDraft(true);
+            }
+        },
+        edit_mode_fields(newValue) {
+            if (!newValue) {
+                this.$root.saveDraft(true);
+            }
+        },
     },
     template: 
         /*html*/`
@@ -1005,6 +1086,9 @@ const vCreateForm = {
                         <h1>Update Form:
                             <button class="btn btn-light ml-2" @click="showHelp = !showHelp"><i class="fa fa-question"></i></button>
                         </h1>
+                        <template v-if="this.$root.last_saved_draft_time">
+                            <small>Last saved draft: {{ this.dateFormatAgo }}</small>
+                        </template>
                         <div v-if="showHelp" class="alert alert-info">
                             <h2>Modifying a Project Creation Form</h2>
 
@@ -1170,10 +1254,10 @@ const vCreateForm = {
                                     :conditional_index="conditional_index"
                                     @remove-condition="removeCondition">
                                 </v-conditional-edit-form>
-                                <div v-if="field_edit_mode" class="row">
+                                <div class="row">
                                     <div class="col-5">
                                         <div class="input-group">
-                                            <select class="form-select" placeholder="test" v-model="this.new_composite_conditional_if[conditional_index]">
+                                            <select class="form-select" v-model="this.new_composite_conditional_if[conditional_index]">
                                                 <template v-for="identifier in Object.keys(this.$root.fields)">
                                                     <option :value="identifier">{{identifier}}</option>
                                                 </template>
@@ -1183,7 +1267,7 @@ const vCreateForm = {
                                     </div>
                                     <div class="col-5 offset-2">
                                         <div class="input-group">
-                                            <select class="form-select" placeholder="test" v-model="this.new_composite_conditional_then[conditional_index]">
+                                            <select class="form-select" v-model="this.new_composite_conditional_then[conditional_index]">
                                                 <template v-for="identifier in Object.keys(this.$root.fields)">
                                                     <option :value="identifier">{{identifier}}</option>
                                                 </template>
@@ -1303,6 +1387,13 @@ const vFormGroupsEditor = {
             }
         }
     },
+    watch: {
+        field_edit_mode(newValue) {
+            if (!newValue) {
+                this.$root.saveDraft(true);
+            }
+        }
+    },
     template: /*html*/`
         <h2 class="mt-3">Form Groups
             <button @click="field_edit_mode = !field_edit_mode" class="btn btn-lg ml-1">
@@ -1372,6 +1463,13 @@ const vConditionalEditForm = {
             return Object.keys(this.conditional.then.properties);
         }
     },
+    watch: {
+        field_edit_mode(newValue) {
+            if (!newValue) {
+                this.$root.saveDraft(true);
+            }
+        }
+    },
     template:
         /*html*/`
         <div class="pb-3">
@@ -1396,6 +1494,9 @@ const vConditionalEditForm = {
                     </div>
                 </div>
             </div>
+            <div><h4>PropertyKeyIf</h4>
+            <p>{{this.propertyKeyIf}}</p>
+            </div>
             <div class="row">
                 <div class="col-5">
                     <template v-for="(if_property, if_property_index) in this.propertyKeyIf">
@@ -1408,7 +1509,6 @@ const vConditionalEditForm = {
                              :edit_mode="field_edit_mode">
                         </v-conditional-edit-form-single-condition>
                     </template>
-
                 </div>
                 <div class="col-2 text-center">
                     <h2><i class="fa-solid fa-arrow-right"></i></h2>
@@ -1496,14 +1596,18 @@ const vConditionalEditFormSingleCondition = {
     },
     template:
     /*html*/`
-        <template v-if="property_index === 0" :class="{'mt-3': conditional_index > 0}">
+        <div v-if="property_index !== 0">
+            AND
+        </div>
+        <div :class="{'mt-3': conditional_index > 0}">
             <h4 v-if="condition_type === 'if'">
                 If <span class="fw-bold">{{propertyReferenceLabel}}</span> is any of
             </h4>
             <h4 v-else>
                 Then <span class="fw-bold">{{propertyReferenceLabel}}</span> has to be one of
             </h4>
-        </template>
+        </div>
+
         <template v-if="showAllOptions && propertyReferenceIsEnum">
             <template v-for="option in propertyReference.enum">
                 <h4>
@@ -1653,6 +1757,13 @@ const vUpdateFormField = {
             }
         }
     },
+    watch: {
+        field_edit_mode(newValue) {
+            if (!newValue) {
+                this.$root.saveDraft(true);
+            }
+        }
+    },
      template:
         /*html*/`
             <div class="mb-5">
@@ -1664,6 +1775,9 @@ const vUpdateFormField = {
                     <button @click="field_edit_mode = !field_edit_mode" class="btn btn-lg ml-1"><i class="fa-solid fa-pen-to-square"></i></button>
                 </template>
                 </h2>
+                <div class="col">
+                    <button class="btn btn-sm btn-danger" @click.prevent="delete this.new_json_schema['properties'][identifier]">Remove field<i class="fa-solid fa-trash ml-2"></i>
+                </div>
                 <div>
                     <label :for="identifier" class="form-label">Identifier</label>
                     <input :id="identifier" class="form-control" type="string" v-model="identifier" :disabled="!field_edit_mode">
