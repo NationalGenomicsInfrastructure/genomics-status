@@ -914,19 +914,9 @@ const vCreateForm = {
             return this.$root.getValue(this.$root.new_json_form, 'json_schema');
         },
         // Metadata fields
-        description() {
-            return this.$root.getValue(this.$root.new_json_form, 'description');
-        },
         form_groups() {
             return this.$root.getValue(this.$root.new_json_form, 'form_groups');
         },
-        instruction() {
-            return this.$root.getValue(this.$root.new_json_form, 'instruction');
-        },
-        title() {
-            return this.$root.getValue(this.$root.new_json_form, 'title');
-        },
-
     },
     methods: {
         removeCondition(conditional_index) {
@@ -1115,7 +1105,7 @@ const vCreateForm = {
                                     </template>
                                 </button>
                             </h5>
-                            <input :id="title" class="form-control" type="string" v-model="this.title" :disabled="!edit_mode_title">
+                            <input :id="title" class="form-control" type="string" v-model="this.$root.new_json_form['title']" :disabled="!edit_mode_title">
                         </div>
                         <div>
                             <h5 class="mb-1">Description
@@ -1128,7 +1118,7 @@ const vCreateForm = {
                                     </template>
                                 </button>
                             </h5>
-                            <input :id="description" class="form-control" type="string" v-model="this.description" :disabled="!edit_mode_description">
+                            <input :id="description" class="form-control" type="string" v-model="this.$root.new_json_form['description']" :disabled="!edit_mode_description">
                         </div>
                         <div>
                             <h5 class="mb-1">Instruction
@@ -1141,7 +1131,7 @@ const vCreateForm = {
                                     </template>
                                 </button>
                             </h5>
-                            <input :id="instruction" class="form-control" type="string" v-model="this.instruction" :disabled="!edit_mode_instruction">
+                            <input :id="instruction" class="form-control" type="text" v-model="this.$root.new_json_form['instruction']" :disabled="!edit_mode_instruction">
                         </div>
                         <v-form-groups-editor :form_groups="this.form_groups"></v-form-groups-editor>
                     </template>
