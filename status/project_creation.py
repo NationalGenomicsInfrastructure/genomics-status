@@ -1,11 +1,13 @@
 import datetime
 import json
+import re
 
 from genologics import lims
 from genologics.config import BASEURI, PASSWORD, USERNAME
 from genologics.entities import Researcher
 
 from status.clone_project import LIMSProjectCloningHandler
+from status.projects import ProjectsBaseDataHandler
 from status.util import LIMSQueryBaseHandler, SafeHandler
 
 
@@ -407,7 +409,7 @@ class LocalCacheEntry:
         ).total_seconds() > expiry_seconds
 
 
-class ProjectCreationCountDetailsDataHandler(SafeHandler):
+class ProjectCreationCountDetailsDataHandler(ProjectsBaseDataHandler):
     """API Handler to get the count of projects created per detail value for a given detail key."""
 
     LocalCache = {}
@@ -454,45 +456,63 @@ class ProjectCreationCountDetailsDataHandler(SafeHandler):
         if project_detail is None:
             return json.dumps(dict())
 
-        result_per_year_cache = self.LocalCache.get(project_detail)
-        if (
-            result_per_year_cache is None
-            or LocalCacheEntry(project_detail).is_expired()
-        ):
-            result_per_year = []
-            # Iterate over the years and fetch data from the view
-            for year in years:
-                keep_iterating = True
-                bookmark = None
-                while keep_iterating:
-                    page = self.collect_results_from_db(
-                        project_detail,
-                        year,
-                        page_size=1000,
-                        bookmark=bookmark,
-                    )
-                    result_per_year.append(page["rows"])
-                    bookmark = page["next_bookmark"]
-                    keep_iterating = page["has_next"]
-            # Save cache for later requests
-            self.LocalCache[project_detail] = LocalCacheEntry(result_per_year)
-        else:
-            result_per_year = result_per_year_cache.data
-
         # Filter detail_values based on the search string
         search_string = self.get_query_argument("search_string", default="")
         search_string_lower = search_string.lower()
 
-        # Process the result
-        for result in result_per_year:
-            for row in result:
-                detail_key, year, detail_value = row["key"]
-                count = row["value"]
+        if project_detail == "user_account":
+            if not self.cached_search_list:
+                self.update_projects_cache()
+            for project in self.cached_search_list:
+                if not re.match(r"^[A-Z]\.[A-Za-z]+_\d{2}_\d{2}$", project[0]):
+                    continue
 
-                if search_string_lower in detail_value.lower():
-                    if detail_key not in results:
-                        results[detail_value] = 0
-                    results[detail_value] += count
+                name, year, ordinal = project[0].split("_")
+                if name not in results:
+                    results[name] = {"year": year, "latest_ordinal": ordinal}
+                else:
+                    if year > results[name]["year"]:
+                        results[name]["year"] = year
+                        results[name]["latest_ordinal"] = ordinal
+                    elif year == results[name]["year"]:
+                        if ordinal > results[name]["latest_ordinal"]:
+                            results[name]["latest_ordinal"] = ordinal
+        else:
+            result_per_year_cache = self.LocalCache.get(project_detail)
+            if (
+                result_per_year_cache is None
+                or LocalCacheEntry(project_detail).is_expired()
+            ):
+                result_per_year = []
+                # Iterate over the years and fetch data from the view
+                for year in years:
+                    keep_iterating = True
+                    bookmark = None
+                    while keep_iterating:
+                        page = self.collect_results_from_db(
+                            project_detail,
+                            year,
+                            page_size=1000,
+                            bookmark=bookmark,
+                        )
+                        result_per_year.append(page["rows"])
+                        bookmark = page["next_bookmark"]
+                        keep_iterating = page["has_next"]
+                # Save cache for later requests
+                self.LocalCache[project_detail] = LocalCacheEntry(result_per_year)
+            else:
+                result_per_year = result_per_year_cache.data
+
+            # Process the result
+            for result in result_per_year:
+                for row in result:
+                    detail_key, year, detail_value = row["key"]
+                    count = row["value"]
+
+                    if search_string_lower in detail_value.lower():
+                        if detail_key not in results:
+                            results[detail_value] = 0
+                        results[detail_value] += count
 
         # Return the results as JSON
         self.write(json.dumps(results))

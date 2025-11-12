@@ -458,6 +458,7 @@ const vFormField = {
             showSuggestions: false,
             suggestions: [],
             suggestionsLoading: false,
+            user_accounts: {}
         };
     },
     computed: {
@@ -605,6 +606,36 @@ const vFormField = {
                 this.showSuggestions = false;
             }, 2000)
         },
+        onCustomDatalistChange() {
+            if(this.identifier === 'user_account'){
+                const val = this.$root.formData[this.identifier];
+                // Match against first element of each suggestion tuple
+                if (this.suggestions.some(s => s[0] === val)) {
+                    this.fetch_data(this.identifier);
+                    const current_year = new Date().getFullYear().toString().slice(-2);
+                    this.$root.formData["project_name"] = `${val}_${current_year}`;
+                    this.user_accounts[val]['year'] < current_year ?
+                        this.$root.formData["project_name"] += `_01` :
+                        this.$root.formData["project_name"] += `_0${parseInt(this.user_accounts[val]['latest_ordinal']) + 1}`;
+                }
+                else{
+                    this.$root.formData["fetched_data"]["researcher_name"] = [];
+                    this.update_field_schema_with_fetched_data("researcher_name", []);
+                    this.$root.formData["project_name"] = '';
+                }
+            }
+        },
+        update_field_schema_with_fetched_data(field_identifier, fetched_data) {
+            const fieldSchema = this.$root.json_schema.properties[field_identifier];
+            if(!fetched_data || fetched_data.length === 0){
+                delete fieldSchema.enum;
+                return;
+            }
+            if (!fieldSchema.enum) {
+                fieldSchema.enum = [];
+            }
+            fieldSchema.enum = fetched_data.map(item => item[field_identifier]);
+        },
         fetch_data(field_identifier) {
             let url = `/api/v1/project_creation_data_fetch`;
             axios
@@ -622,12 +653,7 @@ const vFormField = {
                                 this.$root.formData["fetched_data"] = {};
                             }
                             this.$root.formData["fetched_data"][display_in_field] = result;
-                            const fieldSchema = this.$root.json_schema.properties[display_in_field];
-                            if (!fieldSchema.enum) {
-                                fieldSchema.enum = [];
-                            }
-                            // Clear existing enum and add new values
-                            fieldSchema.enum = result.map(r => r[display_in_field]);
+                            this.update_field_schema_with_fetched_data(display_in_field, result);
                         }
                     }
                 })
@@ -662,9 +688,16 @@ const vFormField = {
                 axios
                     .get(url,)
                     .then(response => {
-                        this.suggestions = Object.entries(
-                            response.data
-                        ).sort((a, b) => b[1] - a[1])
+                        if(this.identifier === 'user_account'){
+                            this.suggestions = Object.entries(response.data).map(([key, value]) => 
+                                [key, `${value.year}_${value.latest_ordinal}`]);
+                            this.user_accounts = response.data
+                        }
+                        else{
+                            this.suggestions = Object.entries(
+                                response.data
+                            ).sort((a, b) => b[1] - a[1])
+                        }
                         this.showSuggestions = true;
                         this.suggestionsLoading = false;
                     })
@@ -726,6 +759,7 @@ const vFormField = {
                             v-model="this.$root.formData[identifier]"
                             :list="identifier+'_list'"
                             placeholder="Type to search..."
+                            @change="onCustomDatalistChange"
                         />
                         <datalist :id="identifier+'_list'">
                             <option
@@ -746,19 +780,6 @@ const vFormField = {
                     <div class="form-check form-switch">
                         <label :for="identifier" class="form-check-label">{{ label }}</label>
                         <input class="form-check-input" type="checkbox" :name="identifier" :id="identifier" :placeholder="description" v-model="this.$root.formData[identifier]">
-                    </div>
-                </template>
-                <template v-if="this.form_type === 'custom_string_data_fetch'">
-                    <div class="input-group mb-3">
-                        <input class="form-control"
-                                        :type="text"
-                                        class="form-control"
-                                        :name="identifier"
-                                        :id="identifier"
-                                        :placeholder="description"
-                                        v-model="this.$root.formData[identifier]"
-                                        list="identifier+'_list'">
-                        <button class="btn btn-secondary" type="button" @click.prevent="fetch_data(identifier)">Fetch suggestions</button>
                     </div>
                 </template>
 
