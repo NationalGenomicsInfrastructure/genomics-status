@@ -191,6 +191,9 @@ const vProjectCreationMain = {
                     console.log(`Setting ${field} to ${options[0]} based on conditional logic`);
                     this.formData[field] = options[0];
                 }
+                if (options !== null && options.length === 0) {
+                    this.$root.error_messages.push(`No options available for field ${field} based on conditional logic. There is likely a contradition in the form or in the input data.`);
+                }
             });
         },
 
