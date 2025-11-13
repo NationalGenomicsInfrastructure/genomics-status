@@ -12,11 +12,19 @@ const vProjectCreationMain = {
             forms: [],
             json_form: {},
             last_saved_draft_time: null,
+            // These fields are mandatory by the genomics template https://github.com/ScilifelabDataCentre/scilifelab-metadata-templates 
+            mandatory_udfs_ena: ['library_construction_method', 'library_source', 'library_selection', 'library_strategy', 'library_construction_protocol'],
+            // These fields have special code associated to them which can not be reproduced by editing the form
+            special_fields: ['project_name', 'user_account', 'researcher_name'],
             new_json_form: {},
             showDebug: false,
             toplevel_edit_mode: false,
             validation_errors: [],
-            validation_errors_per_field: {}
+            validation_errors_per_field: {},
+            // Validation of new form
+            validation_missing_mandatory_LIMS_udfs: {},
+            validation_missing_mandatory_special_fields: {},
+            validation_new_form_ajv_errors: ''
         }
     },
     computed: {
@@ -29,6 +37,9 @@ const vProjectCreationMain = {
         json_schema() {
             return this.$root.getValue(this.$root.json_form, 'json_schema');
         },
+        new_form_errors() {
+            return this.$root.validation_missing_mandatory_LIMS_udfs || this.$root.validation_missing_mandatory_special_fields || this.$root.validation_new_form_ajv_errors;
+        }
     },
     methods: {
         evaluateCondition(condition) {
@@ -236,10 +247,39 @@ const vProjectCreationMain = {
             return true;
         },
         validateNew() {
-            // Validate the new JSON schema
-            console.log("Validating new schema");
+            console.log("Validating new JSON schema");
+            const new_json_schema = this.$root.getValue(this.$root.new_json_form, 'json_schema')
+            // If undefined no validation needed
+            if (!new_json_schema) {
+                return;
+            }
+            // Reset validation results
+            this.$root.validation_missing_mandatory_LIMS_udfs = {}
+            this.$root.validation_missing_mandatory_special_fields = {}
+            this.$root.validation_new_form_ajv_errors = ''
+
             const ajv = new Ajv({strictSchema: false, allErrors: true});
-            const validate = ajv.compile(this.new_json_schema);
+
+            try {
+                const validate = ajv.compile(new_json_schema);
+            } catch (error) {
+                this.$root.validation_new_form_ajv_errors = error.message
+            }
+
+            // Check that all mandatory fields are present in the json_schema properties
+            this.special_fields.forEach(field => {
+                if (!new_json_schema.properties[field]) {
+                    this.$root.validation_missing_mandatory_special_fields[field] = true;
+                }
+            });
+
+            // Check that all mandatory fields are present in the json_schema properties
+            const lims_udfs_in_form = Object.values(new_json_schema.properties).map(field => field.ngi_form_lims_udf);
+            this.mandatory_udfs_ena.forEach(mandatory_udf => {
+                if (!lims_udfs_in_form.includes(mandatory_udf)) {
+                    this.$root.validation_missing_mandatory_LIMS_udfs[mandatory_udf] = true;
+                }
+            });
         }
     },
     watch: {
@@ -249,7 +289,7 @@ const vProjectCreationMain = {
         },
         new_json_form: {
             deep: true,
-            handler: 'validateNew()'
+            handler: 'validateNew'
         }
     }
 }
@@ -437,7 +477,7 @@ const vProjectCreationForm = {
                                     <button class="btn btn-lg btn-primary mt-4 ml-3 col-2" @click="this.$root.saveDraft">
                                         <i class="fa-solid fa-floppy-disk mr-1"></i> Save draft
                                     </button>
-                                    <button class="btn btn-lg btn-success mt-4 ml-2 col-2" @click="this.$root.publishForm">
+                                    <button class="btn btn-lg btn-success mt-4 ml-2 col-2" @click="this.$root.publishForm" :disabled="this.$root.new_form_errors">
                                         <i class="fa-solid fa-circle-check mr-1"></i> Publish form
                                     </button>
                                     <button class="btn btn-lg btn-danger mt-4 ml-2 col-2" @click="this.$root.cancelDraft">
@@ -824,6 +864,7 @@ const vFormField = {
 }
 
 const vCreateFormList = {
+    // The landing page for overview of all project creation forms
     name: 'v-create-form-list',
     mounted() {
         this.$root.fetch_list_of_forms()
@@ -1184,6 +1225,25 @@ const vCreateForm = {
                                     <li><strong>Cancel draft</strong>: Discards your draft. This action cannot be undone.</li>
                                 </ul>
                             </div>
+                        </div>
+                        <div v-if="this.$root.new_form_errors" class="alert alert-danger" role="alert">
+                                <h3>Form Validation Errors</h3>
+                                The edited form has some issues. These will have to be fixed before the draft can be published.
+                                <template v-if="Object.keys(this.$root.validation_missing_mandatory_LIMS_udfs).length > 0">
+                                    <h4>Mandatory LIMS udfs</h4>
+                                    The following mandatory LIMS udfs are currently not assigned to any field:
+                                    <ul v-for="(value, udf) in this.$root.validation_missing_mandatory_LIMS_udfs" :key="udf">
+                                        <li>{{ udf }}</li>
+                                    </ul>
+                                </template>
+                                <template v-if="Object.keys(this.$root.validation_missing_mandatory_special_fields).length > 0">
+                                    <h4>Mandatory special fields</h4>
+                                    The following mandatory special fields are currently missing:
+                                    {{this.$root.validation_missing_mandatory_special_fields}}
+                                </template>
+                                <template v-if="this.$root.validation_new_form_ajv_errors">
+                                    {{this.$root.validation_new_form_ajv_errors}}
+                                </template>
                         </div>
                     </div>
                     <div class="col-auto ml-auto">
