@@ -47,7 +47,7 @@ const vSamplesheetEditor = {
             <div class="row">
                 <div class="col-12">
                     <h1>Samplesheet Editor</h1>
-                    
+
                     <!-- Flowcell ID input -->
                     <div class="card mt-4 mb-4">
                         <div class="card-body">
@@ -55,17 +55,17 @@ const vSamplesheetEditor = {
                             <div class="row g-3 align-items-end">
                                 <div class="col-auto">
                                     <label for="flowcell_id" class="form-label">Flowcell ID</label>
-                                    <input 
-                                        type="text" 
-                                        class="form-control" 
-                                        id="flowcell_id" 
-                                        v-model="flowcell_id" 
+                                    <input
+                                        type="text"
+                                        class="form-control"
+                                        id="flowcell_id"
+                                        v-model="flowcell_id"
                                         placeholder="e.g., 20231115_A01234_0123_ABCDEFGHIJ"
                                         @keyup.enter="fetchSamplesheet">
                                 </div>
                                 <div class="col-auto">
-                                    <button 
-                                        class="btn btn-primary" 
+                                    <button
+                                        class="btn btn-primary"
                                         @click="fetchSamplesheet"
                                         :disabled="loading">
                                         <span v-if="loading" class="spinner-border spinner-border-sm me-2" role="status"></span>
@@ -75,14 +75,14 @@ const vSamplesheetEditor = {
                             </div>
                         </div>
                     </div>
-                    
+
                     <!-- Error messages -->
                     <template v-if="error_messages.length > 0">
                         <div class="alert alert-danger" role="alert">
                             <h3 v-for="error in error_messages">{{ error }}</h3>
                         </div>
                     </template>
-                    
+
                     <!-- Loading state -->
                     <template v-if="loading && !samplesheet">
                         <div class="text-center">
@@ -92,14 +92,60 @@ const vSamplesheetEditor = {
                             <p>Loading samplesheet data...</p>
                         </div>
                     </template>
-                    
+
                     <!-- Samplesheet data -->
                     <template v-if="samplesheet">
                         <h2>Flowcell: {{ samplesheet.flowcell_id }}</h2>
-                        
-                        <div class="alert alert-info" v-if="samplesheet.metadata">
-                            <strong>Summary:</strong> 
-                            {{ samplesheet.metadata.num_samples }} samples across {{ samplesheet.metadata.num_lanes }} lane(s)
+
+                        <!-- Metadata Card -->
+                        <div class="card mt-4" v-if="samplesheet.metadata">
+                            <div class="card-header">
+                                <h5 class="mb-0">Flowcell Information</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <dl class="row">
+                                            <dt class="col-sm-5">Full Name:</dt>
+                                            <dd class="col-sm-7">{{ samplesheet.metadata.full_name || 'Unknown' }}</dd>
+
+                                            <dt class="col-sm-5">Position:</dt>
+                                            <dd class="col-sm-7">{{ samplesheet.metadata.position || 'Unknown' }}</dd>
+
+                                            <dt class="col-sm-5">Instrument:</dt>
+                                            <dd class="col-sm-7">{{ samplesheet.metadata.instrument || 'Unknown' }}</dd>
+
+                                            <dt class="col-sm-5">Run Setup:</dt>
+                                            <dd class="col-sm-7">{{ samplesheet.metadata.run_setup || 'Unknown' }}</dd>
+                                        </dl>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <dl class="row">
+                                            <dt class="col-sm-4">Samples:</dt>
+                                            <dd class="col-sm-8">{{ samplesheet.metadata.num_samples }}</dd>
+
+                                            <dt class="col-sm-4">Lanes:</dt>
+                                            <dd class="col-sm-8">{{ samplesheet.metadata.num_lanes }}</dd>
+
+                                            <dt class="col-sm-4">Projects:</dt>
+                                            <dd class="col-sm-8">
+                                                <span v-if="samplesheet.metadata.projects && samplesheet.metadata.projects.length > 0">
+                                                    <span v-for="(project, idx) in samplesheet.metadata.projects" :key="project.id || project.name">
+                                                        <a v-if="project.id"
+                                                           :href="'/project/' + project.id"
+                                                           class="text-decoration-none">
+                                                            {{ project.name }} ({{ project.id }})
+                                                        </a>
+                                                        <span v-else>{{ project.name }}</span>
+                                                        <span v-if="idx < samplesheet.metadata.projects.length - 1">, </span>
+                                                    </span>
+                                                </span>
+                                                <span v-else>None</span>
+                                            </dd>
+                                        </dl>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                         
                         <div class="mt-4">
