@@ -149,6 +149,7 @@ from status.sample_requirements import (
     SampleRequirementsValidateDraftDataHandler,
     SampleRequirementsViewHandler,
 )
+from status.samplesheet import SamplesheetDataHandler, SamplesheetEditorHandler
 from status.sensorpush import (
     SensorpushDataHandler,
     SensorpushHandler,
@@ -351,6 +352,7 @@ class Application(tornado.web.Application):
             ("/api/v1/workset_links/([^/]*)$", WorksetLinksHandler),
             ("/api/v1/workset_queues", WorksetQueuesDataHandler),
             ("/api/v1/closed_worksets", ClosedWorksetsHandler),
+            ("/api/v1/samplesheet/([^/]*)$", SamplesheetDataHandler),
             ("/barcode", BarcodeHandler),
             ("/controls", ControlsHandler),
             ("/applications", ApplicationsHandler),
@@ -398,6 +400,7 @@ class Application(tornado.web.Application):
             ("/sample_requirements", SampleRequirementsViewHandler),
             ("/sample_requirements_preview", SampleRequirementsPreviewHandler),
             ("/sample_requirements_update", SampleRequirementsUpdateHandler),
+            ("/samplesheet_editor", SamplesheetEditorHandler),
             ("/sensorpush", SensorpushHandler),
             ("/sequencing_queues", SequencingQueuesHandler),
             (
