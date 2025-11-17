@@ -793,7 +793,7 @@ class GenerateQuoteHandler(AgreementsDBHandler):
 
     def post(self):
         quote_input = tornado.escape.json_decode(
-            self.request.body.decode("utf-8").split("=")[1]
+            self.request.body.decode("utf-8").split("=", 1)[1]
         )
         current_user = self.get_current_user()
         user_name = current_user.name
