@@ -1,5 +1,5 @@
 import os
-from typing import Any, Union
+from typing import Any
 
 from status.util import SafeHandler
 
@@ -24,7 +24,7 @@ class MultiQCReportHandler(SafeHandler):
     @staticmethod
     def get_multiqc(
         app: Any, project_id: str, read_file: bool = True
-    ) -> Union[str, dict, None]:
+    ) -> str | dict | None:
         """
         Getting multiqc reports for requested project from the filesystem
         Returns a string containing html if report exists, otherwise None
@@ -75,7 +75,7 @@ class ProjectSummaryReportHandler(SafeHandler):
     @staticmethod
     def get_summary_report(
         app: Any, project_id: str, read_file: bool = True
-    ) -> Union[str, bool, None]:
+    ) -> str | bool | None:
         """If read_file is false, the function will return True if the file exists, otherwise None
         If read_file is True, it returns a string containing the report in html if it exists"""
         project_name = ""
@@ -140,7 +140,7 @@ class SingleCellSampleSummaryReportHandler(SafeHandler):
     def get_sample_summary_reports(
         app: Any,
         project_id: str,
-    ) -> Union[list[str], None]:
+    ) -> list[str] | None:
         """Returns a list of sample summary reports for the requested project if sample_id is None,
         otherwise returns the report for the requested sample"""
 
