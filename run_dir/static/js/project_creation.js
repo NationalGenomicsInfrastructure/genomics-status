@@ -1264,7 +1264,10 @@ const vCreateForm = {
                     <pre>{{ this.$root.new_json_form }}</pre>
                 </template>
                 <div class="ml-3 pb-3 border-bottom">
-                    <h2 class="mt-3">Form Metadata<button v-if="this.display_metadata" class="btn btn-secondary ml-2" @click.prevent="this.display_metadata = false">Hide metadata</button></h2>
+                    <h2 class="mt-3" style="cursor: pointer;" @click="display_metadata = !display_metadata">
+                        <i :class="display_metadata ? 'fa-solid fa-caret-down' : 'fa-solid fa-caret-right'"></i>
+                        Form Metadata
+                    </h2>
                     <template v-if="this.display_metadata">
                         <div>
                             <h5 class="mb-1">Title
@@ -1307,12 +1310,12 @@ const vCreateForm = {
                         </div>
                         <v-form-groups-editor :form_groups="this.form_groups"></v-form-groups-editor>
                     </template>
-                    <template v-else>
-                        <button class="btn btn-primary" @click.prevent="this.display_metadata = true">Show metadata</button>
-                    </template>
                 </div>
                 <div class="ml-3 pb-3 border-bottom">
-                    <h2 class="mt-3">Fields<button v-if="this.display_fields" class="btn btn-secondary ml-2" @click.prevent="this.display_fields = false">Hide fields</button></h2>
+                    <h2 class="mt-3" style="cursor: pointer;" @click="display_fields = !display_fields">
+                        <i :class="display_fields ? 'fa-solid fa-caret-down' : 'fa-solid fa-caret-right'"></i>
+                        Fields
+                    </h2>
                     <template v-if="this.display_fields">
                         <template v-for="(field, identifier) in fields" :key="identifier">
                             <template v-if="field.ngi_form_type !== undefined">
@@ -1326,14 +1329,13 @@ const vCreateForm = {
                                 <button class="btn btn-primary mt-2" @click.prevent="this.addNewField()">Add new field</button>
                             </div>
                         </div>
-                        <button class="btn btn-danger" @click.prevent="this.display_fields = false">Hide fields</button>
-                    </template>
-                    <template v-else>
-                        <button class="btn btn-primary" @click.prevent="this.display_fields = true">Show fields</button>
                     </template>
                 </div>
                 <div class="ml-3">
-                    <h2 class="mt-3">Conditional logic <button v-if="this.display_conditional_logic" class="btn btn-secondary" @click.prevent="this.display_conditional_logic = false">Hide conditional logic</button></h2>
+                    <h2 class="mt-3" style="cursor: pointer;" @click="display_conditional_logic = !display_conditional_logic">
+                        <i :class="display_conditional_logic ? 'fa-solid fa-caret-down' : 'fa-solid fa-caret-right'"></i>
+                        Conditional logic
+                    </h2>
                     <template v-if="this.display_conditional_logic">
                         <template v-for="(conditional, conditional_index) in this.allOf">
                             <div class="border-bottom pb-5">
@@ -1389,12 +1391,6 @@ const vCreateForm = {
                             </div>
                         </div>
                         <button class="btn btn-primary mt-2" @click.prevent="this.addPropertyToCondition()">Add new condition</button>
-                        <div class="mt-5 border-top pt-3">
-                            <button class="btn btn-danger" @click.prevent="this.display_conditional_logic = false">Hide conditional logic</button>
-                        </div>
-                    </template>
-                    <template v-else>
-                        <button class="btn btn-primary" @click.prevent="this.display_conditional_logic = true">Show conditional logic</button>
                     </template>
                 </div>
             </div>
