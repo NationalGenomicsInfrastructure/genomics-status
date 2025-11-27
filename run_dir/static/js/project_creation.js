@@ -13,7 +13,7 @@ const vProjectCreationMain = {
             json_form: {},
             last_saved_draft_time: null,
             // These fields are mandatory by the genomics template https://github.com/ScilifelabDataCentre/scilifelab-metadata-templates 
-            mandatory_udfs_ena: ['library_construction_method', 'library_source', 'library_selection', 'library_strategy', 'library_construction_protocol'],
+            mandatory_udfs_ena: ['Library construction method', 'Library source', 'Library selection', 'Library strategy'],
             // These fields have special code associated to them which can not be reproduced by editing the form
             special_fields: ['project_name', 'user_account', 'researcher_name'],
             new_json_form: {},
@@ -38,7 +38,11 @@ const vProjectCreationMain = {
             return this.$root.getValue(this.$root.json_form, 'json_schema');
         },
         new_form_errors() {
-            return this.$root.validation_missing_mandatory_LIMS_udfs || this.$root.validation_missing_mandatory_special_fields || this.$root.validation_new_form_ajv_errors;
+            const hasLimsUdfErrors = Object.keys(this.$root.validation_missing_mandatory_LIMS_udfs || {}).length > 0;
+            const hasSpecialFieldErrors = Object.keys(this.$root.validation_missing_mandatory_special_fields || {}).length > 0;
+            const hasAjvErrors = !!this.$root.validation_new_form_ajv_errors;
+
+            return hasLimsUdfErrors || hasSpecialFieldErrors || hasAjvErrors;
         }
     },
     methods: {
