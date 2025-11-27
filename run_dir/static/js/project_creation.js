@@ -4,43 +4,43 @@ import Ajv from 'https://cdn.jsdelivr.net/npm/ajv@8.17.1/+esm';
 const vProjectCreationMain = {
     data() {
         return {
-            error_messages: [],
+            errorMessages: [],
             /* Maybe some of these attributes are more suitable in the vProjectCreationForm component 
             but it would be quite a lot of work to move it.*/
             conditionalLogic: [],
             formData: {},
             forms: [],
-            json_form: {},
-            last_saved_draft_time: null,
+            jsonForm: {},
+            lastSavedDraftTime: null,
             // These fields are mandatory by the genomics template https://github.com/ScilifelabDataCentre/scilifelab-metadata-templates 
             mandatory_udfs_ena: ['Library construction method', 'Library source', 'Library selection', 'Library strategy'],
             // These fields have special code associated to them which can not be reproduced by editing the form
             special_fields: ['project_name', 'user_account', 'researcher_name'],
-            new_json_form: {},
+            newJsonForm: {},
             showDebug: false,
-            toplevel_edit_mode: false,
-            validation_errors: [],
-            validation_errors_per_field: {},
+            toplevelEditMode: false,
+            validationErrors: [],
+            validationErrorsPerField: {},
             // Validation of new form
-            validation_missing_mandatory_LIMS_udfs: {},
-            validation_missing_mandatory_special_fields: {},
-            validation_new_form_ajv_errors: ''
+            validationMissingMandatoryLimsUdfs: {},
+            validationMissingMandatorySpecialFields: {},
+            validationNewFormAjvErrors: ''
         }
     },
     computed: {
         fields() {
-            if (this.json_schema === undefined) {
+            if (this.jsonSchema === undefined) {
                 return []
             }
-            return this.getValue(this.json_schema, 'properties');
+            return this.getValue(this.jsonSchema, 'properties');
         },
-        json_schema() {
-            return this.$root.getValue(this.$root.json_form, 'json_schema');
+        jsonSchema() {
+            return this.$root.getValue(this.$root.jsonForm, 'json_schema');
         },
-        new_form_errors() {
-            const hasLimsUdfErrors = Object.keys(this.$root.validation_missing_mandatory_LIMS_udfs || {}).length > 0;
-            const hasSpecialFieldErrors = Object.keys(this.$root.validation_missing_mandatory_special_fields || {}).length > 0;
-            const hasAjvErrors = !!this.$root.validation_new_form_ajv_errors;
+        newFormErrors() {
+            const hasLimsUdfErrors = Object.keys(this.$root.validationMissingMandatoryLimsUdfs || {}).length > 0;
+            const hasSpecialFieldErrors = Object.keys(this.$root.validationMissingMandatorySpecialFields || {}).length > 0;
+            const hasAjvErrors = !!this.$root.validationNewFormAjvErrors;
 
             return hasLimsUdfErrors || hasSpecialFieldErrors || hasAjvErrors;
         }
@@ -67,7 +67,7 @@ const vProjectCreationMain = {
                     this.$root.forms = response.data.forms
                 })
                 .catch(error => {
-                    this.$root.error_messages.push('Error fetching list of forms. Please try again or contact a system adminstrator.');
+                    this.$root.errorMessages.push('Error fetching list of forms. Please try again or contact a system adminstrator.');
                     console.log(error)
                 })
         },
@@ -76,23 +76,23 @@ const vProjectCreationMain = {
             if (version !== undefined) {
                 url = url + '?version=' + version
             }
-            if (this.$root.toplevel_edit_mode) {
+            if (this.$root.toplevelEditMode) {
                 url = url + '&edit_mode=true'
             }
             axios
                 .get(url)
                 .then(response => {
-                    this.$root.json_form = response.data.form
-                    if (this.$root.toplevel_edit_mode) {
-                        this.$root.new_json_form = JSON.parse(JSON.stringify(this.$root.json_form));
+                    this.$root.jsonForm = response.data.form
+                    if (this.$root.toplevelEditMode) {
+                        this.$root.newJsonForm = JSON.parse(JSON.stringify(this.$root.jsonForm));
                     }
                 })
                 .catch(error => {
-                    if (this.$root.toplevel_edit_mode) {
+                    if (this.$root.toplevelEditMode) {
                         // If in edit mode, show a specific error message
-                        this.$root.error_messages.push('Error fetching form. This form might not be suitable for editing: ' + error.message);
+                        this.$root.errorMessages.push('Error fetching form. This form might not be suitable for editing: ' + error.message);
                     } else {
-                        this.$root.error_messages.push('Error fetching form. Please try again or contact a system adminstrator.');
+                        this.$root.errorMessages.push('Error fetching form. Please try again or contact a system adminstrator.');
                     }
                     console.log(error)
                 })
@@ -131,49 +131,49 @@ const vProjectCreationMain = {
         },
         /* Save draft methods */
         cancelDraft() {
-            if (this.new_json_form.status !== 'draft') {
-                this.$root.error_messages.push('Can only cancel draft when the form is in draft status.');
+            if (this.newJsonForm.status !== 'draft') {
+                this.$root.errorMessages.push('Can only cancel draft when the form is in draft status.');
                 return;
             }
-            this.new_json_form.status = 'retired';
+            this.newJsonForm.status = 'retired';
             this.$root.saveNewForm();
             // Redirect to form list using regular javascript
             window.location.href = '/project_creation_forms';
         },
         saveDraft(background = false) {
-            // Save the current new_json_form as a draft by using the generic save endpoint
-            // First make sure that the new_json_form is a draft or valid
-            if (this.new_json_form.status !== 'draft' && this.new_json_form.status !== 'valid') {
-                this.$root.error_messages.push('Can only save draft when the form is in draft or valid status.');
+            // Save the current newJsonForm as a draft by using the generic save endpoint
+            // First make sure that the newJsonForm is a draft or valid
+            if (this.newJsonForm.status !== 'draft' && this.newJsonForm.status !== 'valid') {
+                this.$root.errorMessages.push('Can only save draft when the form is in draft or valid status.');
                 return;
             }
             this.saveNewForm(background);
         },
         publishForm() {
-            if (this.new_json_form.status !== 'draft') {
-                this.$root.error_messages.push('Can only publish draft forms. Please save your changes before publishing.');
+            if (this.newJsonForm.status !== 'draft') {
+                this.$root.errorMessages.push('Can only publish draft forms. Please save your changes before publishing.');
                 return;
             }
-            this.new_json_form.status = 'valid';
+            this.newJsonForm.status = 'valid';
             this.$root.saveNewForm();
             window.location.href = '/project_creation_forms';
         },
         saveNewForm(background = false) {
-            // Save the current new_json_form using the generic save endpoint
+            // Save the current newJsonForm using the generic save endpoint
             axios
                 .post('/api/v1/project_creation_form', {
-                    form: this.new_json_form,
+                    form: this.newJsonForm,
                 })
                 .then(response => {
                     if (!background) {
                         alert('Draft saved successfully.');
                     }
-                    this.last_saved_draft_time = Date.now();
+                    this.lastSavedDraftTime = Date.now();
                     this.fetch_form(response.data.form._id);
                     return true
                 })
                 .catch(error => {
-                    this.$root.error_messages.push('Error saving draft. Please try again or contact a system adminstrator.');
+                    this.$root.errorMessages.push('Error saving draft. Please try again or contact a system adminstrator.');
                     console.log(error)
                     return false
                 })
@@ -196,17 +196,17 @@ const vProjectCreationMain = {
                     this.formData[field] = options[0];
                 }
                 if (options !== null && options.length === 0) {
-                    this.$root.error_messages.push(`No options available for field ${field} based on conditional logic. There is likely a contradition in the form or in the input data.`);
+                    this.$root.errorMessages.push(`No options available for field ${field} based on conditional logic. There is likely a contradition in the form or in the input data.`);
                 }
             });
         },
 
         updateOptions() {
             this.conditionalLogic = [];
-            if (this.json_schema.allOf === undefined) {
+            if (this.jsonSchema.allOf === undefined) {
                 return
             }
-            this.json_schema.allOf.forEach(rule => {
+            this.jsonSchema.allOf.forEach(rule => {
                 if (this.$root.evaluateCondition(rule.if)) {
                     Object.keys(rule.then.properties).forEach(field => {
                         this.conditionalLogic.push({
@@ -231,11 +231,11 @@ const vProjectCreationMain = {
             // Create an instance of Ajv
             const ajv = new Ajv({strictSchema: false, allErrors: true}); // Options can be passed here if needed
 
-            const validate = ajv.compile(this.json_schema);
+            const validate = ajv.compile(this.jsonSchema);
             const valid = validate(this.formData);
             // Reset the validation errors
-            this.validation_errors = [];
-            this.validation_errors_per_field = {};
+            this.validationErrors = [];
+            this.validationErrorsPerField = {};
 
             if (!valid) {
                 // Loop over the errors
@@ -243,10 +243,10 @@ const vProjectCreationMain = {
                     // Check if the instance path is a field
                     if (error.instancePath !== '') {
                         const field = error.instancePath.substring(1); // Remove the leading '/'
-                        this.validation_errors_per_field[field] = this.validation_errors_per_field[field] || [];
-                        this.validation_errors_per_field[field].push(error);
+                        this.validationErrorsPerField[field] = this.validationErrorsPerField[field] || [];
+                        this.validationErrorsPerField[field].push(error);
                     } else {
-                        this.validation_errors.push(error.message);
+                        this.validationErrors.push(error.message);
                     }
                 });
                 return false;
@@ -255,36 +255,36 @@ const vProjectCreationMain = {
         },
         validateNew() {
             console.log("Validating new JSON schema");
-            const new_json_schema = this.$root.getValue(this.$root.new_json_form, 'json_schema')
+            const newJsonSchema = this.$root.getValue(this.$root.newJsonForm, 'json_schema')
             // If undefined no validation needed
-            if (!new_json_schema) {
+            if (!newJsonSchema) {
                 return;
             }
             // Reset validation results
-            this.$root.validation_missing_mandatory_LIMS_udfs = {}
-            this.$root.validation_missing_mandatory_special_fields = {}
-            this.$root.validation_new_form_ajv_errors = ''
+            this.$root.validationMissingMandatoryLimsUdfs = {}
+            this.$root.validationMissingMandatorySpecialFields = {}
+            this.$root.validationNewFormAjvErrors = ''
 
             const ajv = new Ajv({strictSchema: false, allErrors: true});
 
             try {
-                const validate = ajv.compile(new_json_schema);
+                const validate = ajv.compile(newJsonSchema);
             } catch (error) {
-                this.$root.validation_new_form_ajv_errors = error.message
+                this.$root.validationNewFormAjvErrors = error.message
             }
 
-            // Check that all mandatory fields are present in the json_schema properties
+            // Check that all mandatory fields are present in the jsonSchema properties
             this.special_fields.forEach(field => {
-                if (!new_json_schema.properties[field]) {
-                    this.$root.validation_missing_mandatory_special_fields[field] = true;
+                if (!newJsonSchema.properties[field]) {
+                    this.$root.validationMissingMandatorySpecialFields[field] = true;
                 }
             });
 
-            // Check that all mandatory fields are present in the json_schema properties
-            const lims_udfs_in_form = Object.values(new_json_schema.properties).map(field => field.ngi_form_lims_udf);
+            // Check that all mandatory fields are present in the jsonSchema properties
+            const lims_udfs_in_form = Object.values(newJsonSchema.properties).map(field => field.ngi_form_lims_udf);
             this.mandatory_udfs_ena.forEach(mandatory_udf => {
                 if (!lims_udfs_in_form.includes(mandatory_udf)) {
-                    this.$root.validation_missing_mandatory_LIMS_udfs[mandatory_udf] = true;
+                    this.$root.validationMissingMandatoryLimsUdfs[mandatory_udf] = true;
                 }
             });
         }
@@ -294,7 +294,7 @@ const vProjectCreationMain = {
             deep: true,
             handler: 'updateOptionsAndValidate'
         },
-        new_json_form: {
+        newJsonForm: {
             deep: true,
             handler: 'validateNew'
         }
@@ -308,25 +308,25 @@ const vProjectCreationForm = {
     data() {
         return {
             showDebug: false,
-            is_trying_out_form: false,
+            isTryingOutForm: false,
         }
     },
     computed: {
         description() {
-            return this.$root.getValue(this.$root.json_form, 'description');
+            return this.$root.getValue(this.$root.jsonForm, 'description');
         },
         instruction() {
-            return this.$root.getValue(this.$root.json_form, 'instruction');
+            return this.$root.getValue(this.$root.jsonForm, 'instruction');
         },
-        json_form() {
-            return this.$root.json_form;
+        jsonForm() {
+            return this.$root.jsonForm;
         },
-        new_json_schema() {
-            return this.$root.getValue(this.$root.new_json_form, 'json_schema');
+        newJsonSchema() {
+            return this.$root.getValue(this.$root.newJsonForm, 'json_schema');
         },
-        fields_per_group() {
+        fieldsPerGroup() {
             // group fields by their group identifier
-            if (this.$root.json_schema === undefined) {
+            if (this.$root.jsonSchema === undefined) {
                 return {}
             }
 
@@ -348,29 +348,29 @@ const vProjectCreationForm = {
             });
             return groupedFields;
         },
-        form_groups() {
-            if (this.$root.json_form === undefined) {
+        formGroups() {
+            if (this.$root.jsonForm === undefined) {
                 return []
             }
-            return this.$root.getValue(this.$root.json_form, 'form_groups');
+            return this.$root.getValue(this.$root.jsonForm, 'form_groups');
         },
         title() {
-            return this.$root.getValue(this.$root.json_form, 'title');
+            return this.$root.getValue(this.$root.jsonForm, 'title');
         }
     },
     methods: {
         fields_for_given_group(group_identifier) {
             // Get the fields for a specific group
-            if (this.fields_per_group[group_identifier] === undefined) {
+            if (this.fieldsPerGroup[group_identifier] === undefined) {
                 return {}
             }
-            return this.fields_per_group[group_identifier];
+            return this.fieldsPerGroup[group_identifier];
         },
         submitForm() {
             const form_data = this.$root.formData;
             const form_metadata = {};
-            form_metadata['title'] = this.$root.json_form['title'];
-            form_metadata['version'] = this.$root.json_form['version'];
+            form_metadata['title'] = this.$root.jsonForm['title'];
+            form_metadata['version'] = this.$root.jsonForm['version'];
             axios
                 .post('/api/v1/submit_project_creation_form', {
                     form_data: form_data,
@@ -388,7 +388,7 @@ const vProjectCreationForm = {
                     }
                 })
                 .catch(error => {
-                    this.$root.error_messages.push('Error submitting form. Please try again or contact a system administrator.');
+                    this.$root.errorMessages.push('Error submitting form. Please try again or contact a system administrator.');
                     console.log(error);
                 });
         },
@@ -399,19 +399,19 @@ const vProjectCreationForm = {
             this.$root.fetch_form(this.version_id);
         }
         if (this.init_edit_mode.toLowerCase() === 'true') {
-            this.$root.toplevel_edit_mode = true;
+            this.$root.toplevelEditMode = true;
         }
     },
     template: 
         /*html*/`
         <div class="container">
             <div class="row mt-5">
-                <template v-if="this.$root.error_messages.length > 0">
+                <template v-if="this.$root.errorMessages.length > 0">
                     <div class="alert alert-danger" role="alert">
-                        <h3 v-for="error in this.$root.error_messages">{{ error }}</h3>
+                        <h3 v-for="error in this.$root.errorMessages">{{ error }}</h3>
                     </div>
                 </template>
-                <template v-if="this.json_form === {}">
+                <template v-if="this.jsonForm === {}">
                     <div class="alert alert-info" role="alert">
                         <h3>Loading...</h3>
                     </div>
@@ -419,7 +419,7 @@ const vProjectCreationForm = {
                 <template v-else>
                     <div class="row">
                         <div class="col-auto">
-                            <template v-if='this.$root.toplevel_edit_mode'>
+                            <template v-if='this.$root.toplevelEditMode'>
                                 <h1> Modifying project creation form</h1>
                             </template>
                             <template v-else>
@@ -447,20 +447,20 @@ const vProjectCreationForm = {
 
 
 
-                    <template v-if="this.$root.toplevel_edit_mode && !this.is_trying_out_form">
-                        <button class="btn btn-lg btn-primary col-auto ml-2" @click="this.is_trying_out_form = true">Preview form</button>
+                    <template v-if="this.$root.toplevelEditMode && !this.isTryingOutForm">
+                        <button class="btn btn-lg btn-primary col-auto ml-2" @click="this.isTryingOutForm = true">Preview form</button>
                     </template>
                     <template v-else>
 
-                        <template v-if="this.$root.toplevel_edit_mode">
-                            <button class="btn btn-lg btn-primary col-auto ml-2" @click="this.is_trying_out_form = false">Close form</button>
+                        <template v-if="this.$root.toplevelEditMode">
+                            <button class="btn btn-lg btn-primary col-auto ml-2" @click="this.isTryingOutForm = false">Close form</button>
                             <h2 class="mt-2">{{ title }}</h2>
                         </template>
                         <p>{{ description }}</p>
                         <p>{{ instruction }}</p>
 
                         <form @submit.prevent="submitForm" class="mt-3 mb-5">
-                            <template v-for="(form_group, group_identifier) in form_groups" :key="group_identifier">
+                            <template v-for="(form_group, group_identifier) in formGroups" :key="group_identifier">
                                 <template v-if="Object.keys(this.fields_for_given_group(group_identifier)).length !== 0">
                                     <div class="mb-5">
                                         <h3>{{form_group.display_name}}</h3>
@@ -472,10 +472,10 @@ const vProjectCreationForm = {
                                     </div>
                                 </template>
                             </template>
-                            <button type="submit" class="btn btn-lg btn-success mt-3" :disabled="this.$root.toplevel_edit_mode">Create Project in LIMS</button>
+                            <button type="submit" class="btn btn-lg btn-success mt-3" :disabled="this.$root.toplevelEditMode">Create Project in LIMS</button>
                         </form>
                     </template>
-                    <template v-if="this.$root.toplevel_edit_mode">
+                    <template v-if="this.$root.toplevelEditMode">
                         <v-create-form></v-create-form>
                         <div class="card mt-4 mb-5">
                             <div class="card-body">
@@ -484,7 +484,7 @@ const vProjectCreationForm = {
                                     <button class="btn btn-lg btn-primary mt-4 ml-3 col-2" @click="this.$root.saveDraft">
                                         <i class="fa-solid fa-floppy-disk mr-1"></i> Save draft
                                     </button>
-                                    <button class="btn btn-lg btn-success mt-4 ml-2 col-2" @click="this.$root.publishForm" :disabled="this.$root.new_form_errors">
+                                    <button class="btn btn-lg btn-success mt-4 ml-2 col-2" @click="this.$root.publishForm" :disabled="this.$root.newFormErrors">
                                         <i class="fa-solid fa-circle-check mr-1"></i> Publish form
                                     </button>
                                     <button class="btn btn-lg btn-danger mt-4 ml-2 col-2" @click="this.$root.cancelDraft">
@@ -512,7 +512,7 @@ const vFormField = {
             showSuggestions: false,
             suggestions: [],
             suggestionsLoading: false,
-            user_accounts: {}
+            userAccounts: {}
         };
     },
     computed: {
@@ -522,14 +522,14 @@ const vFormField = {
         description() {
             return this.field.description;
         },
-        field_enum(){
+        fieldEnum() {
             // Check if enum is defined on field
             if (this.field.enum == undefined) {
                 return []
             }
             return this.field.enum;
         },
-        form_type() {
+        formType() {
             return this.field.ngi_form_type;
         },
         label() {
@@ -540,21 +540,21 @@ const vFormField = {
             if (conditional_options !== null) {
                 return conditional_options;
             }
-            return this.field_enum;
+            return this.fieldEnum;
         },
-        current_value() {
+        currentValue() {
             return this.$root.formData[this.identifier];
         },
         type() {
             return this.field.type;
         },
         /* Error handling */
-        any_error() {
-            return this.unallowed_option || this.validation_errors.length > 0;
+        anyError() {
+            return this.unallowedOption || this.validationErrors.length > 0;
         },
-        unallowed_option() {
+        unallowedOption() {
             // Highlight if the selected value is not allowed (based on conditional logic)
-            if (this.current_value === undefined) {
+            if (this.currentValue === undefined) {
                 return false;
             }
 
@@ -562,11 +562,11 @@ const vFormField = {
             if (this.options === null || Object.keys(this.options).length === 0) {
                 return false;
             }
-            return !(this.options.includes(this.current_value));
+            return !(this.options.includes(this.currentValue));
         },
-        validation_errors() {
+        validationErrors() {
             // Check if there are validation errors for this field
-            return this.$root.validation_errors_per_field[this.identifier] || [];
+            return this.$root.validationErrorsPerField[this.identifier] || [];
         },
         visible() {
             // Check if the field is visible based on conditional logic
@@ -669,9 +669,9 @@ const vFormField = {
                     this.fetch_data(this.identifier);
                     const current_year = new Date().getFullYear().toString().slice(-2);
                     this.$root.formData["project_name"] = `${val}_${current_year}`;
-                    this.user_accounts[val]['year'] < current_year ?
+                    this.userAccounts[val]['year'] < current_year ?
                         this.$root.formData["project_name"] += `_01` :
-                        this.$root.formData["project_name"] += `_0${parseInt(this.user_accounts[val]['latest_ordinal']) + 1}`;
+                        this.$root.formData["project_name"] += `_0${parseInt(this.userAccounts[val]['latest_ordinal']) + 1}`;
                 }
                 else{
                     this.$root.formData["fetched_data"]["researcher_name"] = [];
@@ -681,7 +681,7 @@ const vFormField = {
             }
         },
         update_field_schema_with_fetched_data(field_identifier, fetched_data) {
-            const fieldSchema = this.$root.json_schema.properties[field_identifier];
+            const fieldSchema = this.$root.jsonSchema.properties[field_identifier];
             if(!fetched_data || fetched_data.length === 0){
                 delete fieldSchema.enum;
                 return;
@@ -724,20 +724,20 @@ const vFormField = {
                         // Not important enough to annoy the user with an alert
                         console.log('Error fetching suggestions. Please try again or contact a system adminstrator.');
                         console.log(error)
-                        this.$root.error_messages.push('Error submitting form. Please try again or contact a system administrator.');
+                        this.$root.errorMessages.push('Error submitting form. Please try again or contact a system administrator.');
                     }
                 })
         }
     },
     mounted() {
         // Initialize the form data for this field
-        if (this.form_type === 'boolean') {
+        if (this.formType === 'boolean') {
             this.$root.formData[this.identifier] = false;
         } else {
             this.$root.formData[this.identifier] = '';
         }
 
-        if (this.form_type === 'custom_datalist') {
+        if (this.formType === 'custom_datalist') {
             let url = `/api/v1/project_count_details?detail_key=${this.identifier}`;
             this.inputChangeTimeout = setTimeout(() => {
                 axios
@@ -746,7 +746,7 @@ const vFormField = {
                         if(this.identifier === 'user_account'){
                             this.suggestions = Object.entries(response.data).map(([key, value]) => 
                                 [key, `${value.year}_${value.latest_ordinal}`]);
-                            this.user_accounts = response.data
+                            this.userAccounts = response.data
                         }
                         else{
                             this.suggestions = Object.entries(
@@ -774,14 +774,14 @@ const vFormField = {
             <div class="mb-3">
                 <div class="row">
                     <label :for="identifier" class="form-label col-auto">{{ label }}</label>
-                    <template v-if="any_error">
-                        <div v-if="validation_errors.length > 0" class="col-auto text-danger ml-auto">
-                            <strong>Validation errors for value '{{current_value}}': </strong>
-                            <span v-for="error in validation_errors" :key="error.message">{{ error.message }}</span>
+                    <template v-if="anyError">
+                        <div v-if="validationErrors.length > 0" class="col-auto text-danger ml-auto">
+                            <strong>Validation errors for value '{{currentValue}}': </strong>
+                            <span v-for="error in validationErrors" :key="error.message">{{ error.message }}</span>
                         </div>
                     </template>
                 </div>
-                <template v-if="this.form_type === 'select'">
+                <template v-if="this.formType === 'select'">
                     <select class="form-select"
                             :aria-label="description"
                             :class="{ 'bg-light text-muted': options.length === 0 }"
@@ -793,7 +793,7 @@ const vFormField = {
                     </select>
                 </template>
 
-                <template v-if="this.form_type === 'datalist'">
+                <template v-if="this.formType === 'datalist'">
                     <input
                         class="form-control"
                         :list="identifier+'_list'"
@@ -806,7 +806,7 @@ const vFormField = {
                         </template>
                     </datalist>
                 </template>
-                <template v-if="this.form_type === 'custom_datalist'">
+                <template v-if="this.formType === 'custom_datalist'">
                     <div class="datalist">
                         <input
                             class="form-control"
@@ -827,11 +827,11 @@ const vFormField = {
                         </datalist>
                     </div>
                 </template>
-                <template v-if="this.form_type === 'string'">
+                <template v-if="this.formType === 'string'">
                     <input class="form-control" :type="text" :name="identifier" :id="identifier" :placeholder="description" v-model="this.$root.formData[identifier]">
                 </template>
 
-                <template v-if="this.form_type === 'boolean'">
+                <template v-if="this.formType === 'boolean'">
                     <div class="form-check form-switch">
                         <label :for="identifier" class="form-check-label">{{ label }}</label>
                         <input class="form-check-input" type="checkbox" :name="identifier" :id="identifier" :placeholder="description" v-model="this.$root.formData[identifier]">
@@ -984,17 +984,17 @@ const vCreateForm = {
     data() {
         return {
             currentTime: new Date(),
-            display_conditional_logic: false,
-            display_fields: false,
-            display_metadata: false,
-            edit_mode_description: false,
-            edit_mode_title: false,
-            edit_mode_instruction: false,
-            new_composite_conditional_if: [],
-            new_composite_conditional_then: [],
-            new_conditional_if: '',
-            new_conditional_then: '',
-            new_field: '',
+            displayConditionalLogic: false,
+            displayFields: false,
+            displayMetadata: false,
+            editModeDescription: false,
+            editModeTitle: false,
+            editModeInstruction: false,
+            newCompositeConditionalIf: [],
+            newCompositeConditionalThen: [],
+            newConditionalIf: '',
+            newConditionalThen: '',
+            newField: '',
             showDebug: false,
             showHelp: false
         }
@@ -1005,8 +1005,8 @@ const vCreateForm = {
         },
         dateFormatAgo() {
             // Format the date to show how long ago it was
-            const diffInSeconds = Math.floor((this.currentTime - new Date(this.$root.last_saved_draft_time)) / 1000);
-            // Current time is set when the component is mounted, while last_saved_draft_time is updated on save
+            const diffInSeconds = Math.floor((this.currentTime - new Date(this.$root.lastSavedDraftTime)) / 1000);
+            // Current time is set when the component is mounted, while lastSavedDraftTime is updated on save
             // So negative time is very likely
             if (diffInSeconds < 0) {
                 return 'very recently';
@@ -1029,11 +1029,11 @@ const vCreateForm = {
             return this.$root.getValue(this.newForm, 'properties');
         },
         newForm() {
-            return this.$root.getValue(this.$root.new_json_form, 'json_schema');
+            return this.$root.getValue(this.$root.newJsonForm, 'json_schema');
         },
         // Metadata fields
-        form_groups() {
-            return this.$root.getValue(this.$root.new_json_form, 'form_groups');
+        formGroups() {
+            return this.$root.getValue(this.$root.newJsonForm, 'form_groups');
         },
     },
     methods: {
@@ -1044,8 +1044,8 @@ const vCreateForm = {
         addExtraConditionIf(conditional_index) {
             // Add a new condition to the existing conditional logic
             const conditional = this.allOf[conditional_index];
-            if (conditional.if.properties[this.new_composite_conditional_if[conditional_index]] === undefined) {
-                conditional.if.properties[this.new_composite_conditional_if[conditional_index]] = { enum: [] };
+            if (conditional.if.properties[this.newCompositeConditionalIf[conditional_index]] === undefined) {
+                conditional.if.properties[this.newCompositeConditionalIf[conditional_index]] = { enum: [] };
                 return
             } else {
                 // do nothing
@@ -1055,8 +1055,8 @@ const vCreateForm = {
         addExtraConditionThen(conditional_index) {
             // Add a new condition to the existing conditional logic
             const conditional = this.allOf[conditional_index];
-            if (conditional.then.properties[this.new_composite_conditional_then[conditional_index]] === undefined) {
-                conditional.then.properties[this.new_composite_conditional_then[conditional_index]] = { enum: [] };
+            if (conditional.then.properties[this.newCompositeConditionalThen[conditional_index]] === undefined) {
+                conditional.then.properties[this.newCompositeConditionalThen[conditional_index]] = { enum: [] };
                 return
             } else {
                 // do nothing
@@ -1065,28 +1065,28 @@ const vCreateForm = {
         },
         addNewField() {
             // Add a new field to the form
-            if (this.new_field === '') {
+            if (this.newField === '') {
                 alert('Please provide a field identifier');
                 return;
             }
-            if (this.fields[this.new_field] !== undefined) {
+            if (this.fields[this.newField] !== undefined) {
                 alert('Field with this identifier already exists');
                 return;
             }
             // Create a new field with default values
             const newField = {
                 ngi_form_type: 'string',
-                ngi_form_label: this.new_field,
+                ngi_form_label: this.newField,
                 description: 'New field',
                 type: 'string',
                 enum: []
             };
             // Add the new field to the JSON schema
-            this.newForm.properties[this.new_field] = newField;
-            // Reset the new_field input
-            this.new_field = '';
+            this.newForm.properties[this.newField] = newField;
+            // Reset the newField input
+            this.newField = '';
             // Update the form data to include the new field
-            this.$root.formData[this.new_field] = '';
+            this.$root.formData[this.newField] = '';
         },
         addPropertyToCondition(conditional) {
             // Add a new property to the conditional logic
@@ -1094,14 +1094,14 @@ const vCreateForm = {
                 description: 'New property',
                 if: {
                     properties: {
-                        [this.new_conditional_if]: {
+                        [this.newConditionalIf]: {
                             enum: []
                         }
                     }
                 },
                 then: {
                     properties: {
-                        [this.new_conditional_then]: {
+                        [this.newConditionalThen]: {
                             enum: []
                         }
                     }
@@ -1117,32 +1117,32 @@ const vCreateForm = {
     },
     watch: {
         // Auto save when sections are closed and when field edit modes are exited
-        display_conditional_logic(newValue) {
+        displayConditionalLogic(newValue) {
             if (!newValue) {
                 this.$root.saveDraft(true);
             }
         },
-        display_fields(newValue) {
+        displayFields(newValue) {
             if (!newValue) {
                 this.$root.saveDraft(true);
             }
         },
-        display_metadata(newValue) {
+        displayMetadata(newValue) {
             if (!newValue) {
                 this.$root.saveDraft(true);
             }
         },
-        edit_mode_description(newValue) {
+        editModeDescription(newValue) {
             if (!newValue) {
                 this.$root.saveDraft(true);
             }
         },
-        edit_mode_instruction(newValue) {
+        editModeInstruction(newValue) {
             if (!newValue) {
                 this.$root.saveDraft(true);
             }
         },
-        edit_mode_title(newValue) {
+        editModeTitle(newValue) {
             if (!newValue) {
                 this.$root.saveDraft(true);
             }
@@ -1157,7 +1157,7 @@ const vCreateForm = {
                         <h1>Update Form:
                             <button class="btn btn-light ml-2" @click="showHelp = !showHelp"><i class="fa fa-question"></i></button>
                         </h1>
-                        <template v-if="this.$root.last_saved_draft_time">
+                        <template v-if="this.$root.lastSavedDraftTime">
                             <small>Last saved draft: {{ this.dateFormatAgo }}</small>
                         </template>
                         <div v-if="showHelp" class="alert alert-info">
@@ -1244,23 +1244,23 @@ const vCreateForm = {
                                 <p><strong>Note:</strong> Changes are not automatically published. You must explicitly click "Publish form" to make your draft the active form.</p>
                             </div>
                         </div>
-                        <div v-if="this.$root.new_form_errors" class="alert alert-danger" role="alert">
+                        <div v-if="this.$root.newFormErrors" class="alert alert-danger" role="alert">
                                 <h3>Form Validation Errors</h3>
                                 The edited form has some issues. These will have to be fixed before the draft can be published.
-                                <template v-if="Object.keys(this.$root.validation_missing_mandatory_LIMS_udfs).length > 0">
+                                <template v-if="Object.keys(this.$root.validationMissingMandatoryLimsUdfs).length > 0">
                                     <h4>Mandatory LIMS udfs</h4>
                                     The following mandatory LIMS udfs are currently not assigned to any field:
-                                    <ul v-for="(value, udf) in this.$root.validation_missing_mandatory_LIMS_udfs" :key="udf">
+                                    <ul v-for="(value, udf) in this.$root.validationMissingMandatoryLimsUdfs" :key="udf">
                                         <li>{{ udf }}</li>
                                     </ul>
                                 </template>
-                                <template v-if="Object.keys(this.$root.validation_missing_mandatory_special_fields).length > 0">
+                                <template v-if="Object.keys(this.$root.validationMissingMandatorySpecialFields).length > 0">
                                     <h4>Mandatory special fields</h4>
                                     The following mandatory special fields are currently missing:
-                                    {{this.$root.validation_missing_mandatory_special_fields}}
+                                    {{this.$root.validationMissingMandatorySpecialFields}}
                                 </template>
-                                <template v-if="this.$root.validation_new_form_ajv_errors">
-                                    {{this.$root.validation_new_form_ajv_errors}}
+                                <template v-if="this.$root.validationNewFormAjvErrors">
+                                    {{this.$root.validationNewFormAjvErrors}}
                                 </template>
                         </div>
                     </div>
@@ -1272,19 +1272,19 @@ const vCreateForm = {
                     </div>
                 </div>
                 <template v-if="showDebug" class="card">
-                    <pre>{{ this.$root.new_json_form }}</pre>
+                    <pre>{{ this.$root.newJsonForm }}</pre>
                 </template>
                 <div class="pb-3 border-bottom">
-                    <h2 class="mt-3" style="cursor: pointer;" @click="display_metadata = !display_metadata">
-                        <i :class="display_metadata ? 'fa-solid fa-caret-down' : 'fa-solid fa-caret-right'"></i>
+                    <h2 class="mt-3" style="cursor: pointer;" @click="displayMetadata = !displayMetadata">
+                        <i :class="displayMetadata ? 'fa-solid fa-caret-down' : 'fa-solid fa-caret-right'"></i>
                         Form Metadata
                     </h2>
-                    <template v-if="this.display_metadata">
+                    <template v-if="this.displayMetadata">
                         <div class="ml-3">
                             <div>
                                 <h5 class="mb-1">Title
-                                    <button @click="edit_mode_title = !edit_mode_title" class="btn btn-lg ml-1">
-                                        <template v-if="!edit_mode_title">
+                                    <button @click="editModeTitle = !editModeTitle" class="btn btn-lg ml-1">
+                                        <template v-if="!editModeTitle">
                                             <i class="fa-solid fa-pen-to-square"></i>
                                         </template>
                                         <template v-else>
@@ -1292,12 +1292,12 @@ const vCreateForm = {
                                         </template>
                                     </button>
                                 </h5>
-                                <input :id="title" class="form-control" type="string" v-model="this.$root.new_json_form['title']" :disabled="!edit_mode_title">
+                                <input :id="title" class="form-control" type="string" v-model="this.$root.newJsonForm['title']" :disabled="!editModeTitle">
                             </div>
                             <div>
                                 <h5 class="mb-1">Description
-                                    <button @click="edit_mode_description = !edit_mode_description" class="btn btn-lg ml-1">
-                                        <template v-if="!edit_mode_description">
+                                    <button @click="editModeDescription = !editModeDescription" class="btn btn-lg ml-1">
+                                        <template v-if="!editModeDescription">
                                             <i class="fa-solid fa-pen-to-square"></i>
                                         </template>
                                         <template v-else>
@@ -1305,12 +1305,12 @@ const vCreateForm = {
                                         </template>
                                     </button>
                                 </h5>
-                                <input :id="description" class="form-control" type="string" v-model="this.$root.new_json_form['description']" :disabled="!edit_mode_description">
+                                <input :id="description" class="form-control" type="string" v-model="this.$root.newJsonForm['description']" :disabled="!editModeDescription">
                             </div>
                             <div>
                                 <h5 class="mb-1">Instruction
-                                    <button @click="edit_mode_instruction = !edit_mode_instruction" class="btn btn-lg ml-1">
-                                        <template v-if="!edit_mode_instruction">
+                                    <button @click="editModeInstruction = !editModeInstruction" class="btn btn-lg ml-1">
+                                        <template v-if="!editModeInstruction">
                                             <i class="fa-solid fa-pen-to-square"></i>
                                         </template>
                                         <template v-else>
@@ -1318,18 +1318,18 @@ const vCreateForm = {
                                         </template>
                                     </button>
                                 </h5>
-                                <input :id="instruction" class="form-control" type="text" v-model="this.$root.new_json_form['instruction']" :disabled="!edit_mode_instruction">
+                                <input :id="instruction" class="form-control" type="text" v-model="this.$root.newJsonForm['instruction']" :disabled="!editModeInstruction">
                             </div>
-                            <v-form-groups-editor :form_groups="this.form_groups"></v-form-groups-editor>
+                            <v-form-groups-editor :formGroups="this.formGroups"></v-form-groups-editor>
                         </div>
                     </template>
                 </div>
                 <div class="pb-3 border-bottom">
-                    <h2 class="mt-3" style="cursor: pointer;" @click="display_fields = !display_fields">
-                        <i :class="display_fields ? 'fa-solid fa-caret-down' : 'fa-solid fa-caret-right'"></i>
+                    <h2 class="mt-3" style="cursor: pointer;" @click="displayFields = !displayFields">
+                        <i :class="displayFields ? 'fa-solid fa-caret-down' : 'fa-solid fa-caret-right'"></i>
                         Fields
                     </h2>
-                    <template v-if="this.display_fields">
+                    <template v-if="this.displayFields">
                     <div class="ml-3">
                         <template v-for="(field, identifier) in fields" :key="identifier">
                             <template v-if="field.ngi_form_type !== undefined">
@@ -1339,18 +1339,18 @@ const vCreateForm = {
                         <div class="mb-3">
                             <h3>Add new field</h3>
                             <div>
-                                <input class="form-control" type="text" placeholder="Field identifier" v-model="this.new_field">
+                                <input class="form-control" type="text" placeholder="Field identifier" v-model="this.newField">
                                 <button class="btn btn-primary mt-2" @click.prevent="this.addNewField()">Add new field</button>
                             </div>
                         </div>
                     </template>
                 </div>
                 <div>
-                    <h2 class="mt-3" style="cursor: pointer;" @click="display_conditional_logic = !display_conditional_logic">
-                        <i :class="display_conditional_logic ? 'fa-solid fa-caret-down' : 'fa-solid fa-caret-right'"></i>
+                    <h2 class="mt-3" style="cursor: pointer;" @click="displayConditionalLogic = !displayConditionalLogic">
+                        <i :class="displayConditionalLogic ? 'fa-solid fa-caret-down' : 'fa-solid fa-caret-right'"></i>
                         Conditional logic
                     </h2>
-                    <template v-if="this.display_conditional_logic">
+                    <template v-if="this.displayConditionalLogic">
                         <div class="ml-3">
                             <template v-for="(conditional, conditional_index) in this.allOf">
                                 <div class="border-bottom pb-5">
@@ -1362,7 +1362,7 @@ const vCreateForm = {
                                     <div class="row">
                                         <div class="col-5">
                                             <div class="input-group">
-                                                <select class="form-select" v-model="this.new_composite_conditional_if[conditional_index]">
+                                                <select class="form-select" v-model="this.newCompositeConditionalIf[conditional_index]">
                                                     <template v-for="identifier in Object.keys(this.$root.fields)">
                                                         <option :value="identifier">{{identifier}}</option>
                                                     </template>
@@ -1372,7 +1372,7 @@ const vCreateForm = {
                                         </div>
                                         <div class="col-5 offset-2">
                                             <div class="input-group">
-                                                <select class="form-select" v-model="this.new_composite_conditional_then[conditional_index]">
+                                                <select class="form-select" v-model="this.newCompositeConditionalThen[conditional_index]">
                                                     <template v-for="identifier in Object.keys(this.$root.fields)">
                                                         <option :value="identifier">{{identifier}}</option>
                                                     </template>
@@ -1386,7 +1386,7 @@ const vCreateForm = {
                                 <h3 class="mt-5 border-top pt-3">Add condition</h3>
                                 <div class="row">
                                     <div class="col-5">
-                                        <select class="form-select" v-model="this.new_conditional_if">
+                                        <select class="form-select" v-model="this.newConditionalIf">
                                             <template v-for="identifier in Object.keys(this.$root.fields)">
                                                 <option :value="identifier">{{identifier}}</option>
                                             </template>
@@ -1396,7 +1396,7 @@ const vCreateForm = {
                                         <h2><i class="fa-solid fa-arrow-right"></i></h2>
                                     </div>
                                     <div class="col-5">
-                                        <select class="form-select" v-model="this.new_conditional_then">
+                                        <select class="form-select" v-model="this.newConditionalThen">
                                             <template v-for="identifier in Object.keys(this.$root.fields)">
                                                 <option :value="identifier">{{identifier}}</option>
                                             </template>
@@ -1416,7 +1416,7 @@ const vCreateForm = {
 const vFormGroupsEditor = {
     name: 'v-form-groups-editor',
     props: {
-        form_groups: {
+        formGroups: {
             type: Object,
             required: true
         }
@@ -1425,24 +1425,24 @@ const vFormGroupsEditor = {
         return {
             newGroupIdentifier: '',
             newGroupDisplayName: '',
-            field_edit_mode: false
+            fieldEditMode: false
         }
     },
     computed: {
         sortedFormGroups() {
             // Sort groups by position for a consistent display order
-            if (this.form_groups) {
-                return Object.entries(this.form_groups).sort(([, a], [, b]) => a.position - b.position);
+            if (this.formGroups) {
+                return Object.entries(this.formGroups).sort(([, a], [, b]) => a.position - b.position);
             }
             return [];
         },
         nextPosition() {
-            const positions = Object.values(this.form_groups).map(g => g.position);
+            const positions = Object.values(this.formGroups).map(g => g.position);
             return positions.length > 0 ? Math.max(...positions) + 1 : 0;
         }
     },
     watch: {
-        field_edit_mode(newValue) {
+        fieldEditMode(newValue) {
             if (!newValue) {
                 this.$root.saveDraft(true);
             }
@@ -1451,8 +1451,8 @@ const vFormGroupsEditor = {
     methods: {
         addGroup() {
             const identifier = this.newGroupIdentifier.trim();
-            if (identifier && !this.form_groups[identifier]) {
-                this.form_groups[identifier] = {
+            if (identifier && !this.formGroups[identifier]) {
+                this.formGroups[identifier] = {
                     display_name: this.newGroupDisplayName,
                     position: this.nextPosition
                 };
@@ -1464,39 +1464,39 @@ const vFormGroupsEditor = {
             }
         },
         moveDown(identifier) {
-            const group = this.form_groups[identifier];
+            const group = this.formGroups[identifier];
             if (group) {
                 const currentPosition = group.position;
-                const nextGroup = Object.entries(this.form_groups).find(([_, g]) => g.position === currentPosition + 1);
+                const nextGroup = Object.entries(this.formGroups).find(([_, g]) => g.position === currentPosition + 1);
                 if (nextGroup) {
                     // Swap positions
-                    this.form_groups[identifier].position = currentPosition + 1;
-                    this.form_groups[nextGroup[0]].position = currentPosition;
+                    this.formGroups[identifier].position = currentPosition + 1;
+                    this.formGroups[nextGroup[0]].position = currentPosition;
                 }
             }
         },
         moveUp(identifier) {
-            const group = this.form_groups[identifier];
+            const group = this.formGroups[identifier];
             if (group) {
                 const currentPosition = group.position;
-                const previousGroup = Object.entries(this.form_groups).find(([_, g]) => g.position === currentPosition - 1);
+                const previousGroup = Object.entries(this.formGroups).find(([_, g]) => g.position === currentPosition - 1);
                 if (previousGroup) {
                     // Swap positions
-                    this.form_groups[identifier].position = currentPosition - 1;
-                    this.form_groups[previousGroup[0]].position = currentPosition;
+                    this.formGroups[identifier].position = currentPosition - 1;
+                    this.formGroups[previousGroup[0]].position = currentPosition;
                 }
             }
         },
         removeGroup(identifier) {
             if (confirm(`Are you sure you want to delete the group "${identifier}"?`)) {
-                delete this.form_groups[identifier];
+                delete this.formGroups[identifier];
             }
         }
     },
     template: /*html*/`
         <h2 class="mt-3">Form Groups
-            <button @click="field_edit_mode = !field_edit_mode" class="btn btn-lg ml-1">
-                <template v-if="!field_edit_mode">
+            <button @click="fieldEditMode = !fieldEditMode" class="btn btn-lg ml-1">
+                <template v-if="!fieldEditMode">
                     <i class="fa-solid fa-pen-to-square"></i>
                 </template>
                 <template v-else>
@@ -1509,24 +1509,24 @@ const vFormGroupsEditor = {
                 <h5>{{ identifier }}</h5>
                 <div class="form-group">
                     <label>Display Name</label>
-                    <input type="text" class="form-control" v-model="group.display_name" :disabled="!field_edit_mode">
+                    <input type="text" class="form-control" v-model="group.display_name" :disabled="!fieldEditMode">
                 </div>
                 <div class="form-group mt-2">
                     <label>Position</label>
                     <input type="number" class="form-control" v-model.number="group.position" disabled>
                 </div>
-                <button v-if="field_edit_mode" class="btn btn-danger btn-sm mt-2" @click="removeGroup(identifier)">
+                <button v-if="fieldEditMode" class="btn btn-danger btn-sm mt-2" @click="removeGroup(identifier)">
                     <i class="fa-solid fa-trash mr-1"></i> Remove Group
                 </button>
-                <div v-if="field_edit_mode" class="btn btn-secondary btn-sm mt-2 ml-2" @click="moveUp(identifier)">
+                <div v-if="fieldEditMode" class="btn btn-secondary btn-sm mt-2 ml-2" @click="moveUp(identifier)">
                     <i class="fa-solid fa-arrow-up mr-1"></i> Move Up
                 </div>
-                <div v-if="field_edit_mode" class="btn btn-secondary btn-sm mt-2 ml-2" @click="moveDown(identifier)">
+                <div v-if="fieldEditMode" class="btn btn-secondary btn-sm mt-2 ml-2" @click="moveDown(identifier)">
                     <i class="fa-solid fa-arrow-down mr-1"></i> Move Down
                 </div>
             </div>
 
-            <div v-if="field_edit_mode" class="mt-4">
+            <div v-if="fieldEditMode" class="mt-4">
                 <h3>Add New Group</h3>
                 <div class="form-group">
                     <label>Identifier</label>
@@ -1548,7 +1548,7 @@ const vConditionalEditForm = {
     emits: ['remove-condition'],
     data() {
         return {
-            field_edit_mode: false
+            fieldEditMode: false
         }
     },
     computed: {
@@ -1563,7 +1563,7 @@ const vConditionalEditForm = {
         }
     },
     watch: {
-        field_edit_mode(newValue) {
+        fieldEditMode(newValue) {
             if (!newValue) {
                 this.$root.saveDraft(true);
             }
@@ -1575,19 +1575,19 @@ const vConditionalEditForm = {
             <div class="row">
                 <div class="mb-3">
                     <h3 class="mt-5 col-auto">{{conditional_index + 1}}. {{this.conditional.description}}
-                        <template v-if="field_edit_mode">
-                            <button @click="field_edit_mode = !field_edit_mode" class="btn btn-lg ml-1"><i class="fa-solid fa-check"></i></button>
+                        <template v-if="fieldEditMode">
+                            <button @click="fieldEditMode = !fieldEditMode" class="btn btn-lg ml-1"><i class="fa-solid fa-check"></i></button>
                         </template>
                         <template v-else>
-                            <button @click="field_edit_mode = !field_edit_mode" class="btn btn-lg ml-1"><i class="fa-solid fa-pen-to-square"></i></button>
+                            <button @click="fieldEditMode = !fieldEditMode" class="btn btn-lg ml-1"><i class="fa-solid fa-pen-to-square"></i></button>
                         </template>
                     </h3>
                     <div class="col-auto ml-auto">
-                        <button v-if="field_edit_mode" class="btn btn-outline-danger" @click.prevent="$emit('remove-condition', conditional_index)">
+                        <button v-if="fieldEditMode" class="btn btn-outline-danger" @click.prevent="$emit('remove-condition', conditional_index)">
                             Remove Condition <i class="fa-solid fa-trash ml-2"></i>
                         </button>
                     </div>
-                    <div v-if="field_edit_mode">
+                    <div v-if="fieldEditMode">
                         <label class="form-label">Condition name/description</label>
                         <input class="form-control" type="string" v-model="this.conditional.description"></input>
                     </div>
@@ -1602,7 +1602,7 @@ const vConditionalEditForm = {
                              :property="if_property"
                              :property_index="if_property_index"
                              :condition_type="'if'"
-                             :edit_mode="field_edit_mode">
+                             :edit_mode="fieldEditMode">
                         </v-conditional-edit-form-single-condition>
                     </template>
                 </div>
@@ -1617,7 +1617,7 @@ const vConditionalEditForm = {
                             :property="then_property"
                             :property_index="then_property_index"
                             :condition_type="'then'"
-                            :edit_mode="field_edit_mode">
+                            :edit_mode="fieldEditMode">
                         </v-conditional-edit-form-single-condition>
                     </template>
                 </div>
@@ -1770,8 +1770,8 @@ const vUpdateFormField = {
     props: ['field', 'identifier'],
     data() {
         return {
-            field_edit_mode: false,
-            show_allowed_values: false,
+            fieldEditMode: false,
+            showAllowedValues: false,
             selectedVisibleIfKey: '',
             visibleIfErrorMessage: ''
         }
@@ -1780,42 +1780,42 @@ const vUpdateFormField = {
         description() {
             return this.field.description;
         },
-        form_type() {
+        formType() {
             return this.field.ngi_form_type;
         },
         label() {
             return this.field.ngi_form_label;
         },
-        new_json_form() {
-            return this.$root.new_json_form;
+        newJsonForm() {
+            return this.$root.newJsonForm;
         },
-        new_json_schema() {
-            return this.$root.getValue(this.$root.new_json_form, 'json_schema');
+        newJsonSchema() {
+            return this.$root.getValue(this.$root.newJsonForm, 'json_schema');
         },
-        nr_of_allowed_values() {
+        nrOfAllowedValues() {
             // Check if enum is defined on field
-            if (this.new_json_schema['properties'][this.identifier]['enum'] === undefined) {
+            if (this.newJsonSchema['properties'][this.identifier]['enum'] === undefined) {
                 return 0
             }
-            return this.new_json_schema['properties'][this.identifier]['enum'].length;
+            return this.newJsonSchema['properties'][this.identifier]['enum'].length;
         },
-        current_value() {
+        currentValue() {
             return this.$root.formData[this.identifier];
         },
         type() {
             return this.field.type;
         },
-        visible_if() {
+        visibleIf() {
             return this.$root.getValue(this.field, 'ngi_form_visible_if');
         }
     },
     methods: {
         add_new_allowed() {
-            if (this.new_json_schema['properties'][this.identifier]['enum'] === undefined) {
-                this.new_json_schema['properties'][this.identifier]['enum'] = []
+            if (this.newJsonSchema['properties'][this.identifier]['enum'] === undefined) {
+                this.newJsonSchema['properties'][this.identifier]['enum'] = []
             }
             // Add a new empty allowed value
-            this.new_json_schema['properties'][this.identifier]['enum'].push('')
+            this.newJsonSchema['properties'][this.identifier]['enum'].push('')
         },
         add_visible_if() {
             this.visibleIfErrorMessage = '';
@@ -1825,19 +1825,19 @@ const vUpdateFormField = {
             }
 
             // Add the skeleton for a new conditional logic when the field should be visible
-            if (this.new_json_schema['properties'][this.identifier]['ngi_form_visible_if'] === undefined) {
+            if (this.newJsonSchema['properties'][this.identifier]['ngi_form_visible_if'] === undefined) {
 
-                this.new_json_schema['properties'][this.identifier]['ngi_form_visible_if'] = {
+                this.newJsonSchema['properties'][this.identifier]['ngi_form_visible_if'] = {
                     properties: {}
                 }
             }
 
-            if (this.new_json_schema['properties'][this.identifier]['ngi_form_visible_if']['properties'][this.selectedVisibleIfKey] !== undefined) {
+            if (this.newJsonSchema['properties'][this.identifier]['ngi_form_visible_if']['properties'][this.selectedVisibleIfKey] !== undefined) {
                 this.visibleIfErrorMessage = 'This field is already included';
                 return null
             }
 
-            let referenceSelectedField = this.$root.getValue(this.new_json_schema['properties'], this.selectedVisibleIfKey);
+            let referenceSelectedField = this.$root.getValue(this.newJsonSchema['properties'], this.selectedVisibleIfKey);
             let default_value = '';
             if (referenceSelectedField.enum !== undefined) {
                 default_value = referenceSelectedField.enum[0];
@@ -1848,13 +1848,13 @@ const vUpdateFormField = {
             } else {
                 default_value = null;
             }
-            this.new_json_schema['properties'][this.identifier]['ngi_form_visible_if']['properties'][this.selectedVisibleIfKey] = {
+            this.newJsonSchema['properties'][this.identifier]['ngi_form_visible_if']['properties'][this.selectedVisibleIfKey] = {
                 enum: [default_value]
             }
         }
     },
     watch: {
-        field_edit_mode(newValue) {
+        fieldEditMode(newValue) {
             if (!newValue) {
                 this.$root.saveDraft(true);
             }
@@ -1864,35 +1864,35 @@ const vUpdateFormField = {
         /*html*/`
             <div class="mb-5">
                 <h2>{{this.label}}
-                <template v-if="field_edit_mode">
-                    <button @click="field_edit_mode = !field_edit_mode" class="btn btn-lg ml-1"><i class="fa-solid fa-check"></i></button>
+                <template v-if="fieldEditMode">
+                    <button @click="fieldEditMode = !fieldEditMode" class="btn btn-lg ml-1"><i class="fa-solid fa-check"></i></button>
                 </template>
                 <template v-else>
-                    <button @click="field_edit_mode = !field_edit_mode" class="btn btn-lg ml-1"><i class="fa-solid fa-pen-to-square"></i></button>
+                    <button @click="fieldEditMode = !fieldEditMode" class="btn btn-lg ml-1"><i class="fa-solid fa-pen-to-square"></i></button>
                 </template>
                 </h2>
                 <div class="col">
-                    <button class="btn btn-sm btn-danger" @click.prevent="delete this.new_json_schema['properties'][identifier]">Remove field<i class="fa-solid fa-trash ml-2"></i>
+                    <button class="btn btn-sm btn-danger" @click.prevent="delete this.newJsonSchema['properties'][identifier]">Remove field<i class="fa-solid fa-trash ml-2"></i>
                 </div>
                 <div>
                     <label :for="identifier" class="form-label">Identifier</label>
-                    <input :id="identifier" class="form-control" type="string" v-model="identifier" :disabled="!field_edit_mode">
+                    <input :id="identifier" class="form-control" type="string" v-model="identifier" :disabled="!fieldEditMode">
                 </div>
                 <div>
                     <label :for="identifier + '_ngi_form_group'" class="form-label">Group</label>
-                    <select :id="identifier + '_ngi_form_group'" class="form-control" v-model="this.new_json_schema['properties'][identifier]['ngi_form_group']" :disabled="!field_edit_mode">
-                        <template v-for="(form_group, group_identifier) in this.new_json_form['form_groups']">
+                    <select :id="identifier + '_ngi_form_group'" class="form-control" v-model="this.newJsonSchema['properties'][identifier]['ngi_form_group']" :disabled="!fieldEditMode">
+                        <template v-for="(form_group, group_identifier) in this.newJsonForm['formGroups']">
                             <option :value="group_identifier">{{form_group.display_name}}</option>
                         </template>
                     </select>
                 </div>
                 <div>
                     <label :for="identifier + '_description'" class="form-label">Description</label>
-                    <input :id="identifier + '_description'" class="form-control" type="string" v-model="this.new_json_schema['properties'][identifier]['description']" :disabled="!field_edit_mode">
+                    <input :id="identifier + '_description'" class="form-control" type="string" v-model="this.newJsonSchema['properties'][identifier]['description']" :disabled="!fieldEditMode">
                 </div>
                 <div>
                     <label :for="identifier + '_ngi_form_type'" class="form-label">Form Type</label>
-                    <select :id="identifier + '_ngi_form_type'" class="form-control" v-model="this.new_json_schema['properties'][identifier]['ngi_form_type']" :disabled="!field_edit_mode">
+                    <select :id="identifier + '_ngi_form_type'" class="form-control" v-model="this.newJsonSchema['properties'][identifier]['ngi_form_type']" :disabled="!fieldEditMode">
                         <option value="string">String</option>
                         <option value="boolean">Boolean</option>
                         <option value="select">Select</option>
@@ -1902,30 +1902,30 @@ const vUpdateFormField = {
                 </div>
                 <div>
                     <label :for="identifier + '_ngi_form_label'" class="form-label">Label</label>
-                    <input :id="identifier + '_ngi_form_label'" class="form-control" type="string" v-model="this.new_json_schema['properties'][identifier]['ngi_form_label']" :disabled="!field_edit_mode">
+                    <input :id="identifier + '_ngi_form_label'" class="form-control" type="string" v-model="this.newJsonSchema['properties'][identifier]['ngi_form_label']" :disabled="!fieldEditMode">
                 </div>
                 <div>
                     <label :for="identifier + '_ngi_form_lims_udf'" class="form-label">LIMS UDF</label>
-                    <input :id="identifier + '_ngi_form_lims_udf'" class="form-control" type="string" v-model="this.new_json_schema['properties'][identifier]['ngi_form_lims_udf']" :disabled="!field_edit_mode">
+                    <input :id="identifier + '_ngi_form_lims_udf'" class="form-control" type="string" v-model="this.newJsonSchema['properties'][identifier]['ngi_form_lims_udf']" :disabled="!fieldEditMode">
                 </div>
-                <template v-if="(this.type === 'string') && (this.form_type !== 'select')">
+                <template v-if="(this.type === 'string') && (this.formType !== 'select')">
                     <div>
                         <label :for="identifier + '_pattern'" class="form-label">Pattern</label>
-                        <input :id="identifier + '_pattern'" class="form-control" type="string" v-model="this.new_json_schema['properties'][identifier]['pattern']" :disabled="!field_edit_mode">
+                        <input :id="identifier + '_pattern'" class="form-control" type="string" v-model="this.newJsonSchema['properties'][identifier]['pattern']" :disabled="!fieldEditMode">
                     </div>
                 </template>
                 <div>
                     <h3 class="mt-3">Visibility</h3>
-                    <template v-if="this.visible_if !== undefined">
+                    <template v-if="this.visibleIf !== undefined">
                         <h4 class="mt-2">Visible only if</h4>
                         <div class="row">
-                            <template v-for="(condition_key, condition_index) in Object.keys(this.visible_if['properties'])">
+                            <template v-for="(condition_key, condition_index) in Object.keys(this.visibleIf['properties'])">
                                 <template v-if="condition_index > 0">
                                     <h4>AND</h4>
                                 </template>
                                 <div class="offset-1 col-11">
-                                    <button v-if="field_edit_mode" class="btn btn-outline-danger" @click.prevent="delete this.new_json_schema['properties'][identifier]['ngi_form_visible_if']['properties'][condition_key]">Remove field<i class="fa-solid fa-trash ml-2"></i></button>
-                                    <v-visible-if-condition-edit-form :field_identifier="identifier" :condition_key="condition_key" :edit_mode="field_edit_mode"></v-visible-if-condition-edit-form>
+                                    <button v-if="fieldEditMode" class="btn btn-outline-danger" @click.prevent="delete this.newJsonSchema['properties'][identifier]['ngi_form_visible_if']['properties'][condition_key]">Remove field<i class="fa-solid fa-trash ml-2"></i></button>
+                                    <v-visible-if-condition-edit-form :field_identifier="identifier" :condition_key="condition_key" :edit_mode="fieldEditMode"></v-visible-if-condition-edit-form>
                                 </div>
                             </template>
                         </div>
@@ -1938,7 +1938,7 @@ const vUpdateFormField = {
                             <h4>{{ this.visibleIfErrorMessage }}</h4>
                         </div>
                     </template>
-                    <div v-if="field_edit_mode" class="row">
+                    <div v-if="fieldEditMode" class="row">
                         <div class="col-6">
                             <div class="input-group">
                                 <select class="form-select" placeholder="test" v-model="this.selectedVisibleIfKey">
@@ -1946,27 +1946,27 @@ const vUpdateFormField = {
                                         <option :value="identifier">{{identifier}}</option>
                                     </template>
                                 </select>
-                                <button class="btn btn-primary" @click.prevent="this.add_visible_if()" :disabled="!field_edit_mode">Add conditional visibility</button>
+                                <button class="btn btn-primary" @click.prevent="this.add_visible_if()" :disabled="!fieldEditMode">Add conditional visibility</button>
                             </div>
                         </div>
                     </div>
                 </div>
-                <template v-if="(this.form_type === 'select') || (this.form_type === 'datalist')">
+                <template v-if="(this.formType === 'select') || (this.formType === 'datalist')">
                     <div class="col-6">
                         <h3>Allowed values</h3>
-                        <p>{{this.nr_of_allowed_values}} number of allowed values are added.</p>
-                        <template v-if="this.show_allowed_values">
-                            <button class="btn btn-danger mb-2" @click.prevent="this.show_allowed_values = false">Hide allowed values</button>
-                            <template v-for="(option, index) in this.new_json_schema['properties'][identifier]['enum']" :key="index">
+                        <p>{{this.nrOfAllowedValues}} number of allowed values are added.</p>
+                        <template v-if="this.showAllowedValues">
+                            <button class="btn btn-danger mb-2" @click.prevent="this.showAllowedValues = false">Hide allowed values</button>
+                            <template v-for="(option, index) in this.newJsonSchema['properties'][identifier]['enum']" :key="index">
                                 <div class="input-group mb-3">
-                                    <input :id="identifier + '_enum_'+index" class="form-control col-auto" type="string" v-model="this.new_json_schema['properties'][identifier]['enum'][index]" :disabled="!field_edit_mode">
-                                    <button v-if="field_edit_mode" class="btn btn-danger col-auto" @click.prevent="this.new_json_schema['properties'][identifier]['enum'].splice(index, 1)">Remove<i class="fa-solid fa-trash ml-2"></i></button>
+                                    <input :id="identifier + '_enum_'+index" class="form-control col-auto" type="string" v-model="this.newJsonSchema['properties'][identifier]['enum'][index]" :disabled="!fieldEditMode">
+                                    <button v-if="fieldEditMode" class="btn btn-danger col-auto" @click.prevent="this.newJsonSchema['properties'][identifier]['enum'].splice(index, 1)">Remove<i class="fa-solid fa-trash ml-2"></i></button>
                                 </div>
                             </template>
-                            <button v-if="field_edit_mode" class="btn btn-primary" @click.prevent="this.add_new_allowed()">Add new allowed value</button>
+                            <button v-if="fieldEditMode" class="btn btn-primary" @click.prevent="this.add_new_allowed()">Add new allowed value</button>
                         </template>
                         <template v-else>
-                            <button class="btn btn-primary" @click.prevent="this.show_allowed_values = true">Show allowed values</button>
+                            <button class="btn btn-primary" @click.prevent="this.showAllowedValues = true">Show allowed values</button>
                         </template>
                     </div>
                 </template>
@@ -1984,7 +1984,7 @@ const vVisibleIfConditionEditForm = {
     },
     computed: {
         condition() {
-            const condition = this.$root.getValue(this.new_json_schema['properties'][this.field_identifier]['ngi_form_visible_if']['properties'], this.condition_key);
+            const condition = this.$root.getValue(this.newJsonSchema['properties'][this.field_identifier]['ngi_form_visible_if']['properties'], this.condition_key);
             if (condition === undefined) {
                 return {'enum': ['']}
             }
@@ -1994,12 +1994,12 @@ const vVisibleIfConditionEditForm = {
             // The enum inside the condition
             return this.condition.enum;
         },
-        new_json_schema() {
-            return this.$root.getValue(this.$root.new_json_form, 'json_schema');
+        newJsonSchema() {
+            return this.$root.getValue(this.$root.newJsonForm, 'json_schema');
         },
         propertyReferenceIf() {
             // The property that is referenced in the condition
-            return this.$root.getValue(this.new_json_schema['properties'], this.condition_key)
+            return this.$root.getValue(this.newJsonSchema['properties'], this.condition_key)
         },
         propertyReferenceIfLabel() {
             // The label of the property that is referenced in the condition
