@@ -516,7 +516,7 @@ const vFormField = {
         };
     },
     computed: {
-        conditonalsApplied() {
+        conditionalsApplied() {
             return this.$root.getConditionalsFor(this.identifier)
         },
         description() {
@@ -661,6 +661,7 @@ const vFormField = {
             }, 2000)
         },
         onCustomDatalistChange() {
+            /* Special hardcoded behaviour for user_account and researcher name */
             if(this.identifier === 'user_account'){
                 const val = this.$root.formData[this.identifier];
                 // Match against first element of each suggestion tuple
@@ -838,10 +839,10 @@ const vFormField = {
                 </template>
 
                 <p class="fst-italic">{{ field.description }}</p>
-                <template v-if="this.conditonalsApplied.length > 0">
+                <template v-if="this.conditionalsApplied.length > 0">
                     <a href="#" @click.prevent="showConditionals = !showConditionals">Conditional logic applied:</a>
                     <template v-if="showConditionals">
-                        <ul v-for="condition in this.conditonalsApplied">
+                        <ul v-for="condition in this.conditionalsApplied">
                             <li>
                                 <h5>{{condition.description}}:</h5>
                                 <template v-for="property_value, property_name, index in condition.condition.properties">
@@ -873,9 +874,6 @@ const vFormField = {
 const vCreateFormList = {
     // The landing page for overview of all project creation forms
     name: 'v-create-form-list',
-    mounted() {
-        this.$root.fetch_list_of_forms()
-    },
     computed: {
 
         draftForm() {
@@ -922,6 +920,9 @@ const vCreateFormList = {
             const minutes = String(date.getMinutes()).padStart(2, '0');
             return `${year}-${month}-${day}T${hours}:${minutes}`;
         }
+    },
+    mounted() {
+        this.$root.fetch_list_of_forms()
     },
     template:
     /*html*/`
@@ -993,6 +994,7 @@ const vCreateForm = {
             new_composite_conditional_then: [],
             new_conditional_if: '',
             new_conditional_then: '',
+            new_field: '',
             showDebug: false,
             showHelp: false
         }
@@ -1135,16 +1137,16 @@ const vCreateForm = {
                 this.$root.saveDraft(true);
             }
         },
-        edit_mode_instructions(newValue) {
+        edit_mode_instruction(newValue) {
             if (!newValue) {
                 this.$root.saveDraft(true);
             }
         },
-        edit_mode_fields(newValue) {
+        edit_mode_title(newValue) {
             if (!newValue) {
                 this.$root.saveDraft(true);
             }
-        },
+        }
     },
     template: 
         /*html*/`
@@ -1164,7 +1166,15 @@ const vCreateForm = {
                                 <p>This guide explains how to modify a project creation form. The modification interface is divided into several sections: <strong>Form Metadata</strong>, <strong>Fields</strong>, and <strong>Conditional Logic</strong>.</p>
 
                                 <h3>Edit Mode</h3>
-                                Each section and field has its own edit button (a pencil icon <i class="fa-solid fa-pen-to-square"></i>). Clicking this button enables editing only for that specific item. Click the checkmark icon (<i class="fa-solid fa-check"></i>) to leave edit mode for that item.</li>
+                                <p>Each section and field has its own edit button (a pencil icon <i class="fa-solid fa-pen-to-square"></i>). Clicking this button enables editing only for that specific item. Click the checkmark icon (<i class="fa-solid fa-check"></i>) to leave edit mode for that item.</p>
+
+                                <h3>Automatic Saving</h3>
+                                <p><strong>Your changes are automatically saved as a draft</strong> when you:</p>
+                                <ul>
+                                    <li>Collapse any of the main sections (Form Metadata, Fields, or Conditional Logic)</li>
+                                    <li>Exit edit mode for any field or metadata property (clicking the checkmark icon)</li>
+                                </ul>
+                                <p>The "Last saved draft" timestamp at the top of the page shows when the last auto-save occurred. You can also manually save at any time using the "Save draft" button at the bottom of the page.</p>
 
                                 <h3>Form Metadata</h3>
                                 <p>This section allows you to edit the general information about the form.</p>
@@ -1224,13 +1234,14 @@ const vCreateForm = {
                                 </ul>
                                 <p>When creating a conditional, note the "show all options" option that will give you a better overview of which options are available for each field.</p>
 
-                                <h3>Saving Your Changes</h3>
-                                <p>At the bottom of the page, you will find buttons to manage your changes:</p>
+                                <h3>Managing Your Changes</h3>
+                                <p>At the bottom of the page, you will find buttons to manage your form:</p>
                                 <ul>
-                                    <li><strong>Save draft</strong>: Saves your current changes as a draft. This does not affect the currently active form. It's recommended to save your progress often.</li>
-                                    <li><strong>Publish form</strong>: Makes your saved draft the new "valid" version of the form, replacing the previous one. You can only publish a saved draft.</li>
-                                    <li><strong>Cancel draft</strong>: Discards your draft. This action cannot be undone.</li>
+                                    <li><strong>Save draft</strong>: Manually saves your current changes as a draft. While changes are automatically saved when you collapse sections or exit edit mode, you can use this button to save immediately and receive a confirmation message.</li>
+                                    <li><strong>Publish form</strong>: Makes your saved draft the new "valid" version of the form, replacing the previous one. This makes your changes live for all users. You can only publish a form that has been saved as a draft.</li>
+                                    <li><strong>Cancel draft</strong>: Permanently discards your draft and marks it as retired. This action cannot be undone. The previously valid form will remain active.</li>
                                 </ul>
+                                <p><strong>Note:</strong> Changes are not automatically published. You must explicitly click "Publish form" to make your draft the active form.</p>
                             </div>
                         </div>
                         <div v-if="this.$root.new_form_errors" class="alert alert-danger" role="alert">
@@ -1372,7 +1383,6 @@ const vCreateForm = {
                                     </div>
                                 </div>
                             </template>
-                            <div v-if="field_edit_mode">
                                 <h3 class="mt-5 border-top pt-3">Add condition</h3>
                                 <div class="row">
                                     <div class="col-5">
@@ -1431,6 +1441,13 @@ const vFormGroupsEditor = {
             return positions.length > 0 ? Math.max(...positions) + 1 : 0;
         }
     },
+    watch: {
+        field_edit_mode(newValue) {
+            if (!newValue) {
+                this.$root.saveDraft(true);
+            }
+        }
+    },
     methods: {
         addGroup() {
             const identifier = this.newGroupIdentifier.trim();
@@ -1473,13 +1490,6 @@ const vFormGroupsEditor = {
         removeGroup(identifier) {
             if (confirm(`Are you sure you want to delete the group "${identifier}"?`)) {
                 delete this.form_groups[identifier];
-            }
-        }
-    },
-    watch: {
-        field_edit_mode(newValue) {
-            if (!newValue) {
-                this.$root.saveDraft(true);
             }
         }
     },
@@ -1582,9 +1592,6 @@ const vConditionalEditForm = {
                         <input class="form-control" type="string" v-model="this.conditional.description"></input>
                     </div>
                 </div>
-            </div>
-            <div><h4>PropertyKeyIf</h4>
-            <p>{{this.propertyKeyIf}}</p>
             </div>
             <div class="row">
                 <div class="col-5">
@@ -1761,7 +1768,7 @@ const vConditionalEditFormSingleCondition = {
 const vUpdateFormField = {
     name: 'v-update-form-field',
     props: ['field', 'identifier'],
-    data: function() {
+    data() {
         return {
             field_edit_mode: false,
             show_allowed_values: false,
@@ -2007,19 +2014,6 @@ const vVisibleIfConditionEditForm = {
                 return false
             }
             return true
-        }
-    },
-    methods: {
-        updateKey(index) {
-            const currentKey = Object.keys(this.new_json_schema['properties'][this.identifier]['ngi_form_visible_if']['properties'])[condition_index];
-            const defaultValue = {'enum': []};
-    
-            // Delete the old key and set the new key with the same value
-            delete this.new_json_schema['properties'][this.identifier]['ngi_form_visible_if']['properties'][currentKey];
-            this.new_json_schema['properties'][this.identifier]['ngi_form_visible_if']['properties'][this.selectedKey] = defaultValue
-    
-            // Reset the selectedKey to avoid confusion
-            this.selectedKey = '';
         }
     },
     template:
