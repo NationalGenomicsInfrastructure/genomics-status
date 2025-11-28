@@ -12,6 +12,7 @@ import markdown
 import nest_asyncio
 import slack_sdk
 import tornado
+from html_sanitizer import Sanitizer
 from tornado.template import Template
 
 from status.util import SafeHandler
@@ -181,7 +182,6 @@ class RunningNotesDataHandler(SafeHandler):
         response = application.cloudant.post_document(
             db="running_notes", document=newNote
         ).get_result()
-        response = {"ok": True}
 
         if not response.get("ok"):
             gen_log.error(
@@ -342,7 +342,7 @@ class RunningNotesDataHandler(SafeHandler):
                 blocks_json_str = json.dumps(template_doc["slack"]["blocks"])
                 rendered_json_str = (
                     Template(blocks_json_str, autoescape=None)
-                    .generate(slack_note=note.replace("\n", "\n>"), **context)
+                    .generate(slack_note=note.replace("\n", "\\n>"), **context)
                     .decode()
                 )
                 blocks = json.loads(rendered_json_str)
@@ -362,25 +362,34 @@ class RunningNotesDataHandler(SafeHandler):
 
             # default is email
             if option == "E-mail" or option == "Both":
-                email_template_str = json.dumps(template_doc["email"])
-                rendered_email_str = (
-                    Template(email_template_str)
+                email_subject = (
+                    Template(template_doc["email"]["subject"])
+                    .generate(**context)
+                    .decode()
+                )
+                email_text = (
+                    Template(template_doc["email"]["text"])
+                    .generate(note=note, **context)
+                    .decode()
+                )
+                sanitizer = Sanitizer()
+                email_html = (
+                    Template(template_doc["email"]["html"])
                     .generate(
-                        note=note, markdown_note=markdown.markdown(note), **context
+                        markdown_note=sanitizer.sanitize(
+                            markdown.markdown(note, extensions=["nl2br"])
+                        ),
+                        **context,
                     )
                     .decode()
                 )
-                email_json = json.loads(rendered_email_str)
                 msg = MIMEMultipart("alternative")
-                msg["Subject"] = email_json["subject"]
+                msg["Subject"] = email_subject
                 msg["From"] = "genomics-status"
                 msg["To"] = user
 
-                text = email_json["text"]
-                html = email_json["html"]
-
-                msg.attach(MIMEText(text, "plain"))
-                msg.attach(MIMEText(html, "html"))
+                msg.attach(MIMEText(email_text, "plain"))
+                msg.attach(MIMEText(email_html, "html"))
 
                 s = smtplib.SMTP("localhost")
                 s.sendmail("genomics-bioinfo@scilifelab.se", msg["To"], msg.as_string())
