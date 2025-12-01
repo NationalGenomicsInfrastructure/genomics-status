@@ -236,7 +236,7 @@ class RunningNotesDataHandler(SafeHandler):
                 link_id = workset_name
             link = f"<a class='text-decoration-none' href='{RunningNotesDataHandler.get_entity_link(application, note_type, link_id)}'>{link_id}</a>"
             project_note = (
-                f"#####*Running note posted on {note_type.split('_')[0]} {link}:*\\n"
+                f"#####*Running note posted on {note_type.split('_')[0]} {link}:*\n"
             )
             project_note += note
             for proj_id in connected_projects:
