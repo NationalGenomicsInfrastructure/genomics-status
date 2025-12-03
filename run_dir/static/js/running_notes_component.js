@@ -174,7 +174,9 @@ export const vRunningNotesTab = {
     components: {
         vRunningNoteSingle,
     },
-    props: ['partition_id', 'note_type'],
+    // all_users_parent and current_user are optional props to avoid fetching user details again if already fetched in parent component
+    // like in project cards view
+    props: ['partition_id', 'note_type', 'all_users_parent', 'current_user'],
     data() {
         return {
             category_filter: 'All',
@@ -187,7 +189,7 @@ export const vRunningNotesTab = {
             submitting: false,
             show_help: false,
             cat_classes: cat_classes,
-            all_users: [],
+            all_users: {},
             user: {
                 user: '',
                 email: '',
@@ -457,8 +459,21 @@ export const vRunningNotesTab = {
             return
         }
         this.fetchAllRunningNotes(this.partition_id);
-        this.fetchAllUsers();
-        this.fetch_current_user();
+        if(!this.all_users_parent
+            || typeof this.all_users_parent !== 'object'
+            || Object.keys(this.all_users_parent).length === 0){
+            this.fetchAllUsers();
+        }
+        else{
+            this.all_users = this.all_users_parent;
+        }
+        if (!this.current_user
+            || typeof this.current_user !== 'object') {
+            this.fetch_current_user();
+        }
+        else{
+            this.user = this.current_user;
+        }
     },
     template: /*html*/`
     <div class="card text-dark info-border mb-3 mt-3">
