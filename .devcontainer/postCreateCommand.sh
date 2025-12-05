@@ -8,10 +8,21 @@ echo $PATH
 cd /workspace
 python -m pip install -e .
 
-# Create symlinks for config files if the conf directory is mounted
+# Set up config files for local development
+# Link settings.yaml to run_dir
+ln -sf /workspace/.devcontainer/config/settings.yaml /workspace/run_dir/settings.yaml
+
+# Link .genologicsrc to home directory (where genologics library looks for it)
+ln -sf /workspace/.devcontainer/config/.genologicsrc /home/mambauser/.genologicsrc
+
+# Link genosqlrc.yaml to home directory (where genologics_sql library looks for it)
+ln -sf /workspace/.devcontainer/config/genosqlrc.yaml /home/mambauser/.genosqlrc.yaml
+
+# If user has their own conf directory mounted, prefer those configs
 if [ -d /home/mambauser/conf ]; then
     [ -f /home/mambauser/conf/.genologicsrc ] && ln -sf /home/mambauser/conf/.genologicsrc /home/mambauser/.genologicsrc
     [ -f /home/mambauser/conf/genosqlrc.yaml ] && ln -sf /home/mambauser/conf/genosqlrc.yaml /home/mambauser/.genosqlrc.yaml
+    [ -f /home/mambauser/conf/settings.yaml ] && ln -sf /home/mambauser/conf/settings.yaml /workspace/run_dir/settings.yaml
 fi
 
 echo ""
