@@ -1,4 +1,4 @@
-"""Handlers for samplesheet editor functionality."""
+"""Handlers for demultiplexing sample info functionality."""
 
 import datetime
 import json
@@ -9,11 +9,11 @@ import tornado.web
 from status.util import SafeHandler
 
 
-class SamplesheetEditorHandler(SafeHandler):
-    """Serves the samplesheet editor page."""
+class DemuxSampleInfoEditorHandler(SafeHandler):
+    """Serves the demux sample info editor page."""
 
     def get(self):
-        t = self.application.loader.load("samplesheet_editor.html")
+        t = self.application.loader.load("demux_sample_info_editor.html")
         self.write(
             t.generate(
                 user=self.get_current_user(),
@@ -22,8 +22,8 @@ class SamplesheetEditorHandler(SafeHandler):
         )
 
 
-class SamplesheetDataHandler(SafeHandler):
-    """Serves samplesheet data via API."""
+class DemuxSampleInfoDataHandler(SafeHandler):
+    """Serves demux sample info data via API."""
 
     def _get_project_id_by_name(self, project_name):
         """Look up project ID (P-number) from project name."""
@@ -260,7 +260,7 @@ class SamplesheetDataHandler(SafeHandler):
         self.write(json.dumps(data))
 
     def post(self, flowcell_id):
-        """Accept POST request with metadata and uploaded_info to create/update samplesheet document."""
+        """Accept POST request with metadata and uploaded_info to create/update demux sample info document."""
         try:
             # Parse the request body
             post_data = tornado.escape.json_decode(self.request.body)
@@ -413,7 +413,7 @@ class SamplesheetDataHandler(SafeHandler):
                 json.dumps(
                     {
                         "status": "success",
-                        "message": "Samplesheet data received and processed",
+                        "message": "Demux sample info data received and processed",
                         "flowcell_id": flowcell_id,
                         "timestamp": timestamp,
                         "document": document,

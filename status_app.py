@@ -33,6 +33,10 @@ from status.config_handler import ConfigDataHandler
 from status.controls import ControlsHandler
 from status.data_deliveries_plot import DataDeliveryHandler, DeliveryPlotHandler
 from status.deliveries import DeliveriesPageHandler
+from status.demux_sample_info import (
+    DemuxSampleInfoDataHandler,
+    DemuxSampleInfoEditorHandler,
+)
 from status.flowcell import (
     ElementFlowcellDataHandler,
     ElementFlowcellHandler,
@@ -149,7 +153,6 @@ from status.sample_requirements import (
     SampleRequirementsValidateDraftDataHandler,
     SampleRequirementsViewHandler,
 )
-from status.samplesheet import SamplesheetDataHandler, SamplesheetEditorHandler
 from status.sensorpush import (
     SensorpushDataHandler,
     SensorpushHandler,
@@ -352,7 +355,7 @@ class Application(tornado.web.Application):
             ("/api/v1/workset_links/([^/]*)$", WorksetLinksHandler),
             ("/api/v1/workset_queues", WorksetQueuesDataHandler),
             ("/api/v1/closed_worksets", ClosedWorksetsHandler),
-            ("/api/v1/samplesheet/([^/]*)$", SamplesheetDataHandler),
+            ("/api/v1/demux_sample_info/([^/]*)$", DemuxSampleInfoDataHandler),
             ("/barcode", BarcodeHandler),
             ("/controls", ControlsHandler),
             ("/applications", ApplicationsHandler),
@@ -400,7 +403,7 @@ class Application(tornado.web.Application):
             ("/sample_requirements", SampleRequirementsViewHandler),
             ("/sample_requirements_preview", SampleRequirementsPreviewHandler),
             ("/sample_requirements_update", SampleRequirementsUpdateHandler),
-            ("/samplesheet_editor", SamplesheetEditorHandler),
+            ("/demux_sample_info_editor", DemuxSampleInfoEditorHandler),
             ("/sensorpush", SensorpushHandler),
             ("/sequencing_queues", SequencingQueuesHandler),
             (
