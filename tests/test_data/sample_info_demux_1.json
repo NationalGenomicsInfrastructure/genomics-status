@@ -1,0 +1,541 @@
+{
+    "flowcell_id": "",
+    "metadata": {
+        // "Metadata that can be retrieved at upload time, from LIMS, I choose to avoid things that can be calculated such as number of samples and which projects are included",
+        "num_lanes": 0,
+        "instrument_id": "",
+        "run_setup": "",
+        "setup_lims_step_id": ""
+    },
+    "uploaded_info": [
+        // This is the information uploaded from LIMS by the EPP, corresponding to the samplesheet currently saved on disk 
+        {
+            "flowcell_id": "233KCWLT4",
+            "lane": "3",
+            "sample_id": "P71234_504",
+            "sample_name": "P71234_504",
+            "sample_ref": "Human (Homo sapiens GRCh38)",
+            "index_1": "SI-TS-D7",
+            "index_2": "",
+            "description": "Y__Andersson_01_45",
+            "control": "N",
+            "recipe": "43-50",
+            "operator": "Lars_Eriksson",
+            "sample_project": "Y__Andersson_01_45"
+        },
+        {
+            "flowcell_id": "233KCWLT4",
+            "lane": "3",
+            "sample_id": "P71234_502",
+            "sample_name": "P71234_502",
+            "sample_ref": "Human (Homo sapiens GRCh38)",
+            "index_1": "SI-TS-B7",
+            "index_2": "",
+            "description": "Y__Andersson_01_45",
+            "control": "N",
+            "recipe": "43-50",
+            "operator": "Lars_Eriksson",
+            "sample_project": "Y__Andersson_01_45"
+        },
+        {
+            "flowcell_id": "233KCWLT4",
+            "lane": "3",
+            "sample_id": "P71234_503",
+            "sample_name": "P71234_503",
+            "sample_ref": "Human (Homo sapiens GRCh38)",
+            "index_1": "SI-TS-C7",
+            "index_2": "",
+            "description": "Y__Andersson_01_45",
+            "control": "N",
+            "recipe": "43-50",
+            "operator": "Lars_Eriksson",
+            "sample_project": "Y__Andersson_01_45"
+        },
+        {
+            "flowcell_id": "233KCWLT4",
+            "lane": "3",
+            "sample_id": "P71234_504",
+            "sample_name": "P71234_504",
+            "sample_ref": "Human (Homo sapiens GRCh38)",
+            "index_1": "SI-TS-D7",
+            "index_2": "",
+            "description": "Y__Andersson_01_45",
+            "control": "N",
+            "recipe": "43-50",
+            "operator": "Lars_Eriksson",
+            "sample_project": "Y__Andersson_01_45"
+        },
+        {
+            "flowcell_id": "233KCWLT4",
+            "lane": "6",
+            "sample_id": "P89101_2001",
+            "sample_name": "P89101_2001",
+            "sample_ref": "Human (Homo sapiens GRCh38)",
+            "index_1": "CGCCTCT",
+            "index_2": "CGTTCCT",
+            "description": "B__Svensson_12_34",
+            "control": "N",
+            "recipe": "151-151",
+            "operator": "Mikael_Johansson",
+            "sample_project": "B__Svensson_12_34"
+        },
+        {
+            "flowcell_id": "233KCWLT4",
+            "lane": "6",
+            "sample_id": "P89101_2002",
+            "sample_name": "P89101_2002",
+            "sample_ref": "Human (Homo sapiens GRCh38)",
+            "index_1": "CTTGCGG",
+            "index_2": "CGCCTCA",
+            "description": "B__Svensson_12_34",
+            "control": "N",
+            "recipe": "151-151",
+            "operator": "Mikael_Johansson",
+            "sample_project": "B__Svensson_12_34"
+        },
+        {
+            "flowcell_id": "233KCWLT4",
+            "lane": "6",
+            "sample_id": "P89101_2003",
+            "sample_name": "P89101_2003",
+            "sample_ref": "Human (Homo sapiens GRCh38)",
+            "index_1": "TGGACGT",
+            "index_2": "CAATCGA",
+            "description": "B__Svensson_12_34",
+            "control": "N",
+            "recipe": "151-151",
+            "operator": "Mikael_Johansson",
+            "sample_project": "B__Svensson_12_34"
+        },
+        {
+            "flowcell_id": "233KCWLT4",
+            "lane": "6",
+            "sample_id": "P89101_2004",
+            "sample_name": "P89101_2004",
+            "sample_ref": "Human (Homo sapiens GRCh38)",
+            "index_1": "ATACTGA",
+            "index_2": "CCTTCGC",
+            "description": "B__Svensson_12_34",
+            "control": "N",
+            "recipe": "151-151",
+            "operator": "Mikael_Johansson",
+            "sample_project": "B__Svensson_12_34"
+        },
+        {
+            "flowcell_id": "233KCWLT4",
+            "lane": "6",
+            "sample_id": "P89101_2005",
+            "sample_name": "P89101_2005",
+            "sample_ref": "Human (Homo sapiens GRCh38)",
+            "index_1": "CAGGAAG",
+            "index_2": "CAGGCAA",
+            "description": "B__Svensson_12_34",
+            "control": "N",
+            "recipe": "151-151",
+            "operator": "Mikael_Johansson",
+            "sample_project": "B__Svensson_12_34"
+        },
+        {
+            "flowcell_id": "233KCWLT4",
+            "lane": "6",
+            "sample_id": "P89101_2006",
+            "sample_name": "P89101_2006",
+            "sample_ref": "Human (Homo sapiens GRCh38)",
+            "index_1": "CAATTAC",
+            "index_2": "GCTCCGT",
+            "description": "B__Svensson_12_34",
+            "control": "N",
+            "recipe": "151-151",
+            "operator": "Mikael_Johansson",
+            "sample_project": "B__Svensson_12_34"
+        },
+        {
+            "flowcell_id": "233KCWLT4",
+            "lane": "6",
+            "sample_id": "P89101_2007",
+            "sample_name": "P89101_2007",
+            "sample_ref": "Human (Homo sapiens GRCh38)",
+            "index_1": "CATACCT",
+            "index_2": "AGAGACT",
+            "description": "B__Svensson_12_34",
+            "control": "N",
+            "recipe": "151-151",
+            "operator": "Mikael_Johansson",
+            "sample_project": "B__Svensson_12_34"
+        },
+        {
+            "flowcell_id": "233KCWLT4",
+            "lane": "6",
+            "sample_id": "P89101_2008",
+            "sample_name": "P89101_2008",
+            "sample_ref": "Human (Homo sapiens GRCh38)",
+            "index_1": "TACTTAG",
+            "index_2": "CTGGCCT",
+            "description": "B__Svensson_12_34",
+            "control": "N",
+            "recipe": "151-151",
+            "operator": "Mikael_Johansson",
+            "sample_project": "B__Svensson_12_34"
+        },
+        {
+            "flowcell_id": "233KCWLT4",
+            "lane": "6",
+            "sample_id": "P89101_2009",
+            "sample_name": "P89101_2009",
+            "sample_ref": "Human (Homo sapiens GRCh38)",
+            "index_1": "AAGCTAA",
+            "index_2": "CGCAAGG",
+            "description": "B__Svensson_12_34",
+            "control": "N",
+            "recipe": "151-151",
+            "operator": "Mikael_Johansson",
+            "sample_project": "B__Svensson_12_34"
+        }
+    ],
+    "calculated": {
+        // All options and settings needed for ygg-demultiplexing should be here
+        // Some demultiplexing logic and settings need to be figured out by DMX,
+        "version_history": {
+            "2025-12-09T06:24:41.23": {
+                "generated_by": "lars.workersson@scilifelab.se",
+                "autogenerated": false,
+                "comment": "RC1 for project P71234 and added two new samples",
+                // auto_run: false here will mean an approval (to yggdrasil) is needed before it starts
+                "auto_run": false
+            },
+            "2025-12-04T06:24:41.23": {
+                "generated_by": null,
+                "autogenerated": true,
+                "comment": "",
+                "auto_run": true
+            }
+        },
+        "lanes": {
+            "3": {
+                "samples": {
+                    // Since some named indices are replaced by multiple indices, we use UUID keys to uniquely identify each sample entry.
+                    "a1b2c3d4-e5f6-7890-abcd-ef1234567890": {
+                        "sample_id": "P71234_504",
+                        "last_modified": "2025-12-09T06:24:41.23",
+                        "settings": {
+                            "2025-12-04T06:24:41.23": {
+                                "control": "N",
+                                "description": "Y__Andersson_01_45",
+                                "flowcell_id": "233KCWLT4",
+                                "index_1": "SI-TS-D7",
+                                "index_2": "",
+                                "lane": "3",
+                                "mask_short_reads": 0,
+                                "minimum_trimmed_read_length": 0,
+                                "named_index": "SI-TS-D7",
+                                "operator": "Lars_Eriksson",
+                                "override_cycles": "",
+                                "recipe": "43-50",
+                                "sample_name": "P71234_504",
+                                "sample_project": "Y__Andersson_01_45",
+                                "sample_ref": "Human (Homo sapiens GRCh38)"
+                            },
+                            "2025-12-09T06:24:41.23": {
+                                "control": "N",
+                                "description": "Y__Andersson_01_45",
+                                "flowcell_id": "233KCWLT4",
+                                "index_1": "SI-TS-D7",
+                                "index_2": "",
+                                "lane": "3",
+                                "mask_short_reads": 0,
+                                "minimum_trimmed_read_length": 0,
+                                "named_index": "SI-TS-D7",
+                                "operator": "Lars_Eriksson",
+                                "override_cycles": "",
+                                "recipe": "43-50",
+                                "sample_name": "P71234_504",
+                                "sample_project": "Y__Andersson_01_45",
+                                "sample_ref": "Human (Homo sapiens GRCh38)"
+                            }
+                        }
+                    },
+                    "b2c3d4e5-f6a7-8901-bcde-f12345678901": {
+                        "sample_id": "P71234_502",
+                        "last_modified": "2025-12-04T06:24:41.23",
+                        "settings": {
+                            "2025-12-04T06:24:41.23": {
+                                "control": "N",
+                                "description": "Y__Andersson_01_45",
+                                "flowcell_id": "233KCWLT4",
+                                "index_1": "SI-TS-B7",
+                                "index_2": "",
+                                "lane": "3",
+                                "mask_short_reads": 0,
+                                "minimum_trimmed_read_length": 0,
+                                "named_index": "SI-TS-B7",
+                                "operator": "Lars_Eriksson",
+                                "override_cycles": "",
+                                "recipe": "43-50",
+                                "sample_name": "P71234_502",
+                                "sample_project": "Y__Andersson_01_45",
+                                "sample_ref": "Human (Homo sapiens GRCh38)"
+                            }
+                        }
+                    },
+                    "c3d4e5f6-a7b8-9012-cdef-123456789012": {
+                        "sample_id": "P71234_503",
+                        "last_modified": "2025-12-04T06:24:41.23",
+                        "settings": {
+                            "2025-12-04T06:24:41.23": {
+                                "control": "N",
+                                "description": "Y__Andersson_01_45",
+                                "flowcell_id": "233KCWLT4",
+                                "index_1": "SI-TS-C7",
+                                "index_2": "",
+                                "lane": "3",
+                                "mask_short_reads": 0,
+                                "minimum_trimmed_read_length": 0,
+                                "named_index": "SI-TS-C7",
+                                "operator": "Lars_Eriksson",
+                                "override_cycles": "",
+                                "recipe": "43-50",
+                                "sample_name": "P71234_503",
+                                "sample_project": "Y__Andersson_01_45",
+                                "sample_ref": "Human (Homo sapiens GRCh38)"
+                            }
+                        }
+                    },
+                    "d4e5f6a7-b8c9-0123-def1-234567890123": {
+                        "sample_id": "P71234_504",
+                        "last_modified": "2025-12-04T06:24:41.23",
+                        "settings": {
+                            "2025-12-04T06:24:41.23": {
+                                "control": "N",
+                                "description": "Y__Andersson_01_45",
+                                "flowcell_id": "233KCWLT4",
+                                "index_1": "SI-TS-D7",
+                                "index_2": "",
+                                "lane": "3",
+                                "mask_short_reads": 0,
+                                "minimum_trimmed_read_length": 0,
+                                "named_index": "SI-TS-D7",
+                                "operator": "Lars_Eriksson",
+                                "override_cycles": "",
+                                "recipe": "43-50",
+                                "sample_name": "P71234_504",
+                                "sample_project": "Y__Andersson_01_45",
+                                "sample_ref": "Human (Homo sapiens GRCh38)"
+                            }
+                        }
+                    }
+                }
+            },
+            "6": {
+                "samples": {
+                    "e5f6a7b8-c9d0-1234-ef12-345678901234": {
+                        "sample_id": "P89101_2001",
+                        "last_modified": "2025-12-04T06:24:41.23",
+                        "settings": {
+                            "2025-12-04T06:24:41.23": {
+                                "control": "N",
+                                "description": "B__Svensson_12_34",
+                                "flowcell_id": "233KCWLT4",
+                                "index_1": "CGCCTCT",
+                                "index_2": "CGTTCCT",
+                                "lane": "6",
+                                "mask_short_reads": 0,
+                                "minimum_trimmed_read_length": 0,
+                                "named_index": "CGCCTCT",
+                                "operator": "Mikael_Johansson",
+                                "override_cycles": "",
+                                "recipe": "151-151",
+                                "sample_name": "P89101_2001",
+                                "sample_project": "B__Svensson_12_34",
+                                "sample_ref": "Human (Homo sapiens GRCh38)"
+                            }
+                        }
+                    },
+                    "f6a7b8c9-d0e1-2345-f123-456789012345": {
+                        "sample_id": "P89101_2002",
+                        "last_modified": "2025-12-04T06:24:41.23",
+                        "settings": {
+                            "2025-12-04T06:24:41.23": {
+                                "control": "N",
+                                "description": "B__Svensson_12_34",
+                                "flowcell_id": "233KCWLT4",
+                                "index_1": "CTTGCGG",
+                                "index_2": "CGCCTCA",
+                                "lane": "6",
+                                "mask_short_reads": 0,
+                                "minimum_trimmed_read_length": 0,
+                                "named_index": "CTTGCGG",
+                                "operator": "Mikael_Johansson",
+                                "override_cycles": "",
+                                "recipe": "151-151",
+                                "sample_name": "P89101_2002",
+                                "sample_project": "B__Svensson_12_34",
+                                "sample_ref": "Human (Homo sapiens GRCh38)"
+                            }
+                        }
+                    },
+                    "a7b8c9d0-e1f2-3456-1234-567890123456": {
+                        "sample_id": "P89101_2003",
+                        "last_modified": "2025-12-04T06:24:41.23",
+                        "settings": {
+                            "2025-12-04T06:24:41.23": {
+                                "control": "N",
+                                "description": "B__Svensson_12_34",
+                                "flowcell_id": "233KCWLT4",
+                                "index_1": "TGGACGT",
+                                "index_2": "CAATCGA",
+                                "lane": "6",
+                                "mask_short_reads": 0,
+                                "minimum_trimmed_read_length": 0,
+                                "named_index": "TGGACGT",
+                                "operator": "Mikael_Johansson",
+                                "override_cycles": "",
+                                "recipe": "151-151",
+                                "sample_name": "P89101_2003",
+                                "sample_project": "B__Svensson_12_34",
+                                "sample_ref": "Human (Homo sapiens GRCh38)"
+                            }
+                        }
+                    },
+                    "b8c9d0e1-f2a3-4567-2345-678901234567": {
+                        "sample_id": "P89101_2004",
+                        "last_modified": "2025-12-04T06:24:41.23",
+                        "settings": {
+                            "2025-12-04T06:24:41.23": {
+                                "control": "N",
+                                "description": "B__Svensson_12_34",
+                                "flowcell_id": "233KCWLT4",
+                                "index_1": "ATACTGA",
+                                "index_2": "CCTTCGC",
+                                "lane": "6",
+                                "mask_short_reads": 0,
+                                "minimum_trimmed_read_length": 0,
+                                "named_index": "ATACTGA",
+                                "operator": "Mikael_Johansson",
+                                "override_cycles": "",
+                                "recipe": "151-151",
+                                "sample_name": "P89101_2004",
+                                "sample_project": "B__Svensson_12_34",
+                                "sample_ref": "Human (Homo sapiens GRCh38)"
+                            }
+                        }
+                    },
+                    "c9d0e1f2-a3b4-5678-3456-789012345678": {
+                        "sample_id": "P89101_2005",
+                        "last_modified": "2025-12-04T06:24:41.23",
+                        "settings": {
+                            "2025-12-04T06:24:41.23": {
+                                "control": "N",
+                                "description": "B__Svensson_12_34",
+                                "flowcell_id": "233KCWLT4",
+                                "index_1": "CAGGAAG",
+                                "index_2": "CAGGCAA",
+                                "lane": "6",
+                                "mask_short_reads": 0,
+                                "minimum_trimmed_read_length": 0,
+                                "named_index": "CAGGAAG",
+                                "operator": "Mikael_Johansson",
+                                "override_cycles": "",
+                                "recipe": "151-151",
+                                "sample_name": "P89101_2005",
+                                "sample_project": "B__Svensson_12_34",
+                                "sample_ref": "Human (Homo sapiens GRCh38)"
+                            }
+                        }
+                    },
+                    "d0e1f2a3-b4c5-6789-4567-890123456789": {
+                        "sample_id": "P89101_2006",
+                        "last_modified": "2025-12-04T06:24:41.23",
+                        "settings": {
+                            "2025-12-04T06:24:41.23": {
+                                "control": "N",
+                                "description": "B__Svensson_12_34",
+                                "flowcell_id": "233KCWLT4",
+                                "index_1": "CAATTAC",
+                                "index_2": "GCTCCGT",
+                                "lane": "6",
+                                "mask_short_reads": 0,
+                                "minimum_trimmed_read_length": 0,
+                                "named_index": "CAATTAC",
+                                "operator": "Mikael_Johansson",
+                                "override_cycles": "",
+                                "recipe": "151-151",
+                                "sample_name": "P89101_2006",
+                                "sample_project": "B__Svensson_12_34",
+                                "sample_ref": "Human (Homo sapiens GRCh38)"
+                            }
+                        }
+                    },
+                    "e1f2a3b4-c5d6-7890-5678-901234567890": {
+                        "sample_id": "P89101_2007",
+                        "last_modified": "2025-12-04T06:24:41.23",
+                        "settings": {
+                            "2025-12-04T06:24:41.23": {
+                                "control": "N",
+                                "description": "B__Svensson_12_34",
+                                "flowcell_id": "233KCWLT4",
+                                "index_1": "CATACCT",
+                                "index_2": "AGAGACT",
+                                "lane": "6",
+                                "mask_short_reads": 0,
+                                "minimum_trimmed_read_length": 0,
+                                "named_index": "CATACCT",
+                                "operator": "Mikael_Johansson",
+                                "override_cycles": "",
+                                "recipe": "151-151",
+                                "sample_name": "P89101_2007",
+                                "sample_project": "B__Svensson_12_34",
+                                "sample_ref": "Human (Homo sapiens GRCh38)"
+                            }
+                        }
+                    },
+                    "f2a3b4c5-d6e7-8901-6789-012345678901": {
+                        "sample_id": "P89101_2008",
+                        "last_modified": "2025-12-04T06:24:41.23",
+                        "settings": {
+                            "2025-12-04T06:24:41.23": {
+                                "control": "N",
+                                "description": "B__Svensson_12_34",
+                                "flowcell_id": "233KCWLT4",
+                                "index_1": "TACTTAG",
+                                "index_2": "CTGGCCT",
+                                "lane": "6",
+                                "mask_short_reads": 0,
+                                "minimum_trimmed_read_length": 0,
+                                "named_index": "TACTTAG",
+                                "operator": "Mikael_Johansson",
+                                "override_cycles": "",
+                                "recipe": "151-151",
+                                "sample_name": "P89101_2008",
+                                "sample_project": "B__Svensson_12_34",
+                                "sample_ref": "Human (Homo sapiens GRCh38)"
+                            }
+                        }
+                    },
+                    "a3b4c5d6-e7f8-9012-7890-123456789012": {
+                        "sample_id": "P89101_2009",
+                        "last_modified": "2025-12-04T06:24:41.23",
+                        "settings": {
+                            "2025-12-04T06:24:41.23": {
+                                "control": "N",
+                                "description": "B__Svensson_12_34",
+                                "flowcell_id": "233KCWLT4",
+                                "index_1": "AAGCTAA",
+                                "index_2": "CGCAAGG",
+                                "lane": "6",
+                                "mask_short_reads": 0,
+                                "minimum_trimmed_read_length": 0,
+                                "named_index": "AAGCTAA",
+                                "operator": "Mikael_Johansson",
+                                "override_cycles": "",
+                                "recipe": "151-151",
+                                "sample_name": "P89101_2009",
+                                "sample_project": "B__Svensson_12_34",
+                                "sample_ref": "Human (Homo sapiens GRCh38)"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
