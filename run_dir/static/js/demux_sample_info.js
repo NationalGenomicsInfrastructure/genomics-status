@@ -26,7 +26,11 @@ const vDemuxSampleInfoEditor = {
                 { key: 'override_cycles', label: 'Override Cycles' },
                 { key: 'last_modified', label: 'Last Modified' }
             ],
-            visibleColumns: ['sample_id', 'last_modified', 'index_1', 'index_2', 'recipe', 'override_cycles']
+            visibleColumns: ['sample_project', 'sample_id', 'last_modified', 'index_1', 'index_2', 'recipe', 'override_cycles'],
+            showBulkEditModal: false,
+            bulkEditAction: 'reverse_complement_index1',
+            bulkEditProject: '',
+            bulkEditLane: 'all'
         }
     },
     computed: {
@@ -121,6 +125,24 @@ const vDemuxSampleInfoEditor = {
             return Object.keys(this.editedData).some(lane => {
                 return Object.keys(this.editedData[lane] || {}).length > 0;
             });
+        },
+        availableProjects() {
+            // Get unique list of projects from calculated samples
+            const projects = new Set();
+            Object.values(this.calculatedLanes).forEach(laneData => {
+                Object.values(laneData.samples).forEach(sample => {
+                    const settingsVersions = Object.keys(sample.settings).sort().reverse();
+                    const latestSettings = sample.settings[settingsVersions[0]];
+                    if (latestSettings.sample_project) {
+                        projects.add(latestSettings.sample_project);
+                    }
+                });
+            });
+            return Array.from(projects).sort();
+        },
+        availableLanes() {
+            // Get list of lanes
+            return Object.keys(this.calculatedLanes).sort((a, b) => parseInt(a) - parseInt(b));
         }
     },
     methods: {
@@ -179,7 +201,7 @@ const vDemuxSampleInfoEditor = {
         },
         applyColumnPreset(preset) {
             if (preset === 'default') {
-                this.visibleColumns = ['sample_id', 'last_modified', 'index_1', 'index_2', 'recipe', 'override_cycles'];
+                this.visibleColumns = ['sample_project', 'sample_id', 'last_modified', 'index_1', 'index_2', 'recipe', 'override_cycles'];
             } else if (preset === 'all') {
                 this.visibleColumns = this.availableColumns.map(col => col.key);
             }
@@ -263,6 +285,58 @@ const vDemuxSampleInfoEditor = {
                 // Clear all edited data
                 this.editedData = {};
             }
+        },
+        openBulkEditModal() {
+            this.showBulkEditModal = true;
+            this.bulkEditProject = '';
+            this.bulkEditLane = 'all';
+            this.bulkEditAction = 'reverse_complement_index1';
+        },
+        closeBulkEditModal() {
+            this.showBulkEditModal = false;
+        },
+        reverseComplement(sequence) {
+            // Reverse complement a DNA sequence
+            const complement = {
+                'A': 'T', 'T': 'A', 'C': 'G', 'G': 'C',
+                'a': 't', 't': 'a', 'c': 'g', 'g': 'c',
+                'N': 'N', 'n': 'n'
+            };
+            return sequence.split('').reverse().map(base => complement[base] || base).join('');
+        },
+        applyBulkEdit() {
+            if (!this.bulkEditProject) {
+                alert('Please select a project.');
+                return;
+            }
+
+            let editCount = 0;
+            const lanesToEdit = this.bulkEditLane === 'all' ? this.availableLanes : [this.bulkEditLane];
+
+            lanesToEdit.forEach(lane => {
+                const laneData = this.calculatedLanes[lane];
+                if (!laneData) return;
+
+                Object.entries(laneData.samples).forEach(([uuid, sample]) => {
+                    const settingsVersions = Object.keys(sample.settings).sort().reverse();
+                    const latestSettings = sample.settings[settingsVersions[0]];
+
+                    // Check if this sample matches the selected project
+                    if (latestSettings.sample_project === this.bulkEditProject) {
+                        if (this.bulkEditAction === 'reverse_complement_index1') {
+                            const currentIndex = this.editedData[lane]?.[uuid]?.index_1 || latestSettings.index_1;
+                            if (currentIndex) {
+                                const newIndex = this.reverseComplement(currentIndex);
+                                this.updateValue(lane, uuid, 'index_1', newIndex);
+                                editCount++;
+                            }
+                        }
+                    }
+                });
+            });
+
+            alert(`Applied ${this.bulkEditAction} to ${editCount} sample(s) in project ${this.bulkEditProject}`);
+            this.closeBulkEditModal();
         }
     },
     mounted() {
@@ -446,20 +520,27 @@ const vDemuxSampleInfoEditor = {
                         <div class="mt-4" v-if="viewMode === 'calculated'">
                             <div class="d-flex justify-content-between align-items-center mb-3">
                                 <h3 class="mb-0">Calculated Samples (by Lane)</h3>
-                                <div v-if="hasChanges">
+                                <div>
                                     <button
-                                        class="btn btn-success me-2"
-                                        @click="saveChanges"
-                                        :disabled="saving">
-                                        <span v-if="saving" class="spinner-border spinner-border-sm me-2" role="status"></span>
-                                        {{ saving ? 'Saving...' : 'Save Changes' }}
+                                        class="btn btn-primary me-2"
+                                        @click="openBulkEditModal">
+                                        Bulk Edit Actions
                                     </button>
-                                    <button
-                                        class="btn btn-secondary"
-                                        @click="discardChanges"
-                                        :disabled="saving">
-                                        Discard Changes
-                                    </button>
+                                    <span v-if="hasChanges">
+                                        <button
+                                            class="btn btn-success me-2"
+                                            @click="saveChanges"
+                                            :disabled="saving">
+                                            <span v-if="saving" class="spinner-border spinner-border-sm me-2" role="status"></span>
+                                            {{ saving ? 'Saving...' : 'Save Changes' }}
+                                        </button>
+                                        <button
+                                            class="btn btn-secondary"
+                                            @click="discardChanges"
+                                            :disabled="saving">
+                                            Discard Changes
+                                        </button>
+                                    </span>
                                 </div>
                             </div>
 
@@ -526,6 +607,48 @@ const vDemuxSampleInfoEditor = {
                             </div>
                         </div>
                     </template>
+
+                    <!-- Bulk Edit Modal -->
+                    <div v-if="showBulkEditModal" class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">Bulk Edit Actions</h5>
+                                    <button type="button" class="btn-close" @click="closeBulkEditModal"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <div class="mb-3">
+                                        <label for="bulkEditAction" class="form-label">Action:</label>
+                                        <select class="form-select" id="bulkEditAction" v-model="bulkEditAction">
+                                            <option value="reverse_complement_index1">Reverse Complement Index 1</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="bulkEditProject" class="form-label">Project:</label>
+                                        <select class="form-select" id="bulkEditProject" v-model="bulkEditProject" required>
+                                            <option value="">-- Select Project --</option>
+                                            <option v-for="project in availableProjects" :key="project" :value="project">
+                                                {{ project }}
+                                            </option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="bulkEditLane" class="form-label">Lane:</label>
+                                        <select class="form-select" id="bulkEditLane" v-model="bulkEditLane">
+                                            <option value="all">All Lanes</option>
+                                            <option v-for="lane in availableLanes" :key="lane" :value="lane">
+                                                Lane {{ lane }}
+                                            </option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" @click="closeBulkEditModal">Cancel</button>
+                                    <button type="button" class="btn btn-primary" @click="applyBulkEdit">Apply</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
