@@ -143,6 +143,26 @@ const vDemuxSampleInfoEditor = {
         availableLanes() {
             // Get list of lanes
             return Object.keys(this.calculatedLanes).sort((a, b) => parseInt(a) - parseInt(b));
+        },
+        projectLanes() {
+            // Get lanes that contain the selected project
+            if (!this.bulkEditProject) return [];
+
+            const lanes = [];
+            Object.entries(this.calculatedLanes).forEach(([lane, laneData]) => {
+                const hasProject = Object.values(laneData.samples).some(sample => {
+                    const settingsVersions = Object.keys(sample.settings).sort().reverse();
+                    const latestSettings = sample.settings[settingsVersions[0]];
+                    return latestSettings.sample_project === this.bulkEditProject;
+                });
+                if (hasProject) {
+                    lanes.push(lane);
+                }
+            });
+            return lanes.sort((a, b) => parseInt(a) - parseInt(b));
+        },
+        isSingleLaneProject() {
+            return this.projectLanes.length === 1;
         }
     },
     methods: {
@@ -289,8 +309,18 @@ const vDemuxSampleInfoEditor = {
         openBulkEditModal() {
             this.showBulkEditModal = true;
             this.bulkEditProject = '';
-            this.bulkEditLane = 'all';
+            this.bulkEditLane = '';
             this.bulkEditAction = 'reverse_complement_index1';
+        },
+        updateProjectLaneSelection() {
+            // When project changes, update lane selection
+            if (this.isSingleLaneProject) {
+                this.bulkEditLane = this.projectLanes[0];
+            } else if (this.projectLanes.length > 0) {
+                this.bulkEditLane = 'all';
+            } else {
+                this.bulkEditLane = '';
+            }
         },
         closeBulkEditModal() {
             this.showBulkEditModal = false;
@@ -311,7 +341,7 @@ const vDemuxSampleInfoEditor = {
             }
 
             let editCount = 0;
-            const lanesToEdit = this.bulkEditLane === 'all' ? this.availableLanes : [this.bulkEditLane];
+            const lanesToEdit = this.bulkEditLane === 'all' ? this.projectLanes : [this.bulkEditLane];
 
             lanesToEdit.forEach(lane => {
                 const laneData = this.calculatedLanes[lane];
@@ -328,6 +358,13 @@ const vDemuxSampleInfoEditor = {
                             if (currentIndex) {
                                 const newIndex = this.reverseComplement(currentIndex);
                                 this.updateValue(lane, uuid, 'index_1', newIndex);
+                                editCount++;
+                            }
+                        } else if (this.bulkEditAction === 'reverse_complement_index2') {
+                            const currentIndex = this.editedData[lane]?.[uuid]?.index_2 || latestSettings.index_2;
+                            if (currentIndex) {
+                                const newIndex = this.reverseComplement(currentIndex);
+                                this.updateValue(lane, uuid, 'index_2', newIndex);
                                 editCount++;
                             }
                         }
@@ -621,25 +658,29 @@ const vDemuxSampleInfoEditor = {
                                         <label for="bulkEditAction" class="form-label">Action:</label>
                                         <select class="form-select" id="bulkEditAction" v-model="bulkEditAction">
                                             <option value="reverse_complement_index1">Reverse Complement Index 1</option>
+                                            <option value="reverse_complement_index2">Reverse Complement Index 2</option>
                                         </select>
                                     </div>
                                     <div class="mb-3">
                                         <label for="bulkEditProject" class="form-label">Project:</label>
-                                        <select class="form-select" id="bulkEditProject" v-model="bulkEditProject" required>
+                                        <select class="form-select" id="bulkEditProject" v-model="bulkEditProject" @change="updateProjectLaneSelection" required>
                                             <option value="">-- Select Project --</option>
                                             <option v-for="project in availableProjects" :key="project" :value="project">
                                                 {{ project }}
                                             </option>
                                         </select>
                                     </div>
-                                    <div class="mb-3">
+                                    <div class="mb-3" v-if="bulkEditProject">
                                         <label for="bulkEditLane" class="form-label">Lane:</label>
-                                        <select class="form-select" id="bulkEditLane" v-model="bulkEditLane">
-                                            <option value="all">All Lanes</option>
-                                            <option v-for="lane in availableLanes" :key="lane" :value="lane">
+                                        <select class="form-select" id="bulkEditLane" v-model="bulkEditLane" :disabled="isSingleLaneProject">
+                                            <option v-if="!isSingleLaneProject" value="all">All Lanes</option>
+                                            <option v-for="lane in projectLanes" :key="lane" :value="lane">
                                                 Lane {{ lane }}
                                             </option>
                                         </select>
+                                        <small v-if="isSingleLaneProject" class="form-text text-muted">
+                                            This project is only present in one lane.
+                                        </small>
                                     </div>
                                 </div>
                                 <div class="modal-footer">
