@@ -3,9 +3,11 @@ const vDemuxSampleInfoEditor = {
         return {
             flowcell_id: '',
             demux_data: null,
+            editedData: null,  // Complete deep copy of calculated lanes for editing
             error_messages: [],
             loading: false,
-            viewMode: 'uploaded',  // 'uploaded', 'calculated', 'history'
+            saving: false,
+            viewMode: 'calculated',  // 'uploaded', 'calculated'
             selectedVersion: null,
             availableColumns: [
                 { key: 'sample_id', label: 'Sample ID' },
@@ -68,6 +70,11 @@ const vDemuxSampleInfoEditor = {
             }
             return this.demux_data.calculated.version_history[this.currentVersion];
         },
+        calculatedData() {
+            if (!this.demux_data || !this.demux_data.calculated) {
+                return {};
+            }
+        },
         calculatedLanes() {
             if (!this.demux_data || !this.demux_data.calculated || !this.demux_data.calculated.lanes) {
                 return {};
@@ -76,9 +83,11 @@ const vDemuxSampleInfoEditor = {
         },
         calculatedSamplesFlat() {
             // Flatten calculated samples with their latest settings for table display
+            // Use editedData if available, otherwise use original data
+            const sourceData = this.editedData || this.calculatedLanes;
             const result = {};
 
-            Object.entries(this.calculatedLanes).forEach(([lane, laneData]) => {
+            Object.entries(sourceData).forEach(([lane, laneData]) => {
                 result[lane] = [];
 
                 Object.entries(laneData.samples).forEach(([uuid, sample]) => {
@@ -103,6 +112,11 @@ const vDemuxSampleInfoEditor = {
                 acc[col.key] = col.label;
                 return acc;
             }, {});
+        },
+        hasChanges() {
+            // Check if there are any unsaved changes by comparing editedData with original
+            if (!this.editedData || !this.demux_data) return false;
+            return JSON.stringify(this.editedData) !== JSON.stringify(this.calculatedData);
         }
     },
     methods: {
@@ -120,6 +134,8 @@ const vDemuxSampleInfoEditor = {
             axios.get(`/api/v1/demux_sample_info/${this.flowcell_id}`)
                 .then(response => {
                     this.demux_data = response.data;
+                    // Create a deep copy of calculated lanes for editing
+                    this.editedData = JSON.parse(JSON.stringify(response.data.calculated || {}));
                     this.selectedVersion = null; // Reset to latest
                     this.loading = false;
                 })
@@ -162,6 +178,53 @@ const vDemuxSampleInfoEditor = {
                 return this.formatTimestamp(value);
             }
             return value || 'N/A';
+        },
+        updateValue(lane, uuid, field, newValue) {
+            // Update the value in editedData
+            if (!this.editedData || !this.editedData['lanes'] || !this.editedData['lanes'][lane] || !this.editedData['lanes'][lane].samples[uuid]) {
+                return;
+            }
+            const sample = this.editedData['lanes'][lane].samples[uuid];
+            const settingsVersions = Object.keys(sample.settings).sort().reverse();
+            const latestSettingsKey = settingsVersions[0];
+            sample.settings[latestSettingsKey][field] = newValue;
+        },
+        saveChanges() {
+            if (!this.hasChanges) {
+                this.error_messages.push('No changes to save.');
+                return;
+            }
+
+            this.error_messages = [];
+            this.saving = true;
+
+            // Prepare the data to send to the API
+            const payload = {
+                flowcell_id: this.flowcell_id,
+                lanes: this.editedData
+            };
+
+            axios.post(`/api/v1/demux_sample_info/${this.flowcell_id}`, payload)
+                .then(response => {
+                    // Refresh the data after successful save
+                    this.demux_data = response.data;
+                    // Reinitialize editedData with the saved data
+                    this.editedData = JSON.parse(JSON.stringify(response.data.calculated?.lanes || {}));
+                    this.saving = false;
+                    // Show success message
+                    alert('Changes saved successfully!');
+                })
+                .catch(error => {
+                    this.error_messages.push('Error saving changes. Please try again or contact a system administrator.');
+                    console.error(error);
+                    this.saving = false;
+                });
+        },
+        discardChanges() {
+            if (confirm('Are you sure you want to discard all unsaved changes?')) {
+                // Reset editedData to a fresh copy of the original data
+                this.editedData = JSON.parse(JSON.stringify(this.calculatedLanes));
+            }
         }
     },
     mounted() {
@@ -343,7 +406,24 @@ const vDemuxSampleInfoEditor = {
 
                         <!-- Calculated Samples view -->
                         <div class="mt-4" v-if="viewMode === 'calculated'">
-                            <h3>Calculated Samples (by Lane)</h3>
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h3 class="mb-0">Calculated Samples (by Lane)</h3>
+                                <div v-if="hasChanges">
+                                    <button
+                                        class="btn btn-success me-2"
+                                        @click="saveChanges"
+                                        :disabled="saving">
+                                        <span v-if="saving" class="spinner-border spinner-border-sm me-2" role="status"></span>
+                                        {{ saving ? 'Saving...' : 'Save Changes' }}
+                                    </button>
+                                    <button
+                                        class="btn btn-secondary"
+                                        @click="discardChanges"
+                                        :disabled="saving">
+                                        Discard Changes
+                                    </button>
+                                </div>
+                            </div>
 
                             <!-- Column Configuration Menu -->
                             <div class="card mt-3 mb-4">
