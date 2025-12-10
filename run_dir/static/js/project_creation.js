@@ -733,7 +733,10 @@ const vFormField = {
         // Initialize the form data for this field
         if (this.formType === 'boolean') {
             this.$root.formData[this.identifier] = false;
-        } else {
+        } else if (this.formType === 'integer') {
+            this.$root.formData[this.identifier] = 0;
+        }
+         else {
             this.$root.formData[this.identifier] = '';
         }
 
@@ -831,7 +834,7 @@ const vFormField = {
                     <input class="form-control" :type="text" :name="identifier" :id="identifier" :placeholder="description" v-model="this.$root.formData[identifier]">
                 </template>
                 <template v-if="this.formType === 'integer'">
-                    <input class="form-control" :type="number" :name="identifier" :id="identifier" :placeholder="0" v-model="this.$root.formData[identifier]">
+                    <input class="form-control" :type="number" :name="identifier" :id="identifier" :placeholder="0" v-model.number="this.$root.formData[identifier]">
                 </template>
 
                 <template v-if="this.formType === 'boolean'">
