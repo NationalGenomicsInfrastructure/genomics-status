@@ -46,9 +46,33 @@ class DemuxSampleInfoDataHandler(SafeHandler):
         self.set_header("Content-type", "application/json")
 
         try:
-            # Fetch the document from the demux_sample_info database
+            # Query the view to find the document ID by flowcell_id
+            view_result = self.application.cloudant.post_view(
+                db="demux_sample_info",
+                ddoc="info",
+                view="flowcell_id",
+                key=flowcell_id,
+            ).get_result()
+
+            rows = view_result.get("rows", [])
+
+            if not rows:
+                self.set_status(404)
+                self.write(
+                    json.dumps(
+                        {
+                            "error": f"No demux sample info found for flowcell {flowcell_id}"
+                        }
+                    )
+                )
+                return
+
+            # Get the document ID from the view result
+            doc_id = rows[0]["id"]
+            
+            # Fetch the actual document using the ID
             document = self.application.cloudant.get_document(
-                db="demux_sample_info", doc_id=flowcell_id
+                db="demux_sample_info", doc_id=doc_id
             ).get_result()
 
             # Remove CouchDB-specific fields from the response
