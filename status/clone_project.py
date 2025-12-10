@@ -170,6 +170,6 @@ class LIMSProjectCloningHandler(SafeHandler):
                 researcher=proj_values["researcher"],
             )
         except requests.exceptions.HTTPError as e:
-            return {"error": e.message}
+            return {"error": e.response.text}
 
         return {"project_id": new_project.id, "project_name": new_project.name}
