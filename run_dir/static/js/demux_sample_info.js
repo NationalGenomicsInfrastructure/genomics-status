@@ -232,6 +232,32 @@ const vDemuxSampleInfoEditor = {
             }
             return value || 'N/A';
         },
+        isFieldEdited(lane, uuid, field) {
+            // Check if a specific field has been edited
+            return this.editedData[lane]?.[uuid]?.[field] !== undefined;
+        },
+        isSampleEdited(lane, uuid) {
+            // Check if any field in the sample has been edited
+            return this.editedData[lane]?.[uuid] && Object.keys(this.editedData[lane][uuid]).length > 0;
+        },
+        getOriginalValue(lane, uuid, field) {
+            // Get the original value before any edits
+            const laneData = this.calculatedLanes[lane];
+            if (!laneData || !laneData.samples[uuid]) return null;
+
+            const sample = laneData.samples[uuid];
+            const settingsVersions = Object.keys(sample.settings).sort().reverse();
+            const latestSettings = sample.settings[settingsVersions[0]];
+            return latestSettings[field];
+        },
+        getEditTooltip(lane, uuid, field) {
+            // Generate tooltip text showing before and after values
+            if (!this.isFieldEdited(lane, uuid, field)) return '';
+
+            const originalValue = this.getOriginalValue(lane, uuid, field) || 'N/A';
+            const newValue = this.editedData[lane][uuid][field] || 'N/A';
+            return `Before: ${originalValue}\nAfter: ${newValue}`;
+        },
         updateValue(lane, uuid, field, newValue) {
             // Initialize lane if it doesn't exist
             if (!this.editedData[lane]) {
@@ -623,7 +649,7 @@ const vDemuxSampleInfoEditor = {
                             <div v-for="(samples, lane) in calculatedSamplesFlat" :key="lane" class="mt-4">
                                 <h4>Lane {{ lane }}</h4>
                                 <div class="table-responsive">
-                                    <table class="table table-striped table-bordered table-sm">
+                                    <table class="table table-bordered table-sm">
                                         <thead>
                                             <tr class="darkth">
                                                 <th v-for="columnKey in visibleColumns" :key="columnKey">
@@ -632,8 +658,11 @@ const vDemuxSampleInfoEditor = {
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            <tr v-for="sample in samples" :key="sample.uuid">
-                                                <td v-for="columnKey in visibleColumns" :key="columnKey">
+                                            <tr v-for="sample in samples" :key="sample.uuid" :class="{ 'table-info': isSampleEdited(lane, sample.uuid) }">
+                                                <td v-for="columnKey in visibleColumns" :key="columnKey"
+                                                    :class="{ 'bg-info': isFieldEdited(lane, sample.uuid, columnKey) }"
+                                                    :title="getEditTooltip(lane, sample.uuid, columnKey)"
+                                                    style="cursor: pointer;">
                                                     <code v-if="columnKey === 'index_1' || columnKey === 'index_2'">{{ formatCellValue(sample[columnKey], columnKey) }}</code>
                                                     <span v-else>{{ formatCellValue(sample[columnKey], columnKey) }}</span>
                                                 </td>
