@@ -6,7 +6,25 @@ const vDemuxSampleInfoEditor = {
             error_messages: [],
             loading: false,
             viewMode: 'uploaded',  // 'uploaded', 'calculated', 'history'
-            selectedVersion: null
+            selectedVersion: null,
+            availableColumns: [
+                { key: 'sample_id', label: 'Sample ID' },
+                { key: 'sample_name', label: 'Sample Name' },
+                { key: 'sample_project', label: 'Sample Project' },
+                { key: 'sample_ref', label: 'Sample Ref' },
+                { key: 'index_1', label: 'Index 1' },
+                { key: 'index_2', label: 'Index 2' },
+                { key: 'named_index', label: 'Named Index' },
+                { key: 'recipe', label: 'Recipe' },
+                { key: 'operator', label: 'Operator' },
+                { key: 'description', label: 'Description' },
+                { key: 'control', label: 'Control' },
+                { key: 'mask_short_reads', label: 'Mask Short Reads' },
+                { key: 'minimum_trimmed_read_length', label: 'Min Trimmed Length' },
+                { key: 'override_cycles', label: 'Override Cycles' },
+                { key: 'last_modified', label: 'Last Modified' }
+            ],
+            visibleColumns: ['sample_id', 'last_modified', 'index_1', 'index_2', 'recipe', 'override_cycles']
         }
     },
     computed: {
@@ -55,6 +73,36 @@ const vDemuxSampleInfoEditor = {
                 return {};
             }
             return this.demux_data.calculated.lanes;
+        },
+        calculatedSamplesFlat() {
+            // Flatten calculated samples with their latest settings for table display
+            const result = {};
+
+            Object.entries(this.calculatedLanes).forEach(([lane, laneData]) => {
+                result[lane] = [];
+
+                Object.entries(laneData.samples).forEach(([uuid, sample]) => {
+                    // Get the latest settings version
+                    const settingsVersions = Object.keys(sample.settings).sort().reverse();
+                    const latestSettings = sample.settings[settingsVersions[0]];
+
+                    result[lane].push({
+                        uuid: uuid,
+                        sample_id: sample.sample_id,
+                        last_modified: sample.last_modified,
+                        ...latestSettings
+                    });
+                });
+            });
+
+            return result;
+        },
+        columnLabel() {
+            // Create a map of column keys to labels for quick lookup
+            return this.availableColumns.reduce((acc, col) => {
+                acc[col.key] = col.label;
+                return acc;
+            }, {});
         }
     },
     methods: {
@@ -97,6 +145,23 @@ const vDemuxSampleInfoEditor = {
             // Get settings for the current version or the latest
             const settingsVersions = Object.keys(sample.settings).sort().reverse();
             return sample.settings[settingsVersions[0]];
+        },
+        toggleColumn(columnKey) {
+            const index = this.visibleColumns.indexOf(columnKey);
+            if (index > -1) {
+                this.visibleColumns.splice(index, 1);
+            } else {
+                this.visibleColumns.push(columnKey);
+            }
+        },
+        isColumnVisible(columnKey) {
+            return this.visibleColumns.includes(columnKey);
+        },
+        formatCellValue(value, columnKey) {
+            if (columnKey === 'last_modified') {
+                return this.formatTimestamp(value);
+            }
+            return value || 'N/A';
         }
     },
     mounted() {
@@ -122,7 +187,7 @@ const vDemuxSampleInfoEditor = {
                             <h5 class="card-title">Fetch Demux Sample Info</h5>
                             <div class="row g-3 align-items-end">
                                 <div class="col-auto">
-                                    <label for="flowcell_id" class="form-label">Flowcell ID</label>
+                                    <label for="flowcell_id" class="form-label">Flowcell ID (if in doubt use 494d04a8ff2c4a44661da5330a0f93e7)</label>
                                     <input
                                         type="text"
                                         class="form-control"
@@ -279,85 +344,56 @@ const vDemuxSampleInfoEditor = {
                         <!-- Calculated Samples view -->
                         <div class="mt-4" v-if="viewMode === 'calculated'">
                             <h3>Calculated Samples (by Lane)</h3>
-                            <div v-for="(laneData, lane) in calculatedLanes" :key="lane" class="mt-3">
-                                <h4>Lane {{ lane }}</h4>
-                                <div class="accordion" :id="'accordion-lane-' + lane">
-                                    <div v-for="(sample, uuid) in laneData.samples" :key="uuid" class="accordion-item">
-                                        <h2 class="accordion-header" :id="'heading-' + uuid">
-                                            <button class="accordion-button collapsed" type="button" 
-                                                    data-bs-toggle="collapse" 
-                                                    :data-bs-target="'#collapse-' + uuid"
-                                                    aria-expanded="false">
-                                                <strong>{{ sample.sample_id }}</strong>
-                                                <span class="ms-3 text-muted">UUID: {{ uuid }}</span>
-                                                <span class="ms-3 text-muted">Last modified: {{ formatTimestamp(sample.last_modified) }}</span>
-                                            </button>
-                                        </h2>
-                                        <div :id="'collapse-' + uuid" 
-                                             class="accordion-collapse collapse" 
-                                             :aria-labelledby="'heading-' + uuid"
-                                             :data-bs-parent="'#accordion-lane-' + lane">
-                                            <div class="accordion-body">
-                                                <h6>Settings History ({{ Object.keys(sample.settings).length }} version(s))</h6>
-                                                <div v-for="(settings, timestamp) in sample.settings" :key="timestamp" class="mb-3">
-                                                    <div class="card">
-                                                        <div class="card-header bg-light">
-                                                            <strong>Version: {{ formatTimestamp(timestamp) }}</strong>
-                                                        </div>
-                                                        <div class="card-body">
-                                                            <div class="row">
-                                                                <div class="col-md-6">
-                                                                    <dl class="row mb-0">
-                                                                        <dt class="col-sm-6">Sample Name:</dt>
-                                                                        <dd class="col-sm-6">{{ settings.sample_name }}</dd>
-                                                                        
-                                                                        <dt class="col-sm-6">Sample Project:</dt>
-                                                                        <dd class="col-sm-6">{{ settings.sample_project }}</dd>
-                                                                        
-                                                                        <dt class="col-sm-6">Sample Ref:</dt>
-                                                                        <dd class="col-sm-6">{{ settings.sample_ref }}</dd>
-                                                                        
-                                                                        <dt class="col-sm-6">Index 1:</dt>
-                                                                        <dd class="col-sm-6"><code>{{ settings.index_1 }}</code></dd>
-                                                                        
-                                                                        <dt class="col-sm-6">Index 2:</dt>
-                                                                        <dd class="col-sm-6"><code>{{ settings.index_2 }}</code></dd>
-                                                                        
-                                                                        <dt class="col-sm-6">Named Index:</dt>
-                                                                        <dd class="col-sm-6">{{ settings.named_index }}</dd>
-                                                                        
-                                                                        <dt class="col-sm-6">Control:</dt>
-                                                                        <dd class="col-sm-6">{{ settings.control }}</dd>
-                                                                    </dl>
-                                                                </div>
-                                                                <div class="col-md-6">
-                                                                    <dl class="row mb-0">
-                                                                        <dt class="col-sm-6">Recipe:</dt>
-                                                                        <dd class="col-sm-6">{{ settings.recipe }}</dd>
-                                                                        
-                                                                        <dt class="col-sm-6">Operator:</dt>
-                                                                        <dd class="col-sm-6">{{ settings.operator }}</dd>
-                                                                        
-                                                                        <dt class="col-sm-6">Description:</dt>
-                                                                        <dd class="col-sm-6">{{ settings.description }}</dd>
-                                                                        
-                                                                        <dt class="col-sm-6">Mask Short Reads:</dt>
-                                                                        <dd class="col-sm-6">{{ settings.mask_short_reads }}</dd>
-                                                                        
-                                                                        <dt class="col-sm-6">Min Trimmed Length:</dt>
-                                                                        <dd class="col-sm-6">{{ settings.minimum_trimmed_read_length }}</dd>
-                                                                        
-                                                                        <dt class="col-sm-6">Override Cycles:</dt>
-                                                                        <dd class="col-sm-6">{{ settings.override_cycles || 'None' }}</dd>
-                                                                    </dl>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
+
+                            <!-- Column Configuration Menu -->
+                            <div class="card mt-3 mb-4">
+                                <div class="card-header">
+                                    <h5 class="mb-0">Column Configuration</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-12">
+                                            <p class="text-muted mb-2">Select columns to display:</p>
+                                            <div class="d-flex flex-wrap gap-2">
+                                                <div v-for="column in availableColumns" :key="column.key" class="form-check form-check-inline">
+                                                    <input
+                                                        class="form-check-input"
+                                                        type="checkbox"
+                                                        :id="'col-' + column.key"
+                                                        :value="column.key"
+                                                        :checked="isColumnVisible(column.key)"
+                                                        @change="toggleColumn(column.key)">
+                                                    <label class="form-check-label" :for="'col-' + column.key">
+                                                        {{ column.label }}
+                                                    </label>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
+                                </div>
+                            </div>
+
+                            <!-- Tables per Lane -->
+                            <div v-for="(samples, lane) in calculatedSamplesFlat" :key="lane" class="mt-4">
+                                <h4>Lane {{ lane }}</h4>
+                                <div class="table-responsive">
+                                    <table class="table table-striped table-bordered table-sm">
+                                        <thead>
+                                            <tr class="darkth">
+                                                <th v-for="columnKey in visibleColumns" :key="columnKey">
+                                                    {{ columnLabel[columnKey] }}
+                                                </th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr v-for="sample in samples" :key="sample.uuid">
+                                                <td v-for="columnKey in visibleColumns" :key="columnKey">
+                                                    <code v-if="columnKey === 'index_1' || columnKey === 'index_2'">{{ formatCellValue(sample[columnKey], columnKey) }}</code>
+                                                    <span v-else>{{ formatCellValue(sample[columnKey], columnKey) }}</span>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
                                 </div>
                             </div>
                         </div>
