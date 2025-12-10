@@ -1,11 +1,12 @@
 {
-    "flowcell_id": "",
+    "flowcell_id": "233KCWLT4",
     "metadata": {
         // "Metadata that can be retrieved at upload time, from LIMS, I choose to avoid things that can be calculated such as number of samples and which projects are included",
-        "num_lanes": 0,
+        "num_lanes": 8,
         "instrument_id": "",
         "run_setup": "",
-        "setup_lims_step_id": ""
+        "setup_lims_step_id": "",
+        "instrument_type": "NovaSeqXPlus"
     },
     "uploaded_info": [
         // This is the information uploaded from LIMS by the EPP, corresponding to the samplesheet currently saved on disk 

@@ -3,7 +3,7 @@ const vDemuxSampleInfoEditor = {
         return {
             flowcell_id: '',
             demux_data: null,
-            editedData: null,  // Complete deep copy of calculated lanes for editing
+            editedData: {},  // Stores edited settings per sample: { lane: { uuid: settings_object } }
             error_messages: [],
             loading: false,
             saving: false,
@@ -83,11 +83,10 @@ const vDemuxSampleInfoEditor = {
         },
         calculatedSamplesFlat() {
             // Flatten calculated samples with their latest settings for table display
-            // Use editedData if available, otherwise use original data
-            const sourceData = this.editedData || this.calculatedLanes;
+            // If there are edits, merge them with original data
             const result = {};
 
-            Object.entries(sourceData).forEach(([lane, laneData]) => {
+            Object.entries(this.calculatedLanes).forEach(([lane, laneData]) => {
                 result[lane] = [];
 
                 Object.entries(laneData.samples).forEach(([uuid, sample]) => {
@@ -95,11 +94,15 @@ const vDemuxSampleInfoEditor = {
                     const settingsVersions = Object.keys(sample.settings).sort().reverse();
                     const latestSettings = sample.settings[settingsVersions[0]];
 
+                    // Check if there's an edited version for this sample
+                    const editedSettings = this.editedData[lane]?.[uuid];
+                    const finalSettings = editedSettings ? { ...latestSettings, ...editedSettings } : latestSettings;
+
                     result[lane].push({
                         uuid: uuid,
                         sample_id: sample.sample_id,
                         last_modified: sample.last_modified,
-                        ...latestSettings
+                        ...finalSettings
                     });
                 });
             });
@@ -114,9 +117,10 @@ const vDemuxSampleInfoEditor = {
             }, {});
         },
         hasChanges() {
-            // Check if there are any unsaved changes by comparing editedData with original
-            if (!this.editedData || !this.demux_data) return false;
-            return JSON.stringify(this.editedData) !== JSON.stringify(this.calculatedData);
+            // Check if there are any unsaved changes
+            return Object.keys(this.editedData).some(lane => {
+                return Object.keys(this.editedData[lane] || {}).length > 0;
+            });
         }
     },
     methods: {
@@ -134,8 +138,8 @@ const vDemuxSampleInfoEditor = {
             axios.get(`/api/v1/demux_sample_info/${this.flowcell_id}`)
                 .then(response => {
                     this.demux_data = response.data;
-                    // Create a deep copy of calculated lanes for editing
-                    this.editedData = JSON.parse(JSON.stringify(response.data.calculated || {}));
+                    // Reset edited data
+                    this.editedData = {};
                     this.selectedVersion = null; // Reset to latest
                     this.loading = false;
                 })
@@ -173,6 +177,13 @@ const vDemuxSampleInfoEditor = {
         isColumnVisible(columnKey) {
             return this.visibleColumns.includes(columnKey);
         },
+        applyColumnPreset(preset) {
+            if (preset === 'default') {
+                this.visibleColumns = ['sample_id', 'last_modified', 'index_1', 'index_2', 'recipe', 'override_cycles'];
+            } else if (preset === 'all') {
+                this.visibleColumns = this.availableColumns.map(col => col.key);
+            }
+        },
         formatCellValue(value, columnKey) {
             if (columnKey === 'last_modified') {
                 return this.formatTimestamp(value);
@@ -180,14 +191,40 @@ const vDemuxSampleInfoEditor = {
             return value || 'N/A';
         },
         updateValue(lane, uuid, field, newValue) {
-            // Update the value in editedData
-            if (!this.editedData || !this.editedData['lanes'] || !this.editedData['lanes'][lane] || !this.editedData['lanes'][lane].samples[uuid]) {
-                return;
+            // Initialize lane if it doesn't exist
+            if (!this.editedData[lane]) {
+                this.editedData[lane] = {};
             }
-            const sample = this.editedData['lanes'][lane].samples[uuid];
-            const settingsVersions = Object.keys(sample.settings).sort().reverse();
-            const latestSettingsKey = settingsVersions[0];
-            sample.settings[latestSettingsKey][field] = newValue;
+            // Initialize sample settings if it doesn't exist
+            if (!this.editedData[lane][uuid]) {
+                this.editedData[lane][uuid] = {};
+            }
+
+            // Get original value to compare
+            const originalSample = this.calculatedLanes[lane]?.samples[uuid];
+            if (originalSample) {
+                const settingsVersions = Object.keys(originalSample.settings).sort().reverse();
+                const latestSettings = originalSample.settings[settingsVersions[0]];
+                const originalValue = latestSettings[field];
+
+                // If value matches original, remove from edited data
+                if (newValue === originalValue) {
+                    delete this.editedData[lane][uuid][field];
+                    // Clean up empty objects
+                    if (Object.keys(this.editedData[lane][uuid]).length === 0) {
+                        delete this.editedData[lane][uuid];
+                    }
+                    if (Object.keys(this.editedData[lane]).length === 0) {
+                        delete this.editedData[lane];
+                    }
+                } else {
+                    // Store the edited value
+                    this.editedData[lane][uuid][field] = newValue;
+                }
+            } else {
+                // No original found, just store the value
+                this.editedData[lane][uuid][field] = newValue;
+            }
         },
         saveChanges() {
             if (!this.hasChanges) {
@@ -199,17 +236,18 @@ const vDemuxSampleInfoEditor = {
             this.saving = true;
 
             // Prepare the data to send to the API
+            // Convert editedData to the format expected by the backend
             const payload = {
                 flowcell_id: this.flowcell_id,
-                lanes: this.editedData
+                edited_settings: this.editedData  // { lane: { uuid: settings_object } }
             };
 
             axios.post(`/api/v1/demux_sample_info/${this.flowcell_id}`, payload)
                 .then(response => {
                     // Refresh the data after successful save
                     this.demux_data = response.data;
-                    // Reinitialize editedData with the saved data
-                    this.editedData = JSON.parse(JSON.stringify(response.data.calculated?.lanes || {}));
+                    // Clear edited data after successful save
+                    this.editedData = {};
                     this.saving = false;
                     // Show success message
                     alert('Changes saved successfully!');
@@ -222,8 +260,8 @@ const vDemuxSampleInfoEditor = {
         },
         discardChanges() {
             if (confirm('Are you sure you want to discard all unsaved changes?')) {
-                // Reset editedData to a fresh copy of the original data
-                this.editedData = JSON.parse(JSON.stringify(this.calculatedLanes));
+                // Clear all edited data
+                this.editedData = {};
             }
         }
     },
@@ -433,6 +471,16 @@ const vDemuxSampleInfoEditor = {
                                 <div class="card-body">
                                     <div class="row">
                                         <div class="col-12">
+                                            <div class="mb-3">
+                                                <label class="form-label">Presets:</label>
+                                                <div class="btn-group" role="group">
+                                                    <input type="radio" class="btn-check" name="columnPreset" id="presetDefault" value="default" @change="applyColumnPreset('default')" autocomplete="off" checked>
+                                                    <label class="btn btn-outline-primary" for="presetDefault">Default</label>
+
+                                                    <input type="radio" class="btn-check" name="columnPreset" id="presetAll" value="all" @change="applyColumnPreset('all')" autocomplete="off">
+                                                    <label class="btn btn-outline-primary" for="presetAll">All</label>
+                                                </div>
+                                            </div>
                                             <p class="text-muted mb-2">Select columns to display:</p>
                                             <div class="d-flex flex-wrap gap-2">
                                                 <div v-for="column in availableColumns" :key="column.key" class="form-check form-check-inline">
