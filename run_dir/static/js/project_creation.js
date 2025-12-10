@@ -830,6 +830,9 @@ const vFormField = {
                 <template v-if="this.formType === 'string'">
                     <input class="form-control" :type="text" :name="identifier" :id="identifier" :placeholder="description" v-model="this.$root.formData[identifier]">
                 </template>
+                <template v-if="this.formType === 'integer'">
+                    <input class="form-control" :type="number" :name="identifier" :id="identifier" :placeholder="0" v-model="this.$root.formData[identifier]">
+                </template>
 
                 <template v-if="this.formType === 'boolean'">
                     <div class="form-check form-switch">
