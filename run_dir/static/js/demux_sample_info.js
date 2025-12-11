@@ -31,7 +31,10 @@ const vDemuxSampleInfoEditor = {
             columnConfigCollapsed: true,
             bulkEditAction: 'reverse_complement_index1',
             bulkEditProject: '',
-            bulkEditLane: 'all'
+            bulkEditLane: 'all',
+            showAddSampleModal: false,
+            addSampleProject: '',
+            addSampleLane: ''
         }
     },
     computed: {
@@ -164,6 +167,58 @@ const vDemuxSampleInfoEditor = {
         },
         isSingleLaneProject() {
             return this.projectLanes.length === 1;
+        },
+        nextSampleId() {
+            // Calculate the next sample ID for the selected project
+            if (!this.addSampleProject) return '';
+
+            // Find all sample IDs for this project across all lanes
+            const sampleIds = [];
+            Object.values(this.calculatedLanes).forEach(laneData => {
+                Object.values(laneData.samples).forEach(sample => {
+                    const settingsVersions = Object.keys(sample.settings).sort().reverse();
+                    const latestSettings = sample.settings[settingsVersions[0]];
+                    if (latestSettings.sample_project === this.addSampleProject) {
+                        sampleIds.push(sample.sample_id);
+                    }
+                });
+            });
+
+            if (sampleIds.length === 0) return 'P000_001'; // Fallback if no samples found
+
+            // Extract the project prefix from existing sample IDs (part before first underscore)
+            let projectPrefix = '';
+            let maxNumber = 0;
+
+            sampleIds.forEach(sampleId => {
+                // Extract the prefix and number part
+                const underscoreIndex = sampleId.indexOf('_');
+                if (underscoreIndex > 0) {
+                    const prefix = sampleId.substring(0, underscoreIndex);
+                    const numPart = sampleId.substring(underscoreIndex + 1);
+                    const num = parseInt(numPart);
+
+                    // Use the first valid prefix we find
+                    if (!projectPrefix) {
+                        projectPrefix = prefix;
+                    }
+
+                    if (!isNaN(num) && num > maxNumber) {
+                        maxNumber = num;
+                    }
+                }
+            });
+
+            if (!projectPrefix) return 'P000_001'; // Fallback
+            if (maxNumber === 0) return projectPrefix + '_001';
+
+            // Calculate next number: increment leading digit, reset rest to 001
+            const maxStr = maxNumber.toString();
+            const leadingDigit = parseInt(maxStr[0]);
+            const nextLeadingDigit = leadingDigit + 1;
+            const nextNumber = nextLeadingDigit.toString() + '001';
+
+            return projectPrefix + '_' + nextNumber;
         }
     },
     methods: {
@@ -401,6 +456,93 @@ const vDemuxSampleInfoEditor = {
 
             alert(`Applied ${this.bulkEditAction} to ${editCount} sample(s) in project ${this.bulkEditProject}`);
             this.closeBulkEditModal();
+        },
+        openAddSampleModal() {
+            this.showAddSampleModal = true;
+            this.addSampleProject = '';
+            this.addSampleLane = '';
+        },
+        closeAddSampleModal() {
+            this.showAddSampleModal = false;
+        },
+        addNewSample() {
+            if (!this.addSampleProject) {
+                alert('Please select a project.');
+                return;
+            }
+            if (!this.addSampleLane) {
+                alert('Please select a lane.');
+                return;
+            }
+
+            const newSampleId = this.nextSampleId;
+            const lane = this.addSampleLane;
+
+            // Generate a new UUID for the sample
+            const uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+                const r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+                return v.toString(16);
+            });
+
+            // Get template settings from an existing sample in the same project
+            let templateSettings = null;
+            Object.values(this.calculatedLanes).some(laneData => {
+                return Object.values(laneData.samples).some(sample => {
+                    const settingsVersions = Object.keys(sample.settings).sort().reverse();
+                    const latestSettings = sample.settings[settingsVersions[0]];
+                    if (latestSettings.sample_project === this.addSampleProject) {
+                        templateSettings = { ...latestSettings };
+                        return true;
+                    }
+                });
+            });
+
+            // Create new sample settings
+            const timestamp = new Date().toISOString();
+            const newSettings = templateSettings ? {
+                ...templateSettings,
+                sample_id: newSampleId,
+                sample_name: newSampleId,
+                lane: lane
+            } : {
+                sample_id: newSampleId,
+                sample_name: newSampleId,
+                sample_project: this.addSampleProject,
+                sample_ref: '',
+                index_1: '',
+                index_2: '',
+                named_index: '',
+                recipe: '',
+                operator: '',
+                description: '',
+                control: 'N',
+                mask_short_reads: 0,
+                minimum_trimmed_read_length: 0,
+                override_cycles: '',
+                lane: lane,
+                flowcell_id: this.flowcell_id
+            };
+
+            // Add to editedData (which will be sent to backend on save)
+            if (!this.editedData[lane]) {
+                this.editedData[lane] = {};
+            }
+            this.editedData[lane][uuid] = newSettings;
+
+            // Also add to the actual data structure for immediate display
+            if (!this.demux_data.calculated.lanes[lane]) {
+                this.demux_data.calculated.lanes[lane] = { samples: {} };
+            }
+            this.demux_data.calculated.lanes[lane].samples[uuid] = {
+                sample_id: newSampleId,
+                last_modified: timestamp,
+                settings: {
+                    [timestamp]: newSettings
+                }
+            };
+
+            alert(`Added new sample ${newSampleId} to lane ${lane}`);
+            this.closeAddSampleModal();
         }
     },
     mounted() {
@@ -570,6 +712,11 @@ const vDemuxSampleInfoEditor = {
                                     <h3 class="mb-0">Calculated Samples (by Lane)</h3>
                                 <div>
                                     <button
+                                        class="btn btn-success me-2"
+                                        @click="openAddSampleModal">
+                                        Add Sample
+                                    </button>
+                                    <button
                                         class="btn btn-primary me-2"
                                         @click="openBulkEditModal">
                                         Bulk Edit Actions
@@ -734,6 +881,45 @@ const vDemuxSampleInfoEditor = {
                                 <div class="modal-footer">
                                     <button type="button" class="btn btn-secondary" @click="closeBulkEditModal">Cancel</button>
                                     <button type="button" class="btn btn-primary" @click="applyBulkEdit">Apply</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Add Sample Modal -->
+                    <div v-if="showAddSampleModal" class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">Add New Sample</h5>
+                                    <button type="button" class="btn-close" @click="closeAddSampleModal"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <div class="mb-3">
+                                        <label for="addSampleProject" class="form-label">Project:</label>
+                                        <select class="form-select" id="addSampleProject" v-model="addSampleProject" required>
+                                            <option value="">-- Select Project --</option>
+                                            <option v-for="project in availableProjects" :key="project" :value="project">
+                                                {{ project }}
+                                            </option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="addSampleLane" class="form-label">Lane:</label>
+                                        <select class="form-select" id="addSampleLane" v-model="addSampleLane" required>
+                                            <option value="">-- Select Lane --</option>
+                                            <option v-for="lane in availableLanes" :key="lane" :value="lane">
+                                                Lane {{ lane }}
+                                            </option>
+                                        </select>
+                                    </div>
+                                    <div v-if="addSampleProject && addSampleLane" class="alert alert-info">
+                                        <strong>Next Sample ID:</strong> {{ nextSampleId }}
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" @click="closeAddSampleModal">Cancel</button>
+                                    <button type="button" class="btn btn-primary" @click="addNewSample">Add Sample</button>
                                 </div>
                             </div>
                         </div>
