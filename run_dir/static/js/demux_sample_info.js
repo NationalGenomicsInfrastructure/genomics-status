@@ -31,10 +31,7 @@ const vDemuxSampleInfoEditor = {
             columnConfigCollapsed: true,
             bulkEditAction: 'reverse_complement_index1',
             bulkEditProject: '',
-            bulkEditLane: 'all',
-            showAddSampleModal: false,
-            addSampleProject: '',
-            addSampleLane: ''
+            bulkEditLane: 'all'
         }
     },
     computed: {
@@ -170,7 +167,7 @@ const vDemuxSampleInfoEditor = {
         },
         nextSampleId() {
             // Calculate the next sample ID for the selected project
-            if (!this.addSampleProject) return '';
+            if (!this.bulkEditProject) return '';
 
             // Find all sample IDs for this project across all lanes
             const sampleIds = [];
@@ -178,7 +175,7 @@ const vDemuxSampleInfoEditor = {
                 Object.values(laneData.samples).forEach(sample => {
                     const settingsVersions = Object.keys(sample.settings).sort().reverse();
                     const latestSettings = sample.settings[settingsVersions[0]];
-                    if (latestSettings.sample_project === this.addSampleProject) {
+                    if (latestSettings.sample_project === this.bulkEditProject) {
                         sampleIds.push(sample.sample_id);
                     }
                 });
@@ -422,6 +419,16 @@ const vDemuxSampleInfoEditor = {
                 return;
             }
 
+            // Handle add_sample action separately
+            if (this.bulkEditAction === 'add_sample') {
+                if (!this.bulkEditLane) {
+                    alert('Please select a lane.');
+                    return;
+                }
+                this.addNewSample();
+                return;
+            }
+
             let editCount = 0;
             const lanesToEdit = this.bulkEditLane === 'all' ? this.projectLanes : [this.bulkEditLane];
 
@@ -457,26 +464,9 @@ const vDemuxSampleInfoEditor = {
             alert(`Applied ${this.bulkEditAction} to ${editCount} sample(s) in project ${this.bulkEditProject}`);
             this.closeBulkEditModal();
         },
-        openAddSampleModal() {
-            this.showAddSampleModal = true;
-            this.addSampleProject = '';
-            this.addSampleLane = '';
-        },
-        closeAddSampleModal() {
-            this.showAddSampleModal = false;
-        },
         addNewSample() {
-            if (!this.addSampleProject) {
-                alert('Please select a project.');
-                return;
-            }
-            if (!this.addSampleLane) {
-                alert('Please select a lane.');
-                return;
-            }
-
             const newSampleId = this.nextSampleId;
-            const lane = this.addSampleLane;
+            const lane = this.bulkEditLane;
 
             // Generate a new UUID for the sample
             const uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
@@ -490,7 +480,7 @@ const vDemuxSampleInfoEditor = {
                 return Object.values(laneData.samples).some(sample => {
                     const settingsVersions = Object.keys(sample.settings).sort().reverse();
                     const latestSettings = sample.settings[settingsVersions[0]];
-                    if (latestSettings.sample_project === this.addSampleProject) {
+                    if (latestSettings.sample_project === this.bulkEditProject) {
                         templateSettings = { ...latestSettings };
                         return true;
                     }
@@ -507,7 +497,7 @@ const vDemuxSampleInfoEditor = {
             } : {
                 sample_id: newSampleId,
                 sample_name: newSampleId,
-                sample_project: this.addSampleProject,
+                    sample_project: this.bulkEditProject,
                 sample_ref: '',
                 index_1: '',
                 index_2: '',
@@ -542,7 +532,7 @@ const vDemuxSampleInfoEditor = {
             };
 
             alert(`Added new sample ${newSampleId} to lane ${lane}`);
-            this.closeAddSampleModal();
+            this.closeBulkEditModal();
         }
     },
     mounted() {
@@ -712,11 +702,6 @@ const vDemuxSampleInfoEditor = {
                                     <h3 class="mb-0">Calculated Samples (by Lane)</h3>
                                 <div>
                                     <button
-                                        class="btn btn-success me-2"
-                                        @click="openAddSampleModal">
-                                        Add Sample
-                                    </button>
-                                    <button
                                         class="btn btn-primary me-2"
                                         @click="openBulkEditModal">
                                         Bulk Edit Actions
@@ -851,9 +836,10 @@ const vDemuxSampleInfoEditor = {
                                 <div class="modal-body">
                                     <div class="mb-3">
                                         <label for="bulkEditAction" class="form-label">Action:</label>
-                                        <select class="form-select" id="bulkEditAction" v-model="bulkEditAction">
+                                        <select class="form-select" id="bulkEditAction" v-model="bulkEditAction" @change="updateProjectLaneSelection">
                                             <option value="reverse_complement_index1">Reverse Complement Index 1</option>
                                             <option value="reverse_complement_index2">Reverse Complement Index 2</option>
+                                            <option value="add_sample">Add New Sample</option>
                                         </select>
                                     </div>
                                     <div class="mb-3">
@@ -868,7 +854,7 @@ const vDemuxSampleInfoEditor = {
                                     <div class="mb-3" v-if="bulkEditProject">
                                         <label for="bulkEditLane" class="form-label">Lane:</label>
                                         <select class="form-select" id="bulkEditLane" v-model="bulkEditLane" :disabled="isSingleLaneProject">
-                                            <option v-if="!isSingleLaneProject" value="all">All Lanes</option>
+                                            <option v-if="!isSingleLaneProject && bulkEditAction !== 'add_sample'" value="all">All Lanes</option>
                                             <option v-for="lane in projectLanes" :key="lane" :value="lane">
                                                 Lane {{ lane }}
                                             </option>
@@ -877,49 +863,15 @@ const vDemuxSampleInfoEditor = {
                                             This project is only present in one lane.
                                         </small>
                                     </div>
-                                </div>
-                                <div class="modal-footer">
-                                    <button type="button" class="btn btn-secondary" @click="closeBulkEditModal">Cancel</button>
-                                    <button type="button" class="btn btn-primary" @click="applyBulkEdit">Apply</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Add Sample Modal -->
-                    <div v-if="showAddSampleModal" class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
-                        <div class="modal-dialog">
-                            <div class="modal-content">
-                                <div class="modal-header">
-                                    <h5 class="modal-title">Add New Sample</h5>
-                                    <button type="button" class="btn-close" @click="closeAddSampleModal"></button>
-                                </div>
-                                <div class="modal-body">
-                                    <div class="mb-3">
-                                        <label for="addSampleProject" class="form-label">Project:</label>
-                                        <select class="form-select" id="addSampleProject" v-model="addSampleProject" required>
-                                            <option value="">-- Select Project --</option>
-                                            <option v-for="project in availableProjects" :key="project" :value="project">
-                                                {{ project }}
-                                            </option>
-                                        </select>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label for="addSampleLane" class="form-label">Lane:</label>
-                                        <select class="form-select" id="addSampleLane" v-model="addSampleLane" required>
-                                            <option value="">-- Select Lane --</option>
-                                            <option v-for="lane in availableLanes" :key="lane" :value="lane">
-                                                Lane {{ lane }}
-                                            </option>
-                                        </select>
-                                    </div>
-                                    <div v-if="addSampleProject && addSampleLane" class="alert alert-info">
+                                    <div v-if="bulkEditAction === 'add_sample' && bulkEditProject && bulkEditLane" class="alert alert-info">
                                         <strong>Next Sample ID:</strong> {{ nextSampleId }}
                                     </div>
                                 </div>
                                 <div class="modal-footer">
-                                    <button type="button" class="btn btn-secondary" @click="closeAddSampleModal">Cancel</button>
-                                    <button type="button" class="btn btn-primary" @click="addNewSample">Add Sample</button>
+                                    <button type="button" class="btn btn-secondary" @click="closeBulkEditModal">Cancel</button>
+                                    <button type="button" class="btn btn-primary" @click="applyBulkEdit">
+                                        {{ bulkEditAction === 'add_sample' ? 'Add Sample' : 'Apply' }}
+                                    </button>
                                 </div>
                             </div>
                         </div>
