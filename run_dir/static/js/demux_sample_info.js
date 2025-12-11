@@ -425,7 +425,7 @@ const vDemuxSampleInfoEditor = {
                             <h5 class="card-title">Fetch Demux Sample Info</h5>
                             <div class="row g-3 align-items-end">
                                 <div class="col-auto">
-                                    <label for="flowcell_id" class="form-label">Flowcell ID (if in doubt use 494d04a8ff2c4a44661da5330a0f93e7)</label>
+                                    <label for="flowcell_id" class="form-label">Flowcell ID (if in doubt use 233KCWLT4)</label>
                                     <input
                                         type="text"
                                         class="form-control"
@@ -523,26 +523,34 @@ const vDemuxSampleInfoEditor = {
                             </div>
                         </div>
 
-                        <!-- View Options -->
-                        <div class="card mt-4">
-                            <div class="card-header">
-                                <h5 class="mb-0">View Mode</h5>
-                            </div>
-                            <div class="card-body">
-                                <div class="btn-group" role="group" aria-label="View mode selection">
-                                    <input type="radio" class="btn-check" name="viewMode" id="viewUploaded" value="uploaded" v-model="viewMode" autocomplete="off" checked>
-                                    <label class="btn btn-outline-primary" for="viewUploaded">Uploaded Info</label>
+                        <!-- Tabs Navigation -->
+                        <ul class="nav nav-tabs mt-4" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button
+                                    class="nav-link"
+                                    :class="{ active: viewMode === 'uploaded' }"
+                                    @click="viewMode = 'uploaded'"
+                                    type="button">
+                                    Uploaded Info
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button
+                                    class="nav-link"
+                                    :class="{ active: viewMode === 'calculated' }"
+                                    @click="viewMode = 'calculated'"
+                                    type="button">
+                                    Calculated Samples
+                                </button>
+                            </li>
+                        </ul>
 
-                                    <input type="radio" class="btn-check" name="viewMode" id="viewCalculated" value="calculated" v-model="viewMode" autocomplete="off">
-                                    <label class="btn btn-outline-primary" for="viewCalculated">Calculated Samples</label>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Uploaded Info view -->
-                        <div class="mt-4" v-if="viewMode === 'uploaded'">
-                            <h3>Uploaded Info from LIMS</h3>
-                            <div v-for="(samples, lane) in uploadedSamplesByLane" :key="lane" class="mt-3">
+                        <!-- Tab Content -->
+                        <div class="tab-content mt-3">
+                            <!-- Uploaded Info tab -->
+                            <div class="tab-pane fade" :class="{ 'show active': viewMode === 'uploaded' }">
+                                <h3>Uploaded Info from LIMS</h3>
+                                <div v-for="(samples, lane) in uploadedSamplesByLane" :key="lane" class="mt-3">
                                 <h4>Lane {{ lane }}</h4>
                                 <table class="table table-striped table-bordered table-sm">
                                     <thead>
@@ -577,12 +585,12 @@ const vDemuxSampleInfoEditor = {
                                     </tbody>
                                 </table>
                             </div>
-                        </div>
+                            </div>
 
-                        <!-- Calculated Samples view -->
-                        <div class="mt-4" v-if="viewMode === 'calculated'">
-                            <div class="d-flex justify-content-between align-items-center mb-3">
-                                <h3 class="mb-0">Calculated Samples (by Lane)</h3>
+                            <!-- Calculated Samples tab -->
+                            <div class="tab-pane fade" :class="{ 'show active': viewMode === 'calculated' }">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h3 class="mb-0">Calculated Samples (by Lane)</h3>
                                 <div>
                                     <button
                                         class="btn btn-primary me-2"
@@ -670,6 +678,7 @@ const vDemuxSampleInfoEditor = {
                                         </tbody>
                                     </table>
                                 </div>
+                            </div>
                             </div>
                         </div>
                     </template>
