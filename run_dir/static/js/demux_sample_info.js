@@ -28,6 +28,7 @@ const vDemuxSampleInfoEditor = {
             ],
             visibleColumns: ['sample_project', 'sample_id', 'last_modified', 'index_1', 'index_2', 'recipe', 'override_cycles'],
             showBulkEditModal: false,
+            columnConfigCollapsed: true,
             bulkEditAction: 'reverse_complement_index1',
             bulkEditProject: '',
             bulkEditLane: 'all'
@@ -526,22 +527,22 @@ const vDemuxSampleInfoEditor = {
                         <!-- Tabs Navigation -->
                         <ul class="nav nav-tabs mt-4" role="tablist">
                             <li class="nav-item" role="presentation">
-                                <button
-                                    class="nav-link"
-                                    :class="{ active: viewMode === 'uploaded' }"
-                                    @click="viewMode = 'uploaded'"
-                                    type="button">
-                                    Uploaded Info
-                                </button>
-                            </li>
-                            <li class="nav-item" role="presentation">
-                                <button
+                                <a
                                     class="nav-link"
                                     :class="{ active: viewMode === 'calculated' }"
-                                    @click="viewMode = 'calculated'"
-                                    type="button">
+                                    @click.prevent="viewMode = 'calculated'"
+                                    href="#">
                                     Calculated Samples
-                                </button>
+                                </a>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <a
+                                    class="nav-link"
+                                    :class="{ active: viewMode === 'uploaded' }"
+                                    @click.prevent="viewMode = 'uploaded'"
+                                    href="#">
+                                    Uploaded Info
+                                </a>
                             </li>
                         </ul>
 
@@ -617,10 +618,13 @@ const vDemuxSampleInfoEditor = {
 
                             <!-- Column Configuration Menu -->
                             <div class="card mt-3 mb-4">
-                                <div class="card-header">
-                                    <h5 class="mb-0">Column Configuration</h5>
+                                <div class="card-header" @click="columnConfigCollapsed = !columnConfigCollapsed" style="cursor: pointer;">
+                                    <h5 class="mb-0">
+                                        <i class="fa" :class="columnConfigCollapsed ? 'fa-caret-right' : 'fa-caret-down'"></i>
+                                        Column Configuration
+                                    </h5>
                                 </div>
-                                <div class="card-body">
+                                <div class="card-body" v-show="!columnConfigCollapsed">
                                     <div class="row">
                                         <div class="col-12">
                                             <div class="mb-3">
