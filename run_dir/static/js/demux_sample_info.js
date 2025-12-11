@@ -31,7 +31,13 @@ const vDemuxSampleInfoEditor = {
             columnConfigCollapsed: true,
             bulkEditAction: 'reverse_complement_index1',
             bulkEditProject: '',
-            bulkEditLane: 'all'
+            bulkEditLane: 'all',
+            showEditModal: false,
+            editModalSample: null,
+            editModalLane: null,
+            editModalUuid: null,
+            editModalIsNew: false,
+            editFormData: {}
         }
     },
     computed: {
@@ -285,6 +291,12 @@ const vDemuxSampleInfoEditor = {
             }
             return value || 'N/A';
         },
+        isFieldEditable(columnKey) {
+            // Determine which fields should be editable
+            // Start with index fields, can expand to others later
+            const editableFields = ['index_1', 'index_2', 'sample_name', 'sample_ref', 'named_index', 'description', 'operator', 'override_cycles'];
+            return editableFields.includes(columnKey);
+        },
         isFieldEdited(lane, uuid, field) {
             // Check if a specific field has been edited
             return this.editedData[lane]?.[uuid]?.[field] !== undefined;
@@ -404,6 +416,154 @@ const vDemuxSampleInfoEditor = {
         closeBulkEditModal() {
             this.showBulkEditModal = false;
         },
+        openEditModal(lane, uuid) {
+            // Open edit modal for an existing sample
+            const laneData = this.calculatedLanes[lane];
+            if (!laneData || !laneData.samples[uuid]) return;
+
+            const sample = laneData.samples[uuid];
+            const settingsVersions = Object.keys(sample.settings).sort().reverse();
+            const latestSettings = sample.settings[settingsVersions[0]];
+
+            // Check if there are already edits for this sample
+            const currentSettings = this.editedData[lane]?.[uuid] || {};
+
+            // Populate form data with current values (edited or original)
+            this.editFormData = {
+                sample_id: currentSettings.sample_id || latestSettings.sample_id,
+                sample_name: currentSettings.sample_name || latestSettings.sample_name,
+                sample_project: currentSettings.sample_project || latestSettings.sample_project,
+                sample_ref: currentSettings.sample_ref || latestSettings.sample_ref,
+                index_1: currentSettings.index_1 || latestSettings.index_1 || '',
+                index_2: currentSettings.index_2 || latestSettings.index_2 || '',
+                named_index: currentSettings.named_index || latestSettings.named_index || '',
+                recipe: currentSettings.recipe || latestSettings.recipe || '',
+                operator: currentSettings.operator || latestSettings.operator || '',
+                description: currentSettings.description || latestSettings.description || '',
+                control: currentSettings.control || latestSettings.control || 'N',
+                override_cycles: currentSettings.override_cycles || latestSettings.override_cycles || ''
+            };
+
+            this.editModalLane = lane;
+            this.editModalUuid = uuid;
+            this.editModalSample = sample;
+            this.editModalIsNew = false;
+            this.showEditModal = true;
+        },
+        openEditModalForNewSample() {
+            // Open edit modal for a new sample (called when add_sample is selected)
+            const newSampleId = this.nextSampleId;
+            const lane = this.bulkEditLane;
+
+            // Generate a new UUID for the sample
+            const uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+                const r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+                return v.toString(16);
+            });
+
+            // Get template settings from an existing sample in the same project
+            let templateSettings = null;
+            Object.values(this.calculatedLanes).some(laneData => {
+                return Object.values(laneData.samples).some(sample => {
+                    const settingsVersions = Object.keys(sample.settings).sort().reverse();
+                    const latestSettings = sample.settings[settingsVersions[0]];
+                    if (latestSettings.sample_project === this.bulkEditProject) {
+                        templateSettings = { ...latestSettings };
+                        return true;
+                    }
+                });
+            });
+
+            // Populate form data with template or defaults
+            this.editFormData = templateSettings ? {
+                sample_id: newSampleId,
+                sample_name: newSampleId,
+                sample_project: this.bulkEditProject,
+                sample_ref: templateSettings.sample_ref || '',
+                index_1: '',
+                index_2: '',
+                named_index: templateSettings.named_index || '',
+                recipe: templateSettings.recipe || '',
+                operator: templateSettings.operator || '',
+                description: '',
+                control: templateSettings.control || 'N',
+                override_cycles: templateSettings.override_cycles || ''
+            } : {
+                sample_id: newSampleId,
+                sample_name: newSampleId,
+                sample_project: this.bulkEditProject,
+                sample_ref: '',
+                index_1: '',
+                index_2: '',
+                named_index: '',
+                recipe: '',
+                operator: '',
+                description: '',
+                control: 'N',
+                override_cycles: ''
+            };
+
+            this.editModalLane = lane;
+            this.editModalUuid = uuid;
+            this.editModalSample = null;
+            this.editModalIsNew = true;
+            this.showEditModal = true;
+            this.closeBulkEditModal();
+        },
+        closeEditModal() {
+            this.showEditModal = false;
+            this.editModalSample = null;
+            this.editModalLane = null;
+            this.editModalUuid = null;
+            this.editModalIsNew = false;
+            this.editFormData = {};
+        },
+        saveEditModal() {
+            // Save the edited sample data
+            const lane = this.editModalLane;
+            const uuid = this.editModalUuid;
+
+            if (this.editModalIsNew) {
+                // Add new sample to the data structure
+                const timestamp = new Date().toISOString();
+                const newSettings = {
+                    ...this.editFormData,
+                    lane: lane,
+                    flowcell_id: this.flowcell_id,
+                    mask_short_reads: 0,
+                    minimum_trimmed_read_length: 0
+                };
+
+                // Add to editedData
+                if (!this.editedData[lane]) {
+                    this.editedData[lane] = {};
+                }
+                this.editedData[lane][uuid] = newSettings;
+
+                // Add to the actual data structure for immediate display
+                if (!this.demux_data.calculated.lanes[lane]) {
+                    this.demux_data.calculated.lanes[lane] = { samples: {} };
+                }
+                this.demux_data.calculated.lanes[lane].samples[uuid] = {
+                    sample_id: newSettings.sample_id,
+                    last_modified: timestamp,
+                    settings: {
+                        [timestamp]: newSettings
+                    }
+                };
+
+                alert(`Added new sample ${newSettings.sample_id} to lane ${lane}`);
+            } else {
+                // Update existing sample - only save changed fields
+                Object.keys(this.editFormData).forEach(field => {
+                    const newValue = this.editFormData[field];
+                    this.updateValue(lane, uuid, field, newValue);
+                });
+                alert(`Updated sample in lane ${lane}`);
+            }
+
+            this.closeEditModal();
+        },
         reverseComplement(sequence) {
             // Reverse complement a DNA sequence
             const complement = {
@@ -425,7 +585,7 @@ const vDemuxSampleInfoEditor = {
                     alert('Please select a lane.');
                     return;
                 }
-                this.addNewSample();
+                this.openEditModalForNewSample();
                 return;
             }
 
@@ -772,6 +932,7 @@ const vDemuxSampleInfoEditor = {
                                     <table class="table table-bordered table-sm">
                                         <thead>
                                             <tr class="darkth">
+                                                <th>Actions</th>
                                                 <th v-for="columnKey in visibleColumns" :key="columnKey">
                                                     {{ columnLabel[columnKey] }}
                                                 </th>
@@ -779,10 +940,17 @@ const vDemuxSampleInfoEditor = {
                                         </thead>
                                         <tbody>
                                             <tr v-for="sample in samples" :key="sample.uuid" :class="{ 'table-info': isSampleEdited(lane, sample.uuid) }">
+                                                <td>
+                                                    <button
+                                                        class="btn btn-sm btn-outline-primary"
+                                                        @click="openEditModal(lane, sample.uuid)"
+                                                        title="Edit sample">
+                                                        <i class="fa fa-pencil"></i>
+                                                    </button>
+                                                </td>
                                                 <td v-for="columnKey in visibleColumns" :key="columnKey"
                                                     :class="{ 'bg-info': isFieldEdited(lane, sample.uuid, columnKey) }"
-                                                    :title="getEditTooltip(lane, sample.uuid, columnKey)"
-                                                    style="cursor: pointer;">
+                                                    :title="getEditTooltip(lane, sample.uuid, columnKey)">
                                                     <code v-if="columnKey === 'index_1' || columnKey === 'index_2'">{{ formatCellValue(sample[columnKey], columnKey) }}</code>
                                                     <span v-else>{{ formatCellValue(sample[columnKey], columnKey) }}</span>
                                                 </td>
@@ -824,6 +992,79 @@ const vDemuxSampleInfoEditor = {
                             </div>
                         </div>
                     </template>
+
+                    <!-- Edit Sample Modal -->
+                    <div v-if="showEditModal" class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+                        <div class="modal-dialog modal-lg">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">{{ editModalIsNew ? 'Add New Sample' : 'Edit Sample' }}</h5>
+                                    <button type="button" class="btn-close" @click="closeEditModal"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label for="edit_sample_id" class="form-label">Sample ID:</label>
+                                            <input type="text" class="form-control" id="edit_sample_id" v-model="editFormData.sample_id" :readonly="!editModalIsNew">
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label for="edit_sample_name" class="form-label">Sample Name:</label>
+                                            <input type="text" class="form-control" id="edit_sample_name" v-model="editFormData.sample_name">
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label for="edit_sample_project" class="form-label">Sample Project:</label>
+                                            <input type="text" class="form-control" id="edit_sample_project" v-model="editFormData.sample_project" readonly>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label for="edit_sample_ref" class="form-label">Sample Ref:</label>
+                                            <input type="text" class="form-control" id="edit_sample_ref" v-model="editFormData.sample_ref">
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label for="edit_index_1" class="form-label">Index 1:</label>
+                                            <input type="text" class="form-control font-monospace" id="edit_index_1" v-model="editFormData.index_1">
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label for="edit_index_2" class="form-label">Index 2:</label>
+                                            <input type="text" class="form-control font-monospace" id="edit_index_2" v-model="editFormData.index_2">
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label for="edit_named_index" class="form-label">Named Index:</label>
+                                            <input type="text" class="form-control" id="edit_named_index" v-model="editFormData.named_index">
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label for="edit_recipe" class="form-label">Recipe:</label>
+                                            <input type="text" class="form-control" id="edit_recipe" v-model="editFormData.recipe">
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label for="edit_operator" class="form-label">Operator:</label>
+                                            <input type="text" class="form-control" id="edit_operator" v-model="editFormData.operator">
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label for="edit_control" class="form-label">Control:</label>
+                                            <select class="form-select" id="edit_control" v-model="editFormData.control">
+                                                <option value="N">N</option>
+                                                <option value="Y">Y</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-12 mb-3">
+                                            <label for="edit_description" class="form-label">Description:</label>
+                                            <textarea class="form-control" id="edit_description" v-model="editFormData.description" rows="2"></textarea>
+                                        </div>
+                                        <div class="col-md-12 mb-3">
+                                            <label for="edit_override_cycles" class="form-label">Override Cycles:</label>
+                                            <input type="text" class="form-control font-monospace" id="edit_override_cycles" v-model="editFormData.override_cycles">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" @click="closeEditModal">Cancel</button>
+                                    <button type="button" class="btn btn-primary" @click="saveEditModal">
+                                        {{ editModalIsNew ? 'Add Sample' : 'Save Changes' }}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
                     <!-- Bulk Edit Modal -->
                     <div v-if="showBulkEditModal" class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
@@ -870,7 +1111,7 @@ const vDemuxSampleInfoEditor = {
                                 <div class="modal-footer">
                                     <button type="button" class="btn btn-secondary" @click="closeBulkEditModal">Cancel</button>
                                     <button type="button" class="btn btn-primary" @click="applyBulkEdit">
-                                        {{ bulkEditAction === 'add_sample' ? 'Add Sample' : 'Apply' }}
+                                        {{ bulkEditAction === 'add_sample' ? 'Continue' : 'Apply' }}
                                     </button>
                                 </div>
                             </div>
