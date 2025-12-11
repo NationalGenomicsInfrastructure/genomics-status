@@ -104,25 +104,25 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                 )
 
     def post(self, flowcell_id):
-        """Accept POST request with metadata and uploaded_info to create/update demux sample info document."""
+        """Accept POST request with metadata and uploaded_lims_info to create/update demux sample info document."""
         try:
             # Parse the request body
             post_data = tornado.escape.json_decode(self.request.body)
 
             # Validate required fields
-            if "metadata" not in post_data or "uploaded_info" not in post_data:
+            if "metadata" not in post_data or "uploaded_lims_info" not in post_data:
                 self.set_status(400)
                 self.write(
                     json.dumps(
                         {
-                            "error": "Missing required fields: 'metadata' and 'uploaded_info' are required"
+                            "error": "Missing required fields: 'metadata' and 'uploaded_lims_info' are required"
                         }
                     )
                 )
                 return
 
             metadata = post_data["metadata"]
-            uploaded_info = post_data["uploaded_info"]
+            uploaded_lims_info = post_data["uploaded_lims_info"]
 
             # Validate metadata fields
             required_metadata_fields = [
@@ -145,17 +145,19 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                 )
                 return
 
-            # Validate uploaded_info is a list
-            if not isinstance(uploaded_info, list):
+            # Validate uploaded_lims_info is a list
+            if not isinstance(uploaded_lims_info, list):
                 self.set_status(400)
                 self.write(
                     json.dumps(
-                        {"error": "'uploaded_info' must be an array of sample objects"}
+                        {
+                            "error": "'uploaded_lims_info' must be an array of sample objects"
+                        }
                     )
                 )
                 return
 
-            # Validate each sample in uploaded_info has required fields
+            # Validate each sample in uploaded_lims_info has required fields
             required_sample_fields = [
                 "flowcell_id",
                 "lane",
@@ -170,7 +172,7 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                 "operator",
                 "sample_project",
             ]
-            for i, sample in enumerate(uploaded_info):
+            for i, sample in enumerate(uploaded_lims_info):
                 missing_sample_fields = [
                     field for field in required_sample_fields if field not in sample
                 ]
@@ -193,7 +195,7 @@ class DemuxSampleInfoDataHandler(SafeHandler):
             lanes_with_samples = {}
 
             # Group samples by lane
-            for sample in uploaded_info:
+            for sample in uploaded_lims_info:
                 lane = str(sample["lane"])
                 if lane not in lanes_with_samples:
                     lanes_with_samples[lane] = []
@@ -201,10 +203,10 @@ class DemuxSampleInfoDataHandler(SafeHandler):
 
             # Create lane structure with UUID-keyed samples
             for lane, samples_in_lane in lanes_with_samples.items():
-                calculated_lanes[lane] = {"samples": {}}
+                calculated_lanes[lane] = {"sample_rows": {}}
                 for sample in samples_in_lane:
                     sample_uuid = str(uuid.uuid4())
-                    calculated_lanes[lane]["samples"][sample_uuid] = {
+                    calculated_lanes[lane]["sample_rows"][sample_uuid] = {
                         "sample_id": sample["sample_id"],
                         "last_modified": timestamp,
                         "settings": {
@@ -232,7 +234,7 @@ class DemuxSampleInfoDataHandler(SafeHandler):
             document = {
                 "flowcell_id": flowcell_id,
                 "metadata": metadata,
-                "uploaded_info": uploaded_info,
+                "uploaded_lims_info": uploaded_lims_info,
                 "calculated": {
                     "version_history": {
                         timestamp: {

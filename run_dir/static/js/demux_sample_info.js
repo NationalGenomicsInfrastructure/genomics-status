@@ -42,12 +42,12 @@ const vDemuxSampleInfoEditor = {
     },
     computed: {
         uploadedSamplesByLane() {
-            if (!this.demux_data || !this.demux_data.uploaded_info) {
+            if (!this.demux_data || !this.demux_data.uploaded_lims_info) {
                 return {};
             }
 
             const grouped = {};
-            this.demux_data.uploaded_info.forEach(sample => {
+            this.demux_data.uploaded_lims_info.forEach(sample => {
                 const lane = sample.lane;
                 if (!grouped[lane]) {
                     grouped[lane] = [];
@@ -93,14 +93,14 @@ const vDemuxSampleInfoEditor = {
             return this.demux_data.calculated.lanes;
         },
         calculatedSamplesFlat() {
-            // Flatten calculated samples with their latest settings for table display
+            // Flatten calculated sample_rows with their latest settings for table display
             // If there are edits, merge them with original data
             const result = {};
 
             Object.entries(this.calculatedLanes).forEach(([lane, laneData]) => {
                 result[lane] = [];
 
-                Object.entries(laneData.samples).forEach(([uuid, sample]) => {
+                Object.entries(laneData.sample_rows).forEach(([uuid, sample]) => {
                     // Get the latest settings version
                     const settingsVersions = Object.keys(sample.settings).sort().reverse();
                     const latestSettings = sample.settings[settingsVersions[0]];
@@ -134,10 +134,10 @@ const vDemuxSampleInfoEditor = {
             });
         },
         availableProjects() {
-            // Get unique list of projects from calculated samples
+            // Get unique list of projects from calculated sample_rows
             const projects = new Set();
             Object.values(this.calculatedLanes).forEach(laneData => {
-                Object.values(laneData.samples).forEach(sample => {
+                Object.values(laneData.sample_rows).forEach(sample => {
                     const settingsVersions = Object.keys(sample.settings).sort().reverse();
                     const latestSettings = sample.settings[settingsVersions[0]];
                     if (latestSettings.sample_project) {
@@ -157,7 +157,7 @@ const vDemuxSampleInfoEditor = {
 
             const lanes = [];
             Object.entries(this.calculatedLanes).forEach(([lane, laneData]) => {
-                const hasProject = Object.values(laneData.samples).some(sample => {
+                const hasProject = Object.values(laneData.sample_rows).some(sample => {
                     const settingsVersions = Object.keys(sample.settings).sort().reverse();
                     const latestSettings = sample.settings[settingsVersions[0]];
                     return latestSettings.sample_project === this.bulkEditProject;
@@ -178,7 +178,7 @@ const vDemuxSampleInfoEditor = {
             // Find all sample IDs for this project across all lanes
             const sampleIds = [];
             Object.values(this.calculatedLanes).forEach(laneData => {
-                Object.values(laneData.samples).forEach(sample => {
+                Object.values(laneData.sample_rows).forEach(sample => {
                     const settingsVersions = Object.keys(sample.settings).sort().reverse();
                     const latestSettings = sample.settings[settingsVersions[0]];
                     if (latestSettings.sample_project === this.bulkEditProject) {
@@ -259,10 +259,10 @@ const vDemuxSampleInfoEditor = {
             return new Date(timestamp).toLocaleString();
         },
         getSampleSettings(sampleUuid, lane) {
-            if (!this.calculatedLanes[lane] || !this.calculatedLanes[lane].samples[sampleUuid]) {
+            if (!this.calculatedLanes[lane] || !this.calculatedLanes[lane].sample_rows[sampleUuid]) {
                 return null;
             }
-            const sample = this.calculatedLanes[lane].samples[sampleUuid];
+            const sample = this.calculatedLanes[lane].sample_rows[sampleUuid];
             // Get settings for the current version or the latest
             const settingsVersions = Object.keys(sample.settings).sort().reverse();
             return sample.settings[settingsVersions[0]];
@@ -308,9 +308,9 @@ const vDemuxSampleInfoEditor = {
         getOriginalValue(lane, uuid, field) {
             // Get the original value before any edits
             const laneData = this.calculatedLanes[lane];
-            if (!laneData || !laneData.samples[uuid]) return null;
+            if (!laneData || !laneData.sample_rows[uuid]) return null;
 
-            const sample = laneData.samples[uuid];
+            const sample = laneData.sample_rows[uuid];
             const settingsVersions = Object.keys(sample.settings).sort().reverse();
             const latestSettings = sample.settings[settingsVersions[0]];
             return latestSettings[field];
@@ -334,7 +334,7 @@ const vDemuxSampleInfoEditor = {
             }
 
             // Get original value to compare
-            const originalSample = this.calculatedLanes[lane]?.samples[uuid];
+            const originalSample = this.calculatedLanes[lane]?.sample_rows[uuid];
             if (originalSample) {
                 const settingsVersions = Object.keys(originalSample.settings).sort().reverse();
                 const latestSettings = originalSample.settings[settingsVersions[0]];
@@ -419,9 +419,9 @@ const vDemuxSampleInfoEditor = {
         openEditModal(lane, uuid) {
             // Open edit modal for an existing sample
             const laneData = this.calculatedLanes[lane];
-            if (!laneData || !laneData.samples[uuid]) return;
+            if (!laneData || !laneData.sample_rows[uuid]) return;
 
-            const sample = laneData.samples[uuid];
+            const sample = laneData.sample_rows[uuid];
             const settingsVersions = Object.keys(sample.settings).sort().reverse();
             const latestSettings = sample.settings[settingsVersions[0]];
 
@@ -464,7 +464,7 @@ const vDemuxSampleInfoEditor = {
             // Get template settings from an existing sample in the same project
             let templateSettings = null;
             Object.values(this.calculatedLanes).some(laneData => {
-                return Object.values(laneData.samples).some(sample => {
+                return Object.values(laneData.sample_rows).some(sample => {
                     const settingsVersions = Object.keys(sample.settings).sort().reverse();
                     const latestSettings = sample.settings[settingsVersions[0]];
                     if (latestSettings.sample_project === this.bulkEditProject) {
@@ -542,9 +542,9 @@ const vDemuxSampleInfoEditor = {
 
                 // Add to the actual data structure for immediate display
                 if (!this.demux_data.calculated.lanes[lane]) {
-                    this.demux_data.calculated.lanes[lane] = { samples: {} };
+                    this.demux_data.calculated.lanes[lane] = { sample_rows: {} };
                 }
-                this.demux_data.calculated.lanes[lane].samples[uuid] = {
+                this.demux_data.calculated.lanes[lane].sample_rows[uuid] = {
                     sample_id: newSettings.sample_id,
                     last_modified: timestamp,
                     settings: {
@@ -596,7 +596,7 @@ const vDemuxSampleInfoEditor = {
                 const laneData = this.calculatedLanes[lane];
                 if (!laneData) return;
 
-                Object.entries(laneData.samples).forEach(([uuid, sample]) => {
+                Object.entries(laneData.sample_rows).forEach(([uuid, sample]) => {
                     const settingsVersions = Object.keys(sample.settings).sort().reverse();
                     const latestSettings = sample.settings[settingsVersions[0]];
 
@@ -637,7 +637,7 @@ const vDemuxSampleInfoEditor = {
             // Get template settings from an existing sample in the same project
             let templateSettings = null;
             Object.values(this.calculatedLanes).some(laneData => {
-                return Object.values(laneData.samples).some(sample => {
+                return Object.values(laneData.sample_rows).some(sample => {
                     const settingsVersions = Object.keys(sample.settings).sort().reverse();
                     const latestSettings = sample.settings[settingsVersions[0]];
                     if (latestSettings.sample_project === this.bulkEditProject) {
@@ -681,9 +681,9 @@ const vDemuxSampleInfoEditor = {
 
             // Also add to the actual data structure for immediate display
             if (!this.demux_data.calculated.lanes[lane]) {
-                this.demux_data.calculated.lanes[lane] = { samples: {} };
+                this.demux_data.calculated.lanes[lane] = { sample_rows: {} };
             }
-            this.demux_data.calculated.lanes[lane].samples[uuid] = {
+            this.demux_data.calculated.lanes[lane].sample_rows[uuid] = {
                 sample_id: newSampleId,
                 last_modified: timestamp,
                 settings: {
@@ -819,7 +819,7 @@ const vDemuxSampleInfoEditor = {
                             <!-- Uploaded Info tab -->
                             <div class="tab-pane fade" :class="{ 'show active': viewMode === 'uploaded' }">
                                 <h3>Uploaded Info from LIMS</h3>
-                                <div v-for="(samples, lane) in uploadedSamplesByLane" :key="lane" class="mt-3">
+                                <div v-for="(sample_rows, lane) in uploadedSamplesByLane" :key="lane" class="mt-3">
                                 <h4>Lane {{ lane }}</h4>
                                 <table class="table table-striped table-bordered table-sm">
                                     <thead>
@@ -838,7 +838,7 @@ const vDemuxSampleInfoEditor = {
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        <tr v-for="(sample, index) in samples" :key="index">
+                                        <tr v-for="(sample, index) in sample_rows" :key="index">
                                             <td>{{ sample.flowcell_id }}</td>
                                             <td>{{ sample.sample_id }}</td>
                                             <td>{{ sample.sample_name }}</td>
@@ -926,7 +926,7 @@ const vDemuxSampleInfoEditor = {
                             </div>
 
                             <!-- Tables per Lane -->
-                            <div v-for="(samples, lane) in calculatedSamplesFlat" :key="lane" class="mt-4">
+                            <div v-for="(sample_rows, lane) in calculatedSamplesFlat" :key="lane" class="mt-4">
                                 <h4>Lane {{ lane }}</h4>
                                 <div class="table-responsive">
                                     <table class="table table-bordered table-sm">
@@ -939,7 +939,7 @@ const vDemuxSampleInfoEditor = {
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            <tr v-for="sample in samples" :key="sample.uuid" :class="{ 'table-info': isSampleEdited(lane, sample.uuid) }">
+                                            <tr v-for="sample in sample_rows" :key="sample.uuid" :class="{ 'table-info': isSampleEdited(lane, sample.uuid) }">
                                                 <td>
                                                     <button
                                                         class="btn btn-sm btn-outline-primary"
