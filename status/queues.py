@@ -100,8 +100,12 @@ class qPCRPoolsDataHandler(QueuesBaseHandler):
             db="gs_configs",
             doc_id="queue_definitions",
         ).get_result()
-        unwanted_in_lib_val = queue_definitions_doc.get("unwanted_in_qPCR_LibraryValidation", [])
-        unwanted_in_lib_val_except_in_pools = queue_definitions_doc.get("unwanted_in_qPCR_LibraryValidation_except_in_pools", [])
+        unwanted_in_lib_val = queue_definitions_doc.get(
+            "unwanted_in_qPCR_LibraryValidation", []
+        )
+        unwanted_in_lib_val_except_in_pools = queue_definitions_doc.get(
+            "unwanted_in_qPCR_LibraryValidation_except_in_pools", []
+        )
         control_names = self.get_control_names()
         query = (
             "select art.artifactid, art.name, CAST(st.lastmodifieddate as DATE), st.generatedbyid, ct.name, ctp.wellxposition, ctp.wellyposition, s.projectid "
@@ -151,7 +155,10 @@ class qPCRPoolsDataHandler(QueuesBaseHandler):
                         if method == "LibraryValidation" and (
                             record[8] in unwanted_in_lib_val
                         ):
-                            if not (record[8] in unwanted_in_lib_val_except_in_pools and self.is_artifact_a_pool(record[0])):
+                            if not (
+                                record[8] in unwanted_in_lib_val_except_in_pools
+                                and self.is_artifact_a_pool(record[0])
+                            ):
                                 pools[method][container]["samples"].pop()
                                 continue
                         proj_details = self.get_proj_details(project)
@@ -192,7 +199,10 @@ class qPCRPoolsDataHandler(QueuesBaseHandler):
                     if method == "LibraryValidation" and (
                         record[8] in unwanted_in_lib_val
                     ):
-                        if not (record[8] in unwanted_in_lib_val_except_in_pools and self.is_artifact_a_pool(record[0])):
+                        if not (
+                            record[8] in unwanted_in_lib_val_except_in_pools
+                            and self.is_artifact_a_pool(record[0])
+                        ):
                             continue
                     proj_details = self.get_proj_details(project)
                     latest_running_note = (
