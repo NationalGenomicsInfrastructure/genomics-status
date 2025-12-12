@@ -1,32 +1,35 @@
-// For format details, see https://aka.ms/devcontainer.json. For config options, see the
-// README at: https://github.com/devcontainers/templates/tree/main/src/docker-existing-dockerfile
 {
     "name": "Genomics Status",
-    "build": {
-        // Sets the run context to one level up instead of the .devcontainer folder.
-        "context": "..",
-        // Update the 'dockerFile' property if you aren't using the standard 'Dockerfile' filename.
-        "dockerfile": "../Dockerfile"
-    },
+    "dockerComposeFile": "docker-compose.yml",
+    "service": "genomics-status",
+    "workspaceFolder": "/workspace",
+
     "features": {},
+
     "customizations": {
         "vscode": {
             "extensions": [
                 "charliermarsh.ruff",
                 "ms-python.python",
-                "Tobermory.es6-string-html" 
+                "Tobermory.es6-string-html"
             ]
         }
     },
-    // Use 'forwardPorts' to make a list of ports inside the container available locally.
-    "forwardPorts": [9761],
+
+    "forwardPorts": [9761, 5984],
+    "portsAttributes": {
+        "9761": {
+            "label": "Genomics Status",
+            "onAutoForward": "notify"
+        },
+        "5984": {
+            "label": "CouchDB",
+            "onAutoForward": "silent"
+        }
+    },
+
     "postCreateCommand": "./.devcontainer/postCreateCommand.sh",
     "postStartCommand": "cd run_dir && python ../status_app.py --develop --testing_mode",
-    // Configure tool-specific properties.
-    // "customizations": {},
-    // Uncomment to connect as an existing user other than the container default. More info: https://aka.ms/dev-containers-non-root.
-    "remoteUser": "mambauser",
-    "mounts": [
-        "source=${localEnv:HOME}/conf,target=/home/mambauser/conf,type=bind,consistency=cached"
-    ]
+
+    "remoteUser": "mambauser"
 }

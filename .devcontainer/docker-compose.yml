@@ -1,0 +1,45 @@
+services:
+  couchdb:
+    # For local development, build from sibling repo:
+    # build:
+    #   context: ../../statusdb_seed_data
+    #   dockerfile: Dockerfile
+    # For production, use published image:
+    image: ghcr.io/scilifelab/statusdb_seed_data:latest
+    environment:
+      - COUCHDB_USER=admin
+      - COUCHDB_PASSWORD=admin
+    volumes:
+      - couchdb-data:/opt/couchdb/data
+    ports:
+      - "5984:5984"
+    networks:
+      - genomics-status-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5984/_up"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  genomics-status:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    volumes:
+      - ..:/workspace:cached
+    ports:
+      - "9761:9761"
+    networks:
+      - genomics-status-network
+    depends_on:
+      couchdb:
+        condition: service_healthy
+    working_dir: /workspace/run_dir
+    command: sleep infinity
+
+volumes:
+  couchdb-data:
+
+networks:
+  genomics-status-network:
