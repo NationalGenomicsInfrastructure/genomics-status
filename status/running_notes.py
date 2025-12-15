@@ -340,9 +340,10 @@ class RunningNotesDataHandler(SafeHandler):
                     f"{tagger} has {notf_text} in {context['entity_id']}!"
                 )
                 blocks_json_str = json.dumps(template_doc["slack"]["blocks"])
+                escape_note_for_json = json.dumps(note.replace("\n", "\n>"))[1:-1]
                 rendered_json_str = (
                     Template(blocks_json_str, autoescape=None)
-                    .generate(slack_note=note.replace("\n", "\\n>"), **context)
+                    .generate(slack_note=escape_note_for_json, **context)
                     .decode()
                 )
                 blocks = json.loads(rendered_json_str)
