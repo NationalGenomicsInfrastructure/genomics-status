@@ -22,9 +22,6 @@
         <span class="bi-project-application" data-toggle="tooltip" data-delay="500" title="Application">{{ application }}</span>
         &nbsp; <span class="bi-project-assigned" data-toggle="tooltip" data-delay="500" title="Bioinfo-responsible">{{ bioinfo_responsible }}</span>
       </small>
-
-
-    <a {% if multiqc %} href="/multiqc_report/{{ project_id }}"{% else %} disabled data-toggle="tooltip" data-placement="bottom" title="No MultiQC report available"{% end %}target="_blank" type="submit" class="btn btn-outline-dark float-right">Open MultiQC report</a>
     </h2>
     <hr>
     <form class="row pb-4">

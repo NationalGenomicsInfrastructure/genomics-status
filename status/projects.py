@@ -726,9 +726,7 @@ class ProjectDataHandler(ProjectsBaseDataHandler):
 
         summary_row["value"]["_doc_id"] = summary_row["id"]
         field_sources["_doc_id"] = "StatusDB, inserted by Genomics Status (backend)"
-        summary_row["value"]["sourcedb_url"] = (
-            "https://" + self.settings["couch_server"].split("@")[1]
-        )
+        summary_row["value"]["sourcedb_url"] = self.settings["couch_url"]
         field_sources["sourcedb_url"] = "Genomics Status (backend)"
 
         summary_row["value"]["field_sources"] = field_sources
