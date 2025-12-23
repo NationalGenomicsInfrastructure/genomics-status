@@ -1048,6 +1048,41 @@ const vCreateForm = {
         formGroups() {
             return this.$root.getValue(this.$root.newJsonForm, 'form_groups');
         },
+        canAddNewCondition() {
+            // Check if both if and then fields are selected and exist in the schema
+            if (this.newConditionalIf === '' || this.newConditionalThen === '') {
+                return false;
+            }
+            const ifField = this.$root.getValue(this.newForm.properties, this.newConditionalIf);
+            const thenField = this.$root.getValue(this.newForm.properties, this.newConditionalThen);
+            return ifField !== undefined && thenField !== undefined;
+        },
+        canAddExtraConditionIf() {
+            // Returns an object mapping conditional_index to whether extra condition can be added
+            const result = {};
+            this.newCompositeConditionalIf.forEach((fieldKey, index) => {
+                if (fieldKey === '') {
+                    result[index] = false;
+                } else {
+                    const field = this.$root.getValue(this.newForm.properties, fieldKey);
+                    result[index] = field !== undefined;
+                }
+            });
+            return result;
+        },
+        canAddExtraConditionThen() {
+            // Returns an object mapping conditional_index to whether extra condition can be added
+            const result = {};
+            this.newCompositeConditionalThen.forEach((fieldKey, index) => {
+                if (fieldKey === '') {
+                    result[index] = false;
+                } else {
+                    const field = this.$root.getValue(this.newForm.properties, fieldKey);
+                    result[index] = field !== undefined;
+                }
+            });
+            return result;
+        }
     },
     methods: {
         removeCondition(conditional_index) {
@@ -1380,7 +1415,7 @@ const vCreateForm = {
                                                         <option :value="identifier">{{identifier}}</option>
                                                     </template>
                                                 </select>
-                                                <button class="btn btn-outline-primary" @click.prevent="this.addExtraConditionIf(conditional_index)">Add extra condition</button>
+                                                <button class="btn btn-outline-primary" @click.prevent="this.addExtraConditionIf(conditional_index)" :disabled="!canAddExtraConditionIf[conditional_index]">Add extra condition</button>
                                             </div>
                                         </div>
                                         <div class="col-5 offset-2">
@@ -1390,7 +1425,7 @@ const vCreateForm = {
                                                         <option :value="identifier">{{identifier}}</option>
                                                     </template>
                                                 </select>
-                                                <button class="btn btn-outline-primary" @click.prevent="this.addExtraConditionThen(conditional_index)">Add extra condition</button>
+                                                <button class="btn btn-outline-primary" @click.prevent="this.addExtraConditionThen(conditional_index)" :disabled="!canAddExtraConditionThen[conditional_index]">Add extra condition</button>
                                             </div>
                                         </div>
                                     </div>
@@ -1417,7 +1452,7 @@ const vCreateForm = {
                                     </div>
                                 </div>
                             </div>
-                            <button class="btn btn-primary mt-2" @click.prevent="this.addPropertyToCondition()">Add new condition</button>
+                            <button class="btn btn-primary mt-2" @click.prevent="this.addPropertyToCondition()" :disabled="!canAddNewCondition">Add new condition</button>
                         </div>
                     </template>
                 </div>
@@ -1827,6 +1862,14 @@ const vUpdateFormField = {
         },
         visibleIf() {
             return this.$root.getValue(this.field, 'ngi_form_visible_if');
+        },
+        canAddVisibleIf() {
+            // Check if a valid field is selected and it exists in the schema
+            if (this.selectedVisibleIfKey === '') {
+                return false;
+            }
+            const referenceField = this.$root.getValue(this.newJsonSchema['properties'], this.selectedVisibleIfKey);
+            return referenceField !== undefined;
         }
     },
     methods: {
@@ -1966,7 +2009,7 @@ const vUpdateFormField = {
                                         <option :value="identifier">{{identifier}}</option>
                                     </template>
                                 </select>
-                                <button class="btn btn-primary" @click.prevent="this.add_visible_if()" :disabled="!fieldEditMode">Add conditional visibility</button>
+                                <button class="btn btn-primary" @click.prevent="this.add_visible_if()" :disabled="!fieldEditMode || !canAddVisibleIf">Add conditional visibility</button>
                             </div>
                         </div>
                     </div>
