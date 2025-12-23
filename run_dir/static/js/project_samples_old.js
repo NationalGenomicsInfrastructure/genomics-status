@@ -514,6 +514,10 @@ function load_all_udfs(){
           $("#project_summary_link_dropdown>ul").append('<li><a class="dropdown-item" href="'+ lims_uri +summary[0]+'" target="_blank"> Created: '+summary[1]+'</a></li>');
         });
       }
+      else if (prettify(key) == 'reads_sequenced'){
+        let values = value.split('(');
+        prettyobj(key).html(nice_numbers(values[0].trim()) + (values.length > 1 ? ' (' + values[1] : ''));
+      }
       // Everything else
       else {
 			  if(prettyobj(key).length > 0){

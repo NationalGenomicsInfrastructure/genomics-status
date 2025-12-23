@@ -18,6 +18,7 @@ from genologics.entities import Artifact
 from ibm_cloud_sdk_core.api_exception import ApiException
 from zenpy import ZenpyException
 
+from status.flowcells import ReadsTotalHandler
 from status.reports import (
     MultiQCReportHandler,
     ProjectSummaryReportHandler,
@@ -707,6 +708,23 @@ class ProjectDataHandler(ProjectsBaseDataHandler):
 
         summary_row = view_rows[0]
         summary_row, field_sources = self.project_summary_data(summary_row)
+
+        # Calculate total reads sequenced for non-failed samples in the project
+        all_reads = ReadsTotalHandler.get_total_reads(self.application, project)
+        reads_sum = 0
+        for flowcells in all_reads.values():
+            for flowcell in flowcells:
+                # Include all non-failed samples, even if they don't have a sample_status
+                if flowcell.get("sample_status", {}) not in ["Failed"]:
+                    reads_sum += flowcell["cl"]
+
+        # 1 unit = 600 million reads
+        summary_row["value"]["reads_sequenced"] = (
+            str(reads_sum) + f" (~ {round(reads_sum / 600000000, 2)} units)"
+        )
+        field_sources["reads_sequenced"] = (
+            "Calculated by Genomics Status (backend) from all non-failed samples in the project"
+        )
 
         date_result_rows = self.application.cloudant.post_view(
             db="projects",
