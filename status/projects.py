@@ -268,7 +268,7 @@ class ProjectsBaseDataHandler(SafeHandler):
 
         # 1 unit = 60 million reads
         row["value"]["reads_sequenced"] = (
-            str(reads_sum) + f" (~ {round(reads_sum / 60000000, 2)} units)"
+            str(reads_sum) + f" (~ {round(reads_sum / 600000000, 2)} units)"
         )
         field_sources["reads_sequenced"] = (
             "Calculated by Genomics Status (backend) from all non-failed samples in the project"
