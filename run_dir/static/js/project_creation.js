@@ -1680,6 +1680,13 @@ const vConditionalEditFormSingleCondition = {
         propertyReferenceIsBoolean() {
             // Check if the referenced property is a boolean
             return this.propertyReference?.type === 'boolean';
+        },
+        sortedPropertyReferenceEnum() {
+            // Return sorted enum values for display when showing all options
+            if (!this.propertyReferenceIsEnum) {
+                return [];
+            }
+            return [...this.propertyReference.enum].sort();
         }
     },
     methods: {
@@ -1718,7 +1725,7 @@ const vConditionalEditFormSingleCondition = {
         </div>
 
         <template v-if="showAllOptions && propertyReferenceIsEnum">
-            <template v-for="option in propertyReference.enum">
+            <template v-for="option in sortedPropertyReferenceEnum">
                 <h4>
                     <template v-if="enumValues.includes(option)">
                         <button v-if="edit_mode" class="btn btn-success" @click.prevent="enumValues.splice(enumValues.indexOf(option), 1)">{{option}}</button>
@@ -2027,6 +2034,13 @@ const vVisibleIfConditionEditForm = {
                 return false
             }
             return true
+        },
+        sortedPropertyReferenceIfEnum() {
+            // Return sorted enum values for display when showing all options
+            if (!this.propertyReferenceIsEnumIf) {
+                return [];
+            }
+            return [...this.propertyReferenceIf.enum].sort();
         }
     },
     template:
@@ -2035,7 +2049,7 @@ const vVisibleIfConditionEditForm = {
                 <h4>{{this.propertyReferenceIfLabel}}</h4>
                 is any of
                 <template v-if="this.showAllOptions && this.propertyReferenceIsEnumIf">
-                    <template v-for="option in this.propertyReferenceIf.enum">
+                    <template v-for="option in this.sortedPropertyReferenceIfEnum">
                         <h4>
                             <template v-if="this.enumIf.includes(option)">
                                 <button v-if="edit_mode" class="btn btn-success" @click.prevent="this.enumIf.splice(this.enumIf.indexOf(option), 1)">{{option}}</button>
