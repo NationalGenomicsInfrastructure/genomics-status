@@ -354,6 +354,13 @@ const vProjectCreationForm = {
             }
             return this.$root.getValue(this.$root.jsonForm, 'form_groups');
         },
+        sortedFormGroups() {
+            // Sort groups by position for a consistent display order
+            if (this.formGroups) {
+                return Object.entries(this.formGroups).sort(([, a], [, b]) => a.position - b.position);
+            }
+            return [];
+        },
         title() {
             return this.$root.getValue(this.$root.jsonForm, 'title');
         }
@@ -460,7 +467,7 @@ const vProjectCreationForm = {
                         <p>{{ instruction }}</p>
 
                         <form @submit.prevent="submitForm" class="mt-3 mb-5">
-                            <template v-for="(form_group, group_identifier) in formGroups" :key="group_identifier">
+                            <template v-for="[group_identifier, form_group] in sortedFormGroups" :key="group_identifier">
                                 <template v-if="Object.keys(this.fields_for_given_group(group_identifier)).length !== 0">
                                     <div class="mb-5">
                                         <h3>{{form_group.display_name}}</h3>
