@@ -83,14 +83,28 @@ class qPCRPoolsDataHandler(QueuesBaseHandler):
     URL: /api/v1/qpcr_pools
     """
 
+    def is_artifact_a_pool(self, artifactid):
+        """Check if the artifact is a pool by counting the number of samples associated with it."""
+        query = (
+            "SELECT COUNT(DISTINCT processid) "
+            "FROM artifact_sample_map "
+            f"WHERE artifactid={artifactid};"
+        )
+        rows = self._get_lims_cursor().execute(query).fetchall()
+        if rows and rows[0][0] > 1:
+            return True
+        return False
+
     def get(self):
-        unwanted_in_lib_val = (
-            self.application.cloudant.get_document(
-                db="gs_configs",
-                doc_id="queue_definitions",
-            )
-            .get_result()
-            .get("unwanted_in_qPCR_LibraryValidation", [])
+        queue_definitions_doc = self.application.cloudant.get_document(
+            db="gs_configs",
+            doc_id="queue_definitions",
+        ).get_result()
+        unwanted_in_lib_val = queue_definitions_doc.get(
+            "unwanted_in_qPCR_LibraryValidation", []
+        )
+        unwanted_in_lib_val_except_in_pools = queue_definitions_doc.get(
+            "unwanted_in_qPCR_LibraryValidation_except_in_pools", []
         )
         control_names = self.get_control_names()
         query = (
@@ -140,12 +154,13 @@ class qPCRPoolsDataHandler(QueuesBaseHandler):
                     if project not in pools[method][container]["projects"]:
                         if method == "LibraryValidation" and (
                             record[8] in unwanted_in_lib_val
-                            or project in ["P28910", "P28911"]
                         ):
-                            # We do not want the projects P28910, N.egative_00_00 and P28911, P.ositive_00_00
-                            # showing up in Library validation as instructed by the lab
-                            pools[method][container]["samples"].pop()
-                            continue
+                            if not (
+                                record[8] in unwanted_in_lib_val_except_in_pools
+                                and self.is_artifact_a_pool(record[0])
+                            ):
+                                pools[method][container]["samples"].pop()
+                                continue
                         proj_details = self.get_proj_details(project)
                         if (
                             proj_details["library_type"]
@@ -183,11 +198,12 @@ class qPCRPoolsDataHandler(QueuesBaseHandler):
                 else:
                     if method == "LibraryValidation" and (
                         record[8] in unwanted_in_lib_val
-                        or project in ["P28910", "P28911"]
                     ):
-                        # We do not want the projects P28910, N.egative_00_00 and P28911, P.ositive_00_00
-                        # showing up in Library validation as instructed by the lab
-                        continue
+                        if not (
+                            record[8] in unwanted_in_lib_val_except_in_pools
+                            and self.is_artifact_a_pool(record[0])
+                        ):
+                            continue
                     proj_details = self.get_proj_details(project)
                     latest_running_note = (
                         LatestRunningNoteHandler.get_latest_running_note(
