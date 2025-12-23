@@ -8,7 +8,7 @@
         "setup_lims_step_id": "",
         "instrument_type": "NovaSeqXPlus"
     },
-    "uploaded_info": [
+    "uploaded_lims_info": [
         // This is the information uploaded from LIMS by the EPP, corresponding to the samplesheet currently saved on disk 
         {
             "flowcell_id": "233KCWLT4",
@@ -213,7 +213,7 @@
         },
         "lanes": {
             "3": {
-                "samples": {
+                "sample_rows": {
                     // Since some named indices are replaced by multiple indices, we use UUID keys to uniquely identify each sample entry.
                     "a1b2c3d4-e5f6-7890-abcd-ef1234567890": {
                         "sample_id": "P71234_504",
