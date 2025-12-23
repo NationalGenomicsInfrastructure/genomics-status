@@ -18,6 +18,7 @@ from genologics.entities import Artifact
 from ibm_cloud_sdk_core.api_exception import ApiException
 from zenpy import ZenpyException
 
+from status.flowcells import ReadsTotalHandler
 from status.reports import (
     MultiQCReportHandler,
     ProjectSummaryReportHandler,
@@ -257,6 +258,21 @@ class ProjectsBaseDataHandler(SafeHandler):
             field_sources["project_bx_email"] = (
                 "Email to project bioinformatics responsible, from Order Portal"
             )
+
+        all_reads = ReadsTotalHandler.get_total_reads(self.application, row["key"][1])
+        reads_sum = 0
+        for flowcells in all_reads.values():
+            for flowcell in flowcells:
+                if flowcell["sample_status"] not in ["Failed"]:
+                    reads_sum += flowcell["cl"]
+
+        # 1 unit = 60 million reads
+        row["value"]["reads_sequenced"] = (
+            str(reads_sum) + f" (~ {round(reads_sum / 60000000, 2)} units)"
+        )
+        field_sources["reads_sequenced"] = (
+            "Calculated by Genomics Status (backend) from all non-failed samples in the project"
+        )
 
         return row, field_sources
 

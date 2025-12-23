@@ -546,7 +546,6 @@ class ReadsTotalHandler(SafeHandler):
     """
 
     def get(self, query):
-        data = {}
         ordereddata = OrderedDict()
         self.set_header("Content-type", "text/html")
         t = self.application.loader.load("reads_total.html")
@@ -561,54 +560,7 @@ class ReadsTotalHandler(SafeHandler):
                 )
             )
         else:
-            xfc_view = self.application.cloudant.post_view(
-                db="x_flowcells",
-                ddoc="samples",
-                view="lane_clusters",
-                start_key=query,
-                end_key=f"{query}Z",
-                reduce=False,
-            ).get_result()["rows"]
-
-            for row in xfc_view:
-                if row["key"] not in data:
-                    data[row["key"]] = []
-                # To add correct threshold values
-                fc_long_name = row["value"]["fcp"].split(":")[0]
-                fc_date_run = fc_long_name.split("_")[0]
-                if len(fc_date_run) > 6:
-                    fc_date_run = fc_date_run[-6:]
-                fc_short_name = fc_date_run + "_" + fc_long_name.split("_")[-1]
-                fc_view = self.application.cloudant.post_view(
-                    db="x_flowcells",
-                    ddoc="info",
-                    view="summary",
-                    key=fc_short_name,
-                    descending=True,
-                ).get_result()["rows"]
-                for info_row in fc_view:
-                    row["value"]["run_mode"] = info_row["value"]["run_mode"]
-                    row["value"]["longer_read_length"] = info_row["value"][
-                        "longer_read_length"
-                    ]
-                data[row["key"]].append(row["value"])
-
-            # To check if sample is failed on lane level
-            bioinfo_view = self.application.cloudant.post_view(
-                db="bioinfo_analysis",
-                ddoc="latest_data",
-                view="sample_id",
-                start_key=[query, None, None, None],
-                end_key=[f"{query}Z", "ZZ", "ZZ", "ZZ"],
-            ).get_result()["rows"]
-            for row in bioinfo_view:
-                if row["key"][3] in data:
-                    for fcl in data[row["key"][3]]:
-                        if row["key"][1] + ":" + row["key"][2] == fcl["fcp"]:
-                            fcl["sample_status"] = row["value"]["sample_status"]
-                            break  # since the row is already found
-            for key in sorted(data.keys()):
-                ordereddata[key] = sorted(data[key], key=lambda d: d["fcp"])
+            ordereddata = self.get_total_reads(self.application, query)
             self.write(
                 t.generate(
                     gs_globals=self.application.gs_globals,
@@ -617,6 +569,60 @@ class ReadsTotalHandler(SafeHandler):
                     query=query,
                 )
             )
+
+    @staticmethod
+    def get_total_reads(app, query):
+        data = {}
+        ordereddata = OrderedDict()
+        xfc_view = app.cloudant.post_view(
+            db="x_flowcells",
+            ddoc="samples",
+            view="lane_clusters",
+            start_key=query,
+            end_key=f"{query}Z",
+            reduce=False,
+        ).get_result()["rows"]
+
+        for row in xfc_view:
+            if row["key"] not in data:
+                data[row["key"]] = []
+            # To add correct threshold values
+            fc_long_name = row["value"]["fcp"].split(":")[0]
+            fc_date_run = fc_long_name.split("_")[0]
+            if len(fc_date_run) > 6:
+                fc_date_run = fc_date_run[-6:]
+            fc_short_name = fc_date_run + "_" + fc_long_name.split("_")[-1]
+            fc_view = app.cloudant.post_view(
+                db="x_flowcells",
+                ddoc="info",
+                view="summary",
+                key=fc_short_name,
+                descending=True,
+            ).get_result()["rows"]
+            for info_row in fc_view:
+                row["value"]["run_mode"] = info_row["value"]["run_mode"]
+                row["value"]["longer_read_length"] = info_row["value"][
+                    "longer_read_length"
+                ]
+            data[row["key"]].append(row["value"])
+
+        # To check if sample is failed on lane level
+        bioinfo_view = app.cloudant.post_view(
+            db="bioinfo_analysis",
+            ddoc="latest_data",
+            view="sample_id",
+            start_key=[query, None, None, None],
+            end_key=[f"{query}Z", "ZZ", "ZZ", "ZZ"],
+        ).get_result()["rows"]
+        for row in bioinfo_view:
+            if row["key"][3] in data:
+                for fcl in data[row["key"][3]]:
+                    if row["key"][1] + ":" + row["key"][2] == fcl["fcp"]:
+                        fcl["sample_status"] = row["value"]["sample_status"]
+                        break  # since the row is already found
+        for key in sorted(data.keys()):
+            ordereddata[key] = sorted(data[key], key=lambda d: d["fcp"])
+        return ordereddata
 
 
 # Functions
