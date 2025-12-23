@@ -840,6 +840,9 @@ const vFormField = {
                 <template v-if="this.formType === 'string'">
                     <input class="form-control" :type="text" :name="identifier" :id="identifier" :placeholder="description" v-model="this.$root.formData[identifier]">
                 </template>
+                <template v-if="this.formType === 'date'">
+                    <input class="form-control" type="date" :name="identifier" :id="identifier" v-model="this.$root.formData[identifier]">
+                </template>
                 <template v-if="this.formType === 'integer'">
                     <input class="form-control" :type="number" :name="identifier" :id="identifier" :placeholder="0" v-model.number="this.$root.formData[identifier]">
                 </template>
@@ -1126,8 +1129,7 @@ const vCreateForm = {
                 ngi_form_type: 'string',
                 ngi_form_label: this.newField,
                 description: 'New field',
-                type: 'string',
-                enum: []
+                type: 'string'
             };
             // Add the new field to the JSON schema
             this.newForm.properties[this.newField] = newField;
@@ -1259,6 +1261,7 @@ const vCreateForm = {
                                         <li><strong>String</strong>: A text input.</li>
                                         <li><strong>Number</strong>: A numeric input field.</li>
                                         <li><strong>Boolean</strong>: A checkbox input.</li>
+                                        <li><strong>Date</strong>: A date picker input field.</li>
                                         <li><strong>Select</strong>: A dropdown list or predefined options. Only predefined options are allowed.</li>
                                         <li><strong>Datalist</strong>: Text input, automatically filtering a list of predefined options. As with select, only predefined options are allowed.</li>
                                         <li><strong>Custom Datalist</strong>: Text input, automatically filtering a list of options. The options are dynamically fetched from the database, based on the recent years projects.
@@ -1904,6 +1907,8 @@ const vUpdateFormField = {
             let default_value = '';
             if (referenceSelectedField.enum !== undefined) {
                 default_value = referenceSelectedField.enum[0];
+            } else if (referenceSelectedField.ngi_form_type === 'date') {
+                default_value = '';
             } else if (referenceSelectedField.type === 'boolean') {
                 default_value = false;
             } else if (referenceSelectedField.type === 'string') {
@@ -1944,7 +1949,7 @@ const vUpdateFormField = {
                 <div>
                     <label :for="identifier + '_ngi_form_group'" class="form-label">Group</label>
                     <select :id="identifier + '_ngi_form_group'" class="form-control" v-model="this.newJsonSchema['properties'][identifier]['ngi_form_group']" :disabled="!fieldEditMode">
-                        <template v-for="(form_group, group_identifier) in this.newJsonForm['formGroups']">
+                        <template v-for="(form_group, group_identifier) in this.$root.getValue(this.newJsonForm, 'form_groups')">
                             <option :value="group_identifier">{{form_group.display_name}}</option>
                         </template>
                     </select>
@@ -1958,6 +1963,7 @@ const vUpdateFormField = {
                     <select :id="identifier + '_ngi_form_type'" class="form-control" v-model="this.newJsonSchema['properties'][identifier]['ngi_form_type']" :disabled="!fieldEditMode">
                         <option value="string">String</option>
                         <option value="boolean">Boolean</option>
+                        <option value="date">Date</option>
                         <option value="select">Select</option>
                         <option value="datalist">Datalist (must select value in list)</option>
                         <option value="custom_datalist">Custom Datalist (fetch most used suggestions)</option>
