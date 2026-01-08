@@ -17,6 +17,9 @@ const vDemuxSampleInfoEditor = {
                 { key: 'sample_type', label: 'Sample Type' },
                 { key: 'index_1', label: 'Index 1' },
                 { key: 'index_2', label: 'Index 2' },
+                { key: 'index_length', label: 'Index Length' },
+                { key: 'umi_length', label: 'UMI Length' },
+                { key: 'umi_config', label: 'UMI Config' },
                 { key: 'named_index', label: 'Named Index' },
                 { key: 'recipe', label: 'Recipe' },
                 { key: 'operator', label: 'Operator' },
@@ -113,6 +116,10 @@ const vDemuxSampleInfoEditor = {
                     result[lane].push({
                         uuid: uuid,
                         sample_id: sample.sample_id,
+                        sample_type: sample.sample_type,
+                        index_length: sample.index_length,
+                        umi_length: sample.umi_length,
+                        umi_config: sample.umi_config,
                         last_modified: sample.last_modified,
                         ...finalSettings
                     });
@@ -289,6 +296,26 @@ const vDemuxSampleInfoEditor = {
         formatCellValue(value, columnKey) {
             if (columnKey === 'last_modified') {
                 return this.formatTimestamp(value);
+            }
+            if (columnKey === 'index_length' || columnKey === 'umi_length') {
+                // Format array as "i7/i5" notation
+                if (Array.isArray(value)) {
+                    return `[${value[0]}, ${value[1]}]`;
+                }
+                return 'N/A';
+            }
+            if (columnKey === 'umi_config') {
+                // Format umi_config object as a compact string
+                if (typeof value === 'object' && value !== null) {
+                    const parts = [];
+                    for (const [key, config] of Object.entries(value)) {
+                        if (config.length > 0) {
+                            parts.push(`${key}:${config.position}(${config.length})`);
+                        }
+                    }
+                    return parts.length > 0 ? parts.join(', ') : 'No UMIs';
+                }
+                return 'N/A';
             }
             return value || 'N/A';
         },

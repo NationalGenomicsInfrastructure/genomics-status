@@ -2,11 +2,37 @@
 
 import datetime
 import json
+import os
+import re
 import uuid
 
 import tornado.web
 
 from status.util import SafeHandler
+
+
+def _load_sample_classification_patterns():
+    """Load sample classification patterns from JSON configuration file."""
+    config_path = os.path.join(
+        os.path.dirname(__file__), "sample_classification_patterns.json"
+    )
+    with open(config_path, "r") as f:
+        config = json.load(f)
+
+    # Compile regex patterns
+    patterns = {}
+    for key, pattern_config in config["patterns"].items():
+        patterns[key] = {"config": pattern_config}
+        if "regex" in pattern_config:
+            patterns[key]["pattern"] = re.compile(pattern_config["regex"])
+
+    return patterns, config
+
+
+# Load patterns from configuration file
+SAMPLE_PATTERNS, CLASSIFICATION_CONFIG = _load_sample_classification_patterns()
+CONTROL_PATTERNS = CLASSIFICATION_CONFIG.get("control_patterns", [])
+SHORT_INDEX_THRESHOLD = CLASSIFICATION_CONFIG.get("short_single_index_threshold", 8)
 
 
 class DemuxSampleInfoEditorHandler(SafeHandler):
@@ -177,36 +203,153 @@ class DemuxSampleInfoDataHandler(SafeHandler):
 
         return (True, None, metadata, uploaded_lims_info)
 
+    def _calculate_umi_length_from_config(self, umi_config):
+        """Calculate umi_length array [i7, i5] from umi_config structure.
+
+        Args:
+            umi_config: Dictionary with keys i7, i5, R1, R2 containing position and length
+
+        Returns:
+            list: [i7_umi_length, i5_umi_length]
+        """
+        i7_length = umi_config.get("i7", {}).get("length", 0)
+        i5_length = umi_config.get("i5", {}).get("length", 0)
+
+        # Handle "calculated" marker for dynamic UMI lengths
+        if i7_length == "calculated":
+            i7_length = 0
+        if i5_length == "calculated":
+            i5_length = 0
+
+        return [i7_length, i5_length]
+
     def _classify_sample_type(self, sample_in_lane):
-        """Classify sample type based on sample properties.
+        """Classify sample type based on sample properties using TACA classification logic.
 
         Args:
             sample_in_lane: Sample object from uploaded_lims_info
 
         Returns:
-            str: Sample type classification ('standard', 'control', 'pool', 'unknown')
+            dict: Contains sample_type, index_length, umi_length, umi_config
         """
-        # Check if it's marked as a control
-        if sample_in_lane.get("control", "").lower() in ["true", "yes", "y"]:
-            return "control"
+        # Normalize index fields
+        index1 = sample_in_lane.get("index_1", "")
+        index2 = sample_in_lane.get("index_2", "")
 
-        # Check sample name patterns for pooled samples
-        sample_name = sample_in_lane.get("sample_name", "").lower()
-        if "pool" in sample_name or "pooled" in sample_name:
-            return "pool"
+        # Check for control samples (PhiX, etc.)
+        sample_name = sample_in_lane.get("sample_name", "")
+        if any(pattern in sample_name.lower() for pattern in CONTROL_PATTERNS):
+            umi_config = {
+                "i7": {"position": "end", "length": 0},
+                "i5": {"position": "start", "length": 0},
+                "R1": {"position": "start", "length": 0},
+                "R2": {"position": "end", "length": 0},
+            }
+            return {
+                "sample_type": "control",
+                "index_length": [len(index1), len(index2)],
+                "umi_length": [0, 0],
+                "umi_config": umi_config,
+            }
 
-        # Check for specific naming conventions that indicate controls
-        control_patterns = ["phix", "control", "blank", "negative"]
-        if any(pattern in sample_name for pattern in control_patterns):
-            return "control"
+        # Classify by index patterns (order matters - most specific first)
 
-        # Check sample reference for standard genomes
-        sample_ref = sample_in_lane.get("sample_ref", "").lower()
-        if sample_ref and sample_ref not in ["", "none", "n/a", "na"]:
-            return "standard"
+        # 10X single-index sample (e.g., ATAC, Gene Expression)
+        if SAMPLE_PATTERNS["tenx_single"]["pattern"].match(index1):
+            config = SAMPLE_PATTERNS["tenx_single"]["config"]
+            return {
+                "sample_type": config["sample_type"],
+                "index_length": config["index_length"],
+                "umi_length": self._calculate_umi_length_from_config(
+                    config["umi_config"]
+                ),
+                "umi_config": config["umi_config"],
+            }
 
-        # Default to standard if no special indicators found
-        return "standard" if sample_name else "unknown"
+        # 10X dual-index sample (e.g., Spatial Transcriptomics)
+        if SAMPLE_PATTERNS["tenx_dual"]["pattern"].match(index1):
+            config = SAMPLE_PATTERNS["tenx_dual"]["config"]
+            return {
+                "sample_type": config["sample_type"],
+                "index_length": config["index_length"],
+                "umi_length": self._calculate_umi_length_from_config(
+                    config["umi_config"]
+                ),
+                "umi_config": config["umi_config"],
+            }
+
+        # IDT UMI sample - indices contain N for UMI positions
+        # Calculate actual index length by removing N's, and UMI length by counting N's
+        idt_pat = SAMPLE_PATTERNS["idt_umi"]["pattern"]
+        if idt_pat.match(index1) or idt_pat.match(index2):
+            config = SAMPLE_PATTERNS["idt_umi"]["config"]
+
+            # Calculate UMI lengths from N positions
+            i7_umi_length = index1.upper().count("N")
+            i5_umi_length = index2.upper().count("N")
+
+            # Build umi_config with calculated values
+            umi_config = {
+                "i7": {"position": "end", "length": i7_umi_length},
+                "i5": {"position": "end", "length": i5_umi_length},
+                "R1": {"position": "start", "length": 0},
+                "R2": {"position": "end", "length": 0},
+            }
+
+            return {
+                "sample_type": config["sample_type"],
+                "index_length": [
+                    len(index1.replace("N", "")),
+                    len(index2.replace("N", "")),
+                ],
+                "umi_length": [i7_umi_length, i5_umi_length],
+                "umi_config": umi_config,
+            }
+
+        # Smart-seq sample (format: SMARTSEQ-<plate>)
+        if SAMPLE_PATTERNS["smartseq"]["pattern"].match(index1):
+            config = SAMPLE_PATTERNS["smartseq"]["config"]
+            return {
+                "sample_type": config["sample_type"],
+                "index_length": config["index_length"],
+                "umi_length": self._calculate_umi_length_from_config(
+                    config["umi_config"]
+                ),
+                "umi_config": config["umi_config"],
+            }
+
+        # No-index sample
+        if index1.upper() == "NOINDEX":
+            config = SAMPLE_PATTERNS["noindex"]["config"]
+            return {
+                "sample_type": config["sample_type"],
+                "index_length": config["index_length"],
+                "umi_length": self._calculate_umi_length_from_config(
+                    config["umi_config"]
+                ),
+                "umi_config": config["umi_config"],
+            }
+
+        # Default: ordinary or short single index
+        # Short single index: ≤threshold bp and only one index present (i7 or i5, but not both)
+        index_length = [len(index1), len(index2)]
+        is_short_single = (
+            index_length[0] <= SHORT_INDEX_THRESHOLD and index_length[1] == 0
+        ) or (index_length[0] == 0 and index_length[1] <= SHORT_INDEX_THRESHOLD)
+
+        umi_config = {
+            "i7": {"position": "end", "length": 0},
+            "i5": {"position": "start", "length": 0},
+            "R1": {"position": "start", "length": 0},
+            "R2": {"position": "end", "length": 0},
+        }
+
+        return {
+            "sample_type": "short_single_index" if is_short_single else "ordinary",
+            "index_length": index_length,
+            "umi_length": [0, 0],
+            "umi_config": umi_config,
+        }
 
     def _group_samples_by_lane(self, uploaded_lims_info):
         """Group samples by lane number.
@@ -243,13 +386,16 @@ class DemuxSampleInfoDataHandler(SafeHandler):
             for sample_in_lane in samples_in_lane:
                 sample_uuid = str(uuid.uuid4())
 
-                # Classify the sample type
-                sample_type = self._classify_sample_type(sample_in_lane)
+                # Classify the sample type (returns dict with sample_type, index_length, umi_length, umi_config)
+                sample_classification = self._classify_sample_type(sample_in_lane)
 
                 calculated_lanes[lane]["sample_rows"][sample_uuid] = {
                     "sample_id": sample_in_lane["sample_id"],
                     "last_modified": timestamp,
-                    "sample_type": sample_type,
+                    "sample_type": sample_classification["sample_type"],
+                    "index_length": sample_classification["index_length"],
+                    "umi_length": sample_classification["umi_length"],
+                    "umi_config": sample_classification["umi_config"],
                     "settings": {
                         timestamp: {
                             "control": sample_in_lane["control"],
@@ -267,7 +413,10 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                             "sample_name": sample_in_lane["sample_name"],
                             "sample_project": sample_in_lane["sample_project"],
                             "sample_ref": sample_in_lane["sample_ref"],
-                            "sample_type": sample_type,
+                            "sample_type": sample_classification["sample_type"],
+                            "index_length": sample_classification["index_length"],
+                            "umi_length": sample_classification["umi_length"],
+                            "umi_config": sample_classification["umi_config"],
                         }
                     },
                 }
