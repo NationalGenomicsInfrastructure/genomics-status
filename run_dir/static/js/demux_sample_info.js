@@ -14,6 +14,7 @@ const vDemuxSampleInfoEditor = {
                 { key: 'sample_name', label: 'Sample Name' },
                 { key: 'sample_project', label: 'Sample Project' },
                 { key: 'sample_ref', label: 'Sample Ref' },
+                { key: 'sample_type', label: 'Sample Type' },
                 { key: 'index_1', label: 'Index 1' },
                 { key: 'index_2', label: 'Index 2' },
                 { key: 'named_index', label: 'Named Index' },
@@ -26,7 +27,7 @@ const vDemuxSampleInfoEditor = {
                 { key: 'override_cycles', label: 'Override Cycles' },
                 { key: 'last_modified', label: 'Last Modified' }
             ],
-            visibleColumns: ['sample_project', 'sample_id', 'last_modified', 'index_1', 'index_2', 'recipe', 'override_cycles'],
+            visibleColumns: ['sample_project', 'sample_id', 'last_modified', 'sample_type', 'index_1', 'index_2', 'recipe', 'override_cycles'],
             showBulkEditModal: false,
             columnConfigCollapsed: true,
             bulkEditAction: 'reverse_complement_index1',
