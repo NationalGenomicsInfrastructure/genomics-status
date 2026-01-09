@@ -1,7 +1,9 @@
 """Main genomics-status web application."""
 
 import base64
+import json
 import logging
+import re
 import subprocess
 import uuid
 from pathlib import Path
@@ -193,9 +195,6 @@ from status.worksets import (
     WorksetSearchHandler,
     WorksetsHandler,
 )
-
-import json
-import re
 
 ONT_RUN_PATTERN = r"\d{8}_\d{4}_[0-9a-zA-Z]+_[0-9a-zA-Z]+_[0-9a-zA-Z]+"
 
