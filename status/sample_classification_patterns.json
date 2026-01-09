@@ -64,6 +64,18 @@
       "description": "Recipe format pattern for read length specification"
     }
   },
+"library_method_mapping": {
+    "10x Chromium Single Cell 3'": "10X_SINGLE",
+    "10x Chromium Single Cell 5'": "10X_SINGLE",
+    "10x Chromium Single Cell ATAC": "10X_SINGLE",
+    "10x Chromium Single Cell Multiome": "10X_SINGLE",
+    "10x Visium Spatial Gene Expression": "10X_DUAL",
+    "10x Visium Spatial Transcriptomics": "10X_DUAL",
+    "10x Visium HD Spatial Gene Expression": "10X_DUAL",
+    "Smart-seq": "SMARTSEQ",
+    "Smart-seq2": "SMARTSEQ",
+    "Smart-seq3": "SMARTSEQ"
+},
   "control_patterns": [
     "phix",
     "control",

@@ -33,6 +33,7 @@ def _load_sample_classification_patterns():
 SAMPLE_PATTERNS, CLASSIFICATION_CONFIG = _load_sample_classification_patterns()
 CONTROL_PATTERNS = CLASSIFICATION_CONFIG.get("control_patterns", [])
 SHORT_INDEX_THRESHOLD = CLASSIFICATION_CONFIG.get("short_single_index_threshold", 8)
+LIBRARY_METHOD_MAPPING = CLASSIFICATION_CONFIG.get("library_method_mapping", {})
 
 
 class DemuxSampleInfoEditorHandler(SafeHandler):
@@ -66,6 +67,43 @@ class DemuxSampleInfoDataHandler(SafeHandler):
             for row in view:
                 self._project_names[project_name] = row["value"]
         return self._project_names.get(project_name, "")
+
+    def _get_project_library_method(self, project_name):
+        """Look up library construction method for a project.
+
+        Args:
+            project_name: Project name (e.g., "P12345")
+
+        Returns:
+            str: Library construction method or empty string if not found
+        """
+        if not hasattr(self, "_project_library_methods"):
+            self._project_library_methods = {}
+
+        if project_name not in self._project_library_methods:
+            try:
+                project_id = self._get_project_id_by_name(project_name)
+                if project_id:
+                    # Fetch the project document
+                    project_doc = self.application.cloudant.get_document(
+                        db="projects", doc_id=project_id
+                    ).get_result()
+
+                    # Extract library construction method
+                    library_method = project_doc.get("details", {}).get(
+                        "library_construction_method", ""
+                    )
+                    self._project_library_methods[project_name] = library_method
+                else:
+                    self._project_library_methods[project_name] = ""
+            except Exception as e:
+                # If we can't fetch the project, log and continue
+                print(
+                    f"Warning: Could not fetch library method for project {project_name}: {e}"
+                )
+                self._project_library_methods[project_name] = ""
+
+        return self._project_library_methods[project_name]
 
     def get(self, flowcell_id):
         """Retrieve demux sample info document for a specific flowcell."""
@@ -223,11 +261,12 @@ class DemuxSampleInfoDataHandler(SafeHandler):
 
         return [i7_length, i5_length]
 
-    def _classify_sample_type(self, sample_in_lane):
+    def _classify_sample_type(self, sample_in_lane, library_method=None):
         """Classify sample type based on sample properties using TACA classification logic.
 
         Args:
             sample_in_lane: Sample object from uploaded_lims_info
+            library_method: Optional library construction method from project
 
         Returns:
             dict: Contains sample_type, index_length, umi_length, umi_config
@@ -251,6 +290,43 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                 "umi_length": [0, 0],
                 "umi_config": umi_config,
             }
+
+        # Check library method mapping first (if available)
+        if library_method and library_method in LIBRARY_METHOD_MAPPING:
+            mapped_type = LIBRARY_METHOD_MAPPING[library_method]
+
+            # Find the pattern config for this sample type
+            for pattern_key, pattern_data in SAMPLE_PATTERNS.items():
+                config = pattern_data.get("config", {})
+                if config.get("sample_type") == mapped_type:
+                    # For IDT_UMI, still need to calculate from indices
+                    if mapped_type == "IDT_UMI":
+                        i7_umi_length = index1.upper().count("N")
+                        i5_umi_length = index2.upper().count("N")
+                        umi_config = {
+                            "i7": {"position": "end", "length": i7_umi_length},
+                            "i5": {"position": "end", "length": i5_umi_length},
+                            "R1": {"position": "start", "length": 0},
+                            "R2": {"position": "end", "length": 0},
+                        }
+                        return {
+                            "sample_type": config["sample_type"],
+                            "index_length": [
+                                len(index1.replace("N", "")),
+                                len(index2.replace("N", "")),
+                            ],
+                            "umi_length": [i7_umi_length, i5_umi_length],
+                            "umi_config": umi_config,
+                        }
+                    else:
+                        return {
+                            "sample_type": config["sample_type"],
+                            "index_length": config["index_length"],
+                            "umi_length": self._calculate_umi_length_from_config(
+                                config["umi_config"]
+                            ),
+                            "umi_config": config["umi_config"],
+                        }
 
         # Classify by index patterns (order matters - most specific first)
 
@@ -386,8 +462,18 @@ class DemuxSampleInfoDataHandler(SafeHandler):
             for sample_in_lane in samples_in_lane:
                 sample_uuid = str(uuid.uuid4())
 
+                # Get library method for the project
+                project_name = sample_in_lane.get("sample_project", "")
+                library_method = (
+                    self._get_project_library_method(project_name)
+                    if project_name
+                    else None
+                )
+
                 # Classify the sample type (returns dict with sample_type, index_length, umi_length, umi_config)
-                sample_classification = self._classify_sample_type(sample_in_lane)
+                sample_classification = self._classify_sample_type(
+                    sample_in_lane, library_method
+                )
 
                 calculated_lanes[lane]["sample_rows"][sample_uuid] = {
                     "sample_id": sample_in_lane["sample_id"],
@@ -396,6 +482,7 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                     "index_length": sample_classification["index_length"],
                     "umi_length": sample_classification["umi_length"],
                     "umi_config": sample_classification["umi_config"],
+                    "library_method": library_method or "",
                     "settings": {
                         timestamp: {
                             "control": sample_in_lane["control"],
@@ -417,6 +504,7 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                             "index_length": sample_classification["index_length"],
                             "umi_length": sample_classification["umi_length"],
                             "umi_config": sample_classification["umi_config"],
+                            "library_method": library_method or "",
                         }
                     },
                 }
