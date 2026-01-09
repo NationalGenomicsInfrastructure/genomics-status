@@ -1,3 +1,4 @@
 ipdb
 ruff
 selenium
+jsonschema
