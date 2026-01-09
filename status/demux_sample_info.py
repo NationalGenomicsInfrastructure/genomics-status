@@ -2,38 +2,11 @@
 
 import datetime
 import json
-import os
-import re
 import uuid
 
 import tornado.web
 
 from status.util import SafeHandler
-
-
-def _load_sample_classification_patterns():
-    """Load sample classification patterns from JSON configuration file."""
-    config_path = os.path.join(
-        os.path.dirname(__file__), "sample_classification_patterns.json"
-    )
-    with open(config_path, "r") as f:
-        config = json.load(f)
-
-    # Compile regex patterns
-    patterns = {}
-    for key, pattern_config in config["patterns"].items():
-        patterns[key] = {"config": pattern_config}
-        if "regex" in pattern_config:
-            patterns[key]["pattern"] = re.compile(pattern_config["regex"])
-
-    return patterns, config
-
-
-# Load patterns from configuration file
-SAMPLE_PATTERNS, CLASSIFICATION_CONFIG = _load_sample_classification_patterns()
-CONTROL_PATTERNS = CLASSIFICATION_CONFIG.get("control_patterns", [])
-SHORT_INDEX_THRESHOLD = CLASSIFICATION_CONFIG.get("short_single_index_threshold", 8)
-LIBRARY_METHOD_MAPPING = CLASSIFICATION_CONFIG.get("library_method_mapping", {})
 
 
 class DemuxSampleInfoEditorHandler(SafeHandler):
@@ -271,13 +244,19 @@ class DemuxSampleInfoDataHandler(SafeHandler):
         Returns:
             dict: Contains sample_type, index_length, umi_length, umi_config
         """
+        # Get patterns from application
+        sample_patterns = self.application.sample_patterns
+        control_patterns = self.application.control_patterns
+        library_method_mapping = self.application.library_method_mapping
+        short_index_threshold = self.application.short_index_threshold
+
         # Normalize index fields
         index1 = sample_in_lane.get("index_1", "")
         index2 = sample_in_lane.get("index_2", "")
 
         # Check for control samples (PhiX, etc.)
         sample_name = sample_in_lane.get("sample_name", "")
-        if any(pattern in sample_name.lower() for pattern in CONTROL_PATTERNS):
+        if any(pattern in sample_name.lower() for pattern in control_patterns):
             umi_config = {
                 "i7": {"position": "end", "length": 0},
                 "i5": {"position": "start", "length": 0},
@@ -292,11 +271,11 @@ class DemuxSampleInfoDataHandler(SafeHandler):
             }
 
         # Check library method mapping first (if available)
-        if library_method and library_method in LIBRARY_METHOD_MAPPING:
-            mapped_type = LIBRARY_METHOD_MAPPING[library_method]
+        if library_method and library_method in library_method_mapping:
+            mapped_type = library_method_mapping[library_method]
 
             # Find the pattern config for this sample type
-            for pattern_key, pattern_data in SAMPLE_PATTERNS.items():
+            for pattern_key, pattern_data in sample_patterns.items():
                 config = pattern_data.get("config", {})
                 if config.get("sample_type") == mapped_type:
                     # For IDT_UMI, still need to calculate from indices
@@ -331,8 +310,8 @@ class DemuxSampleInfoDataHandler(SafeHandler):
         # Classify by index patterns (order matters - most specific first)
 
         # 10X single-index sample (e.g., ATAC, Gene Expression)
-        if SAMPLE_PATTERNS["tenx_single"]["pattern"].match(index1):
-            config = SAMPLE_PATTERNS["tenx_single"]["config"]
+        if sample_patterns["tenx_single"]["pattern"].match(index1):
+            config = sample_patterns["tenx_single"]["config"]
             return {
                 "sample_type": config["sample_type"],
                 "index_length": config["index_length"],
@@ -343,8 +322,8 @@ class DemuxSampleInfoDataHandler(SafeHandler):
             }
 
         # 10X dual-index sample (e.g., Spatial Transcriptomics)
-        if SAMPLE_PATTERNS["tenx_dual"]["pattern"].match(index1):
-            config = SAMPLE_PATTERNS["tenx_dual"]["config"]
+        if sample_patterns["tenx_dual"]["pattern"].match(index1):
+            config = sample_patterns["tenx_dual"]["config"]
             return {
                 "sample_type": config["sample_type"],
                 "index_length": config["index_length"],
@@ -356,9 +335,9 @@ class DemuxSampleInfoDataHandler(SafeHandler):
 
         # IDT UMI sample - indices contain N for UMI positions
         # Calculate actual index length by removing N's, and UMI length by counting N's
-        idt_pat = SAMPLE_PATTERNS["idt_umi"]["pattern"]
+        idt_pat = sample_patterns["idt_umi"]["pattern"]
         if idt_pat.match(index1) or idt_pat.match(index2):
-            config = SAMPLE_PATTERNS["idt_umi"]["config"]
+            config = sample_patterns["idt_umi"]["config"]
 
             # Calculate UMI lengths from N positions
             i7_umi_length = index1.upper().count("N")
@@ -383,8 +362,8 @@ class DemuxSampleInfoDataHandler(SafeHandler):
             }
 
         # Smart-seq sample (format: SMARTSEQ-<plate>)
-        if SAMPLE_PATTERNS["smartseq"]["pattern"].match(index1):
-            config = SAMPLE_PATTERNS["smartseq"]["config"]
+        if sample_patterns["smartseq"]["pattern"].match(index1):
+            config = sample_patterns["smartseq"]["config"]
             return {
                 "sample_type": config["sample_type"],
                 "index_length": config["index_length"],
@@ -396,7 +375,7 @@ class DemuxSampleInfoDataHandler(SafeHandler):
 
         # No-index sample
         if index1.upper() == "NOINDEX":
-            config = SAMPLE_PATTERNS["noindex"]["config"]
+            config = sample_patterns["noindex"]["config"]
             return {
                 "sample_type": config["sample_type"],
                 "index_length": config["index_length"],
@@ -410,8 +389,8 @@ class DemuxSampleInfoDataHandler(SafeHandler):
         # Short single index: ≤threshold bp and only one index present (i7 or i5, but not both)
         index_length = [len(index1), len(index2)]
         is_short_single = (
-            index_length[0] <= SHORT_INDEX_THRESHOLD and index_length[1] == 0
-        ) or (index_length[0] == 0 and index_length[1] <= SHORT_INDEX_THRESHOLD)
+            index_length[0] <= short_index_threshold and index_length[1] == 0
+        ) or (index_length[0] == 0 and index_length[1] <= short_index_threshold)
 
         umi_config = {
             "i7": {"position": "end", "length": 0},

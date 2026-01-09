@@ -194,6 +194,9 @@ from status.worksets import (
     WorksetsHandler,
 )
 
+import json
+import re
+
 ONT_RUN_PATTERN = r"\d{8}_\d{4}_[0-9a-zA-Z]+_[0-9a-zA-Z]+_[0-9a-zA-Z]+"
 
 
@@ -485,6 +488,9 @@ class Application(tornado.web.Application):
         # to display instruments in the server status
         self.server_status = settings.get("server_status")
 
+        # Load sample classification patterns for demux sample info
+        self._load_sample_classification_patterns()
+
         # project summary - reports tab
         # Structure of the reports folder:
         # <reports_path>/
@@ -571,6 +577,29 @@ class Application(tornado.web.Application):
             tornado.autoreload.watch("design/worksets.html")
 
         tornado.web.Application.__init__(self, handlers, **settings)
+
+    def _load_sample_classification_patterns(self):
+        """Load sample classification patterns from JSON configuration file."""
+        # Get the directory where status_app.py is located and navigate to configuration_files
+        script_dir = Path(__file__).parent
+        config_path = (
+            script_dir / "configuration_files" / "sample_classification_patterns.json"
+        )
+        with config_path.open("r") as f:
+            config = json.load(f)
+
+        # Compile regex patterns
+        patterns = {}
+        for key, pattern_config in config["patterns"].items():
+            patterns[key] = {"config": pattern_config}
+            if "regex" in pattern_config:
+                patterns[key]["pattern"] = re.compile(pattern_config["regex"])
+
+        self.sample_patterns = patterns
+        self.classification_config = config
+        self.control_patterns = config.get("control_patterns", [])
+        self.short_index_threshold = config.get("short_single_index_threshold", 8)
+        self.library_method_mapping = config.get("library_method_mapping", {})
 
 
 if __name__ == "__main__":
