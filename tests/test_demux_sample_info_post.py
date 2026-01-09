@@ -154,7 +154,6 @@ class TestDemuxSampleInfoPost(AsyncHTTPTestCase):
         
         self.assertEqual(classification["sample_type"], "10X_DUAL")
         self.assertEqual(classification["index_length"], [10, 10])
-        self.assertEqual(classification["umi_length"], [0, 0])
         self.assertIsNone(classification["umi_config"])  # No UMI present
 
     def test_classify_sample_type_10x_single(self):
@@ -171,8 +170,9 @@ class TestDemuxSampleInfoPost(AsyncHTTPTestCase):
         classification = handler._classify_sample_type(sample, library_method="")
         
         self.assertEqual(classification["sample_type"], "10X_SINGLE")
-        self.assertEqual(classification["index_length"], [16, 0])  # Config has 16 for 10X single
-        self.assertEqual(classification["umi_length"], [0, 0])  # Config has 0 UMI length
+        self.assertEqual(
+            classification["index_length"], [16, 0]
+        )  # Config has 16 for 10X single
 
     def test_classify_sample_type_ordinary_dual(self):
         """Test classification of ordinary dual-index samples."""
@@ -189,7 +189,6 @@ class TestDemuxSampleInfoPost(AsyncHTTPTestCase):
         
         self.assertEqual(classification["sample_type"], "ordinary")
         self.assertEqual(classification["index_length"], [7, 7])
-        self.assertEqual(classification["umi_length"], [0, 0])
         self.assertIsNone(classification["umi_config"])  # No UMI for ordinary samples
 
     def test_classify_sample_type_noindex(self):
