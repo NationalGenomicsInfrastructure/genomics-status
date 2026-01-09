@@ -214,31 +214,6 @@ class DemuxSampleInfoDataHandler(SafeHandler):
 
         return (True, None, metadata, uploaded_lims_info)
 
-    def _calculate_umi_length_from_config(self, umi_config):
-        """Calculate umi_length array [i7, i5] from umi_config structure.
-
-        Args:
-            umi_config: Dictionary with keys i7, i5, R1, R2 containing position and length,
-                       or None/False if no UMI is present
-
-        Returns:
-            list: [i7_umi_length, i5_umi_length]
-        """
-        # If umi_config is None or False, no UMI present
-        if not umi_config:
-            return [0, 0]
-
-        i7_length = umi_config.get("i7", {}).get("length", 0)
-        i5_length = umi_config.get("i5", {}).get("length", 0)
-
-        # Handle "calculated" marker for dynamic UMI lengths
-        if i7_length == "calculated":
-            i7_length = 0
-        if i5_length == "calculated":
-            i5_length = 0
-
-        return [i7_length, i5_length]
-
     def _classify_sample_type(self, sample_in_lane, library_method=None):
         """Classify sample type based on sample properties using TACA classification logic.
 
@@ -247,7 +222,7 @@ class DemuxSampleInfoDataHandler(SafeHandler):
             library_method: Optional library construction method from project
 
         Returns:
-            dict: Contains sample_type, index_length, umi_length, umi_config
+            dict: Contains sample_type, index_length, umi_config
         """
         # Get patterns from application
         sample_patterns = self.application.sample_patterns
@@ -265,7 +240,6 @@ class DemuxSampleInfoDataHandler(SafeHandler):
             return {
                 "sample_type": "control",
                 "index_length": [len(index1), len(index2)],
-                "umi_length": [0, 0],
                 "umi_config": None,  # No UMI for controls
             }
 
@@ -287,7 +261,6 @@ class DemuxSampleInfoDataHandler(SafeHandler):
             return {
                 "sample_type": sample_type,
                 "index_length": index_length,
-                "umi_length": self._calculate_umi_length_from_config(umi_config),
                 "umi_config": umi_config,
             }
 
@@ -299,9 +272,6 @@ class DemuxSampleInfoDataHandler(SafeHandler):
             return {
                 "sample_type": config["sample_type"],
                 "index_length": config["index_length"],
-                "umi_length": self._calculate_umi_length_from_config(
-                    config["umi_config"]
-                ),
                 "umi_config": config["umi_config"],
             }
 
@@ -311,9 +281,6 @@ class DemuxSampleInfoDataHandler(SafeHandler):
             return {
                 "sample_type": config["sample_type"],
                 "index_length": config["index_length"],
-                "umi_length": self._calculate_umi_length_from_config(
-                    config["umi_config"]
-                ),
                 "umi_config": config["umi_config"],
             }
 
@@ -341,7 +308,6 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                     len(index1.replace("N", "")),
                     len(index2.replace("N", "")),
                 ],
-                "umi_length": [i7_umi_length, i5_umi_length],
                 "umi_config": umi_config,
             }
 
@@ -351,9 +317,6 @@ class DemuxSampleInfoDataHandler(SafeHandler):
             return {
                 "sample_type": config["sample_type"],
                 "index_length": config["index_length"],
-                "umi_length": self._calculate_umi_length_from_config(
-                    config["umi_config"]
-                ),
                 "umi_config": config["umi_config"],
             }
 
@@ -363,9 +326,6 @@ class DemuxSampleInfoDataHandler(SafeHandler):
             return {
                 "sample_type": config["sample_type"],
                 "index_length": config["index_length"],
-                "umi_length": self._calculate_umi_length_from_config(
-                    config["umi_config"]
-                ),
                 "umi_config": config["umi_config"],
             }
 
@@ -379,7 +339,6 @@ class DemuxSampleInfoDataHandler(SafeHandler):
         return {
             "sample_type": "short_single_index" if is_short_single else "ordinary",
             "index_length": index_length,
-            "umi_length": [0, 0],
             "umi_config": None,  # No UMI for ordinary samples
         }
 
@@ -426,7 +385,7 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                     else None
                 )
 
-                # Classify the sample type (returns dict with sample_type, index_length, umi_length, umi_config)
+                # Classify the sample type (returns dict with sample_type, index_length, umi_config)
                 sample_classification = self._classify_sample_type(
                     sample_in_lane, library_method
                 )
@@ -436,7 +395,6 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                     "last_modified": timestamp,
                     "sample_type": sample_classification["sample_type"],
                     "index_length": sample_classification["index_length"],
-                    "umi_length": sample_classification["umi_length"],
                     "umi_config": sample_classification["umi_config"],
                     "library_method": library_method or "",
                     "settings": {
@@ -458,7 +416,6 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                             "sample_ref": sample_in_lane["sample_ref"],
                             "sample_type": sample_classification["sample_type"],
                             "index_length": sample_classification["index_length"],
-                            "umi_length": sample_classification["umi_length"],
                             "umi_config": sample_classification["umi_config"],
                             "library_method": library_method or "",
                         }
