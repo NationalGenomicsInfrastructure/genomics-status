@@ -154,10 +154,8 @@ class TestDemuxSampleInfoPost(AsyncHTTPTestCase):
         
         self.assertEqual(classification["sample_type"], "10X_DUAL")
         self.assertEqual(classification["index_length"], [10, 10])
-        self.assertEqual(classification["umi_length"], [0, 0])  # Config has 0 UMI length
-        self.assertIn("i7", classification["umi_config"])
-        self.assertEqual(classification["umi_config"]["i7"]["position"], "end")
-        self.assertEqual(classification["umi_config"]["i7"]["length"], 0)
+        self.assertEqual(classification["umi_length"], [0, 0])
+        self.assertIsNone(classification["umi_config"])  # No UMI present
 
     def test_classify_sample_type_10x_single(self):
         """Test classification of 10X single-index samples (SI-GA-*, SI-NA-*)."""
@@ -192,9 +190,7 @@ class TestDemuxSampleInfoPost(AsyncHTTPTestCase):
         self.assertEqual(classification["sample_type"], "ordinary")
         self.assertEqual(classification["index_length"], [7, 7])
         self.assertEqual(classification["umi_length"], [0, 0])
-        # Default umi_config for ordinary samples has all components with 0 length
-        self.assertIn("i7", classification["umi_config"])
-        self.assertEqual(classification["umi_config"]["i7"]["length"], 0)
+        self.assertIsNone(classification["umi_config"])  # No UMI for ordinary samples
 
     def test_classify_sample_type_noindex(self):
         """Test classification of samples with NOINDEX keyword."""
@@ -228,7 +224,7 @@ class TestDemuxSampleInfoPost(AsyncHTTPTestCase):
         self.assertEqual(classification["sample_type"], "control")
 
     def test_classify_sample_type_by_library_method(self):
-        """Test classification using library method mapping."""
+        """Test classification using library method mapping with new format."""
         handler = DemuxSampleInfoDataHandler(self.get_app(), MagicMock())
         
         sample = {
@@ -237,14 +233,15 @@ class TestDemuxSampleInfoPost(AsyncHTTPTestCase):
             "control": "N",
             "sample_name": "Test_Sample"
         }
-        
-        # Test with 10x Chromium library method
+
+        # Test with example library method from config
         classification = handler._classify_sample_type(
-            sample,
-            library_method="10x Chromium Single Cell 3'"
+            sample, library_method="example_library_prep_method"
         )
-        
-        self.assertEqual(classification["sample_type"], "10X_SINGLE")
+
+        self.assertEqual(classification["sample_type"], "EXAMPLE_TYPE")
+        # index_length should be calculated from actual indices
+        self.assertEqual(classification["index_length"], [8, 0])
 
     def test_classify_sample_type_smartseq(self):
         """Test classification of Smart-seq samples with SMARTSEQ pattern."""

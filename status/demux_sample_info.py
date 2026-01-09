@@ -218,11 +218,16 @@ class DemuxSampleInfoDataHandler(SafeHandler):
         """Calculate umi_length array [i7, i5] from umi_config structure.
 
         Args:
-            umi_config: Dictionary with keys i7, i5, R1, R2 containing position and length
+            umi_config: Dictionary with keys i7, i5, R1, R2 containing position and length,
+                       or None/False if no UMI is present
 
         Returns:
             list: [i7_umi_length, i5_umi_length]
         """
+        # If umi_config is None or False, no UMI present
+        if not umi_config:
+            return [0, 0]
+
         i7_length = umi_config.get("i7", {}).get("length", 0)
         i5_length = umi_config.get("i5", {}).get("length", 0)
 
@@ -257,55 +262,34 @@ class DemuxSampleInfoDataHandler(SafeHandler):
         # Check for control samples (PhiX, etc.)
         sample_name = sample_in_lane.get("sample_name", "")
         if any(pattern in sample_name.lower() for pattern in control_patterns):
-            umi_config = {
-                "i7": {"position": "end", "length": 0},
-                "i5": {"position": "start", "length": 0},
-                "R1": {"position": "start", "length": 0},
-                "R2": {"position": "end", "length": 0},
-            }
             return {
                 "sample_type": "control",
                 "index_length": [len(index1), len(index2)],
                 "umi_length": [0, 0],
-                "umi_config": umi_config,
+                "umi_config": None,  # No UMI for controls
             }
 
         # Check library method mapping first (if available)
         if library_method and library_method in library_method_mapping:
-            mapped_type = library_method_mapping[library_method]
+            mapped_config = library_method_mapping[library_method]
 
-            # Find the pattern config for this sample type
-            for pattern_key, pattern_data in sample_patterns.items():
-                config = pattern_data.get("config", {})
-                if config.get("sample_type") == mapped_type:
-                    # For IDT_UMI, still need to calculate from indices
-                    if mapped_type == "IDT_UMI":
-                        i7_umi_length = index1.upper().count("N")
-                        i5_umi_length = index2.upper().count("N")
-                        umi_config = {
-                            "i7": {"position": "end", "length": i7_umi_length},
-                            "i5": {"position": "end", "length": i5_umi_length},
-                            "R1": {"position": "start", "length": 0},
-                            "R2": {"position": "end", "length": 0},
-                        }
-                        return {
-                            "sample_type": config["sample_type"],
-                            "index_length": [
-                                len(index1.replace("N", "")),
-                                len(index2.replace("N", "")),
-                            ],
-                            "umi_length": [i7_umi_length, i5_umi_length],
-                            "umi_config": umi_config,
-                        }
-                    else:
-                        return {
-                            "sample_type": config["sample_type"],
-                            "index_length": config["index_length"],
-                            "umi_length": self._calculate_umi_length_from_config(
-                                config["umi_config"]
-                            ),
-                            "umi_config": config["umi_config"],
-                        }
+            # New format: library_method_mapping contains full config objects
+            sample_type = mapped_config.get("sample_type", "ordinary")
+            index_length = mapped_config.get("index_length", [len(index1), len(index2)])
+            umi_config = mapped_config.get("umi_config", None)
+
+            # Handle "calculated" index lengths
+            if index_length[0] == "calculated":
+                index_length[0] = len(index1)
+            if index_length[1] == "calculated":
+                index_length[1] = len(index2)
+
+            return {
+                "sample_type": sample_type,
+                "index_length": index_length,
+                "umi_length": self._calculate_umi_length_from_config(umi_config),
+                "umi_config": umi_config,
+            }
 
         # Classify by index patterns (order matters - most specific first)
 
@@ -392,18 +376,11 @@ class DemuxSampleInfoDataHandler(SafeHandler):
             index_length[0] <= short_index_threshold and index_length[1] == 0
         ) or (index_length[0] == 0 and index_length[1] <= short_index_threshold)
 
-        umi_config = {
-            "i7": {"position": "end", "length": 0},
-            "i5": {"position": "start", "length": 0},
-            "R1": {"position": "start", "length": 0},
-            "R2": {"position": "end", "length": 0},
-        }
-
         return {
             "sample_type": "short_single_index" if is_short_single else "ordinary",
             "index_length": index_length,
             "umi_length": [0, 0],
-            "umi_config": umi_config,
+            "umi_config": None,  # No UMI for ordinary samples
         }
 
     def _group_samples_by_lane(self, uploaded_lims_info):

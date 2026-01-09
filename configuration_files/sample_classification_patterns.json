@@ -1,40 +1,26 @@
 {
+  "$schema": "./sample_classification_patterns.schema.json",
   "patterns": {
     "tenx_single": {
       "regex": "SI-(?:GA|NA)-[A-H][1-9][0-2]?",
       "description": "10X single-index samples (e.g., ATAC, Gene Expression)",
       "sample_type": "10X_SINGLE",
       "index_length": [16, 0],
-      "umi_config": {
-        "i7": {"position": "end", "length": 0},
-        "i5": {"position": "start", "length": 0},
-        "R1": {"position": "start", "length": 0},
-        "R2": {"position": "end", "length": 0}
-      }
+      "umi_config": null
     },
     "tenx_dual": {
       "regex": "SI-(?:TT|NT|NN|TN|TS)-[A-H][1-9][0-2]?",
       "description": "10X dual-index samples (e.g., Spatial Transcriptomics)",
       "sample_type": "10X_DUAL",
       "index_length": [10, 10],
-      "umi_config": {
-        "i7": {"position": "end", "length": 0},
-        "i5": {"position": "start", "length": 0},
-        "R1": {"position": "start", "length": 0},
-        "R2": {"position": "end", "length": 0}
-      }
+      "umi_config": null
     },
     "smartseq": {
       "regex": "SMARTSEQ[1-9]?-[1-9][0-9]?[A-P]",
       "description": "Smart-seq samples with plate-based indexing",
       "sample_type": "SMARTSEQ",
       "index_length": [8, 8],
-      "umi_config": {
-        "i7": {"position": "end", "length": 0},
-        "i5": {"position": "start", "length": 0},
-        "R1": {"position": "start", "length": 0},
-        "R2": {"position": "end", "length": 0}
-      }
+      "umi_config": null
     },
     "idt_umi": {
       "regex": "[ATCG]{4,}N+$",
@@ -43,39 +29,34 @@
       "calculate_lengths": true,
       "umi_config": {
         "i7": {"position": "end", "length": "calculated"},
-        "i5": {"position": "end", "length": "calculated"},
-        "R1": {"position": "start", "length": 0},
-        "R2": {"position": "end", "length": 0}
+        "i5": {
+          "position": "end",
+          "length": 2999
+        }
       }
     },
     "noindex": {
       "description": "No-index samples",
       "sample_type": "NOINDEX",
       "index_length": [0, 0],
-      "umi_config": {
-        "i7": {"position": "end", "length": 0},
-        "i5": {"position": "start", "length": 0},
-        "R1": {"position": "start", "length": 0},
-        "R2": {"position": "end", "length": 0}
-      }
+      "umi_config": null
     },
     "recipe": {
       "regex": "[0-9]+-[0-9]+",
       "description": "Recipe format pattern for read length specification"
     }
   },
-"library_method_mapping": {
-    "10x Chromium Single Cell 3'": "10X_SINGLE",
-    "10x Chromium Single Cell 5'": "10X_SINGLE",
-    "10x Chromium Single Cell ATAC": "10X_SINGLE",
-    "10x Chromium Single Cell Multiome": "10X_SINGLE",
-    "10x Visium Spatial Gene Expression": "10X_DUAL",
-    "10x Visium Spatial Transcriptomics": "10X_DUAL",
-    "10x Visium HD Spatial Gene Expression": "10X_DUAL",
-    "Smart-seq": "SMARTSEQ",
-    "Smart-seq2": "SMARTSEQ",
-    "Smart-seq3": "SMARTSEQ"
-},
+  "library_method_mapping": {
+    "example_library_prep_method": {
+      "sample_type": "EXAMPLE_TYPE",
+      "description": "Example library prep method mapping",
+      "index_length": [
+        "calculated",
+        "calculated"
+      ],
+      "umi_config": null
+    }
+  },
   "control_patterns": [
     "phix",
     "control",
