@@ -90,7 +90,9 @@ class qPCRPoolsDataHandler(QueuesBaseHandler):
             "FROM artifact_sample_map "
             f"WHERE artifactid={artifactid};"
         )
-        rows = self._get_lims_cursor().execute(query).fetchall()
+        cursor = self._get_lims_cursor()
+        cursor.execute(query)
+        rows = cursor.fetchall()
         if rows and rows[0][0] > 1:
             return True
         return False
