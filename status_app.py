@@ -1,6 +1,7 @@
 """Main genomics-status web application."""
 
 import base64
+import csv
 import json
 import logging
 import re
@@ -490,6 +491,9 @@ class Application(tornado.web.Application):
         # Load sample classification patterns for demux sample info
         self._load_sample_classification_patterns()
 
+        # Load named indices from config directory
+        self.named_indices = self._load_named_indices(settings.get("config_dir", "."))
+
         # project summary - reports tab
         # Structure of the reports folder:
         # <reports_path>/
@@ -600,6 +604,61 @@ class Application(tornado.web.Application):
         self.short_index_threshold = config.get("short_single_index_threshold", 8)
         self.library_method_mapping = config.get("library_method_mapping", {})
 
+    def _load_named_indices(self, config_dir):
+        """Load named indices from CSV files in the named_indices directory.
+
+        Args:
+            config_dir: Path to the configuration directory
+
+        Returns:
+            Dictionary mapping file names to dictionaries of named index to list of sequence lists.
+            Each sequence list contains 1-2 items in order (i7, optionally i5).
+        """
+        named_indices = {}
+        named_indices_dir = Path(config_dir) / "named_indices"
+
+        if not named_indices_dir.exists():
+            logging.warning(f"Named indices directory not found: {named_indices_dir}")
+            return named_indices
+
+        # Read all CSV files in the directory
+        for csv_file in named_indices_dir.glob("*.csv"):
+            try:
+                file_key = csv_file.stem  # Get filename without extension
+                file_indices = {}
+
+                with csv_file.open("r") as f:
+                    reader = csv.reader(f)
+                    for row in reader:
+                        if row:  # Skip empty rows
+                            named_index = row[0]
+                            sequences = row[1:]
+
+                            # Validate sequence count (max 2: i7 and i5)
+                            if len(sequences) > 2:
+                                logging.warning(
+                                    f"Row for '{named_index}' in {csv_file.name} has {len(sequences)} sequences, "
+                                    f"expected max 2 (i7 and i5). Using only first 2."
+                                )
+                                sequences = sequences[:2]
+
+                            # Add to file_indices (named index can appear multiple times)
+                            if named_index in file_indices:
+                                file_indices[named_index].append(sequences)
+                            else:
+                                file_indices[named_index] = [sequences]
+
+                named_indices[file_key] = file_indices
+                logging.info(f"Loaded indices from {csv_file.name}")
+            except Exception as e:
+                logging.error(f"Error loading named indices from {csv_file}: {e}")
+
+        logging.info(
+            f"Loaded {len(named_indices)} named index files from {named_indices_dir}"
+        )
+
+        return named_indices
+
 
 if __name__ == "__main__":
     # Tornado built-in command line parsing. Auto configures logging
@@ -624,17 +683,28 @@ if __name__ == "__main__":
     define(
         "port", default=9761, type=int, help="The port that the server will listen to."
     )
+
+    define(
+        "config_dir",
+        default="~/conf",
+        type=str,
+        help="Path to the directory containing configuration files",
+    )
     # After parsing the command line, the command line flags are stored in tornado.options
     tornado.options.parse_command_line()
     logging_format = f"%(color)s[%(levelname)1.1s %(asctime)s %(module)s:%(lineno)d] [port:{options['port']}]%(end_color)s %(message)s"
     log_formatter = LogFormatter(fmt=logging_format, color=True)
     logging.getLogger().handlers[0].setFormatter(log_formatter)
 
+    # Configuration directory path from command line
+    config_dir = Path(options["config_dir"]).expanduser()
+
     # Load configuration file
     with open("settings.yaml") as settings_file:
         server_settings = yaml.full_load(settings_file)
 
     server_settings["Testing mode"] = options["testing_mode"]
+    server_settings["config_dir"] = config_dir
 
     if "cookie_secret" not in server_settings:
         cookie_secret = base64.b64encode(uuid.uuid4().bytes + uuid.uuid4().bytes)
