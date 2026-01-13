@@ -513,6 +513,9 @@ class DemuxSampleInfoDataHandler(SafeHandler):
             # Parse the request body
             post_data = tornado.escape.json_decode(self.request.body)
 
+            # Check for dry-run mode
+            dry_run = self.get_argument("dry_run", "false").lower() == "true"
+
             # Validate input data
             is_valid, error_message, metadata, uploaded_lims_info = (
                 self._validate_post_data(post_data)
@@ -530,12 +533,29 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                 flowcell_id, metadata, uploaded_lims_info, timestamp
             )
 
+            # If dry-run, return the document without saving
+            if dry_run:
+                self.set_status(200)
+                self.set_header("Content-type", "application/json")
+                self.write(
+                    json.dumps(
+                        {
+                            "status": "dry_run",
+                            "message": "Dry run - document not saved to database",
+                            "flowcell_id": flowcell_id,
+                            "timestamp": timestamp,
+                            "document": document,
+                        }
+                    )
+                )
+                return
+
             # Check if document already exists for this flowcell
             try:
                 view_result = self.application.cloudant.post_view(
                     db="demux_sample_info",
-                    ddoc="demux_sample_info",
-                    view="by_flowcell",
+                    ddoc="info",
+                    view="flowcell_id",
                     key=flowcell_id,
                 ).get_result()
 
