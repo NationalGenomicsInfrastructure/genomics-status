@@ -8,6 +8,7 @@ const vProjectCreationMain = {
             /* Maybe some of these attributes are more suitable in the vProjectCreationForm component 
             but it would be quite a lot of work to move it.*/
             conditionalLogic: [],
+            fetched_data: {},
             formData: {},
             forms: [],
             jsonForm: {},
@@ -378,6 +379,10 @@ const vProjectCreationForm = {
             const form_metadata = {};
             form_metadata['title'] = this.$root.jsonForm['title'];
             form_metadata['version'] = this.$root.jsonForm['version'];
+            const matchingResearcher = this.$root.fetched_data['researcher_name'].find(
+                researcher => researcher.researcher_name === form_data['researcher_name'].trim()
+            );
+            form_data['researcher_id'] = matchingResearcher ? matchingResearcher.id : '';
             axios
                 .post('/api/v1/submit_project_creation_form', {
                     form_data: form_data,
@@ -608,95 +613,26 @@ const vFormField = {
         }
     },
     methods: {
-        async onInputChange(event) {
-            // cancel previous request if it exists
-            if (this.cancelTokenSource) {
-                this.cancelTokenSource.cancel();
-            }
-
-            // Clear previous debounce timeout
-            if (this.inputChangeTimeout) {
-                clearTimeout(this.inputChangeTimeout);
-            }
-
-            this.cancelTokenSource = axios.CancelToken.source();
-
-            const newValue = event.target.value;
-            this.suggestionsLoading = true;
-            if (!newValue) {
-                this.suggestions = [];
-                this.showSuggestions = false;
-                this.suggestionsLoading = false;
-                return;
-            }
-
-            // Call api to fetch suggestions
-            let url = `/api/v1/project_count_details?detail_key=${this.identifier}&search_string=${newValue}`;
-            this.inputChangeTimeout = setTimeout(() => {
-                axios
-                    .get(url, { cancelToken: this.cancelTokenSource.token })
-                    .then(response => {
-                        this.suggestions = Object.entries(
-                            response.data
-                        ).sort((a, b) => b[1] - a[1])
-                        .slice(0, 10);
-                        this.showSuggestions = true;
-                        this.suggestionsLoading = false;
-                    })
-                    .catch(error => {
-                        if (axios.isCancel(error)) {
-                            console.log('Request cancelled:', error.message);
-                        } else {
-                            // Not important enough to annoy the user with an alert
-                            console.log('Error fetching suggestions. Please try again or contact a system adminstrator.');
-                            console.log(error)
-                        }
-                    })
-                }, 500);
-        },
-        selectOption(event, option) {
-            // Only proceed if left mouse button is clicked
-            if (event.button === 0) {
-                this.$root.formData[this.identifier] = option;
-                this.showSuggestions = false;
-                console.log("Inside button === 0")
-            }
-        },
-        hideSuggestions(){
-            setTimeout(() => {
-                this.showSuggestions = false;
-            }, 2000)
-        },
         onCustomDatalistChange() {
-            /* Special hardcoded behaviour for user_account and researcher name */
+            /* Special hardcoded behaviour for user_account */
             if(this.identifier === 'user_account'){
                 const val = this.$root.formData[this.identifier];
-                // Match against first element of each suggestion tuple
-                if (this.suggestions.some(s => s[0] === val)) {
-                    this.fetch_data(this.identifier);
-                    const current_year = new Date().getFullYear().toString().slice(-2);
-                    this.$root.formData["project_name"] = `${val}_${current_year}`;
-                    this.userAccounts[val]['year'] < current_year ?
-                        this.$root.formData["project_name"] += `_01` :
-                        this.$root.formData["project_name"] += `_0${parseInt(this.userAccounts[val]['latest_ordinal']) + 1}`;
-                }
-                else{
-                    this.$root.formData["fetched_data"]["researcher_name"] = [];
-                    this.update_field_schema_with_fetched_data("researcher_name", []);
+                if(val === ''){
                     this.$root.formData["project_name"] = '';
+                    return;
                 }
+                const current_year = new Date().getFullYear().toString().slice(-2);
+                // Match against first element of each suggestion tuple
+                const is_in_suggestions = this.suggestions.some(s => s[0] === val);
+                let ordinal = 1;
+                if (is_in_suggestions){
+                    this.fetch_data(this.identifier);
+                    if (this.userAccounts[val]['year'] == current_year){
+                        ordinal = parseInt(this.userAccounts[val]['latest_ordinal']) + 1;
+                    }
+                }
+                this.$root.formData["project_name"] = `${val}_${current_year}_${String(ordinal).padStart(2, '0')}`;
             }
-        },
-        update_field_schema_with_fetched_data(field_identifier, fetched_data) {
-            const fieldSchema = this.$root.jsonSchema.properties[field_identifier];
-            if(!fetched_data || fetched_data.length === 0){
-                delete fieldSchema.enum;
-                return;
-            }
-            if (!fieldSchema.enum) {
-                fieldSchema.enum = [];
-            }
-            fieldSchema.enum = fetched_data.map(item => item[field_identifier]);
         },
         fetch_data(field_identifier) {
             let url = `/api/v1/project_creation_data_fetch`;
@@ -711,11 +647,7 @@ const vFormField = {
                         const result = response.data["result"];
                         const display_in_field = response.data["field"]
                         if(Array.isArray(result) && result.length > 0){
-                            if (this.$root.formData["fetched_data"] === undefined) {
-                                this.$root.formData["fetched_data"] = {};
-                            }
-                            this.$root.formData["fetched_data"][display_in_field] = result;
-                            this.update_field_schema_with_fetched_data(display_in_field, result);
+                            this.$root.fetched_data[display_in_field] = result;
                         }
                     }
                 })
@@ -748,34 +680,51 @@ const vFormField = {
         }
 
         if (this.formType === 'custom_datalist') {
-            let url = `/api/v1/project_count_details?detail_key=${this.identifier}`;
-            this.inputChangeTimeout = setTimeout(() => {
-                axios
-                    .get(url,)
-                    .then(response => {
-                        if(this.identifier === 'user_account'){
-                            this.suggestions = Object.entries(response.data).map(([key, value]) => 
-                                [key, `${value.year}_${value.latest_ordinal}`]);
-                            this.userAccounts = response.data
-                        }
-                        else{
-                            this.suggestions = Object.entries(
-                                response.data
-                            ).sort((a, b) => b[1] - a[1])
-                        }
-                        this.showSuggestions = true;
-                        this.suggestionsLoading = false;
-                    })
-                    .catch(error => {
-                        if (axios.isCancel(error)) {
-                            console.log('Request cancelled:', error.message);
-                        } else {
-                            // Not important enough to annoy the user with an alert
-                            console.log('Error fetching suggestions. Please try again or contact a system adminstrator.');
-                            console.log(error)
-                        }
-                    })
-                }, 500);
+            if(this.identifier!=='researcher_name'){
+                let url = `/api/v1/project_count_details?detail_key=${this.identifier}`;
+                    this.inputChangeTimeout = setTimeout(() => {
+                        axios
+                            .get(url,)
+                            .then(response => {
+                                if(this.identifier === 'user_account'){
+                                    this.suggestions = Object.entries(response.data).map(([key, value]) =>
+                                        [key, `${value.year}_${value.latest_ordinal}`]);
+                                    this.userAccounts = response.data
+                                }
+                                else{
+                                    this.suggestions = Object.entries(
+                                        response.data
+                                    ).sort((a, b) => b[1] - a[1])
+                                }
+                                this.showSuggestions = true;
+                                this.suggestionsLoading = false;
+                            })
+                            .catch(error => {
+                                if (axios.isCancel(error)) {
+                                    console.log('Request cancelled:', error.message);
+                                } else {
+                                    // Not important enough to annoy the user with an alert
+                                    console.log('Error fetching suggestions. Please try again or contact a system adminstrator.');
+                                    console.log(error)
+                                }
+                            })
+                        }, 500);
+            }
+        }
+    },
+    watch: {
+        '$root.fetched_data.researcher_name': {
+            deep: true,
+            handler(newVal) {
+                // Whenever formData changes, we can perform actions if needed
+                // For now, we don't need to do anything here
+                if(this.identifier === 'researcher_name'){
+                    this.suggestions = newVal.map((item) =>
+                        [item.researcher_name, '']
+                    );
+                    this.showSuggestions = true;
+                }
+            }
         }
     },
     template:
@@ -832,7 +781,7 @@ const vFormField = {
                                 :key="index"
                                 :value="option[0]"
                             >
-                                {{option[0]}} ({{option[1]}})
+                                {{option[0]}} {{ option[1] ? ' (' + option[1] + ')' : '' }}
                             </option>
                         </datalist>
                     </div>
