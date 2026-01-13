@@ -375,8 +375,6 @@ class DemuxSampleInfoDataHandler(SafeHandler):
             calculated_lanes[lane] = {"sample_rows": {}}
 
             for sample_in_lane in samples_in_lane:
-                sample_uuid = str(uuid.uuid4())
-
                 # Get library method for the project
                 project_name = sample_in_lane.get("sample_project", "")
                 library_method = (
@@ -390,37 +388,82 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                     sample_in_lane, library_method
                 )
 
-                calculated_lanes[lane]["sample_rows"][sample_uuid] = {
-                    "sample_id": sample_in_lane["sample_id"],
-                    "last_modified": timestamp,
-                    "sample_type": sample_classification["sample_type"],
-                    "index_length": sample_classification["index_length"],
-                    "umi_config": sample_classification["umi_config"],
-                    "library_method": library_method or "",
-                    "settings": {
-                        timestamp: {
-                            "control": sample_in_lane["control"],
-                            "description": sample_in_lane["description"],
-                            "flowcell_id": sample_in_lane["flowcell_id"],
-                            "index_1": sample_in_lane["index_1"],
-                            "index_2": sample_in_lane["index_2"],
-                            "lane": sample_in_lane["lane"],
-                            "mask_short_reads": 0,
-                            "minimum_trimmed_read_length": 0,
-                            "named_index": sample_in_lane["index_1"],
-                            "operator": sample_in_lane["operator"],
-                            "override_cycles": "",
-                            "recipe": sample_in_lane["recipe"],
-                            "sample_name": sample_in_lane["sample_name"],
-                            "sample_project": sample_in_lane["sample_project"],
-                            "sample_ref": sample_in_lane["sample_ref"],
-                            "sample_type": sample_classification["sample_type"],
-                            "index_length": sample_classification["index_length"],
-                            "umi_config": sample_classification["umi_config"],
-                            "library_method": library_method or "",
-                        }
-                    },
+                # Check if we need to expand named indices
+                named_index = sample_in_lane["index_1"]
+                sample_type = sample_classification["sample_type"]
+                sequences_to_create = []
+
+                # Map sample types to named indices dictionaries
+                named_indices_mapping = {
+                    "10X_SINGLE": "Chromium_10X_indexes",
+                    "10X_DUAL": "Chromium_10X_indexes",
+                    "SMARTSEQ": "Smart-seq3",
                 }
+
+                # Check if this sample type should use named indices
+                if sample_type in named_indices_mapping:
+                    dict_key = named_indices_mapping[sample_type]
+                    named_indices_dict = self.application.named_indices.get(
+                        dict_key, {}
+                    )
+
+                    if named_index in named_indices_dict:
+                        # Named index found - use the sequences from the dictionary
+                        sequences_to_create = named_indices_dict[named_index]
+                    else:
+                        # Named index not found - treat as ordinary sample with single entry
+                        sequences_to_create = [
+                            [named_index, sample_in_lane.get("index_2", "")]
+                        ]
+                else:
+                    # Not a named index type - use original indices
+                    sequences_to_create = [
+                        [named_index, sample_in_lane.get("index_2", "")]
+                    ]
+
+                # Create a sample row for each sequence entry
+                for sequences in sequences_to_create:
+                    sample_uuid = str(uuid.uuid4())
+
+                    # Unpack sequences (can be 1 or 2 elements)
+                    index_1 = sequences[0] if len(sequences) > 0 else named_index
+                    index_2 = (
+                        sequences[1]
+                        if len(sequences) > 1
+                        else sample_in_lane.get("index_2", "")
+                    )
+
+                    calculated_lanes[lane]["sample_rows"][sample_uuid] = {
+                        "sample_id": sample_in_lane["sample_id"],
+                        "last_modified": timestamp,
+                        "sample_type": sample_classification["sample_type"],
+                        "index_length": sample_classification["index_length"],
+                        "umi_config": sample_classification["umi_config"],
+                        "library_method": library_method or "",
+                        "settings": {
+                            timestamp: {
+                                "control": sample_in_lane["control"],
+                                "description": sample_in_lane["description"],
+                                "flowcell_id": sample_in_lane["flowcell_id"],
+                                "index_1": index_1,
+                                "index_2": index_2,
+                                "lane": sample_in_lane["lane"],
+                                "mask_short_reads": 0,
+                                "minimum_trimmed_read_length": 0,
+                                "named_index": named_index,
+                                "operator": sample_in_lane["operator"],
+                                "override_cycles": "",
+                                "recipe": sample_in_lane["recipe"],
+                                "sample_name": sample_in_lane["sample_name"],
+                                "sample_project": sample_in_lane["sample_project"],
+                                "sample_ref": sample_in_lane["sample_ref"],
+                                "sample_type": sample_classification["sample_type"],
+                                "index_length": sample_classification["index_length"],
+                                "umi_config": sample_classification["umi_config"],
+                                "library_method": library_method or "",
+                            }
+                        },
+                    }
 
         return calculated_lanes
 
