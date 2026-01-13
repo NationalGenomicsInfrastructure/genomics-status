@@ -530,22 +530,64 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                 flowcell_id, metadata, uploaded_lims_info, timestamp
             )
 
-            # TODO: Store document in database
-            # For now, just return success with the created document
+            # Check if document already exists for this flowcell
+            try:
+                view_result = self.application.cloudant.post_view(
+                    db="demux_sample_info",
+                    ddoc="demux_sample_info",
+                    view="by_flowcell",
+                    key=flowcell_id,
+                ).get_result()
 
-            self.set_status(201)
-            self.set_header("Content-type", "application/json")
-            self.write(
-                json.dumps(
-                    {
-                        "status": "success",
-                        "message": "Demux sample info data received and processed",
-                        "flowcell_id": flowcell_id,
-                        "timestamp": timestamp,
-                        "document": document,
-                    }
+                existing_rows = view_result.get("rows", [])
+
+                if existing_rows:
+                    # Document already exists - return error
+                    self.set_status(409)  # Conflict
+                    self.write(
+                        json.dumps(
+                            {
+                                "error": f"Demux sample info already exists for flowcell {flowcell_id}",
+                                "flowcell_id": flowcell_id,
+                            }
+                        )
+                    )
+                    return
+
+                # Document doesn't exist - create new one
+                response = self.application.cloudant.post_document(
+                    db="demux_sample_info", document=document
+                ).get_result()
+
+                if not response.get("ok"):
+                    self.set_status(500)
+                    self.write(
+                        json.dumps(
+                            {
+                                "error": "Failed to save document to database",
+                                "response": response,
+                            }
+                        )
+                    )
+                    return
+
+                self.set_status(201)
+                self.set_header("Content-type", "application/json")
+                self.write(
+                    json.dumps(
+                        {
+                            "status": "success",
+                            "message": "Demux sample info created successfully",
+                            "flowcell_id": flowcell_id,
+                            "timestamp": timestamp,
+                        }
+                    )
                 )
-            )
+
+            except Exception as db_error:
+                self.set_status(500)
+                self.write(json.dumps({"error": f"Database error: {str(db_error)}"}))
+                return
 
         except json.JSONDecodeError as e:
             self.set_status(400)
