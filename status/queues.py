@@ -2,30 +2,19 @@ import ast
 import json
 import logging
 
-import psycopg2
 from dateutil.parser import parse
 from genologics_sql import queries as geno_queries
 from genologics_sql import utils as geno_utils
 
 from status.running_notes import LatestRunningNoteHandler
-from status.util import SafeHandler
+from status.util import LIMSQueryBaseHandler, SafeHandler
 
 
-class QueuesBaseHandler(SafeHandler):
+class QueuesBaseHandler(LIMSQueryBaseHandler):
     """Base class that other queue handlers should inherit from.
 
     Contains common methods and properties used across different queue handlers.
     """
-
-    def _get_lims_cursor(self):
-        """Return a cursor to the LIMS database."""
-        connection = psycopg2.connect(
-            user=self.application.lims_conf["username"],
-            host=self.application.lims_conf["url"],
-            database=self.application.lims_conf["db"],
-            password=self.application.lims_conf["password"],
-        )
-        return connection.cursor()
 
     def get_proj_details(self, project_id):
         proj_doc = self.application.cloudant.post_view(
@@ -61,10 +50,8 @@ class QueuesBaseHandler(SafeHandler):
 
     def get_control_names(self):
         """Fetches control names from the database."""
-        cursor = self._get_lims_cursor()
         query = "SELECT name FROM controltype;"
-        cursor.execute(query)
-        rows = cursor.fetchall()
+        rows = self.get_query_result(query)
         return [row[0] for row in rows]
 
     def fetch_queue_definitions(self, queue):
