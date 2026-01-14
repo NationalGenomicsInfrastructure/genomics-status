@@ -78,7 +78,6 @@ class TestDemuxSampleInfoPost(AsyncHTTPTestCase):
         self.test_data = {
             "metadata": {
                 "num_lanes": 2,
-                "instrument_id": "A00621",
                 "run_setup": "2x151",
                 "setup_lims_step_id": "24-123456"
             },
@@ -137,7 +136,7 @@ class TestDemuxSampleInfoPost(AsyncHTTPTestCase):
         )
         
         self.assertFalse(is_valid)
-        self.assertIn("instrument_id", error_msg)
+        self.assertIn("run_setup", error_msg)
 
     def test_classify_sample_type_10x_dual(self):
         """Test classification of 10X dual-index samples (SI-TS-*)."""

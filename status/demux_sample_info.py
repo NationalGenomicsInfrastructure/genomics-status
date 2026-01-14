@@ -38,14 +38,19 @@ class DemuxSampleInfoDataHandler(SafeHandler):
             ).get_result()["rows"]
             # should be only one row, if not - will overwrite
             for row in view:
-                self._project_names[project_name] = row["value"]
-        return self._project_names.get(project_name, "")
+                self._project_names[project_name] = {
+                    "doc_id": row["id"],
+                    "project_id": row["value"],
+                }
+        return self._project_names.get(project_name, {}).get(
+            "project_id"
+        ), self._project_names.get(project_name, {}).get("doc_id")
 
     def _get_project_library_method(self, project_name):
         """Look up library construction method for a project.
 
         Args:
-            project_name: Project name (e.g., "P12345")
+            project_name: Project name (e.g., "A.Usersson_23_01")
 
         Returns:
             str: Library construction method or empty string if not found
@@ -54,12 +59,12 @@ class DemuxSampleInfoDataHandler(SafeHandler):
             self._project_library_methods = {}
 
         if project_name not in self._project_library_methods:
-            try:
-                project_id = self._get_project_id_by_name(project_name)
-                if project_id:
+            project_id, doc_id = self._get_project_id_by_name(project_name)
+            if project_id and doc_id:
+                try:
                     # Fetch the project document
                     project_doc = self.application.cloudant.get_document(
-                        db="projects", doc_id=project_id
+                        db="projects", doc_id=doc_id
                     ).get_result()
 
                     # Extract library construction method
@@ -67,13 +72,14 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                         "library_construction_method", ""
                     )
                     self._project_library_methods[project_name] = library_method
-                else:
+                except Exception as e:
+                    # If we can't fetch the project, log and continue
+                    print(
+                        f"Warning: Could not fetch library method for project {project_name}: {e}"
+                    )
                     self._project_library_methods[project_name] = ""
-            except Exception as e:
-                # If we can't fetch the project, log and continue
-                print(
-                    f"Warning: Could not fetch library method for project {project_name}: {e}"
-                )
+            else:
+                # Project not found in database
                 self._project_library_methods[project_name] = ""
 
         return self._project_library_methods[project_name]
@@ -161,7 +167,6 @@ class DemuxSampleInfoDataHandler(SafeHandler):
         # Validate metadata fields
         required_metadata_fields = [
             "num_lanes",
-            "instrument_id",
             "run_setup",
             "setup_lims_step_id",
         ]
@@ -222,7 +227,7 @@ class DemuxSampleInfoDataHandler(SafeHandler):
             library_method: Optional library construction method from project
 
         Returns:
-            dict: Contains sample_type, index_length, umi_config
+            dict: Contains sample_type, index_length, umi_config, config_source, named_indices
         """
         # Get patterns from application
         sample_patterns = self.application.sample_patterns
@@ -241,6 +246,8 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                 "sample_type": "control",
                 "index_length": [len(index1), len(index2)],
                 "umi_config": None,  # No UMI for controls
+                "config_source": "control_patterns",
+                "named_indices": None,
             }
 
         # Check library method mapping first (if available)
@@ -262,6 +269,8 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                 "sample_type": sample_type,
                 "index_length": index_length,
                 "umi_config": umi_config,
+                "config_source": f"library_method_mapping.{library_method}",
+                "named_indices": mapped_config.get("named_indices", None),
             }
 
         # Classify by index patterns (order matters - most specific first)
@@ -273,6 +282,8 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                 "sample_type": config["sample_type"],
                 "index_length": config["index_length"],
                 "umi_config": config["umi_config"],
+                "config_source": "patterns.tenx_single",
+                "named_indices": config.get("named_indices", None),
             }
 
         # 10X dual-index sample (e.g., Spatial Transcriptomics)
@@ -282,6 +293,8 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                 "sample_type": config["sample_type"],
                 "index_length": config["index_length"],
                 "umi_config": config["umi_config"],
+                "config_source": "patterns.tenx_dual",
+                "named_indices": config.get("named_indices", None),
             }
 
         # IDT UMI sample - indices contain N for UMI positions
@@ -309,6 +322,8 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                     len(index2.replace("N", "")),
                 ],
                 "umi_config": umi_config,
+                "config_source": "patterns.idt_umi",
+                "named_indices": config.get("named_indices", None),
             }
 
         # Smart-seq sample (format: SMARTSEQ-<plate>)
@@ -318,6 +333,8 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                 "sample_type": config["sample_type"],
                 "index_length": config["index_length"],
                 "umi_config": config["umi_config"],
+                "config_source": "patterns.smartseq",
+                "named_indices": config.get("named_indices", None),
             }
 
         # No-index sample
@@ -327,6 +344,8 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                 "sample_type": config["sample_type"],
                 "index_length": config["index_length"],
                 "umi_config": config["umi_config"],
+                "config_source": "patterns.noindex",
+                "named_indices": config.get("named_indices", None),
             }
 
         # Default: ordinary or short single index
@@ -340,6 +359,10 @@ class DemuxSampleInfoDataHandler(SafeHandler):
             "sample_type": "short_single_index" if is_short_single else "ordinary",
             "index_length": index_length,
             "umi_config": None,  # No UMI for ordinary samples
+            "config_source": "default.short_single_index"
+            if is_short_single
+            else "default.ordinary",
+            "named_indices": None,
         }
 
     def _group_samples_by_lane(self, uploaded_lims_info):
@@ -375,13 +398,18 @@ class DemuxSampleInfoDataHandler(SafeHandler):
             calculated_lanes[lane] = {"sample_rows": {}}
 
             for sample_in_lane in samples_in_lane:
-                # Get library method for the project
-                project_name = sample_in_lane.get("sample_project", "")
-                library_method = (
-                    self._get_project_library_method(project_name)
-                    if project_name
-                    else None
+                # Get library method and project_id for the project
+                # Convert sample_project format (replace __ with .)
+                sample_project = sample_in_lane.get("sample_project", "")
+                project_name = (
+                    sample_project.replace("__", ".", 1) if sample_project else ""
                 )
+                if project_name:
+                    library_method = self._get_project_library_method(project_name)
+                    project_id, _ = self._get_project_id_by_name(project_name)
+                else:
+                    library_method = None
+                    project_id = ""
 
                 # Classify the sample type (returns dict with sample_type, index_length, umi_config)
                 sample_classification = self._classify_sample_type(
@@ -390,21 +418,13 @@ class DemuxSampleInfoDataHandler(SafeHandler):
 
                 # Check if we need to expand named indices
                 named_index = sample_in_lane["index_1"]
-                sample_type = sample_classification["sample_type"]
+                named_indices_file = sample_classification.get("named_indices")
                 sequences_to_create = []
 
-                # Map sample types to named indices dictionaries
-                named_indices_mapping = {
-                    "10X_SINGLE": "Chromium_10X_indexes",
-                    "10X_DUAL": "Chromium_10X_indexes",
-                    "SMARTSEQ": "Smart-seq3",
-                }
-
-                # Check if this sample type should use named indices
-                if sample_type in named_indices_mapping:
-                    dict_key = named_indices_mapping[sample_type]
+                # Check if this sample should use named indices expansion
+                if named_indices_file:
                     named_indices_dict = self.application.named_indices.get(
-                        dict_key, {}
+                        named_indices_file, {}
                     )
 
                     if named_index in named_indices_dict:
@@ -416,7 +436,7 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                             [named_index, sample_in_lane.get("index_2", "")]
                         ]
                 else:
-                    # Not a named index type - use original indices
+                    # No named indices file specified - use original indices
                     sequences_to_create = [
                         [named_index, sample_in_lane.get("index_2", "")]
                     ]
@@ -433,10 +453,7 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                         else sample_in_lane.get("index_2", "")
                     )
 
-                    # Convert sample_project for display (replace __ with .)
-                    sample_project = sample_in_lane["sample_project"]
-                    project_name = sample_project.replace("__", ".", 1)
-
+                    # project_name and project_id were already retrieved earlier in the function
                     calculated_lanes[lane]["sample_rows"][sample_uuid] = {
                         "sample_id": sample_in_lane["sample_id"],
                         "last_modified": timestamp,
@@ -445,6 +462,8 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                         "umi_config": sample_classification["umi_config"],
                         "library_method": library_method or "",
                         "project_name": project_name,
+                        "project_id": project_id or "",
+                        "config_source": sample_classification["config_source"],
                         "settings": {
                             timestamp: {
                                 "control": sample_in_lane["control"],
@@ -465,7 +484,9 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                                 "sample_type": sample_classification["sample_type"],
                                 "index_length": sample_classification["index_length"],
                                 "umi_config": sample_classification["umi_config"],
+                                "config_source": sample_classification["config_source"],
                                 "library_method": library_method or "",
+                                "project_id": project_id or "",
                             }
                         },
                     }
