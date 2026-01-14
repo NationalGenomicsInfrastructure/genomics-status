@@ -1,0 +1,194 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://genomics-status.scilifelab.se/schemas/sample_classification_patterns.schema.json",
+  "title": "Sample Classification Patterns Configuration",
+  "description": "Configuration schema for demultiplexing sample classification patterns, library method mappings, and UMI configurations",
+  "type": "object",
+  "required": ["patterns", "control_patterns", "short_single_index_threshold"],
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "Reference to the JSON schema for validation"
+    },
+    "patterns": {
+      "type": "object",
+      "description": "Dictionary of sample classification patterns with regex matching and configuration",
+      "patternProperties": {
+        "^[a-z_]+$": {
+          "type": "object",
+          "properties": {
+            "regex": {
+              "type": "string",
+              "description": "Regular expression pattern to match sample indices or identifiers"
+            },
+            "description": {
+              "$ref": "#/$defs/sampleConfig/properties/description"
+            },
+            "sample_type": {
+              "$ref": "#/$defs/sampleConfig/properties/sample_type"
+            },
+            "index_length": {
+              "$ref": "#/$defs/sampleConfig/properties/index_length"
+            },
+            "umi_config": {
+              "$ref": "#/$defs/sampleConfig/properties/umi_config"
+            },
+            "calculate_lengths": {
+              "$ref": "#/$defs/sampleConfig/properties/calculate_lengths"
+            },
+            "named_indices": {
+              "$ref": "#/$defs/sampleConfig/properties/named_indices"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "library_method_mapping": {
+      "type": "object",
+      "description": "Mapping of library preparation methods to their sample type configurations",
+      "patternProperties": {
+        ".*": {
+          "type": "object",
+          "required": ["sample_type"],
+          "properties": {
+            "description": {
+              "$ref": "#/$defs/sampleConfig/properties/description"
+            },
+            "sample_type": {
+              "$ref": "#/$defs/sampleConfig/properties/sample_type"
+            },
+            "index_length": {
+              "$ref": "#/$defs/sampleConfig/properties/index_length"
+            },
+            "umi_config": {
+              "$ref": "#/$defs/sampleConfig/properties/umi_config"
+            },
+            "calculate_lengths": {
+              "$ref": "#/$defs/sampleConfig/properties/calculate_lengths"
+            },
+            "named_indices": {
+              "$ref": "#/$defs/sampleConfig/properties/named_indices"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "control_patterns": {
+      "type": "array",
+      "description": "List of lowercase strings to match in sample names to identify control samples",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z_]+$"
+      },
+      "uniqueItems": true
+    },
+    "short_single_index_threshold": {
+      "type": "integer",
+      "description": "Maximum length in base pairs for a single index to be classified as 'short_single_index'",
+      "minimum": 1,
+      "maximum": 20
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "sampleConfig": {
+      "type": "object",
+      "description": "Shared sample configuration properties for patterns and library methods",
+      "properties": {
+        "description": {
+          "type": "string",
+          "description": "Human-readable description"
+        },
+        "sample_type": {
+          "type": "string",
+          "description": "The sample type classification (e.g., 10X_SINGLE, 10X_DUAL, SMARTSEQ, IDT_UMI, NOINDEX, ordinary)",
+          "pattern": "^[A-Z0-9_]+$"
+        },
+        "index_length": {
+          "type": "array",
+          "description": "Array of [i7_length, i5_length] for index lengths",
+          "items": {
+            "oneOf": [
+              {
+                "type": "integer",
+                "minimum": 0
+              },
+              {
+                "type": "string",
+                "enum": ["calculated"]
+              }
+            ]
+          },
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "umi_config": {
+          "oneOf": [
+            {
+              "type": "null",
+              "description": "No UMI present"
+            },
+            {
+              "type": "object",
+              "description": "UMI configuration for each read component",
+              "properties": {
+                "i7": {
+                  "$ref": "#/$defs/umiComponent"
+                },
+                "i5": {
+                  "$ref": "#/$defs/umiComponent"
+                },
+                "R1": {
+                  "$ref": "#/$defs/umiComponent"
+                },
+                "R2": {
+                  "$ref": "#/$defs/umiComponent"
+                }
+              },
+              "additionalProperties": false
+            }
+          ]
+        },
+        "calculate_lengths": {
+          "type": "boolean",
+          "description": "Whether to calculate index/UMI lengths dynamically from the sample data"
+        },
+        "named_indices": {
+          "type": "string",
+          "description": "Name of the named indices file (without .csv extension) to use for expanding this configuration"
+        }
+      }
+    },
+    "umiComponent": {
+      "type": "object",
+      "description": "UMI configuration for a single read component (i7, i5, R1, or R2)",
+      "required": ["position", "length"],
+      "properties": {
+        "position": {
+          "type": "string",
+          "description": "Position of the UMI in the read",
+          "enum": ["start", "end"]
+        },
+        "length": {
+          "oneOf": [
+            {
+              "type": "integer",
+              "description": "Fixed UMI length in base pairs",
+              "minimum": 0
+            },
+            {
+              "type": "string",
+              "description": "Dynamically calculated UMI length",
+              "enum": ["calculated"]
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}
