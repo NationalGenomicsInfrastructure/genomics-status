@@ -433,6 +433,10 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                         else sample_in_lane.get("index_2", "")
                     )
 
+                    # Convert sample_project for display (replace __ with .)
+                    sample_project = sample_in_lane["sample_project"]
+                    project_name = sample_project.replace("__", ".", 1)
+
                     calculated_lanes[lane]["sample_rows"][sample_uuid] = {
                         "sample_id": sample_in_lane["sample_id"],
                         "last_modified": timestamp,
@@ -440,6 +444,7 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                         "index_length": sample_classification["index_length"],
                         "umi_config": sample_classification["umi_config"],
                         "library_method": library_method or "",
+                        "project_name": project_name,
                         "settings": {
                             timestamp: {
                                 "control": sample_in_lane["control"],
