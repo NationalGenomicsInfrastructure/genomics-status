@@ -47,7 +47,9 @@ const vDemuxSampleInfoEditor = {
             editModalLane: null,
             editModalUuid: null,
             editModalIsNew: false,
-            editFormData: {}
+            editFormData: {},
+            samplePresets: null,  // Sample classification presets
+            selectedPreset: ''  // Currently selected preset
         }
     },
     computed: {
@@ -275,6 +277,40 @@ const vDemuxSampleInfoEditor = {
         }
     },
     methods: {
+        fetchSamplePresets() {
+            // Fetch sample classification presets from the API
+            if (this.samplePresets) return; // Already loaded
+
+            axios.get('/api/v1/sample_classification_presets')
+                .then(response => {
+                    this.samplePresets = response.data;
+                })
+                .catch(error => {
+                    console.error('Failed to load sample presets:', error);
+                });
+        },
+        applyPreset() {
+            // Apply selected preset to the form
+            if (!this.selectedPreset || !this.samplePresets) return;
+
+            // Look for preset in patterns first, then library methods
+            const preset = this.samplePresets.patterns[this.selectedPreset] ||
+                this.samplePresets.library_methods[this.selectedPreset];
+
+            if (preset) {
+                // Update recipe based on index_length if available
+                if (preset.index_length && Array.isArray(preset.index_length)) {
+                    const [i7, i5] = preset.index_length;
+                    if (i7 > 0 && i5 > 0) {
+                        this.editFormData.recipe = `${i7}-${i5}`;
+                    } else if (i7 > 0) {
+                        this.editFormData.recipe = `${i7}`;
+                    }
+                }
+
+                // Note: We don't set index_1/index_2 as those are specific to each sample
+            }
+        },
         fetchDemuxInfo() {
             // Clear previous errors
             this.error_messages = [];
@@ -522,6 +558,10 @@ const vDemuxSampleInfoEditor = {
         },
         openEditModalForNewSample() {
             // Open edit modal for a new sample (called when add_sample is selected)
+            // Load presets if not already loaded
+            this.fetchSamplePresets();
+            this.selectedPreset = '';  // Reset preset selection
+
             const newSampleId = this.nextSampleId;
             const lane = this.bulkEditLane;
 
@@ -1190,6 +1230,39 @@ const vDemuxSampleInfoEditor = {
                                     <button type="button" class="btn-close" @click="closeEditModal"></button>
                                 </div>
                                 <div class="modal-body">
+                                    <!-- Preset Selector (only for new samples) -->
+                                    <div v-if="editModalIsNew && samplePresets" class="row mb-3">
+                                        <div class="col-12">
+                                            <div class="card bg-light">
+                                                <div class="card-body">
+                                                    <h6 class="card-title">Apply Sample Type Preset</h6>
+                                                    <div class="row align-items-end">
+                                                        <div class="col-md-8">
+                                                            <label for="preset_select" class="form-label">Select a preset to auto-fill recipe and named index fields:</label>
+                                                            <select class="form-select" id="preset_select" v-model="selectedPreset">
+                                                                <option value="">-- Select Preset --</option>
+                                                                <optgroup label="Sample Patterns">
+                                                                    <option v-for="(preset, key) in samplePresets.patterns" :key="key" :value="key">
+                                                                        {{ preset.description }} ({{ preset.sample_type }})
+                                                                    </option>
+                                                                </optgroup>
+                                                                <optgroup label="Library Methods" v-if="Object.keys(samplePresets.library_methods).length > 0">
+                                                                    <option v-for="(preset, key) in samplePresets.library_methods" :key="key" :value="key">
+                                                                        {{ preset.description }} ({{ preset.sample_type }})
+                                                                    </option>
+                                                                </optgroup>
+                                                            </select>
+                                                        </div>
+                                                        <div class="col-md-4">
+                                                            <button type="button" class="btn btn-primary" @click="applyPreset" :disabled="!selectedPreset">
+                                                                Apply Preset
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                     <div class="row">
                                         <div class="col-md-6 mb-3">
                                             <label for="edit_sample_id" class="form-label">Sample ID:</label>

@@ -639,3 +639,52 @@ class DemuxSampleInfoDataHandler(SafeHandler):
         except Exception as e:
             self.set_status(500)
             self.write(json.dumps({"error": f"Internal server error: {str(e)}"}))
+
+
+class SampleClassificationPresetsHandler(SafeHandler):
+    """Serves sample classification presets for the UI."""
+
+    def get(self):
+        """Return sample classification patterns as presets."""
+        try:
+            patterns = {}
+
+            # Extract relevant information from patterns
+            for key, pattern_data in self.application.sample_patterns.items():
+                config = pattern_data.get("config", {})
+                # Skip recipe pattern as it's not a sample type preset
+                if key == "recipe":
+                    continue
+
+                patterns[key] = {
+                    "name": key,
+                    "description": config.get("description", ""),
+                    "sample_type": config.get("sample_type"),
+                    "index_length": config.get("index_length"),
+                    "umi_config": config.get("umi_config"),
+                    "named_indices": config.get("named_indices"),
+                }
+
+            # Also include library method mappings
+            library_methods = {}
+            for (
+                method,
+                method_config,
+            ) in self.application.library_method_mapping.items():
+                library_methods[method] = {
+                    "name": method,
+                    "description": method_config.get("description", ""),
+                    "sample_type": method_config.get("sample_type"),
+                    "index_length": method_config.get("index_length"),
+                    "umi_config": method_config.get("umi_config"),
+                    "named_indices": method_config.get("named_indices"),
+                }
+
+            self.set_header("Content-type", "application/json")
+            self.write(
+                json.dumps({"patterns": patterns, "library_methods": library_methods})
+            )
+
+        except Exception as e:
+            self.set_status(500)
+            self.write(json.dumps({"error": f"Failed to load presets: {str(e)}"}))
