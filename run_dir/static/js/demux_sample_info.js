@@ -1,15 +1,18 @@
 const vDemuxSampleInfoEditor = {
     data() {
+        const config = window.STATUS_CONFIG || {};
         return {
+            limsUrl: config.lims_url || '',
             flowcell_id: '',
             demux_data: null,
             editedData: {},  // Stores edited settings per sample: { lane: { uuid: settings_object } }
             error_messages: [],
             loading: false,
             saving: false,
-            viewMode: 'calculated',  // 'uploaded', 'calculated'
+            viewMode: 'calculated',  // 'uploaded', 'calculated', 'grouped_named_index'
             selectedVersion: null,
             availableColumns: [
+                { key: 'lane', label: 'Lane' },
                 { key: 'sample_id', label: 'Sample ID' },
                 { key: 'sample_name', label: 'Sample Name' },
                 { key: 'sample_project', label: 'Sample Project' },
@@ -119,13 +122,46 @@ const vDemuxSampleInfoEditor = {
                     result[lane].push({
                         uuid: uuid,
                         sample_id: sample.sample_id,
-                        sample_type: sample.sample_type,
-                        config_source: sample.config_source,
                         project_name: sample.project_name,
                         project_id: sample.project_id,
-                        index_length: sample.index_length,
-                        umi_length: sample.umi_length,
-                        umi_config: sample.umi_config,
+                        last_modified: sample.last_modified,
+                        ...finalSettings
+                    });
+                });
+            });
+
+            return result;
+        },
+        calculatedSamplesByNamedIndex() {
+            // Group calculated samples by named_index across all lanes
+            if (!this.demux_data || !this.demux_data.calculated || !this.demux_data.calculated.lanes) {
+                return {};
+            }
+
+            const result = {};
+
+            Object.entries(this.calculatedLanes).forEach(([lane, laneData]) => {
+                Object.entries(laneData.sample_rows).forEach(([uuid, sample]) => {
+                    // Get the latest settings version
+                    const settingsVersions = Object.keys(sample.settings).sort().reverse();
+                    const latestSettings = sample.settings[settingsVersions[0]];
+
+                    // Check if there's an edited version for this sample
+                    const editedSettings = this.editedData[lane]?.[uuid];
+                    const finalSettings = editedSettings ? { ...latestSettings, ...editedSettings } : latestSettings;
+
+                    const namedIndex = finalSettings.named_index || 'No Named Index';
+
+                    if (!result[namedIndex]) {
+                        result[namedIndex] = [];
+                    }
+
+                    result[namedIndex].push({
+                        uuid: uuid,
+                        lane: lane,
+                        sample_id: sample.sample_id,
+                        project_name: sample.project_name,
+                        project_id: sample.project_id,
                         last_modified: sample.last_modified,
                         ...finalSettings
                     });
@@ -805,14 +841,19 @@ const vDemuxSampleInfoEditor = {
                                     <dt class="col-sm-3">Number of Lanes:</dt>
                                     <dd class="col-sm-9">{{ demux_data.metadata.num_lanes }}</dd>
 
-                                    <dt class="col-sm-3">Instrument ID:</dt>
-                                    <dd class="col-sm-9">{{ demux_data.metadata.instrument_id || 'N/A' }}</dd>
-
                                     <dt class="col-sm-3">Run Setup:</dt>
                                     <dd class="col-sm-9">{{ demux_data.metadata.run_setup || 'N/A' }}</dd>
 
                                     <dt class="col-sm-3">Setup LIMS Step ID:</dt>
-                                    <dd class="col-sm-9">{{ demux_data.metadata.setup_lims_step_id || 'N/A' }}</dd>
+                                    <dd class="col-sm-9">
+                                        <a v-if="demux_data.metadata.setup_lims_step_id && limsUrl"
+                                           :href="limsUrl + '/clarity/work-complete/' + demux_data.metadata.setup_lims_step_id"
+                                           target="_blank"
+                                           rel="noopener noreferrer">
+                                            {{ demux_data.metadata.setup_lims_step_id }}
+                                        </a>
+                                        <span v-else>{{ demux_data.metadata.setup_lims_step_id || 'N/A' }}</span>
+                                    </dd>
                                 </dl>
                             </div>
                         </div>
@@ -825,7 +866,16 @@ const vDemuxSampleInfoEditor = {
                                     :class="{ active: viewMode === 'calculated' }"
                                     @click.prevent="viewMode = 'calculated'"
                                     href="#">
-                                    Calculated Samples
+                                    By Lane
+                                </a>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <a
+                                    class="nav-link"
+                                    :class="{ active: viewMode === 'grouped_named_index' }"
+                                    @click.prevent="viewMode = 'grouped_named_index'"
+                                    href="#">
+                                    By Named Index
                                 </a>
                             </li>
                             <li class="nav-item" role="presentation">
@@ -985,6 +1035,110 @@ const vDemuxSampleInfoEditor = {
                                                 <td v-for="columnKey in visibleColumns" :key="columnKey"
                                                     :class="{ 'bg-info': isFieldEdited(lane, sample.uuid, columnKey) }"
                                                     :title="getEditTooltip(lane, sample.uuid, columnKey)">
+                                                    <code v-if="columnKey === 'index_1' || columnKey === 'index_2'">{{ formatCellValue(sample[columnKey], columnKey) }}</code>
+                                                    <span v-else>{{ formatCellValue(sample[columnKey], columnKey) }}</span>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            </div>
+
+                            <!-- Grouped by Named Index tab -->
+                            <div class="tab-pane fade" :class="{ 'show active': viewMode === 'grouped_named_index' }">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h3 class="mb-0">Calculated Samples (by Named Index)</h3>
+                                <div>
+                                    <button
+                                        class="btn btn-primary me-2"
+                                        @click="openBulkEditModal">
+                                        Bulk Edit Actions
+                                    </button>
+                                    <span v-if="hasChanges">
+                                        <button
+                                            class="btn btn-success me-2"
+                                            @click="saveChanges"
+                                            :disabled="saving">
+                                            <span v-if="saving" class="spinner-border spinner-border-sm me-2" role="status"></span>
+                                            {{ saving ? 'Saving...' : 'Save Changes' }}
+                                        </button>
+                                        <button
+                                            class="btn btn-secondary"
+                                            @click="discardChanges">
+                                            Discard Changes
+                                        </button>
+                                    </span>
+                                </div>
+                                </div>
+
+                            <!-- Column Configuration Menu -->
+                            <div class="card mt-3 mb-4">
+                                <div class="card-header" @click="columnConfigCollapsed = !columnConfigCollapsed" style="cursor: pointer;">
+                                    <h5 class="mb-0">
+                                        <i class="fa" :class="columnConfigCollapsed ? 'fa-caret-right' : 'fa-caret-down'"></i>
+                                        Column Configuration
+                                    </h5>
+                                </div>
+                                <div class="card-body" v-show="!columnConfigCollapsed">
+                                    <div class="row">
+                                        <div class="col-12">
+                                            <div class="mb-3">
+                                                <label class="form-label">Presets:</label>
+                                                <div class="btn-group" role="group">
+                                                    <input type="radio" class="btn-check" name="columnPreset2" id="presetDefault2" value="default" @change="applyColumnPreset('default')" autocomplete="off" checked>
+                                                    <label class="btn btn-outline-primary" for="presetDefault2">Default</label>
+
+                                                    <input type="radio" class="btn-check" name="columnPreset2" id="presetAll2" value="all" @change="applyColumnPreset('all')" autocomplete="off">
+                                                    <label class="btn btn-outline-primary" for="presetAll2">All</label>
+                                                </div>
+                                            </div>
+                                            <p class="text-muted mb-2">Select columns to display:</p>
+                                            <div class="d-flex flex-wrap gap-2">
+                                                <div v-for="column in availableColumns" :key="column.key" class="form-check form-check-inline">
+                                                    <input
+                                                        class="form-check-input"
+                                                        type="checkbox"
+                                                        :id="'col2-' + column.key"
+                                                        :value="column.key"
+                                                        :checked="isColumnVisible(column.key)"
+                                                        @change="toggleColumn(column.key)">
+                                                    <label class="form-check-label" :for="'col2-' + column.key">
+                                                        {{ column.label }}
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Tables per Named Index -->
+                            <div v-for="(sample_rows, namedIndex) in calculatedSamplesByNamedIndex" :key="namedIndex" class="mt-4">
+                                <h4>Named Index: {{ namedIndex }}</h4>
+                                <div class="table-responsive">
+                                    <table class="table table-bordered table-sm">
+                                        <thead>
+                                            <tr class="darkth">
+                                                <th>Actions</th>
+                                                <th v-for="columnKey in visibleColumns" :key="columnKey">
+                                                    {{ columnLabel[columnKey] }}
+                                                </th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr v-for="sample in sample_rows" :key="sample.lane + '-' + sample.uuid" :class="{ 'table-info': isSampleEdited(sample.lane, sample.uuid) }">
+                                                <td>
+                                                    <button
+                                                        class="btn btn-sm btn-outline-primary"
+                                                        @click="openEditModal(sample.lane, sample.uuid)"
+                                                        title="Edit sample">
+                                                        <i class="fa fa-pencil"></i>
+                                                    </button>
+                                                </td>
+                                                <td v-for="columnKey in visibleColumns" :key="columnKey"
+                                                    :class="{ 'bg-info': isFieldEdited(sample.lane, sample.uuid, columnKey) }"
+                                                    :title="getEditTooltip(sample.lane, sample.uuid, columnKey)">
                                                     <code v-if="columnKey === 'index_1' || columnKey === 'index_2'">{{ formatCellValue(sample[columnKey], columnKey) }}</code>
                                                     <span v-else>{{ formatCellValue(sample[columnKey], columnKey) }}</span>
                                                 </td>

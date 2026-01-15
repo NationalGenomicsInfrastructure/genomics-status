@@ -417,9 +417,10 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                 )
 
                 # Check if we need to expand named indices
-                named_index = sample_in_lane["index_1"]
+                index_1_value = sample_in_lane["index_1"]
                 named_indices_file = sample_classification.get("named_indices")
                 sequences_to_create = []
+                named_index = ""  # Only set if found in named indices lookup
 
                 # Check if this sample should use named indices expansion
                 if named_indices_file:
@@ -427,18 +428,19 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                         named_indices_file, {}
                     )
 
-                    if named_index in named_indices_dict:
+                    if index_1_value in named_indices_dict:
                         # Named index found - use the sequences from the dictionary
+                        named_index = index_1_value
                         sequences_to_create = named_indices_dict[named_index]
                     else:
                         # Named index not found - treat as ordinary sample with single entry
                         sequences_to_create = [
-                            [named_index, sample_in_lane.get("index_2", "")]
+                            [index_1_value, sample_in_lane.get("index_2", "")]
                         ]
                 else:
                     # No named indices file specified - use original indices
                     sequences_to_create = [
-                        [named_index, sample_in_lane.get("index_2", "")]
+                        [index_1_value, sample_in_lane.get("index_2", "")]
                     ]
 
                 # Create a sample row for each sequence entry
@@ -446,7 +448,7 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                     sample_uuid = str(uuid.uuid4())
 
                     # Unpack sequences (can be 1 or 2 elements)
-                    index_1 = sequences[0] if len(sequences) > 0 else named_index
+                    index_1 = sequences[0] if len(sequences) > 0 else index_1_value
                     index_2 = (
                         sequences[1]
                         if len(sequences) > 1
@@ -455,15 +457,11 @@ class DemuxSampleInfoDataHandler(SafeHandler):
 
                     # project_name and project_id were already retrieved earlier in the function
                     calculated_lanes[lane]["sample_rows"][sample_uuid] = {
-                        "sample_id": sample_in_lane["sample_id"],
                         "last_modified": timestamp,
-                        "sample_type": sample_classification["sample_type"],
-                        "index_length": sample_classification["index_length"],
-                        "umi_config": sample_classification["umi_config"],
                         "library_method": library_method or "",
-                        "project_name": project_name,
                         "project_id": project_id or "",
-                        "config_source": sample_classification["config_source"],
+                        "project_name": project_name,
+                        "sample_id": sample_in_lane["sample_id"],
                         "settings": {
                             timestamp: {
                                 "control": sample_in_lane["control"],
@@ -551,8 +549,8 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                 self.write(json.dumps({"error": error_message}))
                 return
 
-            # Create timestamp for this operation
-            timestamp = datetime.datetime.now().isoformat(timespec="milliseconds")
+            # Create timestamp for this operation (UTC)
+            timestamp = datetime.datetime.now(datetime.timezone.utc).isoformat(timespec="milliseconds")
 
             # Build the complete document
             document = self._create_document(

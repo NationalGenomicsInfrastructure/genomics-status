@@ -524,6 +524,9 @@ class Application(tornado.web.Application):
         with order_portal_cred_loc.open() as cred_file:
             self.order_portal_conf = yaml.safe_load(cred_file)["order_portal"]
 
+        # Add LIMS URL to globals for templates
+        self.gs_globals["lims_url"] = self.lims_conf.get("url", "")
+
         # Setup the Tornado Application
 
         settings["debug"] = True
