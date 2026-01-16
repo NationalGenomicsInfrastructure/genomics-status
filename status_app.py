@@ -4,7 +4,6 @@ import base64
 import csv
 import json
 import logging
-import re
 import subprocess
 import uuid
 from pathlib import Path
