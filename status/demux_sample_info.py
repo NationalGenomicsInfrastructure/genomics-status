@@ -113,7 +113,7 @@ class DemuxSampleInfoDataHandler(SafeHandler):
 
             # Get the document ID from the view result
             doc_id = rows[0]["id"]
-            
+
             # Fetch the actual document using the ID
             document = self.application.cloudant.get_document(
                 db="demux_sample_info", doc_id=doc_id
@@ -617,7 +617,9 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                 return
 
             # Create timestamp for this operation (UTC)
-            timestamp = datetime.datetime.now(datetime.timezone.utc).isoformat(timespec="milliseconds")
+            timestamp = datetime.datetime.now(datetime.timezone.utc).isoformat(
+                timespec="milliseconds"
+            )
 
             # Build the complete document
             document = self._create_document(

@@ -593,7 +593,9 @@ class Application(tornado.web.Application):
         # Get the directory where status_app.py is located and navigate to configuration_files
         main_repo_dir = Path(__file__).parent
         config_path = (
-            main_repo_dir / "configuration_files" / "sample_classification_patterns.json"
+            main_repo_dir
+            / "configuration_files"
+            / "sample_classification_patterns.json"
         )
         with config_path.open("r") as f:
             config = json.load(f)
