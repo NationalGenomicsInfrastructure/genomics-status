@@ -246,7 +246,7 @@ class DemuxSampleInfoDataHandler(SafeHandler):
             library_method: Optional library construction method from project
 
         Returns:
-            dict: Contains sample_type, index_length, umi_config, config_source, named_indices
+            dict: Contains sample_type, index_length, umi_config, config_sources, named_indices, BCLConvert_Settings
         """
         # Get configuration from application
         config = self.application.sample_classification_config
@@ -266,8 +266,9 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                 "sample_type": "control",
                 "index_length": [len(index1), len(index2)],
                 "umi_config": None,  # No UMI for controls
-                "config_source": "control_patterns",
+                "config_sources": ["control_patterns"],
                 "named_indices": None,
+                "BCLConvert_Settings": {},
             }
 
         # Check library method mapping first (if available)
@@ -285,11 +286,12 @@ class DemuxSampleInfoDataHandler(SafeHandler):
             if index_length[1] == "calculated":
                 index_length[1] = len(index2)
 
+            config_sources = [f"library_method_mapping.{library_method}"]
             return {
                 "sample_type": sample_type,
                 "index_length": index_length,
                 "umi_config": umi_config,
-                "config_source": f"library_method_mapping.{library_method}",
+                "config_sources": config_sources,
                 "named_indices": mapped_config.get("named_indices", None),
                 "BCLConvert_Settings": mapped_config.get("BCLConvert_Settings", {}),
             }
@@ -303,7 +305,7 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                 "sample_type": config["sample_type"],
                 "index_length": config["index_length"],
                 "umi_config": config["umi_config"],
-                "config_source": "patterns.tenx_single",
+                "config_sources": ["patterns.tenx_single"],
                 "named_indices": config.get("named_indices", None),
                 "BCLConvert_Settings": config.get("BCLConvert_Settings", {}),
             }
@@ -315,7 +317,7 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                 "sample_type": config["sample_type"],
                 "index_length": config["index_length"],
                 "umi_config": config["umi_config"],
-                "config_source": "patterns.tenx_dual",
+                "config_sources": ["patterns.tenx_dual"],
                 "named_indices": config.get("named_indices", None),
                 "BCLConvert_Settings": config.get("BCLConvert_Settings", {}),
             }
@@ -345,7 +347,7 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                     len(index2.replace("N", "")),
                 ],
                 "umi_config": umi_config,
-                "config_source": "patterns.idt_umi",
+                "config_sources": ["patterns.idt_umi"],
                 "named_indices": config.get("named_indices", None),
                 "BCLConvert_Settings": config.get("BCLConvert_Settings", {}),
             }
@@ -357,7 +359,7 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                 "sample_type": config["sample_type"],
                 "index_length": config["index_length"],
                 "umi_config": config["umi_config"],
-                "config_source": "patterns.smartseq",
+                "config_sources": ["patterns.smartseq"],
                 "named_indices": config.get("named_indices", None),
                 "BCLConvert_Settings": config.get("BCLConvert_Settings", {}),
             }
@@ -369,7 +371,7 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                 "sample_type": config["sample_type"],
                 "index_length": config["index_length"],
                 "umi_config": config["umi_config"],
-                "config_source": "other_general_sample_types.noindex",
+                "config_sources": ["other_general_sample_types.noindex"],
                 "named_indices": config.get("named_indices", None),
                 "BCLConvert_Settings": config.get("BCLConvert_Settings", {}),
             }
@@ -390,9 +392,9 @@ class DemuxSampleInfoDataHandler(SafeHandler):
             else config["sample_type"],
             "index_length": index_length,
             "umi_config": None,  # No UMI for standard samples
-            "config_source": "default.short_single_index"
+            "config_sources": ["default.short_single_index"]
             if is_short_single
-            else "other_general_sample_types.standard",
+            else ["other_general_sample_types.standard"],
             "named_indices": None,
             "BCLConvert_Settings": {}
             if is_short_single
@@ -456,6 +458,13 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                     "BCLConvert_Settings", {}
                 )
                 bcl_convert_settings = {}
+
+                # Track config sources - start with the classification sources
+                config_sources = list(sample_classification.get("config_sources", []))
+                
+                # Add bcl_convert_settings.BCLConvert_Settings as a source
+                if bcl_settings_defaults:
+                    config_sources.append("bcl_convert_settings.BCLConvert_Settings")
 
                 # Get overrides from the matched pattern or library method
                 classification_overrides = sample_classification.get(
@@ -534,9 +543,7 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                                         "index_length"
                                     ],
                                     "umi_config": sample_classification["umi_config"],
-                                    "config_source": sample_classification[
-                                        "config_source"
-                                    ],
+                                    "config_sources": config_sources,
                                     "library_method": library_method or "",
                                     "project_id": project_id or "",
                                 },
