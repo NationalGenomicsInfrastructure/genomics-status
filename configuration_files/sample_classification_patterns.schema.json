@@ -4,7 +4,12 @@
   "title": "Sample Classification Patterns Configuration",
   "description": "Configuration schema for demultiplexing sample classification patterns, library method mappings, and UMI configurations",
   "type": "object",
-  "required": ["patterns", "control_patterns", "short_single_index_threshold"],
+"required": [
+    "patterns",
+    "other_general_sample_types",
+    "control_patterns",
+    "short_single_index_threshold"
+],
   "properties": {
     "$schema": {
       "type": "string",
@@ -38,6 +43,47 @@
             },
             "named_indices": {
               "$ref": "#/$defs/sampleConfig/properties/named_indices"
+            },
+            "BCLConvert_Settings": {
+                "$ref": "#/$defs/sampleConfig/properties/BCLConvert_Settings"
+            }
+        },
+        "additionalProperties": false
+    }
+},
+"additionalProperties": false
+},
+"other_general_sample_types": {
+"type": "object",
+"description": "General sample type configurations that don't use regex pattern matching",
+"patternProperties": {
+    "^[a-z_]+$": {
+        "type": "object",
+        "required": [
+            "description",
+            "sample_type"
+        ],
+        "properties": {
+            "description": {
+                "$ref": "#/$defs/sampleConfig/properties/description"
+            },
+            "sample_type": {
+                "$ref": "#/$defs/sampleConfig/properties/sample_type"
+            },
+            "index_length": {
+                "$ref": "#/$defs/sampleConfig/properties/index_length"
+            },
+            "umi_config": {
+                "$ref": "#/$defs/sampleConfig/properties/umi_config"
+            },
+            "calculate_lengths": {
+                "$ref": "#/$defs/sampleConfig/properties/calculate_lengths"
+            },
+            "named_indices": {
+                "$ref": "#/$defs/sampleConfig/properties/named_indices"
+            },
+            "BCLConvert_Settings": {
+                "$ref": "#/$defs/sampleConfig/properties/BCLConvert_Settings"
             }
           },
           "additionalProperties": false
@@ -70,6 +116,9 @@
             },
             "named_indices": {
               "$ref": "#/$defs/sampleConfig/properties/named_indices"
+            },
+            "BCLConvert_Settings": {
+                "$ref": "#/$defs/sampleConfig/properties/BCLConvert_Settings"
             }
           },
           "additionalProperties": false
@@ -91,6 +140,99 @@
       "description": "Maximum length in base pairs for a single index to be classified as 'short_single_index'",
       "minimum": 1,
       "maximum": 20
+    },
+    "bcl_convert_settings": {
+        "type": "object",
+        "description": "BCL Convert configuration settings for demultiplexing",
+        "properties": {
+            "per_sample_settings": {
+                "type": "object",
+                "description": "Per-sample field mappings for BCL Convert samplesheet",
+                "patternProperties": {
+                    ".*": {
+                        "type": "object",
+                        "properties": {
+                            "source_field": {
+                                "type": "string",
+                                "description": "Name of the source field in the sample data"
+                            },
+                            "type": {
+                                "type": "string",
+                                "enum": [
+                                    "string",
+                                    "integer",
+                                    "boolean"
+                                ],
+                                "description": "Data type of the field"
+                            },
+                            "regex": {
+                                "type": "string",
+                                "description": "Regular expression for validation"
+                            },
+                            "help": {
+                                "type": "string",
+                                "description": "Help text describing the field"
+                            },
+                            "mandatory": {
+                                "type": "boolean",
+                                "description": "Whether this field is mandatory"
+                            },
+                            "can_be_left_blank": {
+                                "type": "boolean",
+                                "description": "Whether the field can be left blank"
+                            },
+                            "can_be_on_BCLConvert_settings": {
+                                "type": "boolean",
+                                "description": "Whether this setting can be placed in the BCLConvert_Settings section instead"
+                            }
+                        },
+                        "additionalProperties": false
+                    }
+                },
+                "additionalProperties": false
+            },
+            "BCLConvert_Settings": {
+                "type": "object",
+                "description": "Global BCL Convert settings",
+                "patternProperties": {
+                    ".*": {
+                        "type": "object",
+                        "properties": {
+                            "type": {
+                                "type": "string",
+                                "enum": [
+                                    "string",
+                                    "integer",
+                                    "boolean"
+                                ],
+                                "description": "Data type of the setting"
+                            },
+                            "help": {
+                                "type": "string",
+                                "description": "Help text describing the setting"
+                            },
+                            "default": {
+                                "description": "Default value for the setting",
+                                "oneOf": [
+                                    {
+                                        "type": "string"
+                                    },
+                                    {
+                                        "type": "integer"
+                                    },
+                                    {
+                                        "type": "boolean"
+                                    }
+                                ]
+                            }
+                        },
+                        "additionalProperties": false
+                    }
+                },
+                "additionalProperties": false
+            }
+        },
+        "additionalProperties": false
     }
   },
   "additionalProperties": false,
@@ -160,6 +302,26 @@
         "named_indices": {
           "type": "string",
           "description": "Name of the named indices file (without .csv extension) to use for expanding this configuration"
+        },
+        "BCLConvert_Settings": {
+            "type": "object",
+            "description": "Override BCL Convert global settings for this pattern/library method. Keys are setting names (e.g., TrimUMI, CreateFastqForIndexReads), values are booleans, integers, or strings matching the setting type.",
+            "patternProperties": {
+                ".*": {
+                    "oneOf": [
+                        {
+                            "type": "boolean"
+                        },
+                        {
+                            "type": "integer"
+                        },
+                        {
+                            "type": "string"
+                        }
+                    ]
+                }
+            },
+            "additionalProperties": false
         }
       }
     },

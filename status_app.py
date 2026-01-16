@@ -592,25 +592,15 @@ class Application(tornado.web.Application):
     def _load_sample_classification_patterns(self):
         """Load sample classification patterns from JSON configuration file."""
         # Get the directory where status_app.py is located and navigate to configuration_files
-        script_dir = Path(__file__).parent
+        main_repo_dir = Path(__file__).parent
         config_path = (
-            script_dir / "configuration_files" / "sample_classification_patterns.json"
+            main_repo_dir / "configuration_files" / "sample_classification_patterns.json"
         )
         with config_path.open("r") as f:
             config = json.load(f)
 
-        # Compile regex patterns
-        patterns = {}
-        for key, pattern_config in config["patterns"].items():
-            patterns[key] = {"config": pattern_config}
-            if "regex" in pattern_config:
-                patterns[key]["pattern"] = re.compile(pattern_config["regex"])
-
-        self.sample_patterns = patterns
-        self.classification_config = config
-        self.control_patterns = config.get("control_patterns", [])
-        self.short_index_threshold = config.get("short_single_index_threshold", 8)
-        self.library_method_mapping = config.get("library_method_mapping", {})
+        # Store the full configuration for access by handlers
+        self.sample_classification_config = config
 
     def _load_named_indices(self, config_dir):
         """Load named indices from CSV files in the named_indices directory.

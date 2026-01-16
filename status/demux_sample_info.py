@@ -2,6 +2,7 @@
 
 import datetime
 import json
+import re
 import uuid
 
 import tornado.web
@@ -219,6 +220,24 @@ class DemuxSampleInfoDataHandler(SafeHandler):
 
         return (True, None, metadata, uploaded_lims_info)
 
+    def _get_sample_patterns(self):
+        """Get compiled sample patterns with caching."""
+        if not hasattr(self, "_compiled_patterns"):
+            config = self.application.sample_classification_config
+            patterns = {}
+            # Load regex-based patterns
+            for key, pattern_config in config["patterns"].items():
+                patterns[key] = {"config": pattern_config}
+                if "regex" in pattern_config:
+                    patterns[key]["pattern"] = re.compile(pattern_config["regex"])
+            # Load general sample types (no regex)
+            for key, pattern_config in config.get(
+                "other_general_sample_types", {}
+            ).items():
+                patterns[key] = {"config": pattern_config}
+            self._compiled_patterns = patterns
+        return self._compiled_patterns
+
     def _classify_sample_type(self, sample_in_lane, library_method=None):
         """Classify sample type based on sample properties using TACA classification logic.
 
@@ -229,11 +248,12 @@ class DemuxSampleInfoDataHandler(SafeHandler):
         Returns:
             dict: Contains sample_type, index_length, umi_config, config_source, named_indices
         """
-        # Get patterns from application
-        sample_patterns = self.application.sample_patterns
-        control_patterns = self.application.control_patterns
-        library_method_mapping = self.application.library_method_mapping
-        short_index_threshold = self.application.short_index_threshold
+        # Get configuration from application
+        config = self.application.sample_classification_config
+        sample_patterns = self._get_sample_patterns()
+        control_patterns = config.get("control_patterns", [])
+        library_method_mapping = config.get("library_method_mapping", {})
+        short_index_threshold = config.get("short_single_index_threshold", 8)
 
         # Normalize index fields
         index1 = sample_in_lane.get("index_1", "")
@@ -255,7 +275,7 @@ class DemuxSampleInfoDataHandler(SafeHandler):
             mapped_config = library_method_mapping[library_method]
 
             # New format: library_method_mapping contains full config objects
-            sample_type = mapped_config.get("sample_type", "ordinary")
+            sample_type = mapped_config.get("sample_type", "standard")
             index_length = mapped_config.get("index_length", [len(index1), len(index2)])
             umi_config = mapped_config.get("umi_config", None)
 
@@ -271,6 +291,7 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                 "umi_config": umi_config,
                 "config_source": f"library_method_mapping.{library_method}",
                 "named_indices": mapped_config.get("named_indices", None),
+                "BCLConvert_Settings": mapped_config.get("BCLConvert_Settings", {}),
             }
 
         # Classify by index patterns (order matters - most specific first)
@@ -284,6 +305,7 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                 "umi_config": config["umi_config"],
                 "config_source": "patterns.tenx_single",
                 "named_indices": config.get("named_indices", None),
+                "BCLConvert_Settings": config.get("BCLConvert_Settings", {}),
             }
 
         # 10X dual-index sample (e.g., Spatial Transcriptomics)
@@ -295,6 +317,7 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                 "umi_config": config["umi_config"],
                 "config_source": "patterns.tenx_dual",
                 "named_indices": config.get("named_indices", None),
+                "BCLConvert_Settings": config.get("BCLConvert_Settings", {}),
             }
 
         # IDT UMI sample - indices contain N for UMI positions
@@ -324,6 +347,7 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                 "umi_config": umi_config,
                 "config_source": "patterns.idt_umi",
                 "named_indices": config.get("named_indices", None),
+                "BCLConvert_Settings": config.get("BCLConvert_Settings", {}),
             }
 
         # Smart-seq sample (format: SMARTSEQ-<plate>)
@@ -335,6 +359,7 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                 "umi_config": config["umi_config"],
                 "config_source": "patterns.smartseq",
                 "named_indices": config.get("named_indices", None),
+                "BCLConvert_Settings": config.get("BCLConvert_Settings", {}),
             }
 
         # No-index sample
@@ -344,25 +369,34 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                 "sample_type": config["sample_type"],
                 "index_length": config["index_length"],
                 "umi_config": config["umi_config"],
-                "config_source": "patterns.noindex",
+                "config_source": "other_general_sample_types.noindex",
                 "named_indices": config.get("named_indices", None),
+                "BCLConvert_Settings": config.get("BCLConvert_Settings", {}),
             }
 
-        # Default: ordinary or short single index
+        # Default: standard or short single index
         # Short single index: ≤threshold bp and only one index present (i7 or i5, but not both)
         index_length = [len(index1), len(index2)]
         is_short_single = (
             index_length[0] <= short_index_threshold and index_length[1] == 0
         ) or (index_length[0] == 0 and index_length[1] <= short_index_threshold)
 
+        # Get standard pattern config
+        config = sample_patterns["standard"]["config"]
+
         return {
-            "sample_type": "short_single_index" if is_short_single else "ordinary",
+            "sample_type": "short_single_index"
+            if is_short_single
+            else config["sample_type"],
             "index_length": index_length,
-            "umi_config": None,  # No UMI for ordinary samples
+            "umi_config": None,  # No UMI for standard samples
             "config_source": "default.short_single_index"
             if is_short_single
-            else "default.ordinary",
+            else "other_general_sample_types.standard",
             "named_indices": None,
+            "BCLConvert_Settings": {}
+            if is_short_single
+            else config.get("BCLConvert_Settings", {}),
         }
 
     def _group_samples_by_lane(self, uploaded_lims_info):
@@ -416,6 +450,30 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                     sample_in_lane, library_method
                 )
 
+                # Build BCLConvert_Settings from defaults and pattern/library method overrides
+                config = self.application.sample_classification_config
+                bcl_settings_defaults = config.get("bcl_convert_settings", {}).get(
+                    "BCLConvert_Settings", {}
+                )
+                bcl_convert_settings = {}
+
+                # Get overrides from the matched pattern or library method
+                classification_overrides = sample_classification.get(
+                    "BCLConvert_Settings", {}
+                )
+
+                for setting_name, setting_config in bcl_settings_defaults.items():
+                    # Get default value from config
+                    default_value = setting_config.get("default")
+
+                    # Check if the pattern/library method has an override
+                    if setting_name in classification_overrides:
+                        bcl_convert_settings[setting_name] = classification_overrides[
+                            setting_name
+                        ]
+                    else:
+                        bcl_convert_settings[setting_name] = default_value
+
                 # Check if we need to expand named indices
                 index_1_value = sample_in_lane["index_1"]
                 named_indices_file = sample_classification.get("named_indices")
@@ -433,7 +491,7 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                         named_index = index_1_value
                         sequences_to_create = named_indices_dict[named_index]
                     else:
-                        # Named index not found - treat as ordinary sample with single entry
+                        # Named index not found - treat as standard sample with single entry
                         sequences_to_create = [
                             [index_1_value, sample_in_lane.get("index_2", "")]
                         ]
@@ -461,30 +519,39 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                         "library_method": library_method or "",
                         "project_id": project_id or "",
                         "project_name": project_name,
-                        "sample_id": sample_in_lane["sample_id"],
+                        "control": sample_in_lane["control"],
+                        "description": sample_in_lane["description"],
+                        "flowcell_id": sample_in_lane["flowcell_id"],
                         "settings": {
                             timestamp: {
-                                "control": sample_in_lane["control"],
-                                "description": sample_in_lane["description"],
-                                "flowcell_id": sample_in_lane["flowcell_id"],
-                                "index_1": index_1,
-                                "index_2": index_2,
-                                "lane": sample_in_lane["lane"],
-                                "mask_short_reads": 0,
-                                "minimum_trimmed_read_length": 0,
-                                "named_index": named_index,
-                                "operator": sample_in_lane["operator"],
-                                "override_cycles": "",
-                                "recipe": sample_in_lane["recipe"],
-                                "sample_name": sample_in_lane["sample_name"],
-                                "sample_project": sample_in_lane["sample_project"],
-                                "sample_ref": sample_in_lane["sample_ref"],
-                                "sample_type": sample_classification["sample_type"],
-                                "index_length": sample_classification["index_length"],
-                                "umi_config": sample_classification["umi_config"],
-                                "config_source": sample_classification["config_source"],
-                                "library_method": library_method or "",
-                                "project_id": project_id or "",
+                                "other_details": {
+                                    "named_index": named_index,
+                                    "operator": sample_in_lane["operator"],
+                                    "recipe": sample_in_lane["recipe"],
+                                    "sample_ref": sample_in_lane["sample_ref"],
+                                    "sample_type": sample_classification["sample_type"],
+                                    "index_length": sample_classification[
+                                        "index_length"
+                                    ],
+                                    "umi_config": sample_classification["umi_config"],
+                                    "config_source": sample_classification[
+                                        "config_source"
+                                    ],
+                                    "library_method": library_method or "",
+                                    "project_id": project_id or "",
+                                },
+                                "per_sample_fields": {
+                                    "Lane": sample_in_lane["lane"],
+                                    "Sample_ID": sample_in_lane["sample_id"],
+                                    "index": index_1,
+                                    "index2": index_2,
+                                    "MaskShortReads": 0,
+                                    "MinimumTrimmedReadLength": 0,
+                                    "OverrideCycles": "",
+                                    "Sample_Name": sample_in_lane["sample_name"],
+                                    "Sample_Project": sample_in_lane["sample_project"],
+                                },
+                                "BCLConvert_Settings": bcl_convert_settings,
                             }
                         },
                     }
@@ -647,30 +714,29 @@ class SampleClassificationPresetsHandler(SafeHandler):
     def get(self):
         """Return sample classification patterns as presets."""
         try:
+            config = self.application.sample_classification_config
             patterns = {}
 
             # Extract relevant information from patterns
-            for key, pattern_data in self.application.sample_patterns.items():
-                config = pattern_data.get("config", {})
+            for key, pattern_config in config.get("patterns", {}).items():
                 # Skip recipe pattern as it's not a sample type preset
                 if key == "recipe":
                     continue
 
                 patterns[key] = {
                     "name": key,
-                    "description": config.get("description", ""),
-                    "sample_type": config.get("sample_type"),
-                    "index_length": config.get("index_length"),
-                    "umi_config": config.get("umi_config"),
-                    "named_indices": config.get("named_indices"),
+                    "description": pattern_config.get("description", ""),
+                    "sample_type": pattern_config.get("sample_type"),
+                    "index_length": pattern_config.get("index_length"),
+                    "umi_config": pattern_config.get("umi_config"),
+                    "named_indices": pattern_config.get("named_indices"),
                 }
 
             # Also include library method mappings
             library_methods = {}
-            for (
-                method,
-                method_config,
-            ) in self.application.library_method_mapping.items():
+            for method, method_config in config.get(
+                "library_method_mapping", {}
+            ).items():
                 library_methods[method] = {
                     "name": method,
                     "description": method_config.get("description", ""),

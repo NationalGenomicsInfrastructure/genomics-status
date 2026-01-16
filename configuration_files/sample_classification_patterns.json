@@ -7,7 +7,10 @@
       "sample_type": "10X_SINGLE",
       "index_length": [16, 0],
       "umi_config": null,
-      "named_indices": "Chromium_10X_indexes"
+      "named_indices": "Chromium_10X_indexes",
+      "BCLConvert_Settings": {
+        "TrimUMI": false
+      }
     },
     "tenx_dual": {
       "regex": "SI-(?:TT|NT|NN|TN|TS)-[A-H][1-9][0-2]?",
@@ -31,22 +34,28 @@
       "sample_type": "IDT_UMI",
       "calculate_lengths": true,
       "umi_config": {
-        "i7": {"position": "end", "length": "calculated"},
-        "i5": {
+        "i7": {
           "position": "end",
-          "length": 2999
+          "length": "calculated"
         }
       }
     },
+    "recipe": {
+      "regex": "[0-9]+-[0-9]+",
+      "description": "Recipe format pattern for read length specification"
+    }
+  },
+  "other_general_sample_types": {
     "noindex": {
       "description": "No-index samples",
       "sample_type": "NOINDEX",
       "index_length": [0, 0],
       "umi_config": null
     },
-    "recipe": {
-      "regex": "[0-9]+-[0-9]+",
-      "description": "Recipe format pattern for read length specification"
+    "standard": {
+      "description": "Standard samples without special classification",
+      "sample_type": "STANDARD",
+      "umi_config": null
     }
   },
   "library_method_mapping": {
@@ -64,6 +73,92 @@
         }
       },
       "named_indices": "Chromium_10X_indexes"
+    }
+  },
+  "bcl_convert_settings": {
+    "per_sample_settings": {
+      "Lane": {
+        "type": "integer",
+        "help": "Lane number as an integer, used internally to divide demultiplexing per lane.",
+        "mandatory": true
+      },
+      "Sample_ID": {
+        "type": "string",
+        "help": "Unique sample identifier, used to name output files and directories.",
+        "mandatory": true,
+        "can_be_left_blank": false
+      },
+      "index": {
+        "type": "string",
+        "regex": "^[ATCGN]+$",
+        "help": "i7 index sequence.",
+        "mandatory": true,
+        "can_be_left_blank": true
+      },
+      "index2": {
+        "type": "string",
+        "regex": "^[ATCGN]*$",
+        "help": "i5 index sequence.",
+        "mandatory": true,
+        "can_be_left_blank": true
+      },
+      "Sample_Project": {
+        "type": "string",
+        "help": "Project name associated with the sample.",
+        "mandatory": true,
+        "can_be_left_blank": true
+      },
+      "Sample_Name": {
+        "type": "string",
+        "help": "Human-readable sample name, can be used to name output files when using a certain combination of settings.",
+        "mandatory": false,
+        "can_be_left_blank": true
+      },
+      "OverrideCycles": {
+        "type": "string",
+        "help": "Override cycle settings for read lengths, index lengths, UMIs and so on, for example: R1:U7N1Y143;R2:U7N1Y143;I1:I8;I2:I8",
+        "mandatory": false,
+        "can_be_left_blank": false,
+        "can_be_on_BCLConvert_settings": true
+      },
+      "BarcodeMismatchesIndex1": {
+        "type": "integer",
+        "help": "Number of allowed mismatches for i7 index during demultiplexing (0,1 or 2).",
+        "regex": "^[0-2]$",
+        "mandatory": false,
+        "can_be_left_blank": false,
+        "can_be_on_BCLConvert_settings": true
+      },
+      "BarcodeMismatchesIndex2": {
+        "type": "integer",
+        "help": "Number of allowed mismatches for i5 index during demultiplexing (0,1 or 2).",
+        "regex": "^[0-2]$",
+        "mandatory": false,
+        "can_be_left_blank": false,
+        "can_be_on_BCLConvert_settings": true
+      }
+    },
+    "BCLConvert_Settings": {
+      "TrimUMI": {
+        "type": "boolean",
+        "help": "If set to 'false', UMI sequences are not trimmed from output FASTQ reads. The UMI is still placed in sequence header. Can only be enabled (1) if a UMI is present for at least 1 sample according to the OverrideCycles setting.",
+        "default": true
+      },
+      "CreateFastqForIndexReads": {
+        "type": "boolean",
+        "help": "If set to 'true', output FASTQ files for index reads as well as genomic reads. Can only be enabled when an index is present and used for demultiplexing according to the index/index2 columns and the OverrideCycles setting.",
+        "default": false
+      },
+      "MinimumTrimmedReadLength": {
+        "type": "integer",
+        "help": "Reads trimmed below this point become masked at that point. Default is the minimum of 35 and the shortest non-indexed read length. Can only be specified when index 2 is present and used for demultiplexing for all samples according to the index column and the OverrideCycles setting.",
+        "default": 0
+      },
+      "MaskShortReads": {
+        "type": "integer",
+        "help": "Reads trimmed below this point become masked out. Default is the minimum of 22 and MinimumTrimmedReadLength.",
+        "default": 0
+      }
     }
   },
   "control_patterns": [
