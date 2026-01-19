@@ -2,6 +2,7 @@
 
 import datetime
 import json
+import logging
 import re
 import uuid
 
@@ -75,8 +76,10 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                     self._project_library_methods[project_name] = library_method
                 except Exception as e:
                     # If we can't fetch the project, log and continue
-                    print(
-                        f"Warning: Could not fetch library method for project {project_name}: {e}"
+                    logging.warning(
+                        "Could not fetch library method for project %s: %s",
+                        project_name,
+                        e,
                     )
                     self._project_library_methods[project_name] = ""
             else:
@@ -241,6 +244,9 @@ class DemuxSampleInfoDataHandler(SafeHandler):
     def _classify_sample_type(self, sample_in_lane, library_method=None):
         """Classify sample type based on sample properties using TACA classification logic.
 
+        Applies configurations from least specific to most specific, where more specific
+        configs override less specific ones.
+
         Args:
             sample_in_lane: Sample object from uploaded_lims_info
             library_method: Optional library construction method from project
@@ -258,148 +264,169 @@ class DemuxSampleInfoDataHandler(SafeHandler):
         # Normalize index fields
         index1 = sample_in_lane.get("index_1", "")
         index2 = sample_in_lane.get("index_2", "")
-
-        # Check for control samples (PhiX, etc.)
         sample_name = sample_in_lane.get("sample_name", "")
-        if any(pattern in sample_name.lower() for pattern in control_patterns):
-            return {
-                "sample_type": "control",
-                "index_length": [len(index1), len(index2)],
-                "umi_config": None,  # No UMI for controls
-                "config_sources": ["control_patterns"],
-                "named_indices": None,
-                "BCLConvert_Settings": {},
-            }
 
-        # Check library method mapping first (if available)
-        if library_method and library_method in library_method_mapping:
-            mapped_config = library_method_mapping[library_method]
+        # Track which configs were applied
+        config_sources = []
 
-            # New format: library_method_mapping contains full config objects
-            sample_type = mapped_config.get("sample_type", "standard")
-            index_length = mapped_config.get("index_length", [len(index1), len(index2)])
-            umi_config = mapped_config.get("umi_config", None)
-
-            # Handle "calculated" index lengths
-            if index_length[0] == "calculated":
-                index_length[0] = len(index1)
-            if index_length[1] == "calculated":
-                index_length[1] = len(index2)
-
-            config_sources = [f"library_method_mapping.{library_method}"]
-            return {
-                "sample_type": sample_type,
-                "index_length": index_length,
-                "umi_config": umi_config,
-                "config_sources": config_sources,
-                "named_indices": mapped_config.get("named_indices", None),
-                "BCLConvert_Settings": mapped_config.get("BCLConvert_Settings", {}),
-            }
-
-        # Classify by index patterns (order matters - most specific first)
-
-        # 10X single-index sample (e.g., ATAC, Gene Expression)
-        if sample_patterns["tenx_single"]["pattern"].match(index1):
-            config = sample_patterns["tenx_single"]["config"]
-            return {
-                "sample_type": config["sample_type"],
-                "index_length": config["index_length"],
-                "umi_config": config["umi_config"],
-                "config_sources": ["patterns.tenx_single"],
-                "named_indices": config.get("named_indices", None),
-                "BCLConvert_Settings": config.get("BCLConvert_Settings", {}),
-            }
-
-        # 10X dual-index sample (e.g., Spatial Transcriptomics)
-        if sample_patterns["tenx_dual"]["pattern"].match(index1):
-            config = sample_patterns["tenx_dual"]["config"]
-            return {
-                "sample_type": config["sample_type"],
-                "index_length": config["index_length"],
-                "umi_config": config["umi_config"],
-                "config_sources": ["patterns.tenx_dual"],
-                "named_indices": config.get("named_indices", None),
-                "BCLConvert_Settings": config.get("BCLConvert_Settings", {}),
-            }
-
-        # IDT UMI sample - indices contain N for UMI positions
-        # Calculate actual index length by removing N's, and UMI length by counting N's
-        idt_pat = sample_patterns["idt_umi"]["pattern"]
-        if idt_pat.match(index1) or idt_pat.match(index2):
-            config = sample_patterns["idt_umi"]["config"]
-
-            # Calculate UMI lengths from N positions
-            i7_umi_length = index1.upper().count("N")
-            i5_umi_length = index2.upper().count("N")
-
-            # Build umi_config with calculated values
-            umi_config = {
-                "i7": {"position": "end", "length": i7_umi_length},
-                "i5": {"position": "end", "length": i5_umi_length},
-                "R1": {"position": "start", "length": 0},
-                "R2": {"position": "end", "length": 0},
-            }
-
-            return {
-                "sample_type": config["sample_type"],
-                "index_length": [
-                    len(index1.replace("N", "")),
-                    len(index2.replace("N", "")),
-                ],
-                "umi_config": umi_config,
-                "config_sources": ["patterns.idt_umi"],
-                "named_indices": config.get("named_indices", None),
-                "BCLConvert_Settings": config.get("BCLConvert_Settings", {}),
-            }
-
-        # Smart-seq sample (format: SMARTSEQ-<plate>)
-        if sample_patterns["smartseq"]["pattern"].match(index1):
-            config = sample_patterns["smartseq"]["config"]
-            return {
-                "sample_type": config["sample_type"],
-                "index_length": config["index_length"],
-                "umi_config": config["umi_config"],
-                "config_sources": ["patterns.smartseq"],
-                "named_indices": config.get("named_indices", None),
-                "BCLConvert_Settings": config.get("BCLConvert_Settings", {}),
-            }
-
-        # No-index sample
-        if index1.upper() == "NOINDEX":
-            config = sample_patterns["noindex"]["config"]
-            return {
-                "sample_type": config["sample_type"],
-                "index_length": config["index_length"],
-                "umi_config": config["umi_config"],
-                "config_sources": ["other_general_sample_types.noindex"],
-                "named_indices": config.get("named_indices", None),
-                "BCLConvert_Settings": config.get("BCLConvert_Settings", {}),
-            }
-
-        # Default: standard or short single index
-        # Short single index: ≤threshold bp and only one index present (i7 or i5, but not both)
+        # STEP 1: Start with default/base configuration (least specific)
         index_length = [len(index1), len(index2)]
         is_short_single = (
             index_length[0] <= short_index_threshold and index_length[1] == 0
         ) or (index_length[0] == 0 and index_length[1] <= short_index_threshold)
 
-        # Get standard pattern config
-        config = sample_patterns["standard"]["config"]
+        if is_short_single:
+            result = {
+                "sample_type": "short_single_index",
+                "index_length": index_length,
+                "umi_config": None,
+                "named_indices": None,
+                "BCLConvert_Settings": {},
+            }
+            config_sources.append("default.short_single_index")
+        else:
+            # Use standard pattern as base
+            standard_config = sample_patterns["standard"]["config"]
+            result = {
+                "sample_type": standard_config.get("sample_type", "STANDARD"),
+                "index_length": index_length,
+                "umi_config": None,
+                "named_indices": None,
+                "BCLConvert_Settings": standard_config.get("BCLConvert_Settings", {}),
+            }
+            config_sources.append("other_general_sample_types.standard")
 
-        return {
-            "sample_type": "short_single_index"
-            if is_short_single
-            else config["sample_type"],
-            "index_length": index_length,
-            "umi_config": None,  # No UMI for standard samples
-            "config_sources": ["default.short_single_index"]
-            if is_short_single
-            else ["other_general_sample_types.standard"],
-            "named_indices": None,
-            "BCLConvert_Settings": {}
-            if is_short_single
-            else config.get("BCLConvert_Settings", {}),
-        }
+        # STEP 2: Apply pattern-based configurations (more specific)
+        pattern_matched = False
+
+        # Check noindex
+        if index1.upper() == "NOINDEX":
+            noindex_config = sample_patterns["noindex"]["config"]
+            result["sample_type"] = noindex_config.get("sample_type")
+            result["index_length"] = noindex_config.get("index_length", index_length)
+            if noindex_config.get("umi_config") is not None:
+                result["umi_config"] = noindex_config["umi_config"]
+            if noindex_config.get("named_indices"):
+                result["named_indices"] = noindex_config["named_indices"]
+            if noindex_config.get("BCLConvert_Settings"):
+                result["BCLConvert_Settings"].update(
+                    noindex_config["BCLConvert_Settings"]
+                )
+            config_sources.append("other_general_sample_types.noindex")
+            pattern_matched = True
+
+        # Check 10X single-index
+        if not pattern_matched and sample_patterns["tenx_single"]["pattern"].match(
+            index1
+        ):
+            tenx_config = sample_patterns["tenx_single"]["config"]
+            result["sample_type"] = tenx_config.get("sample_type")
+            result["index_length"] = tenx_config.get("index_length", index_length)
+            if tenx_config.get("umi_config") is not None:
+                result["umi_config"] = tenx_config["umi_config"]
+            if tenx_config.get("named_indices"):
+                result["named_indices"] = tenx_config["named_indices"]
+            if tenx_config.get("BCLConvert_Settings"):
+                result["BCLConvert_Settings"].update(tenx_config["BCLConvert_Settings"])
+            config_sources.append("patterns.tenx_single")
+            pattern_matched = True
+
+        # Check 10X dual-index
+        if not pattern_matched and sample_patterns["tenx_dual"]["pattern"].match(
+            index1
+        ):
+            tenx_config = sample_patterns["tenx_dual"]["config"]
+            result["sample_type"] = tenx_config.get("sample_type")
+            result["index_length"] = tenx_config.get("index_length", index_length)
+            if tenx_config.get("umi_config") is not None:
+                result["umi_config"] = tenx_config["umi_config"]
+            if tenx_config.get("named_indices"):
+                result["named_indices"] = tenx_config["named_indices"]
+            if tenx_config.get("BCLConvert_Settings"):
+                result["BCLConvert_Settings"].update(tenx_config["BCLConvert_Settings"])
+            config_sources.append("patterns.tenx_dual")
+            pattern_matched = True
+
+        # Check IDT UMI
+        idt_pat = sample_patterns["idt_umi"]["pattern"]
+        if not pattern_matched and (idt_pat.match(index1) or idt_pat.match(index2)):
+            idt_config = sample_patterns["idt_umi"]["config"]
+            result["sample_type"] = idt_config.get("sample_type")
+
+            # Calculate UMI lengths and index lengths from N positions
+            i7_umi_length = index1.upper().count("N")
+            i5_umi_length = index2.upper().count("N")
+            result["index_length"] = [
+                len(index1.replace("N", "")),
+                len(index2.replace("N", "")),
+            ]
+            result["umi_config"] = {
+                "i7": {"position": "end", "length": i7_umi_length},
+                "i5": {"position": "end", "length": i5_umi_length},
+                "R1": {"position": "start", "length": 0},
+                "R2": {"position": "end", "length": 0},
+            }
+            if idt_config.get("named_indices"):
+                result["named_indices"] = idt_config["named_indices"]
+            if idt_config.get("BCLConvert_Settings"):
+                result["BCLConvert_Settings"].update(idt_config["BCLConvert_Settings"])
+            config_sources.append("patterns.idt_umi")
+            pattern_matched = True
+
+        # Check Smart-seq
+        if not pattern_matched and sample_patterns["smartseq"]["pattern"].match(index1):
+            smartseq_config = sample_patterns["smartseq"]["config"]
+            result["sample_type"] = smartseq_config.get("sample_type")
+            result["index_length"] = smartseq_config.get("index_length", index_length)
+            if smartseq_config.get("umi_config") is not None:
+                result["umi_config"] = smartseq_config["umi_config"]
+            if smartseq_config.get("named_indices"):
+                result["named_indices"] = smartseq_config["named_indices"]
+            if smartseq_config.get("BCLConvert_Settings"):
+                result["BCLConvert_Settings"].update(
+                    smartseq_config["BCLConvert_Settings"]
+                )
+            config_sources.append("patterns.smartseq")
+            pattern_matched = True
+
+        # STEP 3: Apply library method mapping (most specific for general samples)
+        if library_method and library_method in library_method_mapping:
+            mapped_config = library_method_mapping[library_method]
+
+            if mapped_config.get("sample_type"):
+                result["sample_type"] = mapped_config["sample_type"]
+
+            if "index_length" in mapped_config:
+                result["index_length"] = mapped_config["index_length"].copy()
+                # Handle "calculated" index lengths
+                if result["index_length"][0] == "calculated":
+                    result["index_length"][0] = len(index1)
+                if result["index_length"][1] == "calculated":
+                    result["index_length"][1] = len(index2)
+
+            if mapped_config.get("umi_config") is not None:
+                result["umi_config"] = mapped_config["umi_config"]
+
+            if mapped_config.get("named_indices"):
+                result["named_indices"] = mapped_config["named_indices"]
+
+            if mapped_config.get("BCLConvert_Settings"):
+                result["BCLConvert_Settings"].update(
+                    mapped_config["BCLConvert_Settings"]
+                )
+
+            config_sources.append(f"library_method_mapping.{library_method}")
+
+        # STEP 4: Check for control samples (highest priority override)
+        if any(pattern in sample_name.lower() for pattern in control_patterns):
+            result["sample_type"] = "control"
+            result["umi_config"] = None
+            result["named_indices"] = None
+            result["BCLConvert_Settings"] = {}
+            config_sources.append("control_patterns")
+
+        result["config_sources"] = config_sources
+        return result
 
     def _group_samples_by_lane(self, uploaded_lims_info):
         """Group samples by lane number.
@@ -461,7 +488,7 @@ class DemuxSampleInfoDataHandler(SafeHandler):
 
                 # Track config sources - start with the classification sources
                 config_sources = list(sample_classification.get("config_sources", []))
-                
+
                 # Add bcl_convert_settings.BCLConvert_Settings as a source
                 if bcl_settings_defaults:
                     config_sources.append("bcl_convert_settings.BCLConvert_Settings")
