@@ -20,7 +20,7 @@ const vDemuxSampleInfoEditor = {
                 { key: 'project_id', label: 'Project ID' },
                 { key: 'sample_ref', label: 'Sample Ref' },
                 { key: 'sample_type', label: 'Sample Type' },
-                { key: 'config_source', label: 'Config Source' },
+                { key: 'config_sources', label: 'Config Sources' },
                 { key: 'index_1', label: 'Index 1' },
                 { key: 'index_2', label: 'Index 2' },
                 { key: 'index_length', label: 'Index Length' },
@@ -36,7 +36,7 @@ const vDemuxSampleInfoEditor = {
                 { key: 'override_cycles', label: 'Override Cycles' },
                 { key: 'last_modified', label: 'Last Modified' }
             ],
-            visibleColumns: ['project_name', 'sample_id', 'last_modified', 'sample_type', 'index_1', 'index_2', 'umi_config', 'recipe', 'override_cycles'],
+            visibleColumns: ['project_name', 'sample_id', 'last_modified', 'sample_type', 'config_sources', 'index_1', 'index_2', 'umi_config', 'recipe', 'override_cycles'],
             showBulkEditModal: false,
             columnConfigCollapsed: true,
             bulkEditAction: 'reverse_complement_index1',
@@ -121,13 +121,18 @@ const vDemuxSampleInfoEditor = {
                     const editedSettings = this.editedData[lane]?.[uuid];
                     const finalSettings = editedSettings ? { ...latestSettings, ...editedSettings } : latestSettings;
 
+                    // Extract per_sample_fields and other_details
+                    const per_sample_fields = finalSettings.per_sample_fields || {};
+                    const other_details = finalSettings.other_details || {};
+
                     result[lane].push({
                         uuid: uuid,
-                        sample_id: sample.sample_id,
+                        sample_id: sample.sample_id || sample.Sample_ID,
                         project_name: sample.project_name,
                         project_id: sample.project_id,
                         last_modified: sample.last_modified,
-                        ...finalSettings
+                        ...per_sample_fields,
+                        ...other_details
                     });
                 });
             });
@@ -152,7 +157,11 @@ const vDemuxSampleInfoEditor = {
                     const editedSettings = this.editedData[lane]?.[uuid];
                     const finalSettings = editedSettings ? { ...latestSettings, ...editedSettings } : latestSettings;
 
-                    const namedIndex = finalSettings.named_index || 'No Named Index';
+                    // Extract per_sample_fields and other_details
+                    const per_sample_fields = finalSettings.per_sample_fields || {};
+                    const other_details = finalSettings.other_details || {};
+
+                    const namedIndex = other_details.named_index || 'No Named Index';
 
                     if (!result[namedIndex]) {
                         result[namedIndex] = [];
@@ -161,11 +170,12 @@ const vDemuxSampleInfoEditor = {
                     result[namedIndex].push({
                         uuid: uuid,
                         lane: lane,
-                        sample_id: sample.sample_id,
+                        sample_id: sample.sample_id || sample.Sample_ID,
                         project_name: sample.project_name,
                         project_id: sample.project_id,
                         last_modified: sample.last_modified,
-                        ...finalSettings
+                        ...per_sample_fields,
+                        ...other_details
                     });
                 });
             });
@@ -375,6 +385,13 @@ const vDemuxSampleInfoEditor = {
             if (columnKey === 'last_modified') {
                 return this.formatTimestamp(value);
             }
+            if (columnKey === 'config_sources') {
+                // Format config_sources array as numbered list
+                if (Array.isArray(value)) {
+                    return value.map((src, i) => `${i + 1}. ${src}`).join(' → ');
+                }
+                return value || 'N/A';
+            }
             if (columnKey === 'index_length' || columnKey === 'umi_length') {
                 // Format array as "i7/i5" notation
                 if (Array.isArray(value)) {
@@ -502,6 +519,16 @@ const vDemuxSampleInfoEditor = {
                 // Clear all edited data
                 this.editedData = {};
             }
+        },
+        getConfigSources(sample) {
+            // Extract config_sources from the sample's latest settings
+            if (!sample || !sample.settings) return [];
+
+            const settingsVersions = Object.keys(sample.settings).sort().reverse();
+            const latestSettings = sample.settings[settingsVersions[0]];
+            const other_details = latestSettings.other_details || {};
+
+            return other_details.config_sources || [];
         },
         openBulkEditModal() {
             this.showBulkEditModal = true;
@@ -1230,6 +1257,24 @@ const vDemuxSampleInfoEditor = {
                                     <button type="button" class="btn-close" @click="closeEditModal"></button>
                                 </div>
                                 <div class="modal-body">
+                                    <!-- Config Sources Info (only for existing samples) -->
+                                    <div v-if="!editModalIsNew && editModalSample" class="row mb-3">
+                                        <div class="col-12">
+                                            <div class="card bg-light border-info">
+                                                <div class="card-body">
+                                                    <h6 class="card-title text-info">
+                                                        <i class="fa fa-info-circle"></i> Configuration Sources Applied
+                                                    </h6>
+                                                    <p class="mb-2 small text-muted">The following configurations were applied in order to generate this sample's settings:</p>
+                                                    <ol class="mb-0">
+                                                        <li v-for="(source, index) in getConfigSources(editModalSample)" :key="index" class="font-monospace small">
+                                                            {{ source }}
+                                                        </li>
+                                                    </ol>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                     <!-- Preset Selector (only for new samples) -->
                                     <div v-if="editModalIsNew && samplePresets" class="row mb-3">
                                         <div class="col-12">
