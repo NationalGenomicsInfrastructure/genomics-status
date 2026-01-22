@@ -36,14 +36,14 @@
   <nav class="navbar navbar-expand-xl navbar-light {% if gs_globals['prod'] %} bg-light {% else %} bg-warning {% end %} fixed-top border-bottom shadow-sm">
     <div class="container-fluid">
       <a class="navbar-brand" href="/">Genomics-Status{% if not gs_globals['prod'] %}-Stage {% end %}</a>
+      <form class="form-inline statusdb-search" role="search" id="navbar-searchbar">
+        <input class="form-control typeahead" type="text" placeholder="Search" aria-label="Search">
+      </form>
       <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#genstat-main-nav-collapse" aria-controls="navbarsExampleDefault" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
       </button>
-
       <div class="collapse navbar-collapse" id="genstat-main-nav-collapse">
-        <form class="form-inline statusdb-search" role="search" id="navbar-searchbar">
-          <input class="form-control typeahead" type="text" placeholder="Search" aria-label="Search">
-        </form>
+
         <ul class="navbar-nav ml-auto">
           <li class="nav-item dropdown px-1">
             <a class="nav-link dropdown-toggle" id="nav_production_dropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" href="#">Lists</a>
