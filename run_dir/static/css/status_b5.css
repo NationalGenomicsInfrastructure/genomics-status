@@ -1272,6 +1272,10 @@ thead th.sort::before{
   background-color: white !important;
 }
 
+.table-invoice-pricing tr.border-top td {
+  border-top: 1px solid #000;
+}
+
 .fillbadgecolour {
   top: -.1em;
   position: relative;

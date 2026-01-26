@@ -32,7 +32,6 @@ dependencies:
   - six
   - slack_sdk
   - tornado
-  - weasyprint
   - zenpy
   - ipdb
   - ruff
@@ -44,6 +43,7 @@ dependencies:
       - utils
       - git+https://github.com/SciLifeLab/genologics.git
       - git+https://github.com/NationalGenomicsInfrastructure/genologics_sql.git
+      - weasyprint==68.0
 platforms:
   - linux-64 # For Linux
   - osx-64  # For Apple Intel
