@@ -51,6 +51,10 @@ tfoot {
   display: table-header-group;
 }
 
+.statusdb-search .form-control {
+  margin-right: 4.5rem;
+}
+
 /* .tt = twitter typeahead styles. For homepage search box */
 #navbar-searchbar .twitter-typeahead { background-color: #FFFFFF; }
 
@@ -1257,11 +1261,19 @@ thead th.sort::before{
   margin-bottom: 0px;
 }
 
+.table-invoice-pricing{
+    border-collapse: separate !important;
+    border-spacing: 0;
+    width: 100%;
+}
+
 .table-invoice-pricing tr td {
-  border: none;
-  border-bottom-width: 0px!important;
-  padding: 1px;
-  margin: 1px;
+  padding: 2px;
+  background-color: white !important;
+}
+
+.table-invoice-pricing tr.border-top td {
+  border-top: 1px solid #000;
 }
 
 .fillbadgecolour {
