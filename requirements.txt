@@ -22,5 +22,5 @@ selenium
 setuptools
 slack_sdk
 tornado>=6.0.2
-weasyprint==52.5
+weasyprint>=68.0
 Zenpy
