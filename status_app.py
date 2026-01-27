@@ -93,6 +93,15 @@ from status.production import (
     ProductionCronjobsHandler,
 )
 from status.project_cards import ProjectCardsHandler, ProjectCardsWebSocket
+from status.project_creation import (
+    ProjectCreationCountDetailsDataHandler,
+    ProjectCreationDataHandler,
+    ProjectCreationFormDataHandler,
+    ProjectCreationHandler,
+    ProjectCreationIndividualDataFetchHandler,
+    ProjectCreationListFormsDataHandler,
+    ProjectCreationListFormsHandler,
+)
 from status.projects import (
     CaliperImageHandler,
     CharonProjectHandler,
@@ -297,6 +306,9 @@ class Application(tornado.web.Application):
                 ProjectPeopleAssignmentDataHandler,
             ),
             ("/api/v1/project/([^/]*)/tickets", ProjectTicketsDataHandler),
+            ("/api/v1/project_count_details", ProjectCreationCountDetailsDataHandler),
+            ("/api/v1/project_creation_form", ProjectCreationFormDataHandler),
+            ("/api/v1/project_creation_forms", ProjectCreationListFormsDataHandler),
             ("/api/v1/projects_fields", ProjectsFieldsDataHandler),
             ("/api/v1/project_summary/([^/]*)$", ProjectDataHandler),
             ("/api/v1/project_search/([^/]*)$", ProjectsSearchHandler),
@@ -342,6 +354,11 @@ class Application(tornado.web.Application):
                 YearDeliverytimeApplicationHandler,
             ),
             ("/api/v1/deliveries/set_bioinfo_responsible$", DeliveriesPageHandler),
+            ("/api/v1/submit_project_creation_form", ProjectCreationDataHandler),
+            (
+                "/api/v1/project_creation_data_fetch",
+                ProjectCreationIndividualDataFetchHandler,
+            ),
             ("/api/v1/suggestions", SuggestionBoxDataHandler),
             (r"/api/v1/test/(\w+)?", TestDataHandler),
             ("/api/v1/user_management/users", UserManagementDataHandler),
@@ -389,6 +406,8 @@ class Application(tornado.web.Application):
             ("/production/cronjobs", ProductionCronjobsHandler),
             ("/project/([^/]*)$", ProjectSamplesOldHandler),
             ("/project_new/([^/]*)$", ProjectSamplesHandler),
+            ("/project_creation", ProjectCreationHandler),
+            ("/project_creation_forms", ProjectCreationListFormsHandler),
             ("/projects", ProjectsHandler),
             ("/project_cards", ProjectCardsHandler),
             ("/proj_meta", ProjMetaCompareHandler),
