@@ -38,6 +38,7 @@ from status.deliveries import DeliveriesPageHandler
 from status.demux_sample_info import (
     DemuxSampleInfoDataHandler,
     DemuxSampleInfoEditorHandler,
+    SampleClassificationConfigHandler,
     SampleClassificationPresetsHandler,
 )
 from status.flowcell import (
@@ -362,6 +363,10 @@ class Application(tornado.web.Application):
             (
                 "/api/v1/sample_classification_presets",
                 SampleClassificationPresetsHandler,
+            ),
+            (
+                "/api/v1/sample_classification_config",
+                SampleClassificationConfigHandler,
             ),
             ("/barcode", BarcodeHandler),
             ("/controls", ControlsHandler),

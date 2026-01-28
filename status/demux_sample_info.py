@@ -767,3 +767,33 @@ class SampleClassificationPresetsHandler(SafeHandler):
         except Exception as e:
             self.set_status(500)
             self.write(json.dumps({"error": f"Failed to load presets: {str(e)}"}))
+
+
+class SampleClassificationConfigHandler(SafeHandler):
+    """Serves the full sample classification configuration for the UI."""
+
+    def get(self):
+        """Return the complete sample classification configuration."""
+        try:
+            config = self.application.sample_classification_config
+
+            # Return the full config with all details
+            response = {
+                "patterns": config.get("patterns", {}),
+                "other_general_sample_types": config.get(
+                    "other_general_sample_types", {}
+                ),
+                "library_method_mapping": config.get("library_method_mapping", {}),
+                "bcl_convert_settings": config.get("bcl_convert_settings", {}),
+                "control_patterns": config.get("control_patterns", []),
+                "short_single_index_threshold": config.get(
+                    "short_single_index_threshold", 8
+                ),
+            }
+
+            self.set_header("Content-type", "application/json")
+            self.write(json.dumps(response))
+
+        except Exception as e:
+            self.set_status(500)
+            self.write(json.dumps({"error": f"Failed to load configuration: {str(e)}"}))

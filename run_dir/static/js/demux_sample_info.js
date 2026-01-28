@@ -49,7 +49,12 @@ const vDemuxSampleInfoEditor = {
             editModalIsNew: false,
             editFormData: {},
             samplePresets: null,  // Sample classification presets
-            selectedPreset: ''  // Currently selected preset
+            selectedPreset: '',  // Currently selected preset
+            sampleClassificationConfig: null,  // Full sample classification configuration
+            showConfigModal: false,
+            configModalSources: [],
+            configModalSample: null,
+            expandedConfigSources: []  // Track which config sources are expanded
         }
     },
     computed: {
@@ -127,12 +132,28 @@ const vDemuxSampleInfoEditor = {
 
                     result[lane].push({
                         uuid: uuid,
-                        sample_id: sample.sample_id || sample.Sample_ID,
+                        lane: per_sample_fields.Lane,
+                        sample_id: per_sample_fields.Sample_ID,
+                        sample_name: per_sample_fields.Sample_Name,
+                        sample_project: per_sample_fields.Sample_Project,
                         project_name: sample.project_name,
                         project_id: sample.project_id,
                         last_modified: sample.last_modified,
-                        ...per_sample_fields,
-                        ...other_details
+                        sample_ref: other_details.sample_ref,
+                        sample_type: other_details.sample_type,
+                        config_sources: other_details.config_sources,
+                        index_1: per_sample_fields.index,
+                        index_2: per_sample_fields.index2,
+                        index_length: other_details.index_length,
+                        umi_config: other_details.umi_config,
+                        named_index: other_details.named_index,
+                        recipe: other_details.recipe,
+                        operator: other_details.operator,
+                        description: sample.description,
+                        control: sample.control,
+                        mask_short_reads: per_sample_fields.MaskShortReads,
+                        minimum_trimmed_read_length: per_sample_fields.MinimumTrimmedReadLength,
+                        override_cycles: per_sample_fields.OverrideCycles
                     });
                 });
             });
@@ -169,13 +190,28 @@ const vDemuxSampleInfoEditor = {
 
                     result[namedIndex].push({
                         uuid: uuid,
-                        lane: lane,
-                        sample_id: sample.sample_id || sample.Sample_ID,
+                        lane: per_sample_fields.Lane,
+                        sample_id: per_sample_fields.Sample_ID,
+                        sample_name: per_sample_fields.Sample_Name,
+                        sample_project: per_sample_fields.Sample_Project,
                         project_name: sample.project_name,
                         project_id: sample.project_id,
                         last_modified: sample.last_modified,
-                        ...per_sample_fields,
-                        ...other_details
+                        sample_ref: other_details.sample_ref,
+                        sample_type: other_details.sample_type,
+                        config_sources: other_details.config_sources,
+                        index_1: per_sample_fields.index,
+                        index_2: per_sample_fields.index2,
+                        index_length: other_details.index_length,
+                        umi_config: other_details.umi_config,
+                        named_index: other_details.named_index,
+                        recipe: other_details.recipe,
+                        operator: other_details.operator,
+                        description: sample.description,
+                        control: sample.control,
+                        mask_short_reads: per_sample_fields.MaskShortReads,
+                        minimum_trimmed_read_length: per_sample_fields.MinimumTrimmedReadLength,
+                        override_cycles: per_sample_fields.OverrideCycles
                     });
                 });
             });
@@ -202,8 +238,9 @@ const vDemuxSampleInfoEditor = {
                 Object.values(laneData.sample_rows).forEach(sample => {
                     const settingsVersions = Object.keys(sample.settings).sort().reverse();
                     const latestSettings = sample.settings[settingsVersions[0]];
-                    if (latestSettings.sample_project) {
-                        projects.add(latestSettings.sample_project);
+                    const sampleProject = latestSettings.per_sample_fields?.Sample_Project;
+                    if (sampleProject) {
+                        projects.add(sampleProject);
                     }
                 });
             });
@@ -222,7 +259,7 @@ const vDemuxSampleInfoEditor = {
                 const hasProject = Object.values(laneData.sample_rows).some(sample => {
                     const settingsVersions = Object.keys(sample.settings).sort().reverse();
                     const latestSettings = sample.settings[settingsVersions[0]];
-                    return latestSettings.sample_project === this.bulkEditProject;
+                    return latestSettings.per_sample_fields?.Sample_Project === this.bulkEditProject;
                 });
                 if (hasProject) {
                     lanes.push(lane);
@@ -243,8 +280,8 @@ const vDemuxSampleInfoEditor = {
                 Object.values(laneData.sample_rows).forEach(sample => {
                     const settingsVersions = Object.keys(sample.settings).sort().reverse();
                     const latestSettings = sample.settings[settingsVersions[0]];
-                    if (latestSettings.sample_project === this.bulkEditProject) {
-                        sampleIds.push(sample.sample_id);
+                    if (latestSettings.per_sample_fields?.Sample_Project === this.bulkEditProject) {
+                        sampleIds.push(latestSettings.per_sample_fields?.Sample_ID);
                     }
                 });
             });
@@ -298,6 +335,82 @@ const vDemuxSampleInfoEditor = {
                 .catch(error => {
                     console.error('Failed to load sample presets:', error);
                 });
+        },
+        fetchSampleClassificationConfig() {
+            // Fetch full sample classification configuration from the API
+            if (this.sampleClassificationConfig) return; // Already loaded
+
+            axios.get('/api/v1/sample_classification_config')
+                .then(response => {
+                    this.sampleClassificationConfig = response.data;
+                })
+                .catch(error => {
+                    console.error('Failed to load sample classification config:', error);
+                });
+        },
+        openConfigModal(sample, lane) {
+            // Open modal to show config sources and their details
+            const configSources = this.getConfigSources(sample);
+            this.configModalSources = configSources;
+            this.configModalSample = sample;
+            this.expandedConfigSources = [0];  // Expand the first item by default
+            this.showConfigModal = true;
+
+            // Fetch config if not already loaded
+            this.fetchSampleClassificationConfig();
+        },
+        closeConfigModal() {
+            this.showConfigModal = false;
+            this.configModalSources = [];
+            this.configModalSample = null;
+            this.expandedConfigSources = [];
+        },
+        toggleConfigSource(index) {
+            // Toggle the expanded state of a config source
+            const idx = this.expandedConfigSources.indexOf(index);
+            if (idx > -1) {
+                this.expandedConfigSources.splice(idx, 1);
+            } else {
+                this.expandedConfigSources.push(index);
+            }
+        },
+        isConfigSourceExpanded(index) {
+            // Check if a config source is expanded
+            return this.expandedConfigSources.includes(index);
+        },
+        getConfigDetails(configSource) {
+            // Parse config source and return the configuration details
+            if (!this.sampleClassificationConfig) return null;
+
+            const parts = configSource.split('.');
+            if (parts.length < 2) return null;
+
+            const category = parts[0];  // e.g., "patterns", "library_method_mapping", "bcl_convert_settings"
+            const key = parts.slice(1).join('.');  // e.g., "tenx_single", "BCLConvert_Settings"
+
+            if (category === 'bcl_convert_settings') {
+                return this.sampleClassificationConfig.bcl_convert_settings?.[key];
+            } else if (category === 'patterns') {
+                return this.sampleClassificationConfig.patterns?.[key];
+            } else if (category === 'other_general_sample_types') {
+                return this.sampleClassificationConfig.other_general_sample_types?.[key];
+            } else if (category === 'library_method_mapping') {
+                return this.sampleClassificationConfig.library_method_mapping?.[key];
+            } else if (category === 'control_patterns') {
+                return { control_patterns: this.sampleClassificationConfig.control_patterns };
+            }
+
+            return null;
+        },
+        formatConfigValue(value) {
+            // Format configuration value for display
+            if (value === null || value === undefined) {
+                return 'null';
+            }
+            if (typeof value === 'object') {
+                return JSON.stringify(value, null, 2);
+            }
+            return String(value);
         },
         applyPreset() {
             // Apply selected preset to the form
@@ -563,18 +676,18 @@ const vDemuxSampleInfoEditor = {
 
             // Populate form data with current values (edited or original)
             this.editFormData = {
-                sample_id: currentSettings.sample_id || latestSettings.sample_id,
-                sample_name: currentSettings.sample_name || latestSettings.sample_name,
-                sample_project: currentSettings.sample_project || latestSettings.sample_project,
-                sample_ref: currentSettings.sample_ref || latestSettings.sample_ref,
-                index_1: currentSettings.index_1 || latestSettings.index_1 || '',
-                index_2: currentSettings.index_2 || latestSettings.index_2 || '',
-                named_index: currentSettings.named_index || latestSettings.named_index || '',
-                recipe: currentSettings.recipe || latestSettings.recipe || '',
-                operator: currentSettings.operator || latestSettings.operator || '',
-                description: currentSettings.description || latestSettings.description || '',
-                control: currentSettings.control || latestSettings.control || 'N',
-                override_cycles: currentSettings.override_cycles || latestSettings.override_cycles || ''
+                sample_id: currentSettings.sample_id || latestSettings.per_sample_fields?.Sample_ID,
+                sample_name: currentSettings.sample_name || latestSettings.per_sample_fields?.Sample_Name,
+                sample_project: currentSettings.sample_project || latestSettings.per_sample_fields?.Sample_Project,
+                sample_ref: currentSettings.sample_ref || latestSettings.other_details?.sample_ref,
+                index_1: currentSettings.index_1 || latestSettings.per_sample_fields?.index || '',
+                index_2: currentSettings.index_2 || latestSettings.per_sample_fields?.index2 || '',
+                named_index: currentSettings.named_index || latestSettings.other_details?.named_index || '',
+                recipe: currentSettings.recipe || latestSettings.other_details?.recipe || '',
+                operator: currentSettings.operator || latestSettings.other_details?.operator || '',
+                description: currentSettings.description || sample.description || '',
+                control: currentSettings.control || sample.control || 'N',
+                override_cycles: currentSettings.override_cycles || latestSettings.per_sample_fields?.OverrideCycles || ''
             };
 
             this.editModalLane = lane;
@@ -604,7 +717,7 @@ const vDemuxSampleInfoEditor = {
                 return Object.values(laneData.sample_rows).some(sample => {
                     const settingsVersions = Object.keys(sample.settings).sort().reverse();
                     const latestSettings = sample.settings[settingsVersions[0]];
-                    if (latestSettings.sample_project === this.bulkEditProject) {
+                    if (latestSettings.per_sample_fields?.Sample_Project === this.bulkEditProject) {
                         templateSettings = { ...latestSettings };
                         return true;
                     }
@@ -616,15 +729,15 @@ const vDemuxSampleInfoEditor = {
                 sample_id: newSampleId,
                 sample_name: newSampleId,
                 sample_project: this.bulkEditProject,
-                sample_ref: templateSettings.sample_ref || '',
+                sample_ref: templateSettings.other_details?.sample_ref || '',
                 index_1: '',
                 index_2: '',
-                named_index: templateSettings.named_index || '',
-                recipe: templateSettings.recipe || '',
-                operator: templateSettings.operator || '',
+                named_index: templateSettings.other_details?.named_index || '',
+                recipe: templateSettings.other_details?.recipe || '',
+                operator: templateSettings.other_details?.operator || '',
                 description: '',
                 control: templateSettings.control || 'N',
-                override_cycles: templateSettings.override_cycles || ''
+                override_cycles: templateSettings.per_sample_fields?.OverrideCycles || ''
             } : {
                 sample_id: newSampleId,
                 sample_name: newSampleId,
@@ -738,16 +851,16 @@ const vDemuxSampleInfoEditor = {
                     const latestSettings = sample.settings[settingsVersions[0]];
 
                     // Check if this sample matches the selected project
-                    if (latestSettings.sample_project === this.bulkEditProject) {
+                    if (latestSettings.per_sample_fields?.Sample_Project === this.bulkEditProject) {
                         if (this.bulkEditAction === 'reverse_complement_index1') {
-                            const currentIndex = this.editedData[lane]?.[uuid]?.index_1 || latestSettings.index_1;
+                            const currentIndex = this.editedData[lane]?.[uuid]?.index_1 || latestSettings.per_sample_fields?.index;
                             if (currentIndex) {
                                 const newIndex = this.reverseComplement(currentIndex);
                                 this.updateValue(lane, uuid, 'index_1', newIndex);
                                 editCount++;
                             }
                         } else if (this.bulkEditAction === 'reverse_complement_index2') {
-                            const currentIndex = this.editedData[lane]?.[uuid]?.index_2 || latestSettings.index_2;
+                            const currentIndex = this.editedData[lane]?.[uuid]?.index_2 || latestSettings.per_sample_fields?.index2;
                             if (currentIndex) {
                                 const newIndex = this.reverseComplement(currentIndex);
                                 this.updateValue(lane, uuid, 'index_2', newIndex);
@@ -777,7 +890,7 @@ const vDemuxSampleInfoEditor = {
                 return Object.values(laneData.sample_rows).some(sample => {
                     const settingsVersions = Object.keys(sample.settings).sort().reverse();
                     const latestSettings = sample.settings[settingsVersions[0]];
-                    if (latestSettings.sample_project === this.bulkEditProject) {
+                    if (latestSettings.per_sample_fields?.Sample_Project === this.bulkEditProject) {
                         templateSettings = { ...latestSettings };
                         return true;
                     }
@@ -1103,6 +1216,12 @@ const vDemuxSampleInfoEditor = {
                                                     :class="{ 'bg-info': isFieldEdited(lane, sample.uuid, columnKey) }"
                                                     :title="getEditTooltip(lane, sample.uuid, columnKey)">
                                                     <code v-if="columnKey === 'index_1' || columnKey === 'index_2'">{{ formatCellValue(sample[columnKey], columnKey) }}</code>
+                                                    <button v-else-if="columnKey === 'config_sources' && Array.isArray(sample[columnKey]) && sample[columnKey].length > 0"
+                                                        class="btn btn-sm btn-outline-info"
+                                                        @click="openConfigModal(calculatedLanes[lane].sample_rows[sample.uuid], lane)"
+                                                        :title="'Click to view configuration details'">
+                                                        <i class="fa fa-info-circle"></i> {{ formatCellValue(sample[columnKey], columnKey) }}
+                                                    </button>
                                                     <span v-else>{{ formatCellValue(sample[columnKey], columnKey) }}</span>
                                                 </td>
                                             </tr>
@@ -1207,6 +1326,12 @@ const vDemuxSampleInfoEditor = {
                                                     :class="{ 'bg-info': isFieldEdited(sample.lane, sample.uuid, columnKey) }"
                                                     :title="getEditTooltip(sample.lane, sample.uuid, columnKey)">
                                                     <code v-if="columnKey === 'index_1' || columnKey === 'index_2'">{{ formatCellValue(sample[columnKey], columnKey) }}</code>
+                                                    <button v-else-if="columnKey === 'config_sources' && Array.isArray(sample[columnKey]) && sample[columnKey].length > 0"
+                                                        class="btn btn-sm btn-outline-info"
+                                                        @click="openConfigModal(calculatedLanes[sample.lane].sample_rows[sample.uuid], sample.lane)"
+                                                        :title="'Click to view configuration details'">
+                                                        <i class="fa fa-info-circle"></i> {{ formatCellValue(sample[columnKey], columnKey) }}
+                                                    </button>
                                                     <span v-else>{{ formatCellValue(sample[columnKey], columnKey) }}</span>
                                                 </td>
                                             </tr>
@@ -1419,6 +1544,92 @@ const vDemuxSampleInfoEditor = {
                                     <button type="button" class="btn btn-primary" @click="applyBulkEdit">
                                         {{ bulkEditAction === 'add_sample' ? 'Continue' : 'Apply' }}
                                     </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Configuration Details Modal -->
+                    <div v-if="showConfigModal" class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+                        <div class="modal-dialog modal-xl">
+                            <div class="modal-content">
+                                <div class="modal-header bg-info text-white">
+                                    <h5 class="modal-title">
+                                        <i class="fa fa-cog"></i> Sample Classification Configuration Details
+                                    </h5>
+                                    <button type="button" class="btn-close btn-close-white" @click="closeConfigModal"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <p class="lead mb-4">
+                                        The following configurations were applied in order (from least specific to most specific) to determine this sample's classification:
+                                    </p>
+
+                                    <div v-if="!sampleClassificationConfig" class="text-center">
+                                        <div class="spinner-border text-info" role="status">
+                                            <span class="visually-hidden">Loading configuration...</span>
+                                        </div>
+                                        <p class="mt-2">Loading configuration details...</p>
+                                    </div>
+
+                                    <div v-else>
+                                        <div v-for="(source, index) in configModalSources" :key="index" class="card mb-2">
+                                            <div class="card-header">
+                                                <button class="btn btn-link text-start w-100 text-decoration-none d-flex align-items-center"
+                                                    type="button"
+                                                    @click="toggleConfigSource(index)">
+                                                    <span class="badge bg-primary me-2">{{ index + 1 }}</span>
+                                                    <strong class="flex-grow-1">{{ source }}</strong>
+                                                    <i class="fa" :class="isConfigSourceExpanded(index) ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+                                                </button>
+                                            </div>
+                                            <div v-show="isConfigSourceExpanded(index)" class="card-body">
+                                                <div v-if="getConfigDetails(source)">
+                                                    <pre class="bg-light p-3 rounded mb-0"><code>{{ formatConfigValue(getConfigDetails(source)) }}</code></pre>
+                                                </div>
+                                                <div v-else class="alert alert-warning mb-0">
+                                                    Configuration details not available for this source.
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Show the final calculated settings -->
+                                    <div v-if="configModalSample" class="mt-4">
+                                        <h5 class="text-info">
+                                            <i class="fa fa-check-circle"></i> Final Calculated Settings
+                                        </h5>
+                                        <p class="text-muted">After applying all configurations above, these are the final settings for this sample:</p>
+                                        <div class="card">
+                                            <div class="card-body">
+                                                <div v-if="configModalSample.settings">
+                                                    <div v-for="(settings, timestamp) in configModalSample.settings" :key="timestamp">
+                                                        <h6 class="text-muted">Settings ({{ formatTimestamp(timestamp) }})</h6>
+                                                        <dl class="row">
+                                                            <dt class="col-sm-3">Sample Type:</dt>
+                                                            <dd class="col-sm-9"><code>{{ settings.other_details?.sample_type || 'N/A' }}</code></dd>
+
+                                                            <dt class="col-sm-3">Index Length:</dt>
+                                                            <dd class="col-sm-9"><code>{{ formatConfigValue(settings.other_details?.index_length) }}</code></dd>
+
+                                                            <dt class="col-sm-3">UMI Config:</dt>
+                                                            <dd class="col-sm-9"><code>{{ formatConfigValue(settings.other_details?.umi_config) }}</code></dd>
+
+                                                            <dt class="col-sm-3">Named Indices:</dt>
+                                                            <dd class="col-sm-9"><code>{{ settings.other_details?.named_index || 'N/A' }}</code></dd>
+
+                                                            <dt class="col-sm-3">BCLConvert Settings:</dt>
+                                                            <dd class="col-sm-9">
+                                                                <pre class="bg-light p-2 rounded mb-0"><code>{{ formatConfigValue(settings.BCLConvert_Settings) }}</code></pre>
+                                                            </dd>
+                                                        </dl>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" @click="closeConfigModal">Close</button>
                                 </div>
                             </div>
                         </div>
