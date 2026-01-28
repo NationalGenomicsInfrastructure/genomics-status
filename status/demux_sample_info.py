@@ -247,6 +247,13 @@ class DemuxSampleInfoDataHandler(SafeHandler):
         Applies configurations from least specific to most specific, where more specific
         configs override less specific ones.
 
+        Order of application:
+        1. Default BCLConvert_Settings
+        2. Regex-based patterns (patterns)
+        3. Other general sample types (other_general_sample_types)
+        4. Library method mapping (library_method_mapping)
+        5. Control patterns (highest priority)
+
         Args:
             sample_in_lane: Sample object from uploaded_lims_info
             library_method: Optional library construction method from project
@@ -259,7 +266,6 @@ class DemuxSampleInfoDataHandler(SafeHandler):
         sample_patterns = self._get_sample_patterns()
         control_patterns = config.get("control_patterns", [])
         library_method_mapping = config.get("library_method_mapping", {})
-        short_index_threshold = config.get("short_single_index_threshold", 8)
 
         # Normalize index fields
         index1 = sample_in_lane.get("index_1", "")
@@ -269,56 +275,21 @@ class DemuxSampleInfoDataHandler(SafeHandler):
         # Track which configs were applied
         config_sources = []
 
-        # STEP 1: Start with default/base configuration (least specific)
+        # STEP 1: Start with minimal base configuration
         index_length = [len(index1), len(index2)]
-        is_short_single = (
-            index_length[0] <= short_index_threshold and index_length[1] == 0
-        ) or (index_length[0] == 0 and index_length[1] <= short_index_threshold)
+        result = {
+            "sample_type": None,
+            "index_length": index_length,
+            "umi_config": None,
+            "named_indices": None,
+            "BCLConvert_Settings": {},
+        }
 
-        if is_short_single:
-            result = {
-                "sample_type": "short_single_index",
-                "index_length": index_length,
-                "umi_config": None,
-                "named_indices": None,
-                "BCLConvert_Settings": {},
-            }
-            config_sources.append("default.short_single_index")
-        else:
-            # Use standard pattern as base
-            standard_config = sample_patterns["standard"]["config"]
-            result = {
-                "sample_type": standard_config.get("sample_type", "STANDARD"),
-                "index_length": index_length,
-                "umi_config": None,
-                "named_indices": None,
-                "BCLConvert_Settings": standard_config.get("BCLConvert_Settings", {}),
-            }
-            config_sources.append("other_general_sample_types.standard")
-
-        # STEP 2: Apply pattern-based configurations (more specific)
+        # STEP 2: Apply regex-based pattern configurations
         pattern_matched = False
 
-        # Check noindex
-        if index1.upper() == "NOINDEX":
-            noindex_config = sample_patterns["noindex"]["config"]
-            result["sample_type"] = noindex_config.get("sample_type")
-            result["index_length"] = noindex_config.get("index_length", index_length)
-            if noindex_config.get("umi_config") is not None:
-                result["umi_config"] = noindex_config["umi_config"]
-            if noindex_config.get("named_indices"):
-                result["named_indices"] = noindex_config["named_indices"]
-            if noindex_config.get("BCLConvert_Settings"):
-                result["BCLConvert_Settings"].update(
-                    noindex_config["BCLConvert_Settings"]
-                )
-            config_sources.append("other_general_sample_types.noindex")
-            pattern_matched = True
-
         # Check 10X single-index
-        if not pattern_matched and sample_patterns["tenx_single"]["pattern"].match(
-            index1
-        ):
+        if sample_patterns["tenx_single"]["pattern"].match(index1):
             tenx_config = sample_patterns["tenx_single"]["config"]
             result["sample_type"] = tenx_config.get("sample_type")
             result["index_length"] = tenx_config.get("index_length", index_length)
@@ -389,7 +360,35 @@ class DemuxSampleInfoDataHandler(SafeHandler):
             config_sources.append("patterns.smartseq")
             pattern_matched = True
 
-        # STEP 3: Apply library method mapping (most specific for general samples)
+        # STEP 3: Apply other general sample type configurations (if no pattern matched)
+        if not pattern_matched:
+            # Check noindex
+            if index1.upper() == "NOINDEX":
+                noindex_config = sample_patterns["noindex"]["config"]
+                result["sample_type"] = noindex_config.get("sample_type")
+                result["index_length"] = noindex_config.get(
+                    "index_length", index_length
+                )
+                if noindex_config.get("umi_config") is not None:
+                    result["umi_config"] = noindex_config["umi_config"]
+                if noindex_config.get("named_indices"):
+                    result["named_indices"] = noindex_config["named_indices"]
+                if noindex_config.get("BCLConvert_Settings"):
+                    result["BCLConvert_Settings"].update(
+                        noindex_config["BCLConvert_Settings"]
+                    )
+                config_sources.append("other_general_sample_types.noindex")
+            else:
+                # Use standard as default
+                standard_config = sample_patterns["standard"]["config"]
+                result["sample_type"] = standard_config.get("sample_type", "STANDARD")
+                if standard_config.get("BCLConvert_Settings"):
+                    result["BCLConvert_Settings"].update(
+                        standard_config["BCLConvert_Settings"]
+                    )
+                config_sources.append("other_general_sample_types.standard")
+
+        # STEP 4: Apply library method mapping (overrides previous configurations)
         if library_method and library_method in library_method_mapping:
             mapped_config = library_method_mapping[library_method]
 
@@ -417,7 +416,7 @@ class DemuxSampleInfoDataHandler(SafeHandler):
 
             config_sources.append(f"library_method_mapping.{library_method}")
 
-        # STEP 4: Check for control samples (highest priority override)
+        # STEP 5: Check for control samples (highest priority override)
         if any(pattern in sample_name.lower() for pattern in control_patterns):
             result["sample_type"] = "control"
             result["umi_config"] = None
@@ -474,41 +473,37 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                     library_method = None
                     project_id = ""
 
-                # Classify the sample type (returns dict with sample_type, index_length, umi_config)
-                sample_classification = self._classify_sample_type(
-                    sample_in_lane, library_method
-                )
-
-                # Build BCLConvert_Settings from defaults and pattern/library method overrides
+                # Build BCLConvert_Settings from defaults first
                 config = self.application.sample_classification_config
                 bcl_settings_defaults = config.get("bcl_convert_settings", {}).get(
                     "BCLConvert_Settings", {}
                 )
                 bcl_convert_settings = {}
 
-                # Track config sources - start with the classification sources
-                config_sources = list(sample_classification.get("config_sources", []))
+                # Track config sources - start with defaults
+                config_sources = []
 
-                # Add bcl_convert_settings.BCLConvert_Settings as a source
+                # STEP 1: Apply default BCLConvert_Settings
                 if bcl_settings_defaults:
+                    for setting_name, setting_config in bcl_settings_defaults.items():
+                        default_value = setting_config.get("default")
+                        bcl_convert_settings[setting_name] = default_value
                     config_sources.append("bcl_convert_settings.BCLConvert_Settings")
 
-                # Get overrides from the matched pattern or library method
+                # STEP 2-5: Classify the sample type (applies patterns, other_general_sample_types, library_method_mapping)
+                sample_classification = self._classify_sample_type(
+                    sample_in_lane, library_method
+                )
+
+                # Add classification config sources
+                config_sources.extend(sample_classification.get("config_sources", []))
+
+                # Apply overrides from the matched pattern, general types, or library method
                 classification_overrides = sample_classification.get(
                     "BCLConvert_Settings", {}
                 )
-
-                for setting_name, setting_config in bcl_settings_defaults.items():
-                    # Get default value from config
-                    default_value = setting_config.get("default")
-
-                    # Check if the pattern/library method has an override
-                    if setting_name in classification_overrides:
-                        bcl_convert_settings[setting_name] = classification_overrides[
-                            setting_name
-                        ]
-                    else:
-                        bcl_convert_settings[setting_name] = default_value
+                if classification_overrides:
+                    bcl_convert_settings.update(classification_overrides)
 
                 # Check if we need to expand named indices
                 index_1_value = sample_in_lane["index_1"]
