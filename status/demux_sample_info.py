@@ -288,77 +288,59 @@ class DemuxSampleInfoDataHandler(SafeHandler):
         # STEP 2: Apply regex-based pattern configurations
         pattern_matched = False
 
-        # Check 10X single-index
-        if sample_patterns["tenx_single"]["pattern"].match(index1):
-            tenx_config = sample_patterns["tenx_single"]["config"]
-            result["sample_type"] = tenx_config.get("sample_type")
-            result["index_length"] = tenx_config.get("index_length", index_length)
-            if tenx_config.get("umi_config") is not None:
-                result["umi_config"] = tenx_config["umi_config"]
-            if tenx_config.get("named_indices"):
-                result["named_indices"] = tenx_config["named_indices"]
-            if tenx_config.get("BCLConvert_Settings"):
-                result["BCLConvert_Settings"].update(tenx_config["BCLConvert_Settings"])
-            config_sources.append("patterns.tenx_single")
-            pattern_matched = True
+        # Define patterns to check in order
+        patterns_to_check = [
+            (
+                "tenx_single",
+                lambda: sample_patterns["tenx_single"]["pattern"].match(index1),
+            ),
+            (
+                "tenx_dual",
+                lambda: sample_patterns["tenx_dual"]["pattern"].match(index1),
+            ),
+            (
+                "idt_umi",
+                lambda: sample_patterns["idt_umi"]["pattern"].match(index1)
+                or sample_patterns["idt_umi"]["pattern"].match(index2),
+            ),
+            ("smartseq", lambda: sample_patterns["smartseq"]["pattern"].match(index1)),
+        ]
 
-        # Check 10X dual-index
-        if not pattern_matched and sample_patterns["tenx_dual"]["pattern"].match(
-            index1
-        ):
-            tenx_config = sample_patterns["tenx_dual"]["config"]
-            result["sample_type"] = tenx_config.get("sample_type")
-            result["index_length"] = tenx_config.get("index_length", index_length)
-            if tenx_config.get("umi_config") is not None:
-                result["umi_config"] = tenx_config["umi_config"]
-            if tenx_config.get("named_indices"):
-                result["named_indices"] = tenx_config["named_indices"]
-            if tenx_config.get("BCLConvert_Settings"):
-                result["BCLConvert_Settings"].update(tenx_config["BCLConvert_Settings"])
-            config_sources.append("patterns.tenx_dual")
-            pattern_matched = True
+        for pattern_name, match_func in patterns_to_check:
+            if not pattern_matched and match_func():
+                pattern_config = sample_patterns[pattern_name]["config"]
+                result["sample_type"] = pattern_config.get("sample_type")
 
-        # Check IDT UMI
-        idt_pat = sample_patterns["idt_umi"]["pattern"]
-        if not pattern_matched and (idt_pat.match(index1) or idt_pat.match(index2)):
-            idt_config = sample_patterns["idt_umi"]["config"]
-            result["sample_type"] = idt_config.get("sample_type")
+                # Special handling for idt_umi - calculate UMI lengths from N positions
+                if pattern_name == "idt_umi":
+                    i7_umi_length = index1.upper().count("N")
+                    i5_umi_length = index2.upper().count("N")
+                    result["index_length"] = [
+                        len(index1.replace("N", "")),
+                        len(index2.replace("N", "")),
+                    ]
+                    result["umi_config"] = {
+                        "i7": {"position": "end", "length": i7_umi_length},
+                        "i5": {"position": "end", "length": i5_umi_length},
+                        "R1": {"position": "start", "length": 0},
+                        "R2": {"position": "end", "length": 0},
+                    }
+                else:
+                    result["index_length"] = pattern_config.get(
+                        "index_length", index_length
+                    )
+                    if pattern_config.get("umi_config") is not None:
+                        result["umi_config"] = pattern_config["umi_config"]
 
-            # Calculate UMI lengths and index lengths from N positions
-            i7_umi_length = index1.upper().count("N")
-            i5_umi_length = index2.upper().count("N")
-            result["index_length"] = [
-                len(index1.replace("N", "")),
-                len(index2.replace("N", "")),
-            ]
-            result["umi_config"] = {
-                "i7": {"position": "end", "length": i7_umi_length},
-                "i5": {"position": "end", "length": i5_umi_length},
-                "R1": {"position": "start", "length": 0},
-                "R2": {"position": "end", "length": 0},
-            }
-            if idt_config.get("named_indices"):
-                result["named_indices"] = idt_config["named_indices"]
-            if idt_config.get("BCLConvert_Settings"):
-                result["BCLConvert_Settings"].update(idt_config["BCLConvert_Settings"])
-            config_sources.append("patterns.idt_umi")
-            pattern_matched = True
+                if pattern_config.get("named_indices"):
+                    result["named_indices"] = pattern_config["named_indices"]
+                if pattern_config.get("BCLConvert_Settings"):
+                    result["BCLConvert_Settings"].update(
+                        pattern_config["BCLConvert_Settings"]
+                    )
 
-        # Check Smart-seq
-        if not pattern_matched and sample_patterns["smartseq"]["pattern"].match(index1):
-            smartseq_config = sample_patterns["smartseq"]["config"]
-            result["sample_type"] = smartseq_config.get("sample_type")
-            result["index_length"] = smartseq_config.get("index_length", index_length)
-            if smartseq_config.get("umi_config") is not None:
-                result["umi_config"] = smartseq_config["umi_config"]
-            if smartseq_config.get("named_indices"):
-                result["named_indices"] = smartseq_config["named_indices"]
-            if smartseq_config.get("BCLConvert_Settings"):
-                result["BCLConvert_Settings"].update(
-                    smartseq_config["BCLConvert_Settings"]
-                )
-            config_sources.append("patterns.smartseq")
-            pattern_matched = True
+                config_sources.append(f"patterns.{pattern_name}")
+                pattern_matched = True
 
         # STEP 3: Apply other general sample type configurations (if no pattern matched)
         if not pattern_matched:
