@@ -489,7 +489,7 @@ const vDemuxSampleInfoEditor = {
         },
         applyColumnPreset(preset) {
             if (preset === 'default') {
-                this.visibleColumns = ['sample_project', 'sample_id', 'last_modified', 'index_1', 'index_2', 'recipe', 'override_cycles'];
+                this.visibleColumns = ['project_name', 'sample_id', 'last_modified', 'sample_type', 'config_sources', 'index_1', 'index_2', 'umi_config', 'recipe', 'override_cycles'];
             } else if (preset === 'all') {
                 this.visibleColumns = this.availableColumns.map(col => col.key);
             }
