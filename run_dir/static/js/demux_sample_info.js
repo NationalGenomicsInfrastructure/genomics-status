@@ -1,6 +1,7 @@
 const vDemuxSampleInfoEditor = {
     data() {
         const config = window.STATUS_CONFIG || {};
+        const defaultVisibleColumns = ['project_name', 'sample_id', 'last_modified', 'sample_type', 'index_1', 'index_2', 'umi_config', 'recipe', 'override_cycles'];
         return {
             limsUrl: config.lims_url || '',
             flowcell_id: '',
@@ -36,7 +37,8 @@ const vDemuxSampleInfoEditor = {
                 { key: 'override_cycles', label: 'Override Cycles' },
                 { key: 'last_modified', label: 'Last Modified' }
             ],
-            visibleColumns: ['project_name', 'sample_id', 'last_modified', 'sample_type', 'config_sources', 'index_1', 'index_2', 'umi_config', 'recipe', 'override_cycles'],
+            visibleColumns: defaultVisibleColumns,
+            defaultVisibleColumns: defaultVisibleColumns,
             showBulkEditModal: false,
             columnConfigCollapsed: true,
             bulkEditAction: 'reverse_complement_index1',
@@ -489,7 +491,7 @@ const vDemuxSampleInfoEditor = {
         },
         applyColumnPreset(preset) {
             if (preset === 'default') {
-                this.visibleColumns = ['project_name', 'sample_id', 'last_modified', 'sample_type', 'config_sources', 'index_1', 'index_2', 'umi_config', 'recipe', 'override_cycles'];
+                this.visibleColumns = [...this.defaultVisibleColumns];
             } else if (preset === 'all') {
                 this.visibleColumns = this.availableColumns.map(col => col.key);
             }
@@ -1216,7 +1218,7 @@ const vDemuxSampleInfoEditor = {
                                                     :class="{ 'bg-info': isFieldEdited(lane, sample.uuid, columnKey) }"
                                                     :title="getEditTooltip(lane, sample.uuid, columnKey)">
                                                     <code v-if="columnKey === 'index_1' || columnKey === 'index_2'">{{ formatCellValue(sample[columnKey], columnKey) }}</code>
-                                                    <button v-else-if="columnKey === 'config_sources' && Array.isArray(sample[columnKey]) && sample[columnKey].length > 0"
+                                                    <button v-else-if="columnKey === 'sample_type' && Array.isArray(sample['config_sources']) && sample['config_sources'].length > 0"
                                                         class="btn btn-sm btn-outline-info"
                                                         @click="openConfigModal(calculatedLanes[lane].sample_rows[sample.uuid], lane)"
                                                         :title="'Click to view configuration details'">
