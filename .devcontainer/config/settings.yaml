@@ -1,0 +1,73 @@
+# Local development settings for genomics-status
+# Uses the CouchDB container from docker-compose
+
+couch_server: http://admin:admin@couchdb:5984
+username: admin
+password: admin
+port: 9761
+redirect_uri: http://localhost:9761/login
+cookie_secret: dev-cookie-secret-not-for-production
+
+# CouchDB URL - use 'couchdb' hostname for docker network
+couch_url: http://couchdb:5984
+
+# Font Awesome - using free version CDN for dev
+font_awesome_url: https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js
+
+# LIMS backend credentials location
+lims_backend_credential_location: /workspace/.devcontainer/config/lims_backend_cred.yaml
+
+# Order portal - not needed for local dev
+order_portal_credential_location: /workspace/.devcontainer/config/orderportal_cred.yaml
+
+# Google OAuth - disabled in testing_mode
+google_oauth:
+    key: fake-google-oauth-key
+    secret: fake-google-oauth-secret
+
+# Zendesk - not needed for local dev
+zendesk:
+    url: https://example.zendesk.com
+    username: fake@example.com
+    token: fake-zendesk-token
+
+contact_person: dev@localhost
+
+# Instruments - empty for local dev
+instruments:
+    HiSeq:
+        DEV001: Dev-HiSeq
+    MiSeq:
+        DEV002: Dev-MiSeq
+
+# Slack - not needed for local dev
+slack:
+    token: fake-slack-token
+
+# Jira - not needed for local dev
+jira:
+    url: https://example.atlassian.net
+    user: fake@example.com
+    api_token: fake-jira-token
+    project_key: DEV
+
+# Suggestion box log
+sb_log: suggestion_box.log
+
+# PSUL log - not needed for local dev
+psul_log: /tmp/lims2db_projects.log
+
+# Charon - not needed for local dev
+charon:
+    url: https://example.com
+    api_token: fake-charon-token
+
+# LIMS Dashboard
+lims_dashboard_url: http://localhost:8080
+
+# Server status - empty for local dev
+server_status:
+    instruments: {}
+
+# Reports path
+reports_path: /tmp/reports
