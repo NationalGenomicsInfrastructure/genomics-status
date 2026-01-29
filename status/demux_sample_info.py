@@ -720,6 +720,248 @@ class DemuxSampleInfoDataHandler(SafeHandler):
             self.set_status(500)
             self.write(json.dumps({"error": f"Internal server error: {str(e)}"}))
 
+    def put(self, flowcell_id):
+        """Accept PUT request to update calculated sample settings.
+
+        Expected payload:
+        {
+            "flowcell_id": "...",
+            "edited_settings": {
+                "lane_1": {
+                    "uuid123": {
+                        "sample_id": "new_value",
+                        "index_1": "ATCG",
+                        ...
+                    }
+                }
+            }
+        }
+        """
+        try:
+            # Parse the request body
+            put_data = tornado.escape.json_decode(self.request.body)
+
+            if "edited_settings" not in put_data:
+                self.set_status(400)
+                self.write(
+                    json.dumps({"error": "Missing required field: 'edited_settings'"})
+                )
+                return
+            
+            edited_settings = put_data["edited_settings"]
+
+            # Define which fields are allowed to be edited
+            # Fields are mapped to their location in the settings structure
+            # Format: "field_key": ("section", "actual_key") or ("sample_row", "field_name") for top-level fields
+            allowed_fields = {
+                # per_sample_fields
+                "sample_id": ("per_sample_fields", "Sample_ID"),
+                "sample_name": ("per_sample_fields", "Sample_Name"),
+                "sample_project": ("per_sample_fields", "Sample_Project"),
+                "index_1": ("per_sample_fields", "index"),
+                "index_2": ("per_sample_fields", "index2"),
+                "mask_short_reads": ("per_sample_fields", "MaskShortReads"),
+                "minimum_trimmed_read_length": (
+                    "per_sample_fields",
+                    "MinimumTrimmedReadLength",
+                ),
+                "override_cycles": ("per_sample_fields", "OverrideCycles"),
+                # other_details
+                "sample_ref": ("other_details", "sample_ref"),
+                "sample_type": ("other_details", "sample_type"),
+                "named_index": ("other_details", "named_index"),
+                "recipe": ("other_details", "recipe"),
+                "operator": ("other_details", "operator"),
+                "index_length": ("other_details", "index_length"),
+                "umi_config": ("other_details", "umi_config"),
+                "library_method": ("other_details", "library_method"),
+                # sample_row level (top level of sample, not in settings)
+                "control": ("sample_row", "control"),
+                "description": ("sample_row", "description"),
+            }
+
+            # Fetch the existing document
+            try:
+                view_result = self.application.cloudant.post_view(
+                    db="demux_sample_info",
+                    ddoc="info",
+                    view="flowcell_id",
+                    key=flowcell_id,
+                ).get_result()
+
+                existing_rows = view_result.get("rows", [])
+
+                if not existing_rows:
+                    self.set_status(404)
+                    self.write(
+                        json.dumps(
+                            {
+                                "error": f"No demux sample info found for flowcell {flowcell_id}"
+                            }
+                        )
+                    )
+                    return
+
+                # Get the document
+                doc_id = existing_rows[0]["id"]
+                document = self.application.cloudant.get_document(
+                    db="demux_sample_info", doc_id=doc_id
+                ).get_result()
+
+            except Exception as db_error:
+                self.set_status(500)
+                self.write(
+                    json.dumps(
+                        {"error": f"Database error fetching document: {str(db_error)}"}
+                    )
+                )
+                return
+
+            # Create timestamp for this update
+            timestamp = datetime.datetime.now(datetime.timezone.utc).isoformat(
+                timespec="milliseconds"
+            )
+
+            # Track changes for version history comment
+            changes_summary = []
+
+            # Process edited settings
+            for lane, samples in edited_settings.items():
+                # Convert lane to string to match database structure
+                lane_key = str(lane)
+
+                if lane_key not in document["calculated"]["lanes"]:
+                    raise ValueError(f"Lane {lane_key} does not exist in the document")
+
+                for sample_uuid, edited_fields in samples.items():
+                    if (
+                        sample_uuid
+                        not in document["calculated"]["lanes"][lane_key]["sample_rows"]
+                    ):
+                        raise ValueError(
+                            f"Sample UUID {sample_uuid} does not exist in lane {lane_key}"
+                        )
+
+                    sample_row = document["calculated"]["lanes"][lane_key][
+                        "sample_rows"
+                    ][sample_uuid]
+
+                    # Get the latest settings version
+                    settings_versions = sorted(
+                        sample_row["settings"].keys(), reverse=True
+                    )
+                    latest_version = settings_versions[0]
+                    latest_settings = sample_row["settings"][latest_version]
+
+                    # Create a deep copy of the latest settings for the new version
+                    new_settings = {
+                        "per_sample_fields": latest_settings.get(
+                            "per_sample_fields", {}
+                        ).copy(),
+                        "other_details": latest_settings.get(
+                            "other_details", {}
+                        ).copy(),
+                        "BCLConvert_Settings": latest_settings.get(
+                            "BCLConvert_Settings", {}
+                        ).copy(),
+                    }
+
+                    # Apply edits to the appropriate sections
+                    for field_key, new_value in edited_fields.items():
+                        if field_key not in allowed_fields:
+                            # Skip fields that aren't in the allowed list
+                            continue
+
+                        section, actual_key = allowed_fields[field_key]
+
+                        # Handle sample_row level fields (not in settings)
+                        if section == "sample_row":
+                            old_value = sample_row.get(actual_key)
+                            sample_row[actual_key] = new_value
+
+                            # Track the change
+                            sample_id = new_settings["per_sample_fields"].get(
+                                "Sample_ID", sample_uuid
+                            )
+                            changes_summary.append(
+                                f"{sample_id}: {field_key} changed from '{old_value}' to '{new_value}'"
+                            )
+                        # Handle settings level fields
+                        elif section in new_settings:
+                            old_value = new_settings[section].get(actual_key)
+                            new_settings[section][actual_key] = new_value
+
+                            # Track the change
+                            sample_id = new_settings["per_sample_fields"].get(
+                                "Sample_ID", sample_uuid
+                            )
+                            changes_summary.append(
+                                f"{sample_id}: {field_key} changed from '{old_value}' to '{new_value}'"
+                            )
+
+                    # Add the new settings version with the current timestamp
+                    sample_row["settings"][timestamp] = new_settings
+
+                    # Update last_modified
+                    sample_row["last_modified"] = timestamp
+
+            # Update version_history
+            if "version_history" not in document["calculated"]:
+                document["calculated"]["version_history"] = {}
+
+            document["calculated"]["version_history"][timestamp] = {
+                "generated_by": self.get_current_user().email
+                if self.get_current_user()
+                else None,
+                "autogenerated": False,
+                "comment": f"Manual edit: {'; '.join(changes_summary[:5])}"
+                + ("..." if len(changes_summary) > 5 else ""),
+                "auto_run": False,
+            }
+
+            # Save the updated document back to the database
+            try:
+                response = self.application.cloudant.post_document(
+                    db="demux_sample_info", document=document
+                ).get_result()
+
+                if not response.get("ok"):
+                    self.set_status(500)
+                    self.write(
+                        json.dumps(
+                            {
+                                "error": "Failed to update document in database",
+                                "response": response,
+                            }
+                        )
+                    )
+                    return
+
+                # Fetch the updated document to return to the client
+                updated_doc = self.application.cloudant.get_document(
+                    db="demux_sample_info", doc_id=doc_id
+                ).get_result()
+
+                self.set_status(200)
+                self.set_header("Content-type", "application/json")
+                self.write(json.dumps(updated_doc))
+
+            except Exception as db_error:
+                self.set_status(500)
+                self.write(
+                    json.dumps(
+                        {"error": f"Database error saving document: {str(db_error)}"}
+                    )
+                )
+                return
+
+        except json.JSONDecodeError as e:
+            self.set_status(400)
+            self.write(json.dumps({"error": f"Invalid JSON in request body: {str(e)}"}))
+        except Exception as e:
+            self.set_status(500)
+            self.write(json.dumps({"error": f"Internal server error: {str(e)}"}))
+
 
 class SampleClassificationPresetsHandler(SafeHandler):
     """Serves sample classification presets for the UI."""

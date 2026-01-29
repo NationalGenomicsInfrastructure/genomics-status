@@ -679,7 +679,7 @@ const vDemuxSampleInfoEditor = {
                 edited_settings: this.editedData  // { lane: { uuid: settings_object } }
             };
 
-            axios.post(`/api/v1/demux_sample_info/${this.flowcell_id}`, payload)
+            axios.put(`/api/v1/demux_sample_info/${this.flowcell_id}`, payload)
                 .then(response => {
                     // Refresh the data after successful save
                     this.demux_data = response.data;
