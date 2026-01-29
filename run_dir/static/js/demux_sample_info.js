@@ -1305,7 +1305,7 @@ const vDemuxSampleInfoEditor = {
                                                                         class="btn btn-sm btn-link p-0 text-decoration-none"
                                                                         @click="openEditModal(lane, sample.uuid)"
                                                                         :title="'Edit sample: ' + sample[columnKey]">
-                                                                        <i class="fa fa-pencil me-1"></i>{{ formatCellValue(sample[columnKey], columnKey) }}
+                                                                        {{ formatCellValue(sample[columnKey], columnKey) }}<i class="fa fa-pencil ml-2"></i>
                                                                     </button>
                                                                 </template>
                                                                 <!-- Index columns with code formatting -->
