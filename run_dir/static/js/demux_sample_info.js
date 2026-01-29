@@ -43,6 +43,7 @@ const vDemuxSampleInfoEditor = {
             columnConfigCollapsed: true,
             groupByNamedIndex: false,
             groupByProjectFirst: false,
+            saveComment: '',
             bulkEditAction: 'reverse_complement_index1',
             bulkEditProject: '',
             bulkEditLane: 'all',
@@ -743,15 +744,17 @@ const vDemuxSampleInfoEditor = {
             // Convert editedData to the format expected by the backend
             const payload = {
                 flowcell_id: this.flowcell_id,
-                edited_settings: this.editedData  // { lane: { uuid: settings_object } }
+                edited_settings: this.editedData,  // { lane: { uuid: settings_object } }
+                comment: this.saveComment || ''  // Optional user comment
             };
 
             axios.put(`/api/v1/demux_sample_info/${this.flowcell_id}`, payload)
                 .then(response => {
                     // Refresh the data after successful save
                     this.demux_data = response.data;
-                    // Clear edited data after successful save
+                    // Clear edited data and comment after successful save
                     this.editedData = {};
+                    this.saveComment = '';
                     this.saving = false;
                     // Show success message
                     alert('Changes saved successfully!');
@@ -1274,6 +1277,23 @@ const vDemuxSampleInfoEditor = {
                                     </div>
                                 </div>
 
+                                <!-- Save Comment Field (shown when there are changes) -->
+                                <div v-if="hasChanges" class="card mt-3 mb-3 border-info">
+                                    <div class="card-body">
+                                        <label for="saveComment" class="form-label">
+                                            <i class="fa fa-comment"></i> <strong>Change Comment (optional)</strong>
+                                        </label>
+                                        <textarea
+                                            class="form-control"
+                                            id="saveComment"
+                                            v-model="saveComment"
+                                            rows="2"
+                                            placeholder="Describe the changes you made (optional)..."
+                                            :disabled="saving"></textarea>
+                                        <small class="text-muted">This comment will be saved in the version history.</small>
+                                    </div>
+                                </div>
+
                                 <!-- Column Configuration Menu -->
                                 <div class="card mt-3 mb-4">
                                     <div class="card-header" @click="columnConfigCollapsed = !columnConfigCollapsed" style="cursor: pointer;">
@@ -1689,11 +1709,25 @@ const vDemuxSampleInfoEditor = {
                                         </div>
                                         <div class="col-md-6 mb-3">
                                             <label for="edit_index_1" class="form-label">Index 1:</label>
-                                            <input type="text" class="form-control font-monospace" id="edit_index_1" v-model="editFormData.index_1">
+                                            <input
+                                                type="text"
+                                                class="form-control font-monospace"
+                                                id="edit_index_1"
+                                                v-model="editFormData.index_1"
+                                                @input="editFormData.index_1 = editFormData.index_1.toUpperCase().replace(/[^ACGT]/g, '')"
+                                                pattern="[ACGT]*"
+                                                title="Only ACGT characters are allowed">
                                         </div>
                                         <div class="col-md-6 mb-3">
                                             <label for="edit_index_2" class="form-label">Index 2:</label>
-                                            <input type="text" class="form-control font-monospace" id="edit_index_2" v-model="editFormData.index_2">
+                                            <input
+                                                type="text"
+                                                class="form-control font-monospace"
+                                                id="edit_index_2"
+                                                v-model="editFormData.index_2"
+                                                @input="editFormData.index_2 = editFormData.index_2.toUpperCase().replace(/[^ACGT]/g, '')"
+                                                pattern="[ACGT]*"
+                                                title="Only ACGT characters are allowed">
                                         </div>
                                         <div class="col-md-6 mb-3">
                                             <label for="edit_named_index" class="form-label">Named Index:</label>
