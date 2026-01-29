@@ -1753,8 +1753,11 @@ const vDemuxSampleInfoEditor = {
                                             <textarea class="form-control" id="edit_description" v-model="editFormData.description" rows="2"></textarea>
                                         </div>
                                         <div class="col-md-12 mb-3">
-                                            <label for="edit_override_cycles" class="form-label">Override Cycles:</label>
-                                            <input type="text" class="form-control font-monospace" id="edit_override_cycles" v-model="editFormData.override_cycles">
+                                            <label for="edit_override_cycles" class="form-label">
+                                                Override Cycles:
+                                                <span class="text-muted small">(auto-calculated from recipe and UMI config)</span>
+                                            </label>
+                                            <input type="text" class="form-control font-monospace bg-light" id="edit_override_cycles" v-model="editFormData.override_cycles" readonly>
                                         </div>
                                     </div>
                                 </div>

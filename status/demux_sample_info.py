@@ -338,18 +338,18 @@ class DemuxSampleInfoDataHandler(SafeHandler):
         Args:
             read_name: "R1" or "R2"
             run_cycles: Number of cycles in the run
-            recipe_cycles: Number of expected cycles from recipe
+            recipe_cycles: Number of expected cycles from recipe (includes UMI)
             umi_config: UMI configuration dict
             umi_key: Key to look up in umi_config ("R1" or "R2")
 
         Returns:
-            str: Override string (e.g., "R1:U7N1Y143") or empty if no override needed
+            str: Override string (e.g., "R1:U5Y138N8") or empty if no override needed
         """
         if run_cycles == 0:
             return ""
 
         parts = []
-        remaining_cycles = run_cycles
+        remaining_cycles_from_recipe = recipe_cycles
 
         # Check for UMI at start
         if umi_config and umi_key and umi_key in umi_config:
@@ -359,36 +359,31 @@ class DemuxSampleInfoDataHandler(SafeHandler):
 
             if umi_length > 0 and umi_position == "start":
                 parts.append(f"U{umi_length}")
-                remaining_cycles -= umi_length
-
-        # Add valid sequence bases for the recipe length
-        if recipe_cycles > 0:
-            valid_bases = min(recipe_cycles, remaining_cycles)
-            if umi_config and umi_key and umi_key in umi_config:
-                umi_info = umi_config[umi_key]
-                umi_length = umi_info.get("length", 0)
-                umi_position = umi_info.get("position", "")
-                # Subtract UMI from valid bases if at end
-                if umi_length > 0 and umi_position == "end":
-                    valid_bases -= umi_length
-
-            if valid_bases > 0:
-                parts.append(f"Y{valid_bases}")
-                remaining_cycles -= valid_bases
+                remaining_cycles_from_recipe -= umi_length
 
         # Check for UMI at end
+        umi_at_end = 0
         if umi_config and umi_key and umi_key in umi_config:
             umi_info = umi_config[umi_key]
             umi_length = umi_info.get("length", 0)
             umi_position = umi_info.get("position", "")
 
             if umi_length > 0 and umi_position == "end":
-                parts.append(f"U{umi_length}")
-                remaining_cycles -= umi_length
+                remaining_cycles_from_recipe -= umi_length
+                umi_at_end = umi_length
 
-        # Add ignored bases for remaining cycles (if recipe is shorter than run)
-        if remaining_cycles > 0:
-            parts.append(f"N{remaining_cycles}")
+        # Add valid sequence bases (what's left in recipe after UMIs)
+        if remaining_cycles_from_recipe > 0:
+            parts.append(f"Y{remaining_cycles_from_recipe}")
+
+        # Add UMI at end if present
+        if umi_at_end > 0:
+            parts.append(f"U{umi_at_end}")
+
+        # Add ignored bases if recipe uses fewer cycles than available in run
+        ignored_cycles = run_cycles - recipe_cycles
+        if ignored_cycles > 0:
+            parts.append(f"N{ignored_cycles}")
 
         return f"{read_name}:{''.join(parts)}" if parts else ""
 
@@ -439,14 +434,12 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                 parts.append(f"U{umi_length}")
                 remaining_cycles -= umi_length
 
-        # Add ignored bases for remaining cycles within recipe
-        if remaining_cycles > 0:
-            parts.append(f"N{remaining_cycles}")
-        
-        # Add ignored bases if recipe uses fewer cycles than available in run
-        ignored_from_run = run_cycles - recipe_cycles
-        if ignored_from_run > 0:
-            parts.append(f"N{ignored_from_run}")
+        # Calculate total ignored bases:
+        # 1. Remaining cycles within recipe (after UMI and index)
+        # 2. Extra cycles from run_cycles that recipe doesn't use
+        total_ignored = remaining_cycles + (run_cycles - recipe_cycles)
+        if total_ignored > 0:
+            parts.append(f"N{total_ignored}")
 
         return f"{index_name}:{''.join(parts)}" if parts else ""
 
@@ -1109,6 +1102,27 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                                 "Sample_ID", sample_uuid
                             )
                             modified_samples.add(sample_id)
+
+                    # Recalculate OverrideCycles if recipe or indices were changed
+                    # Check if any relevant fields were edited
+                    relevant_fields = {"recipe", "index_1", "index_2", "umi_config"}
+                    if relevant_fields.intersection(edited_fields.keys()):
+                        run_setup = document.get("metadata", {}).get("run_setup", "")
+                        recipe = new_settings["other_details"].get("recipe", "")
+                        index_1 = new_settings["per_sample_fields"].get("index", "")
+                        index_2 = new_settings["per_sample_fields"].get("index2", "")
+                        umi_config = new_settings["other_details"].get("umi_config")
+                        
+                        # Calculate index lengths from actual index sequences
+                        index_lengths = [len(index_1), len(index_2)]
+                        
+                        # Generate new OverrideCycles
+                        override_cycles = self._generate_override_cycles(
+                            run_setup, recipe, index_lengths, umi_config
+                        )
+                        
+                        # Update the OverrideCycles field
+                        new_settings["per_sample_fields"]["OverrideCycles"] = override_cycles
 
                     # Add the new settings version with the current timestamp
                     sample_row["settings"][timestamp] = new_settings

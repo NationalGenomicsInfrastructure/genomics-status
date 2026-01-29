@@ -29,11 +29,11 @@ class TestOverrideCycles(unittest.TestCase):
         run_setup = "151-10-24-151"
         recipe = "151-X-X-151"
         index_lengths = [10, 24]
-        
+
         result = self.handler._generate_override_cycles(
             run_setup, recipe, index_lengths, None
         )
-        
+
         self.assertEqual(result, "R1:Y151;I1:I10;I2:I24;R2:Y151")
 
     def test_with_umi_r1_r2(self):
@@ -47,11 +47,11 @@ class TestOverrideCycles(unittest.TestCase):
             "i7": {"position": "end", "length": 0},
             "i5": {"position": "end", "length": 0},
         }
-        
+
         result = self.handler._generate_override_cycles(
             run_setup, recipe, index_lengths, umi_config
         )
-        
+
         self.assertEqual(result, "R1:U7Y144;I1:I10;I2:I24;R2:Y144U7")
 
     def test_with_umi_indices(self):
@@ -65,14 +65,12 @@ class TestOverrideCycles(unittest.TestCase):
             "i7": {"position": "end", "length": 2},
             "i5": {"position": "end", "length": 2},
         }
-        
+
         result = self.handler._generate_override_cycles(
             run_setup, recipe, index_lengths, umi_config
         )
-        
+
         self.assertEqual(result, "R1:Y151;I1:I8U2;I2:I8U2N14;R2:Y151")
-
-
 
     def test_with_umi_full_index(self):
         """Test where one index is just UMI"""
@@ -82,7 +80,7 @@ class TestOverrideCycles(unittest.TestCase):
         umi_config = {
             "i5": {"position": "start", "length": 24},
         }
-        
+
         result = self.handler._generate_override_cycles(
             run_setup, recipe, index_lengths, umi_config
         )
@@ -94,12 +92,40 @@ class TestOverrideCycles(unittest.TestCase):
         run_setup = "151-10-24-151"
         recipe = "143-X-X-143"
         index_lengths = [10, 24]
-        
+
         result = self.handler._generate_override_cycles(
             run_setup, recipe, index_lengths, None
         )
-        
+
         self.assertEqual(result, "R1:Y143N8;I1:I10;I2:I24;R2:Y143N8")
+
+    def test_umi_shorter_recipe(self):
+        """Test with UMI and recipe shorter than run setup."""
+        run_setup = "151-10-24-151"
+        recipe = "143-X-X-143"
+        index_lengths = [10, 24]
+        umi_config = {
+            "R1": {"position": "start", "length": 5},
+            "R2": {"position": "end", "length": 5},
+        }
+
+        result = self.handler._generate_override_cycles(
+            run_setup, recipe, index_lengths, umi_config
+        )
+
+        self.assertEqual(result, "R1:U5Y138N8;I1:I10;I2:I24;R2:Y138U5N8")
+
+    def test_recipe_between_run_setup_and_index_lengths(self):
+        """Test with recipe length between run setup and index lengths."""
+        run_setup = "151-10-24-151"
+        recipe = "151-9-X-151"
+        index_lengths = [8, 20]
+
+        result = self.handler._generate_override_cycles(
+            run_setup, recipe, index_lengths, None
+        )
+
+        self.assertEqual(result, "R1:Y151;I1:I8N2;I2:I20N4;R2:Y151")
 
     def test_complex_umi(self):
         """Test complex case with UMIs on multiple locations."""
@@ -112,11 +138,11 @@ class TestOverrideCycles(unittest.TestCase):
             "i7": {"position": "end", "length": 2},
             "i5": {"position": "end", "length": 2},
         }
-        
+
         result = self.handler._generate_override_cycles(
             run_setup, recipe, index_lengths, umi_config
         )
-        
+
         self.assertEqual(result, "R1:U7Y144;I1:I8U2;I2:I8U2N14;R2:Y144U7")
 
     def test_invalid_run_setup(self):
@@ -124,11 +150,11 @@ class TestOverrideCycles(unittest.TestCase):
         run_setup = "151-10"  # Not enough parts
         recipe = "151-X-X-151"
         index_lengths = [10, 24]
-        
+
         result = self.handler._generate_override_cycles(
             run_setup, recipe, index_lengths, None
         )
-        
+
         self.assertEqual(result, "")
 
     def test_empty_run_setup(self):
@@ -136,11 +162,11 @@ class TestOverrideCycles(unittest.TestCase):
         run_setup = ""
         recipe = "151-X-X-151"
         index_lengths = [10, 24]
-        
+
         result = self.handler._generate_override_cycles(
             run_setup, recipe, index_lengths, None
         )
-        
+
         self.assertEqual(result, "")
 
     def test_empty_recipe(self):
@@ -148,11 +174,11 @@ class TestOverrideCycles(unittest.TestCase):
         run_setup = "151-10-24-151"
         recipe = ""
         index_lengths = [10, 24]
-        
+
         result = self.handler._generate_override_cycles(
             run_setup, recipe, index_lengths, None
         )
-        
+
         self.assertEqual(result, "")
 
 
