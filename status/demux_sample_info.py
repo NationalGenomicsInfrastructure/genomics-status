@@ -747,7 +747,7 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                     json.dumps({"error": "Missing required field: 'edited_settings'"})
                 )
                 return
-            
+
             edited_settings = put_data["edited_settings"]
 
             # Define which fields are allowed to be edited
