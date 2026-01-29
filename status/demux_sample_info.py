@@ -241,6 +241,215 @@ class DemuxSampleInfoDataHandler(SafeHandler):
             self._compiled_patterns = patterns
         return self._compiled_patterns
 
+    def _generate_override_cycles(
+        self, run_setup, recipe, index_lengths, umi_config=None
+    ):
+        """Generate OverrideCycles string for BCLConvert based on run setup, recipe, UMI config, and index lengths.
+
+        Args:
+            run_setup: String in format "R1-I1-I2-R2" (e.g., "151-10-24-151")
+            recipe: String in format "R1-I1-I2-R2" (e.g., "151-X-X-151"), X means use full run cycles
+            index_lengths: List of [index1_length, index2_length] - actual index sequence lengths from sample
+            umi_config: Optional dict with UMI configuration for R1, R2, i7, i5
+
+        Returns:
+            str: OverrideCycles string (e.g., "R1:U7N1Y143;R2:U7N1Y143;I1:I8;I2:I8")
+                 or empty string if no override needed
+        """
+        if not run_setup or not recipe:
+            return ""
+
+        # Parse run_setup and recipe
+        run_parts = run_setup.split("-")
+        recipe_parts = recipe.split("-")
+
+        if len(run_parts) != 4 or len(recipe_parts) != 4:
+            # Invalid format
+            return ""
+
+        # Extract cycle counts from run_setup
+        try:
+            run_r1, run_i1, run_i2, run_r2 = [int(x) for x in run_parts]
+        except ValueError:
+            return ""
+
+        # Extract expected cycles from recipe (X means use full run cycles)
+        recipe_r1 = int(recipe_parts[0]) if recipe_parts[0] != "X" else run_r1
+        recipe_i1 = int(recipe_parts[1]) if recipe_parts[1] != "X" else run_i1
+        recipe_i2 = int(recipe_parts[2]) if recipe_parts[2] != "X" else run_i2
+        recipe_r2 = int(recipe_parts[3]) if recipe_parts[3] != "X" else run_r2
+
+        # Use the actual index sequence lengths from the parameter
+        # These represent the true index sequence length (after any UMI is accounted for)
+        index1_length = index_lengths[0]
+        index2_length = index_lengths[1]
+
+        # Validate that recipe cycles don't exceed run setup
+        if (
+            recipe_r1 > run_r1
+            or recipe_i1 > run_i1
+            or recipe_i2 > run_i2
+            or recipe_r2 > run_r2
+        ):
+            # Recipe requires more cycles than available in run - this is an error
+            logging.warning(
+                f"Recipe requirements exceed run setup: recipe={recipe}, "
+                f"run_setup={run_setup}"
+            )
+            return ""
+
+        override_parts = []
+
+        # Generate R1 override
+        r1_override = self._generate_read_override(
+            "R1", run_r1, recipe_r1, umi_config, "R1" if umi_config else None
+        )
+        if r1_override:
+            override_parts.append(r1_override)
+
+        # Generate I1 (i7) override
+        i1_override = self._generate_index_override(
+            "I1", run_i1, recipe_i1, index1_length, umi_config, "i7" if umi_config else None
+        )
+        if i1_override:
+            override_parts.append(i1_override)
+
+        # Generate I2 (i5) override
+        i2_override = self._generate_index_override(
+            "I2", run_i2, recipe_i2, index2_length, umi_config, "i5" if umi_config else None
+        )
+        if i2_override:
+            override_parts.append(i2_override)
+
+        # Generate R2 override
+        r2_override = self._generate_read_override(
+            "R2", run_r2, recipe_r2, umi_config, "R2" if umi_config else None
+        )
+        if r2_override:
+            override_parts.append(r2_override)
+
+        return ";".join(override_parts) if override_parts else ""
+
+    def _generate_read_override(
+        self, read_name, run_cycles, recipe_cycles, umi_config, umi_key
+    ):
+        """Generate override string for a read (R1 or R2).
+
+        Args:
+            read_name: "R1" or "R2"
+            run_cycles: Number of cycles in the run
+            recipe_cycles: Number of expected cycles from recipe
+            umi_config: UMI configuration dict
+            umi_key: Key to look up in umi_config ("R1" or "R2")
+
+        Returns:
+            str: Override string (e.g., "R1:U7N1Y143") or empty if no override needed
+        """
+        if run_cycles == 0:
+            return ""
+
+        parts = []
+        remaining_cycles = run_cycles
+
+        # Check for UMI at start
+        if umi_config and umi_key and umi_key in umi_config:
+            umi_info = umi_config[umi_key]
+            umi_length = umi_info.get("length", 0)
+            umi_position = umi_info.get("position", "")
+
+            if umi_length > 0 and umi_position == "start":
+                parts.append(f"U{umi_length}")
+                remaining_cycles -= umi_length
+
+        # Add valid sequence bases for the recipe length
+        if recipe_cycles > 0:
+            valid_bases = min(recipe_cycles, remaining_cycles)
+            if umi_config and umi_key and umi_key in umi_config:
+                umi_info = umi_config[umi_key]
+                umi_length = umi_info.get("length", 0)
+                umi_position = umi_info.get("position", "")
+                # Subtract UMI from valid bases if at end
+                if umi_length > 0 and umi_position == "end":
+                    valid_bases -= umi_length
+
+            if valid_bases > 0:
+                parts.append(f"Y{valid_bases}")
+                remaining_cycles -= valid_bases
+
+        # Check for UMI at end
+        if umi_config and umi_key and umi_key in umi_config:
+            umi_info = umi_config[umi_key]
+            umi_length = umi_info.get("length", 0)
+            umi_position = umi_info.get("position", "")
+
+            if umi_length > 0 and umi_position == "end":
+                parts.append(f"U{umi_length}")
+                remaining_cycles -= umi_length
+
+        # Add ignored bases for remaining cycles (if recipe is shorter than run)
+        if remaining_cycles > 0:
+            parts.append(f"N{remaining_cycles}")
+
+        return f"{read_name}:{''.join(parts)}" if parts else ""
+
+    def _generate_index_override(
+        self, index_name, run_cycles, recipe_cycles, index_length, umi_config, umi_key
+    ):
+        """Generate override string for an index (I1 or I2).
+
+        Args:
+            index_name: "I1" or "I2"
+            run_cycles: Total cycles available in run_setup
+            recipe_cycles: Number of cycles to use for this index (from recipe)
+            index_length: Actual index sequence length (not including UMI)
+            umi_config: UMI configuration dict
+            umi_key: Key to look up in umi_config ("i7" or "i5")
+
+        Returns:
+            str: Override string (e.g., "I1:I8N2") or empty if no override needed
+        """
+        if recipe_cycles == 0:
+            return ""
+
+        parts = []
+        remaining_cycles = recipe_cycles
+
+        # Check for UMI at start
+        if umi_config and umi_key and umi_key in umi_config:
+            umi_info = umi_config[umi_key]
+            umi_length = umi_info.get("length", 0)
+            umi_position = umi_info.get("position", "")
+
+            if umi_length > 0 and umi_position == "start":
+                parts.append(f"U{umi_length}")
+                remaining_cycles -= umi_length
+
+        # Add index bases only if index_length > 0
+        if index_length > 0:
+            parts.append(f"I{index_length}")
+            remaining_cycles -= index_length
+
+        # Check for UMI at end
+        if umi_config and umi_key and umi_key in umi_config:
+            umi_info = umi_config[umi_key]
+            umi_length = umi_info.get("length", 0)
+            umi_position = umi_info.get("position", "")
+
+            if umi_length > 0 and umi_position == "end":
+                parts.append(f"U{umi_length}")
+                remaining_cycles -= umi_length
+
+        # Add ignored bases for remaining cycles within recipe
+        if remaining_cycles > 0:
+            parts.append(f"N{remaining_cycles}")
+        
+        # Add ignored bases if recipe uses fewer cycles than available in run
+        ignored_from_run = run_cycles - recipe_cycles
+        if ignored_from_run > 0:
+            parts.append(f"N{ignored_from_run}")
+
+        return f"{index_name}:{''.join(parts)}" if parts else ""
+
     def _classify_sample_type(self, sample_in_lane, library_method=None):
         """Classify sample type based on sample properties using TACA classification logic.
 
@@ -326,9 +535,7 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                         "R2": {"position": "end", "length": 0},
                     }
                 else:
-                    result["index_length"] = pattern_config.get(
-                        "index_length", index_length
-                    )
+                    # index_length stays as initialized (actual index sequence lengths)
                     if pattern_config.get("umi_config") is not None:
                         result["umi_config"] = pattern_config["umi_config"]
 
@@ -348,9 +555,7 @@ class DemuxSampleInfoDataHandler(SafeHandler):
             if index1.upper() == "NOINDEX":
                 noindex_config = sample_patterns["noindex"]["config"]
                 result["sample_type"] = noindex_config.get("sample_type")
-                result["index_length"] = noindex_config.get(
-                    "index_length", index_length
-                )
+                result["index_length"] = [0, 0]  # No index for NOINDEX samples
                 if noindex_config.get("umi_config") is not None:
                     result["umi_config"] = noindex_config["umi_config"]
                 if noindex_config.get("named_indices"):
@@ -377,14 +582,8 @@ class DemuxSampleInfoDataHandler(SafeHandler):
             if mapped_config.get("sample_type"):
                 result["sample_type"] = mapped_config["sample_type"]
 
-            if "index_length" in mapped_config:
-                result["index_length"] = mapped_config["index_length"].copy()
-                # Handle "calculated" index lengths
-                if result["index_length"][0] == "calculated":
-                    result["index_length"][0] = len(index1)
-                if result["index_length"][1] == "calculated":
-                    result["index_length"][1] = len(index2)
-
+            # index_length stays as actual index sequence lengths from sample
+            # UMI config from library method mapping will be used in OverrideCycles generation
             if mapped_config.get("umi_config") is not None:
                 result["umi_config"] = mapped_config["umi_config"]
 
@@ -426,12 +625,13 @@ class DemuxSampleInfoDataHandler(SafeHandler):
             lanes_with_samples[lane].append(sample)
         return lanes_with_samples
 
-    def _create_calculated_lanes(self, lanes_with_samples, timestamp):
+    def _create_calculated_lanes(self, lanes_with_samples, timestamp, metadata):
         """Create the calculated lanes structure with sample rows.
 
         Args:
             lanes_with_samples: Dictionary mapping lane numbers to sample lists
             timestamp: ISO format timestamp string
+            metadata: Metadata dictionary containing run_setup and other run information
 
         Returns:
             dict: Calculated lanes structure with UUID-keyed sample rows
@@ -526,6 +726,20 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                         else sample_in_lane.get("index_2", "")
                     )
 
+                    # Generate OverrideCycles if not already set in BCLConvert_Settings
+                    override_cycles = ""
+                    if (
+                        "OverrideCycles" not in bcl_convert_settings
+                        or not bcl_convert_settings["OverrideCycles"]
+                    ):
+                        run_setup = metadata.get("run_setup", "")
+                        recipe = sample_in_lane.get("recipe", "")
+                        index_lengths = sample_classification["index_length"]
+                        umi_config = sample_classification.get("umi_config")
+                        override_cycles = self._generate_override_cycles(
+                            run_setup, recipe, index_lengths, umi_config
+                        )
+
                     # project_name and project_id were already retrieved earlier in the function
                     calculated_lanes[lane]["sample_rows"][sample_uuid] = {
                         "last_modified": timestamp,
@@ -558,7 +772,7 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                                     "index2": index_2,
                                     "MaskShortReads": 0,
                                     "MinimumTrimmedReadLength": 0,
-                                    "OverrideCycles": "",
+                                    "OverrideCycles": override_cycles,
                                     "Sample_Name": sample_in_lane["sample_name"],
                                     "Sample_Project": sample_in_lane["sample_project"],
                                 },
@@ -585,7 +799,9 @@ class DemuxSampleInfoDataHandler(SafeHandler):
         lanes_with_samples = self._group_samples_by_lane(uploaded_lims_info)
 
         # Create calculated lanes structure
-        calculated_lanes = self._create_calculated_lanes(lanes_with_samples, timestamp)
+        calculated_lanes = self._create_calculated_lanes(
+            lanes_with_samples, timestamp, metadata
+        )
 
         # Construct the full document
         document = {
@@ -749,6 +965,7 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                 return
 
             edited_settings = put_data["edited_settings"]
+            user_comment = put_data.get("comment", "").strip()
 
             # Define which fields are allowed to be edited
             # Fields are mapped to their location in the settings structure
@@ -822,8 +1039,8 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                 timespec="milliseconds"
             )
 
-            # Track changes for version history comment
-            changes_summary = []
+            # Track which samples were changed
+            modified_samples = set()
 
             # Process edited settings
             for lane, samples in edited_settings.items():
@@ -876,28 +1093,22 @@ class DemuxSampleInfoDataHandler(SafeHandler):
 
                         # Handle sample_row level fields (not in settings)
                         if section == "sample_row":
-                            old_value = sample_row.get(actual_key)
                             sample_row[actual_key] = new_value
 
-                            # Track the change
+                            # Track the sample ID
                             sample_id = new_settings["per_sample_fields"].get(
                                 "Sample_ID", sample_uuid
                             )
-                            changes_summary.append(
-                                f"{sample_id}: {field_key} changed from '{old_value}' to '{new_value}'"
-                            )
+                            modified_samples.add(sample_id)
                         # Handle settings level fields
                         elif section in new_settings:
-                            old_value = new_settings[section].get(actual_key)
                             new_settings[section][actual_key] = new_value
 
-                            # Track the change
+                            # Track the sample ID
                             sample_id = new_settings["per_sample_fields"].get(
                                 "Sample_ID", sample_uuid
                             )
-                            changes_summary.append(
-                                f"{sample_id}: {field_key} changed from '{old_value}' to '{new_value}'"
-                            )
+                            modified_samples.add(sample_id)
 
                     # Add the new settings version with the current timestamp
                     sample_row["settings"][timestamp] = new_settings
@@ -909,13 +1120,23 @@ class DemuxSampleInfoDataHandler(SafeHandler):
             if "version_history" not in document["calculated"]:
                 document["calculated"]["version_history"] = {}
 
+            # Use user-provided comment if available, otherwise generate automatic summary
+            if user_comment:
+                comment = user_comment
+            else:
+                # Generate automatic comment listing modified samples
+                sample_list = ", ".join(sorted(modified_samples)[:10])
+                if len(modified_samples) > 10:
+                    comment = f"Manual edit: Modified {len(modified_samples)} samples: {sample_list}..."
+                else:
+                    comment = f"Manual edit: Modified samples: {sample_list}"
+
             document["calculated"]["version_history"][timestamp] = {
                 "generated_by": self.get_current_user().email
                 if self.get_current_user()
                 else None,
                 "autogenerated": False,
-                "comment": f"Manual edit: {'; '.join(changes_summary[:5])}"
-                + ("..." if len(changes_summary) > 5 else ""),
+                "comment": comment,
                 "auto_run": False,
             }
 

@@ -5,7 +5,6 @@
       "regex": "SI-(?:GA|NA)-[A-H][1-9][0-2]?",
       "description": "10X single-index samples (e.g., ATAC, Gene Expression)",
       "sample_type": "10X_SINGLE",
-      "index_length": [16, 0],
       "umi_config": null,
       "named_indices": "Chromium_10X_indexes",
       "BCLConvert_Settings": {
@@ -16,7 +15,6 @@
       "regex": "SI-(?:TT|NT|NN|TN|TS)-[A-H][1-9][0-2]?",
       "description": "10X dual-index samples (e.g., Spatial Transcriptomics)",
       "sample_type": "10X_DUAL",
-      "index_length": [10, 10],
       "umi_config": null,
       "named_indices": "Chromium_10X_indexes"
     },
@@ -24,7 +22,6 @@
       "regex": "SMARTSEQ[1-9]?-[1-9][0-9]?[A-P]",
       "description": "Smart-seq samples with plate-based indexing",
       "sample_type": "SMARTSEQ",
-      "index_length": [8, 8],
       "umi_config": null,
       "named_indices": "Smart-seq3"
     },
@@ -49,7 +46,6 @@
     "noindex": {
       "description": "No-index samples",
       "sample_type": "NOINDEX",
-      "index_length": [0, 0],
       "umi_config": null
     },
     "standard": {
@@ -62,10 +58,6 @@
     "10X Chromium: Multiome": {
       "sample_type": "10X_SINGLE_MULTIOME",
       "description": "Example library prep method mapping",
-      "index_length": [
-        8,
-        0
-      ],
       "umi_config": {
         "i5": {
           "position": "start",

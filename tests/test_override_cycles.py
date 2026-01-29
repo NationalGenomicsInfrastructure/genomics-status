@@ -77,7 +77,7 @@ class TestOverrideCycles(unittest.TestCase):
     def test_with_umi_full_index(self):
         """Test where one index is just UMI"""
         run_setup = "151-10-24-151"
-        recipe = "151-10-24-151"
+        recipe = "151-8-24-151"
         index_lengths = [8, 0]  # After removing UMI
         umi_config = {
             "i5": {"position": "start", "length": 24},
@@ -86,7 +86,7 @@ class TestOverrideCycles(unittest.TestCase):
         result = self.handler._generate_override_cycles(
             run_setup, recipe, index_lengths, umi_config
         )
-        
+
         self.assertEqual(result, "R1:Y151;I1:I8N2;I2:U24;R2:Y151")
 
     def test_shorter_recipe(self):
