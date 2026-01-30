@@ -1288,9 +1288,45 @@ class SampleClassificationPresetsHandler(SafeHandler):
                     "named_indices": method_config.get("named_indices"),
                 }
 
+            # Also include instrument type mappings
+            instrument_types = {}
+            for instrument, instrument_config in config.get(
+                "instrument_type_mapping", {}
+            ).items():
+                instrument_types[instrument] = {
+                    "name": instrument,
+                    "description": instrument_config.get("description", ""),
+                    "sample_type": instrument_config.get("sample_type"),
+                    "umi_config": instrument_config.get("umi_config"),
+                    "named_indices": instrument_config.get("named_indices"),
+                    "BCLConvert_Settings": instrument_config.get("BCLConvert_Settings"),
+                }
+
+                # Include run modes if present
+                if "run_modes" in instrument_config:
+                    run_modes = {}
+                    for mode, mode_config in instrument_config["run_modes"].items():
+                        run_modes[mode] = {
+                            "name": mode,
+                            "description": mode_config.get("description", ""),
+                            "sample_type": mode_config.get("sample_type"),
+                            "umi_config": mode_config.get("umi_config"),
+                            "named_indices": mode_config.get("named_indices"),
+                            "BCLConvert_Settings": mode_config.get(
+                                "BCLConvert_Settings"
+                            ),
+                        }
+                    instrument_types[instrument]["run_modes"] = run_modes
+
             self.set_header("Content-type", "application/json")
             self.write(
-                json.dumps({"patterns": patterns, "library_methods": library_methods})
+                json.dumps(
+                    {
+                        "patterns": patterns,
+                        "library_methods": library_methods,
+                        "instrument_types": instrument_types,
+                    }
+                )
             )
 
         except Exception as e:
@@ -1315,6 +1351,7 @@ class SampleClassificationConfigHandler(SafeHandler):
                 "library_method_mapping": config.get("library_method_mapping", {}),
                 "bcl_convert_settings": config.get("bcl_convert_settings", {}),
                 "control_patterns": config.get("control_patterns", []),
+                "instrument_type_mapping": config.get("instrument_type_mapping", {}),
                 "short_single_index_threshold": config.get(
                     "short_single_index_threshold", 8
                 ),

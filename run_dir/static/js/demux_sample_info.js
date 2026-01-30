@@ -518,7 +518,7 @@ const vDemuxSampleInfoEditor = {
             const parts = configSource.split('.');
             if (parts.length < 2) return null;
 
-            const category = parts[0];  // e.g., "patterns", "library_method_mapping", "bcl_convert_settings"
+            const category = parts[0];  // e.g., "patterns", "library_method_mapping", "bcl_convert_settings", "instrument_type_mapping"
             const key = parts.slice(1).join('.');  // e.g., "tenx_single", "BCLConvert_Settings"
 
             if (category === 'bcl_convert_settings') {
@@ -531,6 +531,23 @@ const vDemuxSampleInfoEditor = {
                 return this.sampleClassificationConfig.library_method_mapping?.[key];
             } else if (category === 'control_patterns') {
                 return { control_patterns: this.sampleClassificationConfig.control_patterns };
+            } else if (category === 'instrument_type_mapping') {
+                // Handle instrument type configs: "instrument_type_mapping.NovaSeqXPlus" or "instrument_type_mapping.NovaSeqXPlus.run_modes.10B"
+                const restParts = parts.slice(1);  // e.g., ["NovaSeqXPlus"] or ["NovaSeqXPlus", "run_modes", "10B"]
+                const instrumentType = restParts[0];
+                
+                if (!this.sampleClassificationConfig.instrument_type_mapping?.[instrumentType]) {
+                    return null;
+                }
+                
+                if (restParts.length === 1) {
+                    // Just the instrument type
+                    return this.sampleClassificationConfig.instrument_type_mapping[instrumentType];
+                } else if (restParts.length === 3 && restParts[1] === 'run_modes') {
+                    // Instrument type with run mode: instrument_type_mapping.NovaSeqXPlus.run_modes.10B
+                    const runMode = restParts[2];
+                    return this.sampleClassificationConfig.instrument_type_mapping[instrumentType].run_modes?.[runMode];
+                }
             }
 
             return null;
@@ -549,9 +566,29 @@ const vDemuxSampleInfoEditor = {
             // Apply selected preset to the form
             if (!this.selectedPreset || !this.samplePresets) return;
 
-            // Look for preset in patterns first, then library methods
-            const preset = this.samplePresets.patterns[this.selectedPreset] ||
-                this.samplePresets.library_methods[this.selectedPreset];
+            let preset = null;
+
+            // Check if it's an instrument type preset (format: "instrument:Type" or "instrument:Type:Mode")
+            if (this.selectedPreset.startsWith('instrument:')) {
+                const parts = this.selectedPreset.split(':');
+                const instrumentKey = parts[1];
+                const runModeKey = parts[2]; // May be undefined
+
+                const instrument = this.samplePresets.instrument_types[instrumentKey];
+                if (instrument) {
+                    if (runModeKey && instrument.run_modes && instrument.run_modes[runModeKey]) {
+                        // Use run mode preset
+                        preset = instrument.run_modes[runModeKey];
+                    } else {
+                        // Use instrument type preset
+                        preset = instrument;
+                    }
+                }
+            } else {
+                // Look for preset in patterns first, then library methods
+                preset = this.samplePresets.patterns[this.selectedPreset] ||
+                    this.samplePresets.library_methods[this.selectedPreset];
+            }
 
             if (preset) {
                 // Update recipe based on index_length if available
@@ -564,7 +601,13 @@ const vDemuxSampleInfoEditor = {
                     }
                 }
 
+                // Update named_indices if available
+                if (preset.named_indices) {
+                    this.editFormData.named_index = preset.named_indices;
+                }
+
                 // Note: We don't set index_1/index_2 as those are specific to each sample
+                // Note: UMI config and BCLConvert settings are applied by the backend based on classification
             }
         },
         fetchDemuxInfo() {
@@ -1673,10 +1716,22 @@ const vDemuxSampleInfoEditor = {
                                                                         {{ preset.description }} ({{ preset.sample_type }})
                                                                     </option>
                                                                 </optgroup>
-                                                                <optgroup label="Library Methods" v-if="Object.keys(samplePresets.library_methods).length > 0">
+                                                                <optgroup label="Library Methods" v-if="samplePresets.library_methods && Object.keys(samplePresets.library_methods).length > 0">
                                                                     <option v-for="(preset, key) in samplePresets.library_methods" :key="key" :value="key">
                                                                         {{ preset.description }} ({{ preset.sample_type }})
                                                                     </option>
+                                                                </optgroup>
+                                                                <optgroup label="Instrument Types" v-if="samplePresets.instrument_types && Object.keys(samplePresets.instrument_types).length > 0">
+                                                                    <template v-for="(instrument, instKey) in samplePresets.instrument_types" :key="instKey">
+                                                                        <option :value="'instrument:' + instKey">
+                                                                            {{ instrument.description }} - {{ instKey }}
+                                                                        </option>
+                                                                        <template v-if="instrument.run_modes">
+                                                                            <option v-for="(mode, modeKey) in instrument.run_modes" :key="instKey + ':' + modeKey" :value="'instrument:' + instKey + ':' + modeKey" class="ms-3">
+                                                                                &nbsp;&nbsp;↳ {{ modeKey }} - {{ mode.description }}
+                                                                            </option>
+                                                                        </template>
+                                                                    </template>
                                                                 </optgroup>
                                                             </select>
                                                         </div>
