@@ -443,7 +443,7 @@ class DemuxSampleInfoDataHandler(SafeHandler):
 
         return f"{index_name}:{''.join(parts)}" if parts else ""
 
-    def _classify_sample_type(self, sample_in_lane, library_method=None):
+    def _classify_sample_type(self, sample_in_lane, library_method=None, metadata=None):
         """Classify sample type based on sample properties using TACA classification logic.
 
         Applies configurations from least specific to most specific, where more specific
@@ -454,11 +454,13 @@ class DemuxSampleInfoDataHandler(SafeHandler):
         2. Regex-based patterns (patterns)
         3. Other general sample types (other_general_sample_types)
         4. Library method mapping (library_method_mapping)
-        5. Control patterns (highest priority)
+        5. Instrument type and run mode mapping (instrument_type_mapping)
+        6. Control patterns (highest priority)
 
         Args:
             sample_in_lane: Sample object from uploaded_lims_info
             library_method: Optional library construction method from project
+            metadata: Optional metadata dict containing instrument_type and run_mode
 
         Returns:
             dict: Contains sample_type, index_length, umi_config, config_sources, named_indices, BCLConvert_Settings
@@ -590,7 +592,57 @@ class DemuxSampleInfoDataHandler(SafeHandler):
 
             config_sources.append(f"library_method_mapping.{library_method}")
 
-        # STEP 5: Check for control samples (highest priority override)
+        # STEP 5: Apply instrument type and run mode mapping (overrides previous configurations)
+        if metadata:
+            instrument_type = metadata.get("instrument_type")
+            run_mode = metadata.get("run_mode")
+            instrument_type_mapping = config.get("instrument_type_mapping", {})
+
+            if instrument_type and instrument_type in instrument_type_mapping:
+                instrument_config = instrument_type_mapping[instrument_type]
+
+                # Apply instrument-level settings first
+                if instrument_config.get("sample_type"):
+                    result["sample_type"] = instrument_config["sample_type"]
+
+                if instrument_config.get("umi_config") is not None:
+                    result["umi_config"] = instrument_config["umi_config"]
+
+                if instrument_config.get("named_indices"):
+                    result["named_indices"] = instrument_config["named_indices"]
+
+                if instrument_config.get("BCLConvert_Settings"):
+                    result["BCLConvert_Settings"].update(
+                        instrument_config["BCLConvert_Settings"]
+                    )
+
+                config_sources.append(f"instrument_type_mapping.{instrument_type}")
+
+                # Apply run mode-specific settings (overrides instrument-level)
+                if run_mode and "run_modes" in instrument_config:
+                    run_modes = instrument_config["run_modes"]
+                    if run_mode in run_modes:
+                        run_mode_config = run_modes[run_mode]
+
+                        if run_mode_config.get("sample_type"):
+                            result["sample_type"] = run_mode_config["sample_type"]
+
+                        if run_mode_config.get("umi_config") is not None:
+                            result["umi_config"] = run_mode_config["umi_config"]
+
+                        if run_mode_config.get("named_indices"):
+                            result["named_indices"] = run_mode_config["named_indices"]
+
+                        if run_mode_config.get("BCLConvert_Settings"):
+                            result["BCLConvert_Settings"].update(
+                                run_mode_config["BCLConvert_Settings"]
+                            )
+
+                        config_sources.append(
+                            f"instrument_type_mapping.{instrument_type}.run_modes.{run_mode}"
+                        )
+
+        # STEP 6: Check for control samples (highest priority override)
         if any(pattern in sample_name.lower() for pattern in control_patterns):
             result["sample_type"] = "control"
             result["umi_config"] = None
@@ -665,9 +717,9 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                         bcl_convert_settings[setting_name] = default_value
                     config_sources.append("bcl_convert_settings.BCLConvert_Settings")
 
-                # STEP 2-5: Classify the sample type (applies patterns, other_general_sample_types, library_method_mapping)
+                # STEP 2-6: Classify the sample type (applies patterns, other_general_sample_types, library_method_mapping, instrument_type_mapping)
                 sample_classification = self._classify_sample_type(
-                    sample_in_lane, library_method
+                    sample_in_lane, library_method, metadata
                 )
 
                 # Add classification config sources

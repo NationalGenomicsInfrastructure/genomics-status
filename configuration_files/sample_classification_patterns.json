@@ -67,6 +67,30 @@
       "named_indices": "Chromium_10X_indexes"
     }
   },
+  "instrument_type_mapping": {
+    "NovaSeqXPlus": {
+      "description": "NovaSeq X Plus sequencer defaults",
+      "BCLConvert_Settings": {
+        "BarcodeMismatchesIndex1": 1,
+        "BarcodeMismatchesIndex2": 1
+      },
+      "run_modes": {
+        "10B": {
+          "description": "10B flow cell mode",
+          "BCLConvert_Settings": {
+            "BarcodeMismatchesIndex1": 2
+          }
+        },
+        "25B": {
+          "description": "25B flow cell mode"
+        }
+      }
+    },
+    "NovaSeq6000": {
+      "description": "NovaSeq 6000 sequencer defaults",
+      "BCLConvert_Settings": {}
+    }
+  },
   "bcl_convert_settings": {
     "per_sample_settings": {
       "Lane": {

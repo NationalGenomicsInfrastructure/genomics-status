@@ -126,6 +126,62 @@
       },
       "additionalProperties": false
     },
+    "instrument_type_mapping": {
+      "type": "object",
+      "description": "Mapping of instrument types and run modes to their configurations",
+      "patternProperties": {
+        ".*": {
+          "type": "object",
+          "properties": {
+            "description": {
+              "$ref": "#/$defs/sampleConfig/properties/description"
+            },
+            "sample_type": {
+              "$ref": "#/$defs/sampleConfig/properties/sample_type"
+            },
+            "umi_config": {
+              "$ref": "#/$defs/sampleConfig/properties/umi_config"
+            },
+            "named_indices": {
+              "$ref": "#/$defs/sampleConfig/properties/named_indices"
+            },
+            "BCLConvert_Settings": {
+              "$ref": "#/$defs/sampleConfig/properties/BCLConvert_Settings"
+            },
+            "run_modes": {
+              "type": "object",
+              "description": "Mapping of run modes to their configurations (inherits from instrument type)",
+              "patternProperties": {
+                ".*": {
+                  "type": "object",
+                  "properties": {
+                    "description": {
+                      "$ref": "#/$defs/sampleConfig/properties/description"
+                    },
+                    "sample_type": {
+                      "$ref": "#/$defs/sampleConfig/properties/sample_type"
+                    },
+                    "umi_config": {
+                      "$ref": "#/$defs/sampleConfig/properties/umi_config"
+                    },
+                    "named_indices": {
+                      "$ref": "#/$defs/sampleConfig/properties/named_indices"
+                    },
+                    "BCLConvert_Settings": {
+                      "$ref": "#/$defs/sampleConfig/properties/BCLConvert_Settings"
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
     "control_patterns": {
       "type": "array",
       "description": "List of lowercase strings to match in sample names to identify control samples",
