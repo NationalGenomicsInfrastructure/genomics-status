@@ -562,6 +562,103 @@ const vDemuxSampleInfoEditor = {
             }
             return String(value);
         },
+        traceConfigValueSource(configKey, path = null) {
+            // Trace which config source set a specific value
+            // configKey can be 'sample_type', 'umi_config', 'named_indices', or 'BCLConvert_Settings'
+            // path is for nested values like 'BCLConvert_Settings.BarcodeMismatchesIndex1'
+
+            if (!this.configModalSources || !this.sampleClassificationConfig) return null;
+
+            let lastSource = null;
+
+            // Go through config sources in order
+            for (const source of this.configModalSources) {
+                const config = this.getConfigDetails(source);
+                if (!config) continue;
+
+                if (path) {
+                    // For nested paths like BCLConvert_Settings.BarcodeMismatchesIndex1
+                    const [topKey, ...restPath] = path.split('.');
+                    let value = config[topKey];
+                    for (const key of restPath) {
+                        if (value && typeof value === 'object') {
+                            value = value[key];
+                        } else {
+                            value = undefined;
+                            break;
+                        }
+                    }
+                    if (value !== undefined && value !== null) {
+                        lastSource = source;
+                    }
+                } else {
+                    // For top-level keys
+                    if (config[configKey] !== undefined && config[configKey] !== null) {
+                        lastSource = source;
+                    }
+                }
+            }
+
+            return lastSource;
+        },
+        getValueWithSource(configKey, value, path = null) {
+            // Get a formatted display of value with its source
+            const source = this.traceConfigValueSource(configKey, path);
+            const sourceIndex = source ? this.configModalSources.indexOf(source) + 1 : null;
+
+            return {
+                value: value,
+                source: source,
+                sourceIndex: sourceIndex
+            };
+        },
+        getAllBCLConvertSettings(sampleSettings) {
+            // Get all BCLConvert settings including defaults from schema
+            if (!this.sampleClassificationConfig) return {};
+
+            const allSettings = {};
+            const bclConvertDefaults = this.sampleClassificationConfig.bcl_convert_settings?.BCLConvert_Settings || {};
+
+            // Start with defaults
+            for (const [key, config] of Object.entries(bclConvertDefaults)) {
+                if (config.default !== undefined) {
+                    allSettings[key] = config.default;
+                }
+            }
+
+            // Override with actual settings
+            if (sampleSettings?.BCLConvert_Settings) {
+                Object.assign(allSettings, sampleSettings.BCLConvert_Settings);
+            }
+
+            return allSettings;
+        },
+        formatConfigSourceLabel(source) {
+            // Format config source string into readable label
+            if (!source) return null;
+
+            const parts = source.split('.');
+            const category = parts[0];
+
+            if (category === 'patterns') {
+                return `Pattern: ${parts[1]}`;
+            } else if (category === 'library_method_mapping') {
+                return `Library method: ${parts.slice(1).join('.')}`;
+            } else if (category === 'instrument_type_mapping') {
+                if (parts.length === 2) {
+                    return `Instrument type: ${parts[1]}`;
+                } else if (parts.length === 4 && parts[2] === 'run_modes') {
+                    return `Run mode: ${parts[3]}`;
+                }
+                return `Instrument: ${parts.slice(1).join('.')}`;
+            } else if (category === 'other_general_sample_types') {
+                return `General type: ${parts[1]}`;
+            } else if (category === 'control_patterns') {
+                return 'Control pattern';
+            }
+
+            return source;
+        },
         applyPreset() {
             // Apply selected preset to the form
             if (!this.selectedPreset || !this.samplePresets) return;
@@ -1933,24 +2030,64 @@ const vDemuxSampleInfoEditor = {
                                                 <div v-if="configModalSample.settings">
                                                     <div v-for="(settings, timestamp) in configModalSample.settings" :key="timestamp">
                                                         <h6 class="text-muted">Settings ({{ formatTimestamp(timestamp) }})</h6>
-                                                        <dl class="row">
-                                                            <dt class="col-sm-3">Sample Type:</dt>
-                                                            <dd class="col-sm-9"><code>{{ settings.other_details?.sample_type || 'N/A' }}</code></dd>
-
-                                                            <dt class="col-sm-3">Index Length:</dt>
-                                                            <dd class="col-sm-9"><code>{{ formatConfigValue(settings.other_details?.index_length) }}</code></dd>
-
-                                                            <dt class="col-sm-3">UMI Config:</dt>
-                                                            <dd class="col-sm-9"><code>{{ formatConfigValue(settings.other_details?.umi_config) }}</code></dd>
-
-                                                            <dt class="col-sm-3">Named Indices:</dt>
-                                                            <dd class="col-sm-9"><code>{{ settings.other_details?.named_index || 'N/A' }}</code></dd>
-
-                                                            <dt class="col-sm-3">BCLConvert Settings:</dt>
-                                                            <dd class="col-sm-9">
-                                                                <pre class="bg-light p-2 rounded mb-0"><code>{{ formatConfigValue(settings.BCLConvert_Settings) }}</code></pre>
-                                                            </dd>
-                                                        </dl>
+                                                        <div class="table-responsive">
+                                                            <table class="table table-sm table-hover">
+                                                                <thead class="table-light">
+                                                                    <tr>
+                                                                        <th style="width: 30%">Setting Name</th>
+                                                                        <th style="width: 45%">Value</th>
+                                                                        <th style="width: 25%">Source</th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody>
+                                                                    <tr>
+                                                                        <td><strong>Sample Type</strong></td>
+                                                                        <td><code>{{ settings.other_details?.sample_type || 'N/A' }}</code></td>
+                                                                        <td>
+                                                                            <span v-if="traceConfigValueSource('sample_type')" class="badge bg-info">
+                                                                                {{ formatConfigSourceLabel(traceConfigValueSource('sample_type')) }}
+                                                                            </span>
+                                                                        </td>
+                                                                    </tr>
+                                                                    <tr>
+                                                                        <td><strong>Index Length</strong></td>
+                                                                        <td><code>{{ formatConfigValue(settings.other_details?.index_length) }}</code></td>
+                                                                        <td><span class="badge bg-secondary">actual indices</span></td>
+                                                                    </tr>
+                                                                    <tr>
+                                                                        <td><strong>UMI Config</strong></td>
+                                                                        <td><code>{{ formatConfigValue(settings.other_details?.umi_config) }}</code></td>
+                                                                        <td>
+                                                                            <span v-if="traceConfigValueSource('umi_config')" class="badge bg-info">
+                                                                                {{ formatConfigSourceLabel(traceConfigValueSource('umi_config')) }}
+                                                                            </span>
+                                                                        </td>
+                                                                    </tr>
+                                                                    <tr>
+                                                                        <td><strong>Named Indices</strong></td>
+                                                                        <td><code>{{ settings.other_details?.named_index || 'N/A' }}</code></td>
+                                                                        <td>
+                                                                            <span v-if="traceConfigValueSource('named_indices')" class="badge bg-info">
+                                                                                {{ formatConfigSourceLabel(traceConfigValueSource('named_indices')) }}
+                                                                            </span>
+                                                                        </td>
+                                                                    </tr>
+                                                                    <tr v-if="getAllBCLConvertSettings(settings) && Object.keys(getAllBCLConvertSettings(settings)).length > 0">
+                                                                        <td colspan="3" class="table-secondary"><strong>BCLConvert Settings</strong></td>
+                                                                    </tr>
+                                                                    <tr v-for="(value, key) in getAllBCLConvertSettings(settings)" :key="key">
+                                                                        <td class="ps-4">{{ key }}</td>
+                                                                        <td><code>{{ value }}</code></td>
+                                                                        <td>
+                                                                            <span v-if="traceConfigValueSource('BCLConvert_Settings', 'BCLConvert_Settings.' + key)" class="badge bg-info">
+                                                                                {{ formatConfigSourceLabel(traceConfigValueSource('BCLConvert_Settings', 'BCLConvert_Settings.' + key)) }}
+                                                                            </span>
+                                                                            <span v-else class="badge bg-secondary">default</span>
+                                                                        </td>
+                                                                    </tr>
+                                                                </tbody>
+                                                            </table>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
