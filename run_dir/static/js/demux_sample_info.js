@@ -486,7 +486,7 @@ const vDemuxSampleInfoEditor = {
             const configSources = this.getConfigSources(sample);
             this.configModalSources = configSources;
             this.configModalSample = sample;
-            this.expandedConfigSources = [0];  // Expand the first item by default
+            this.expandedConfigSources = [];  // All cards collapsed by default
             this.showConfigModal = true;
 
             // Fetch config if not already loaded
@@ -1986,41 +1986,8 @@ const vDemuxSampleInfoEditor = {
                                     <button type="button" class="btn-close btn-close-white" @click="closeConfigModal"></button>
                                 </div>
                                 <div class="modal-body">
-                                    <p class="lead mb-4">
-                                        The following configurations were applied in order (from least specific to most specific) to determine this sample's classification:
-                                    </p>
-
-                                    <div v-if="!sampleClassificationConfig" class="text-center">
-                                        <div class="spinner-border text-info" role="status">
-                                            <span class="visually-hidden">Loading configuration...</span>
-                                        </div>
-                                        <p class="mt-2">Loading configuration details...</p>
-                                    </div>
-
-                                    <div v-else>
-                                        <div v-for="(source, index) in configModalSources" :key="index" class="card mb-2">
-                                            <div class="card-header">
-                                                <button class="btn btn-link text-start w-100 text-decoration-none d-flex align-items-center"
-                                                    type="button"
-                                                    @click="toggleConfigSource(index)">
-                                                    <span class="badge bg-primary me-2">{{ index + 1 }}</span>
-                                                    <strong class="flex-grow-1">{{ source }}</strong>
-                                                    <i class="fa" :class="isConfigSourceExpanded(index) ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
-                                                </button>
-                                            </div>
-                                            <div v-show="isConfigSourceExpanded(index)" class="card-body">
-                                                <div v-if="getConfigDetails(source)">
-                                                    <pre class="bg-light p-3 rounded mb-0"><code>{{ formatConfigValue(getConfigDetails(source)) }}</code></pre>
-                                                </div>
-                                                <div v-else class="alert alert-warning mb-0">
-                                                    Configuration details not available for this source.
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
                                     <!-- Show the final calculated settings -->
-                                    <div v-if="configModalSample" class="mt-4">
+                                    <div v-if="configModalSample" class="mb-4">
                                         <h5 class="text-info">
                                             <i class="fa fa-check-circle"></i> Final Calculated Settings
                                         </h5>
@@ -2088,6 +2055,45 @@ const vDemuxSampleInfoEditor = {
                                                                 </tbody>
                                                             </table>
                                                         </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Configuration Sources -->
+                                    <div class="mt-4">
+                                        <h5 class="text-info">
+                                            <i class="fa fa-list"></i> Configuration Sources Applied
+                                        </h5>
+                                        <p class="text-muted mb-3">
+                                            The following configurations were applied in order (from least specific to most specific) to determine this sample's classification:
+                                        </p>
+
+                                        <div v-if="!sampleClassificationConfig" class="text-center">
+                                            <div class="spinner-border text-info" role="status">
+                                                <span class="visually-hidden">Loading configuration...</span>
+                                            </div>
+                                            <p class="mt-2">Loading configuration details...</p>
+                                        </div>
+
+                                        <div v-else>
+                                            <div v-for="(source, index) in configModalSources" :key="index" class="card mb-2">
+                                                <div class="card-header">
+                                                    <button class="btn btn-link text-start w-100 text-decoration-none d-flex align-items-center"
+                                                        type="button"
+                                                        @click="toggleConfigSource(index)">
+                                                        <span class="badge bg-primary me-2">{{ index + 1 }}</span>
+                                                        <strong class="flex-grow-1">{{ source }}</strong>
+                                                        <i class="fa" :class="isConfigSourceExpanded(index) ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+                                                    </button>
+                                                </div>
+                                                <div v-show="isConfigSourceExpanded(index)" class="card-body">
+                                                    <div v-if="getConfigDetails(source)">
+                                                        <pre class="bg-light p-3 rounded mb-0"><code>{{ formatConfigValue(getConfigDetails(source)) }}</code></pre>
+                                                    </div>
+                                                    <div v-else class="alert alert-warning mb-0">
+                                                        Configuration details not available for this source.
                                                     </div>
                                                 </div>
                                             </div>
