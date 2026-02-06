@@ -454,6 +454,11 @@ const vDemuxSampleInfoEditor = {
             const nextNumber = nextLeadingDigit.toString() + '001';
 
             return projectPrefix + '_' + nextNumber;
+        },
+        samplesheets() {
+            // Return pre-generated samplesheets from the server
+            if (!this.demux_data || !this.demux_data.samplesheets) return [];
+            return this.demux_data.samplesheets;
         }
     },
     methods: {
@@ -614,24 +619,28 @@ const vDemuxSampleInfoEditor = {
         },
         getAllBCLConvertSettings(sampleSettings) {
             // Get all BCLConvert settings including defaults from schema
-            if (!this.sampleClassificationConfig) return {};
-
             const allSettings = {};
-            const bclConvertDefaults = this.sampleClassificationConfig.bcl_convert_settings?.BCLConvert_Settings || {};
 
-            // Start with defaults
-            for (const [key, config] of Object.entries(bclConvertDefaults)) {
-                if (config.default !== undefined) {
-                    allSettings[key] = config.default;
+            // If config is loaded, start with defaults
+            if (this.sampleClassificationConfig) {
+                const bclConvertDefaults = this.sampleClassificationConfig.bcl_convert_settings?.BCLConvert_Settings || {};
+                for (const [key, config] of Object.entries(bclConvertDefaults)) {
+                    if (config.default !== undefined) {
+                        allSettings[key] = config.default;
+                    }
                 }
             }
 
-            // Override with actual settings
+            // Override with actual settings from the sample
             if (sampleSettings?.BCLConvert_Settings) {
                 Object.assign(allSettings, sampleSettings.BCLConvert_Settings);
             }
 
             return allSettings;
+        },
+        getSamplesheetBCLSettings(settings) {
+            // Helper method to get BCLConvert settings for samplesheet display
+            return this.getAllBCLConvertSettings(settings);
         },
         formatConfigSourceLabel(source) {
             // Format config source string into readable label
@@ -1221,6 +1230,62 @@ const vDemuxSampleInfoEditor = {
 
             alert(`Added new sample ${newSampleId} to lane ${lane}`);
             this.closeBulkEditModal();
+        },
+        generateSamplesheetContent(samplesheet) {
+            // Convert JSON samplesheet to Illumina v2 CSV format
+            const lines = [];
+
+            // [Header] section
+            lines.push('[Header]');
+            for (const [key, value] of Object.entries(samplesheet.Header)) {
+                lines.push(`${key},${value}`);
+            }
+            lines.push('');
+
+            // [BCLConvert_Settings] section
+            lines.push('[BCLConvert_Settings]');
+
+            // Add BCLConvert settings in standard order
+            const settingsOrder = ['SoftwareVersion', 'MinimumTrimmedReadLength', 'MaskShortReads'];
+            for (const key of settingsOrder) {
+                if (samplesheet.BCLConvert_Settings[key] !== undefined) {
+                    lines.push(`${key},${samplesheet.BCLConvert_Settings[key]}`);
+                }
+            }
+
+            // Add remaining settings
+            for (const [key, value] of Object.entries(samplesheet.BCLConvert_Settings)) {
+                if (!settingsOrder.includes(key)) {
+                    lines.push(`${key},${value}`);
+                }
+            }
+
+            lines.push('');
+
+            // [BCLConvert_Data] section
+            lines.push('[BCLConvert_Data]');
+            lines.push('Lane,Sample_ID,Sample_Name,index,index2,Sample_Project,OverrideCycles');
+
+            // Add sample rows
+            for (const sample of samplesheet.BCLConvert_Data) {
+                lines.push(`${sample.Lane},${sample.Sample_ID},${sample.Sample_Name},${sample.index},${sample.index2},${sample.Sample_Project},${sample.OverrideCycles}`);
+            }
+
+            return lines.join('\n');
+        },
+        downloadSamplesheet(samplesheet) {
+            // Convert JSON samplesheet to CSV and download
+            const content = this.generateSamplesheetContent(samplesheet);
+            const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+
+            link.setAttribute('href', url);
+            link.setAttribute('download', samplesheet.filename);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
         }
     },
     mounted() {
@@ -1343,6 +1408,16 @@ const vDemuxSampleInfoEditor = {
                                     @click.prevent="viewMode = 'history'"
                                     href="#">
                                     Version History
+                                </a>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <a
+                                    class="nav-link"
+                                    :class="{ active: viewMode === 'samplesheets' }"
+                                    @click.prevent="viewMode = 'samplesheets'"
+                                    href="#">
+                                    Samplesheets
+                                    <span class="badge bg-primary ms-1">{{ samplesheets.length }}</span>
                                 </a>
                             </li>
                         </ul>
@@ -1763,6 +1838,39 @@ const vDemuxSampleInfoEditor = {
                                                 <dt class="col-sm-3">Comment:</dt>
                                                 <dd class="col-sm-9">{{ demux_data.calculated.version_history[timestamp].comment || 'None' }}</dd>
                                             </dl>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Samplesheets tab -->
+                            <div class="tab-pane fade" :class="{ 'show active': viewMode === 'samplesheets' }">
+                                <h3>Illumina v2 Samplesheets</h3>
+                                <p class="text-muted">Generated samplesheets grouped by lane and BCLConvert settings. Projects with different settings are split into separate samplesheets.</p>
+
+                                <div v-if="samplesheets.length === 0" class="alert alert-info">
+                                    No samplesheets available. Please ensure data is loaded.
+                                </div>
+
+                                <div v-else>
+                                    <div v-for="(samplesheet, index) in samplesheets" :key="index" class="card mb-4">
+                                        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <h5 class="mb-0">
+                                                    <i class="fa fa-file-text"></i> Lane {{ samplesheet.lane }} - {{ samplesheet.projects.join(', ') }}
+                                                </h5>
+                                                <small class="text-muted">{{ samplesheet.sample_count }} sample{{ samplesheet.sample_count !== 1 ? 's' : '' }}</small>
+                                            </div>
+                                            <button class="btn btn-primary btn-sm" @click="downloadSamplesheet(samplesheet)">
+                                                <i class="fa fa-download"></i> Download
+                                            </button>
+                                        </div>
+                                        <div class="card-body">
+                                            <!-- Samplesheet Preview -->
+                                            <div>
+                                                <h6 class="text-muted">Preview:</h6>
+                                                <pre class="bg-light p-3 rounded" style="max-height: 400px; overflow-y: auto;"><code>{{ generateSamplesheetContent(samplesheet) }}</code></pre>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>

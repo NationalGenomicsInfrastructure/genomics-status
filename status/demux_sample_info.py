@@ -828,6 +828,98 @@ class DemuxSampleInfoDataHandler(SafeHandler):
 
         return calculated_lanes
 
+    def _generate_samplesheets(self, flowcell_id, calculated_lanes, metadata):
+        """Generate Illumina v2 samplesheets grouped by lane and BCLConvert settings.
+
+        Args:
+            flowcell_id: Flowcell identifier
+            calculated_lanes: Dictionary of calculated lanes with sample data
+            metadata: Metadata dictionary with run information
+
+        Returns:
+            list: List of samplesheet dictionaries as structured JSON
+        """
+        samplesheets = []
+
+        # Process each lane
+        for lane, lane_data in calculated_lanes.items():
+            # Group samples by their BCLConvert_Settings
+            settings_groups = {}
+
+            for sample_uuid, sample in lane_data["sample_rows"].items():
+                # Get the latest settings version
+                settings_versions = sorted(sample["settings"].keys(), reverse=True)
+                if not settings_versions:
+                    continue
+
+                latest_settings = sample["settings"][settings_versions[0]]
+
+                # Get BCLConvert_Settings for this sample
+                bcl_settings = latest_settings.get("BCLConvert_Settings", {})
+                settings_key = json.dumps(bcl_settings, sort_keys=True)
+
+                if settings_key not in settings_groups:
+                    settings_groups[settings_key] = {
+                        "bcl_settings": bcl_settings,
+                        "samples": [],
+                    }
+
+                # Build sample data for samplesheet
+                fields = latest_settings.get("per_sample_fields", {})
+                other_details = latest_settings.get("other_details", {})
+
+                sample_data = {
+                    "Lane": lane,
+                    "Sample_ID": fields.get("Sample_ID", ""),
+                    "Sample_Name": fields.get(
+                        "Sample_Name", fields.get("Sample_ID", "")
+                    ),
+                    "index": fields.get("index", ""),
+                    "index2": fields.get("index2", ""),
+                    "Sample_Project": fields.get("Sample_Project", ""),
+                    "OverrideCycles": other_details.get(
+                        "override_cycles", fields.get("OverrideCycles", "")
+                    ),
+                }
+
+                settings_groups[settings_key]["samples"].append(sample_data)
+
+            # Create one samplesheet per settings group
+            for settings_idx, (settings_key, group) in enumerate(
+                settings_groups.items()
+            ):
+                # Get unique projects for this group
+                projects = sorted(
+                    set(
+                        sample["Sample_Project"] or "Unknown"
+                        for sample in group["samples"]
+                    )
+                )
+
+                # Build structured samplesheet
+                samplesheet = {
+                    "lane": lane,
+                    "projects": projects,
+                    "settings_index": settings_idx,
+                    "sample_count": len(group["samples"]),
+                    "filename": f"Lane{lane}_{'_'.join(projects)}_{settings_idx}.csv",
+                    "Header": {
+                        "FileFormatVersion": "2",
+                        "RunName": flowcell_id,
+                        "InstrumentID": "MYSEQ",
+                        "Date": datetime.datetime.now().strftime("%Y-%m-%d"),
+                    },
+                    "BCLConvert_Settings": group["bcl_settings"],
+                    "BCLConvert_Data": group["samples"],
+                }
+
+                samplesheets.append(samplesheet)
+
+        # Sort by lane and settings index
+        samplesheets.sort(key=lambda x: (int(x["lane"]), x["settings_index"]))
+
+        return samplesheets
+
     def _create_document(self, flowcell_id, metadata, uploaded_lims_info, timestamp):
         """Create the complete demux sample info document structure.
 
@@ -848,6 +940,11 @@ class DemuxSampleInfoDataHandler(SafeHandler):
             lanes_with_samples, timestamp, metadata
         )
 
+        # Generate samplesheets
+        samplesheets = self._generate_samplesheets(
+            flowcell_id, calculated_lanes, metadata
+        )
+
         # Construct the full document
         document = {
             "flowcell_id": flowcell_id,
@@ -866,6 +963,7 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                 },
                 "lanes": calculated_lanes,
             },
+            "samplesheets": samplesheets,
         }
 
         return document
@@ -1205,6 +1303,14 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                 "comment": comment,
                 "auto_run": False,
             }
+
+            # Regenerate samplesheets after updates
+            calculated_lanes = document.get("calculated", {}).get("lanes", {})
+            metadata = document.get("metadata", {})
+            samplesheets = self._generate_samplesheets(
+                flowcell_id, calculated_lanes, metadata
+            )
+            document["samplesheets"] = samplesheets
 
             # Save the updated document back to the database
             try:
