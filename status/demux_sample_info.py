@@ -24,6 +24,52 @@ class DemuxSampleInfoEditorHandler(SafeHandler):
         )
 
 
+class DemuxSampleInfoListHandler(SafeHandler):
+    """API handler to list recent flowcells."""
+
+    def get(self):
+        """Get the latest 50 flowcells."""
+        self.set_header("Content-type", "application/json")
+
+        try:
+            # Query the all_docs view to get recent flowcells
+            # We'll use the flowcell_id view to get all flowcells
+            view_result = self.application.cloudant.post_view(
+                db="demux_sample_info",
+                ddoc="info",
+                view="flowcell_id",
+                include_docs=False,
+            ).get_result()
+
+            rows = view_result.get("rows", [])
+
+            # Get unique flowcells (in case there are duplicates)
+            flowcells = []
+            seen = set()
+
+            for row in rows:
+                flowcell_id = row.get("key")
+                if flowcell_id and flowcell_id not in seen:
+                    seen.add(flowcell_id)
+                    flowcells.append(
+                        {"flowcell_id": flowcell_id, "doc_id": row.get("id")}
+                    )
+
+            # Sort by flowcell_id descending (most recent first, assuming naming convention)
+            flowcells.sort(key=lambda x: x["flowcell_id"], reverse=True)
+
+            # Limit to 50 most recent
+            flowcells = flowcells[:50]
+
+            self.write(json.dumps({"flowcells": flowcells}))
+
+        except Exception as e:
+            self.set_status(500)
+            self.write(
+                json.dumps({"error": f"Error retrieving flowcell list: {str(e)}"})
+            )
+
+
 class DemuxSampleInfoDataHandler(SafeHandler):
     """Serves demux sample info data via API."""
 
@@ -309,14 +355,24 @@ class DemuxSampleInfoDataHandler(SafeHandler):
 
         # Generate I1 (i7) override
         i1_override = self._generate_index_override(
-            "I1", run_i1, recipe_i1, index1_length, umi_config, "i7" if umi_config else None
+            "I1",
+            run_i1,
+            recipe_i1,
+            index1_length,
+            umi_config,
+            "i7" if umi_config else None,
         )
         if i1_override:
             override_parts.append(i1_override)
 
         # Generate I2 (i5) override
         i2_override = self._generate_index_override(
-            "I2", run_i2, recipe_i2, index2_length, umi_config, "i5" if umi_config else None
+            "I2",
+            run_i2,
+            recipe_i2,
+            index2_length,
+            umi_config,
+            "i5" if umi_config else None,
         )
         if i2_override:
             override_parts.append(i2_override)
@@ -1262,17 +1318,19 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                         index_1 = new_settings["per_sample_fields"].get("index", "")
                         index_2 = new_settings["per_sample_fields"].get("index2", "")
                         umi_config = new_settings["other_details"].get("umi_config")
-                        
+
                         # Calculate index lengths from actual index sequences
                         index_lengths = [len(index_1), len(index_2)]
-                        
+
                         # Generate new OverrideCycles
                         override_cycles = self._generate_override_cycles(
                             run_setup, recipe, index_lengths, umi_config
                         )
-                        
+
                         # Update the OverrideCycles field
-                        new_settings["per_sample_fields"]["OverrideCycles"] = override_cycles
+                        new_settings["per_sample_fields"]["OverrideCycles"] = (
+                            override_cycles
+                        )
 
                     # Add the new settings version with the current timestamp
                     sample_row["settings"][timestamp] = new_settings

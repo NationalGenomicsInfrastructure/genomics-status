@@ -6,6 +6,8 @@ const vDemuxSampleInfoEditor = {
             limsUrl: config.lims_url || '',
             flowcell_id: '',
             demux_data: null,
+            flowcell_list: [],  // List of recent flowcells
+            loadingFlowcells: false,
             editedData: {},  // Stores edited settings per sample: { lane: { uuid: settings_object } }
             error_messages: [],
             loading: false,
@@ -745,6 +747,25 @@ const vDemuxSampleInfoEditor = {
                     this.loading = false;
                 });
         },
+        fetchFlowcellList() {
+            // Fetch the list of recent flowcells
+            this.loadingFlowcells = true;
+
+            axios.get('/api/v1/demux_sample_info_list')
+                .then(response => {
+                    this.flowcell_list = response.data.flowcells || [];
+                    this.loadingFlowcells = false;
+                })
+                .catch(error => {
+                    console.error('Error fetching flowcell list:', error);
+                    this.loadingFlowcells = false;
+                });
+        },
+        selectFlowcell(flowcellId) {
+            // Select a flowcell from the list
+            this.flowcell_id = flowcellId;
+            this.fetchDemuxInfo();
+        },
         formatTimestamp(timestamp) {
             if (!timestamp) return '';
             return new Date(timestamp).toLocaleString();
@@ -1289,6 +1310,9 @@ const vDemuxSampleInfoEditor = {
         }
     },
     mounted() {
+        // Fetch the list of recent flowcells
+        this.fetchFlowcellList();
+
         // Check if flowcell ID is in the URL
         const urlParams = new URLSearchParams(window.location.search);
         const flowcellId = urlParams.get('flowcell');
@@ -1305,29 +1329,58 @@ const vDemuxSampleInfoEditor = {
                 <div class="col-12">
                     <h1>Demux Sample Info Editor</h1>
 
-                    <!-- Flowcell ID input -->
+                    <!-- Recent Flowcells List -->
                     <div class="card mt-4 mb-4">
                         <div class="card-body">
-                            <h5 class="card-title">Fetch Demux Sample Info</h5>
-                            <div class="row g-3 align-items-end">
-                                <div class="col-auto">
-                                    <label for="flowcell_id" class="form-label">Flowcell ID (if in doubt use 233KCWLT4)</label>
-                                    <input
-                                        type="text"
-                                        class="form-control"
-                                        id="flowcell_id"
-                                        v-model="flowcell_id"
-                                        placeholder="e.g., 233KCWLT4"
-                                        @keyup.enter="fetchDemuxInfo">
+                            <h5 class="card-title">Recent Flowcells (Latest 50)</h5>
+
+                            <!-- Loading state -->
+                            <div v-if="loadingFlowcells" class="text-center py-3">
+                                <div class="spinner-border spinner-border-sm" role="status">
+                                    <span class="visually-hidden">Loading...</span>
                                 </div>
-                                <div class="col-auto">
-                                    <button
-                                        class="btn btn-primary"
-                                        @click="fetchDemuxInfo"
-                                        :disabled="loading">
-                                        <span v-if="loading" class="spinner-border spinner-border-sm me-2" role="status"></span>
-                                        {{ loading ? 'Loading...' : 'Fetch Data' }}
-                                    </button>
+                                <span class="ms-2">Loading flowcells...</span>
+                            </div>
+
+                            <!-- Flowcell list -->
+                            <div v-else-if="flowcell_list.length > 0" class="list-group" style="max-height: 400px; overflow-y: auto;">
+                                <button
+                                    v-for="fc in flowcell_list"
+                                    :key="fc.flowcell_id"
+                                    type="button"
+                                    class="list-group-item list-group-item-action"
+                                    :class="{ 'active': flowcell_id === fc.flowcell_id }"
+                                    @click="selectFlowcell(fc.flowcell_id)">
+                                    <i class="fa fa-file-text-o me-2"></i>{{ fc.flowcell_id }}
+                                </button>
+                            </div>
+
+                            <!-- No flowcells found -->
+                            <div v-else class="alert alert-info mb-0">
+                                No flowcells found in the database.
+                            </div>
+
+                            <!-- Manual entry option -->
+                            <div class="mt-3 pt-3 border-top">
+                                <label class="form-label"><strong>Or enter a flowcell ID manually:</strong></label>
+                                <div class="row g-2 align-items-end">
+                                    <div class="col-auto flex-grow-1">
+                                        <input
+                                            type="text"
+                                            class="form-control"
+                                            v-model="flowcell_id"
+                                            placeholder="e.g., 233KCWLT4"
+                                            @keyup.enter="fetchDemuxInfo">
+                                    </div>
+                                    <div class="col-auto">
+                                        <button
+                                            class="btn btn-primary"
+                                            @click="fetchDemuxInfo"
+                                            :disabled="loading">
+                                            <span v-if="loading" class="spinner-border spinner-border-sm me-2" role="status"></span>
+                                            {{ loading ? 'Loading...' : 'Fetch Data' }}
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
