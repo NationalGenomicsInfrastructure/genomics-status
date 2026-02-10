@@ -718,7 +718,7 @@ const vDemuxSampleInfoEditor = {
                 // Note: UMI config and BCLConvert settings are applied by the backend based on classification
             }
         },
-        fetchDemuxInfo() {
+        fetchDemuxInfo(updateHistory = true) {
             // Clear previous errors
             this.error_messages = [];
             
@@ -736,6 +736,12 @@ const vDemuxSampleInfoEditor = {
                     this.editedData = {};
                     this.selectedVersion = null; // Reset to latest
                     this.loading = false;
+
+                    // Update URL in browser history
+                    if (updateHistory) {
+                        const newUrl = `${window.location.pathname}?flowcell=${encodeURIComponent(this.flowcell_id)}`;
+                        history.pushState({ flowcell: this.flowcell_id }, '', newUrl);
+                    }
                 })
                 .catch(error => {
                     if (error.response && error.response.status === 404) {
@@ -1307,6 +1313,21 @@ const vDemuxSampleInfoEditor = {
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
+        },
+        handlePopState(event) {
+            // Handle browser back/forward buttons
+            const urlParams = new URLSearchParams(window.location.search);
+            const flowcellId = urlParams.get('flowcell');
+
+            if (flowcellId) {
+                this.flowcell_id = flowcellId;
+                this.fetchDemuxInfo(false); // false = don't push to history again
+            } else {
+                // Clear data if no flowcell in URL
+                this.flowcell_id = '';
+                this.demux_data = null;
+                this.error_messages = [];
+            }
         }
     },
     mounted() {
@@ -1319,8 +1340,15 @@ const vDemuxSampleInfoEditor = {
         
         if (flowcellId) {
             this.flowcell_id = flowcellId;
-            this.fetchDemuxInfo();
+            this.fetchDemuxInfo(false); // false = don't push to history on initial load
         }
+
+        // Listen for browser back/forward navigation
+        window.addEventListener('popstate', this.handlePopState);
+    },
+    unmounted() {
+        // Clean up event listener
+        window.removeEventListener('popstate', this.handlePopState);
     },
     template: 
         /*html*/`
