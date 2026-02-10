@@ -772,6 +772,17 @@ const vDemuxSampleInfoEditor = {
             this.flowcell_id = flowcellId;
             this.fetchDemuxInfo();
         },
+        backToList() {
+            // Return to the flowcell list view
+            this.flowcell_id = '';
+            this.demux_data = null;
+            this.error_messages = [];
+            this.editedData = {};
+            
+            // Update URL to remove flowcell parameter
+            const newUrl = window.location.pathname;
+            history.pushState({}, '', newUrl);
+        },
         formatTimestamp(timestamp) {
             if (!timestamp) return '';
             return new Date(timestamp).toLocaleString();
@@ -1357,8 +1368,8 @@ const vDemuxSampleInfoEditor = {
                 <div class="col-12">
                     <h1>Demux Sample Info Editor</h1>
 
-                    <!-- Recent Flowcells List -->
-                    <div class="card mt-4 mb-4">
+                    <!-- Recent Flowcells List (hidden when viewing a flowcell) -->
+                    <div v-if="!demux_data" class="card mt-4 mb-4">
                         <div class="card-body">
                             <h5 class="card-title">Recent Flowcells (Latest 50)</h5>
 
@@ -1433,6 +1444,13 @@ const vDemuxSampleInfoEditor = {
 
                     <!-- Demux data -->
                     <template v-if="demux_data">
+                        <!-- Back button -->
+                        <div class="mb-3">
+                            <button class="btn btn-outline-secondary" @click="backToList">
+                                <i class="fa fa-arrow-left me-2"></i>Back to Flowcell List
+                            </button>
+                        </div>
+                        
                         <h2>Flowcell: {{ demux_data.flowcell_id }}</h2>
 
                         <!-- Metadata Card -->
