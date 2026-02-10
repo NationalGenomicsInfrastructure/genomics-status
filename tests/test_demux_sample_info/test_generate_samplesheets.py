@@ -655,6 +655,154 @@ class TestGenerateSamplesheets(unittest.TestCase):
         indices = sorted([ss["settings_index"] for ss in lane3_sheets])
         self.assertEqual(indices, [0, 1])
 
+    def test_project_across_multiple_lanes(self):
+        """Test that a project spanning multiple lanes creates separate samplesheets per lane."""
+        flowcell_id = "MULTILANE_PROJECT"
+        # Same project (Project_ABC) appears on lanes 1, 2, and 3 with same settings
+        calculated_lanes = {
+            "1": {
+                "sample_rows": {
+                    "s1_lane1": {
+                        "settings": {
+                            self.timestamp: {
+                                "per_sample_fields": {
+                                    "Lane": "1",
+                                    "Sample_ID": "Sample1_L1",
+                                    "Sample_Name": "Sample_1_Lane1",
+                                    "index": "AAAAAAAA",
+                                    "index2": "TTTTTTTT",
+                                    "Sample_Project": "Project_ABC",
+                                    "OverrideCycles": "",
+                                },
+                                "BCLConvert_Settings": {
+                                    "SoftwareVersion": "4.0.3",
+                                    "BarcodeMismatchesIndex1": "1",
+                                },
+                                "other_details": {},
+                            }
+                        }
+                    },
+                    "s2_lane1": {
+                        "settings": {
+                            self.timestamp: {
+                                "per_sample_fields": {
+                                    "Lane": "1",
+                                    "Sample_ID": "Sample2_L1",
+                                    "Sample_Name": "Sample_2_Lane1",
+                                    "index": "CCCCCCCC",
+                                    "index2": "GGGGGGGG",
+                                    "Sample_Project": "Project_ABC",
+                                    "OverrideCycles": "",
+                                },
+                                "BCLConvert_Settings": {
+                                    "SoftwareVersion": "4.0.3",
+                                    "BarcodeMismatchesIndex1": "1",
+                                },
+                                "other_details": {},
+                            }
+                        }
+                    },
+                }
+            },
+            "2": {
+                "sample_rows": {
+                    "s1_lane2": {
+                        "settings": {
+                            self.timestamp: {
+                                "per_sample_fields": {
+                                    "Lane": "2",
+                                    "Sample_ID": "Sample1_L2",
+                                    "Sample_Name": "Sample_1_Lane2",
+                                    "index": "AAAAAAAA",
+                                    "index2": "TTTTTTTT",
+                                    "Sample_Project": "Project_ABC",
+                                    "OverrideCycles": "",
+                                },
+                                "BCLConvert_Settings": {
+                                    "SoftwareVersion": "4.0.3",
+                                    "BarcodeMismatchesIndex1": "1",
+                                },
+                                "other_details": {},
+                            }
+                        }
+                    }
+                }
+            },
+            "3": {
+                "sample_rows": {
+                    "s1_lane3": {
+                        "settings": {
+                            self.timestamp: {
+                                "per_sample_fields": {
+                                    "Lane": "3",
+                                    "Sample_ID": "Sample1_L3",
+                                    "Sample_Name": "Sample_1_Lane3",
+                                    "index": "AAAAAAAA",
+                                    "index2": "TTTTTTTT",
+                                    "Sample_Project": "Project_ABC",
+                                    "OverrideCycles": "",
+                                },
+                                "BCLConvert_Settings": {
+                                    "SoftwareVersion": "4.0.3",
+                                    "BarcodeMismatchesIndex1": "1",
+                                },
+                                "other_details": {},
+                            }
+                        }
+                    },
+                    "s2_lane3": {
+                        "settings": {
+                            self.timestamp: {
+                                "per_sample_fields": {
+                                    "Lane": "3",
+                                    "Sample_ID": "Sample2_L3",
+                                    "Sample_Name": "Sample_2_Lane3",
+                                    "index": "CCCCCCCC",
+                                    "index2": "GGGGGGGG",
+                                    "Sample_Project": "Project_ABC",
+                                    "OverrideCycles": "",
+                                },
+                                "BCLConvert_Settings": {
+                                    "SoftwareVersion": "4.0.3",
+                                    "BarcodeMismatchesIndex1": "1",
+                                },
+                                "other_details": {},
+                            }
+                        }
+                    },
+                }
+            },
+        }
+        metadata = {}
+
+        result = self.handler._generate_samplesheets(
+            flowcell_id, calculated_lanes, metadata
+        )
+
+        # Should have 3 samplesheets - one per lane, even though it's the same project
+        self.assertEqual(len(result), 3)
+
+        # Verify each lane has its own samplesheet
+        lanes = [ss["lane"] for ss in result]
+        self.assertEqual(sorted(lanes), ["1", "2", "3"])
+
+        # All should be for Project_ABC
+        for samplesheet in result:
+            self.assertEqual(samplesheet["projects"], ["Project_ABC"])
+
+        # Lane 1 should have 2 samples, lanes 2 and 3 should have 1 and 2 samples respectively
+        sample_counts_by_lane = {ss["lane"]: ss["sample_count"] for ss in result}
+        self.assertEqual(sample_counts_by_lane["1"], 2)
+        self.assertEqual(sample_counts_by_lane["2"], 1)
+        self.assertEqual(sample_counts_by_lane["3"], 2)
+
+        # Verify filenames are unique per lane
+        filenames = [ss["filename"] for ss in result]
+        self.assertEqual(len(filenames), len(set(filenames)))  # All unique
+        self.assertIn("Lane1_Project_ABC_0.csv", filenames)
+        self.assertIn("Lane2_Project_ABC_0.csv", filenames)
+        self.assertIn("Lane3_Project_ABC_0.csv", filenames)
+
 
 if __name__ == "__main__":
     unittest.main()
