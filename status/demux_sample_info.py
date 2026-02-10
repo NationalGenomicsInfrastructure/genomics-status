@@ -295,6 +295,7 @@ class DemuxSampleInfoDataHandler(SafeHandler):
         Args:
             run_setup: String in format "R1-I1-I2-R2" (e.g., "151-10-24-151")
             recipe: String in format "R1-I1-I2-R2" (e.g., "151-X-X-151"), X means use full run cycles
+                    Or shorthand format "R1-R2" (e.g., "151-151") which is equivalent to "R1-X-X-R2"
             index_lengths: List of [index1_length, index2_length] - actual index sequence lengths from sample
             umi_config: Optional dict with UMI configuration for R1, R2, i7, i5
 
@@ -308,6 +309,10 @@ class DemuxSampleInfoDataHandler(SafeHandler):
         # Parse run_setup and recipe
         run_parts = run_setup.split("-")
         recipe_parts = recipe.split("-")
+        
+        # Allow 2-part recipe format (Y-Z) as shorthand for Y-X-X-Z
+        if len(recipe_parts) == 2:
+            recipe_parts = [recipe_parts[0], "X", "X", recipe_parts[1]]
 
         if len(run_parts) != 4 or len(recipe_parts) != 4:
             # Invalid format
@@ -962,8 +967,6 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                     "Header": {
                         "FileFormatVersion": "2",
                         "RunName": flowcell_id,
-                        "InstrumentID": "MYSEQ",
-                        "Date": datetime.datetime.now().strftime("%Y-%m-%d"),
                     },
                     "BCLConvert_Settings": group["bcl_settings"],
                     "BCLConvert_Data": group["samples"],
