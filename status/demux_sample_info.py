@@ -28,32 +28,87 @@ class DemuxSampleInfoListHandler(SafeHandler):
     """API handler to list recent flowcells."""
 
     def get(self):
-        """Get the latest 50 flowcells."""
+        """Get the latest 50 flowcells, merged from demux_sample_info and y_flowcells databases."""
         self.set_header("Content-type", "application/json")
 
         try:
-            # Query the all_docs view to get recent flowcells
-            # We'll use the flowcell_id view to get all flowcells
-            view_result = self.application.cloudant.post_view(
+            # Query demux_sample_info database
+            demux_view_result = self.application.cloudant.post_view(
                 db="demux_sample_info",
                 ddoc="info",
                 view="flowcell_id",
                 include_docs=False,
             ).get_result()
 
-            rows = view_result.get("rows", [])
+            demux_rows = demux_view_result.get("rows", [])
 
-            # Get unique flowcells (in case there are duplicates)
-            flowcells = []
-            seen = set()
+            # Get unique flowcells from demux_sample_info
+            flowcells_dict = {}
 
-            for row in rows:
+            for row in demux_rows:
                 flowcell_id = row.get("key")
-                if flowcell_id and flowcell_id not in seen:
-                    seen.add(flowcell_id)
-                    flowcells.append(
-                        {"flowcell_id": flowcell_id, "doc_id": row.get("id")}
-                    )
+                if flowcell_id:
+                    flowcells_dict[flowcell_id] = {
+                        "flowcell_id": flowcell_id,
+                        "doc_id": row.get("id"),
+                        "has_demux_info": True,
+                    }
+
+            # Query y_flowcells database for event status
+            try:
+                y_flowcells_view_result = self.application.cloudant.post_view(
+                    db="y_flowcells",
+                    ddoc="summary",
+                    view="flowcell_id",
+                    include_docs=False,
+                ).get_result()
+
+                y_flowcells_rows = y_flowcells_view_result.get("rows", [])
+
+                # Merge event data from y_flowcells
+                for row in y_flowcells_rows:
+                    flowcell_id = row.get("key")
+                    if flowcell_id:
+                        events_data = row.get("value", {})
+
+                        # Extract the events we're interested in
+                        event_info = {
+                            "sequencing_started": events_data.get(
+                                "sequencing_started", False
+                            ),
+                            "sequencing_started_timestamp": events_data.get(
+                                "sequencing_started_timestamp"
+                            ),
+                            "sequencing_finished": events_data.get(
+                                "sequencing_finished", False
+                            ),
+                            "sequencing_finished_timestamp": events_data.get(
+                                "sequencing_finished_timestamp"
+                            ),
+                            "transferred_to_hpc": events_data.get(
+                                "transferred_to_hpc", False
+                            ),
+                            "transferred_to_hpc_timestamp": events_data.get(
+                                "transferred_to_hpc_timestamp"
+                            ),
+                        }
+
+                        if flowcell_id in flowcells_dict:
+                            # Merge with existing entry
+                            flowcells_dict[flowcell_id].update(event_info)
+                        else:
+                            # Add new entry from y_flowcells
+                            flowcells_dict[flowcell_id] = {
+                                "flowcell_id": flowcell_id,
+                                "has_demux_info": False,
+                                **event_info,
+                            }
+            except Exception as e:
+                # Log but don't fail if y_flowcells query fails
+                logging.warning(f"Failed to fetch data from y_flowcells: {str(e)}")
+
+            # Convert dict to list
+            flowcells = list(flowcells_dict.values())
 
             # Sort by flowcell_id descending (most recent first, assuming naming convention)
             flowcells.sort(key=lambda x: x["flowcell_id"], reverse=True)

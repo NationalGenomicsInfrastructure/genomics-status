@@ -1382,16 +1382,72 @@ const vDemuxSampleInfoEditor = {
                             </div>
 
                             <!-- Flowcell list -->
-                            <div v-else-if="flowcell_list.length > 0" class="list-group" style="max-height: 400px; overflow-y: auto;">
-                                <button
-                                    v-for="fc in flowcell_list"
-                                    :key="fc.flowcell_id"
-                                    type="button"
-                                    class="list-group-item list-group-item-action"
-                                    :class="{ 'active': flowcell_id === fc.flowcell_id }"
-                                    @click="selectFlowcell(fc.flowcell_id)">
-                                    <i class="fa fa-file-text-o me-2"></i>{{ fc.flowcell_id }}
-                                </button>
+                            <div v-else-if="flowcell_list.length > 0" class="table-responsive" style="max-height: 500px; overflow-y: auto;">
+                                <table class="table table-hover table-sm mb-0">
+                                    <thead class="sticky-top bg-white">
+                                        <tr>
+                                            <th>Flowcell ID</th>
+                                            <th>Demux Info</th>
+                                            <th>Sequencing Started</th>
+                                            <th>Sequencing Finished</th>
+                                            <th>Transferred to HPC</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr
+                                            v-for="fc in flowcell_list"
+                                            :key="fc.flowcell_id"
+                                            class="cursor-pointer"
+                                            :class="{ 'table-active': flowcell_id === fc.flowcell_id }"
+                                            @click="selectFlowcell(fc.flowcell_id)"
+                                            style="cursor: pointer;">
+                                            <td>
+                                                <i class="fa fa-file-text-o me-2"></i>{{ fc.flowcell_id }}
+                                            </td>
+                                            <td>
+                                                <span v-if="fc.has_demux_info" class="badge bg-success">
+                                                    <i class="fa fa-check"></i> Yes
+                                                </span>
+                                                <span v-else class="badge bg-secondary">
+                                                    <i class="fa fa-times"></i> No
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <span v-if="fc.sequencing_started" class="text-success" :title="fc.sequencing_started_timestamp">
+                                                    <i class="fa fa-check-circle"></i>
+                                                    <small v-if="fc.sequencing_started_timestamp">
+                                                        {{ new Date(fc.sequencing_started_timestamp).toLocaleString() }}
+                                                    </small>
+                                                </span>
+                                                <span v-else class="text-muted">
+                                                    <i class="fa fa-minus-circle"></i> No
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <span v-if="fc.sequencing_finished" class="text-success" :title="fc.sequencing_finished_timestamp">
+                                                    <i class="fa fa-check-circle"></i>
+                                                    <small v-if="fc.sequencing_finished_timestamp">
+                                                        {{ new Date(fc.sequencing_finished_timestamp).toLocaleString() }}
+                                                    </small>
+                                                </span>
+                                                <span v-else class="text-muted">
+                                                    <i class="fa fa-minus-circle"></i> No
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <span v-if="fc.transferred_to_hpc" class="text-success" :title="fc.transferred_to_hpc_timestamp">
+                                                    <i class="fa fa-check-circle"></i>
+                                                    <small v-if="fc.transferred_to_hpc_timestamp">
+                                                        {{ new Date(fc.transferred_to_hpc_timestamp).toLocaleString() }}
+                                                    </small>
+                                                </span>
+                                                <span v-else class="text-muted">
+                                                    <i class="fa fa-minus-circle"></i> No
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
                             </div>
 
                             <!-- No flowcells found -->
