@@ -1388,10 +1388,8 @@ const vDemuxSampleInfoEditor = {
                                         <tr>
                                             <th>Flowcell ID</th>
                                             <th>Demux Info</th>
-                                            <th>First Generated</th>
                                             <th>Run Setup</th>
                                             <th>Instrument Type</th>
-                                            <th>Sequencing Started</th>
                                             <th>Sequencing Finished</th>
                                             <th>Transferred to HPC</th>
                                         </tr>
@@ -1406,6 +1404,19 @@ const vDemuxSampleInfoEditor = {
                                             style="cursor: pointer;">
                                             <td>
                                                 {{ fc.runfolder_id || fc.flowcell_id }}
+                                                <!-- Status icons -->
+                                                <i v-if="fc.sequencing_finished" 
+                                                   class="fa fa-check ms-2" 
+                                                   title="Sequencing finished"
+                                                   aria-hidden="true"></i>
+                                                <i v-else-if="fc.sequencing_started" 
+                                                   class="fa fa-hourglass-half ms-2" 
+                                                   title="Sequencing in progress"
+                                                   aria-hidden="true"></i>
+                                                <i v-else-if="fc.has_demux_info && !fc.sequencing_started" 
+                                                   class="fa fa-spinner ms-2" 
+                                                   title="Awaiting event data"
+                                                   aria-hidden="true"></i>
                                                 <small v-if="fc.runfolder_id && fc.runfolder_id !== fc.flowcell_id" class="text-muted d-block" style="font-size: 0.75rem;">
                                                     {{ fc.flowcell_id }}
                                                 </small>
@@ -1419,29 +1430,12 @@ const vDemuxSampleInfoEditor = {
                                                 </span>
                                             </td>
                                             <td>
-                                                <small v-if="fc.first_generated">
-                                                    {{ fc.first_generated.split('T')[0] }}
-                                                </small>
-                                                <span v-else class="text-muted">-</span>
-                                            </td>
-                                            <td>
                                                 <small v-if="fc.run_setup">{{ fc.run_setup }}</small>
                                                 <span v-else class="text-muted">-</span>
                                             </td>
                                             <td>
                                                 <small v-if="fc.instrument_type">{{ fc.instrument_type }}</small>
                                                 <span v-else class="text-muted">-</span>
-                                            </td>
-                                            <td>
-                                                <span v-if="fc.sequencing_started" class="text-success" :title="fc.sequencing_started_timestamp">
-                                                    <i class="fa fa-check-circle"></i>
-                                                    <small v-if="fc.sequencing_started_timestamp">
-                                                        {{ fc.sequencing_started_timestamp.split('T')[0] }}
-                                                    </small>
-                                                </span>
-                                                <span v-else class="text-muted">
-                                                    <i class="fa fa-minus-circle"></i> No
-                                                </span>
                                             </td>
                                             <td>
                                                 <span v-if="fc.sequencing_finished" class="text-success" :title="fc.sequencing_finished_timestamp">

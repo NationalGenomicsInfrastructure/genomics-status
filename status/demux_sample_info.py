@@ -122,15 +122,26 @@ class DemuxSampleInfoListHandler(SafeHandler):
             # Convert dict to list
             flowcells = list(flowcells_dict.values())
 
-            # Sort by first_generated descending (most recent first)
-            # For flowcells without demux info, use sequencing_started_timestamp as fallback
-            flowcells.sort(
-                key=lambda x: (
-                    x.get("sequencing_started_timestamp") or "",
-                    x.get("first_generated") or "",
-                ),
-                reverse=True,
-            )
+            # Sort by single value per flowcell: use sequencing_started_timestamp if available,
+            # otherwise first_generated, otherwise runfolder_id, otherwise flowcell_id (most recent first)
+            # Remove dashes from dates for proper string sorting
+            def get_sort_key(fc):
+                seq_started = fc.get("sequencing_started_timestamp")
+                if seq_started:
+                    return seq_started.replace("-", "")
+                first_gen = fc.get("first_generated")
+                if first_gen:
+                    return first_gen.replace("-", "")
+                runfolder = fc.get("runfolder_id")
+                if runfolder:
+                    # If runfolder starts with 6 digits, prefix with '20'
+                    parts = runfolder.split("_")
+                    if parts and parts[0].isdigit() and len(parts[0]) == 6:
+                        return "20" + runfolder
+                    return runfolder
+                return fc.get("flowcell_id") or ""
+
+            flowcells.sort(key=get_sort_key, reverse=True)
             self.write(json.dumps({"flowcells": flowcells}))
 
         except Exception as e:
