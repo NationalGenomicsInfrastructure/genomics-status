@@ -7,6 +7,7 @@ import re
 import uuid
 
 import tornado.web
+from dateutil.relativedelta import relativedelta
 
 from status.util import SafeHandler
 
@@ -28,20 +29,39 @@ class DemuxSampleInfoListHandler(SafeHandler):
     """API handler to list recent flowcells."""
 
     def get(self):
-        """Get the latest 100 flowcells, merged from demux_sample_info and y_flowcells databases."""
+        """Get flowcells merged from demux_sample_info and y_flowcells databases.
+
+        Query parameters:
+            all: If present, fetch all flowcells. Otherwise, only last 6 months.
+        """
         self.set_header("Content-type", "application/json")
+        show_all = self.get_argument("all", False)
 
         try:
+            # Calculate date cutoff for 6 months ago (format: YYYYMMDD)
+            six_months_ago = (
+                datetime.datetime.now() - relativedelta(months=6)
+            ).strftime("%Y%m%d")
+
             # Query demux_sample_info database using the summary view
             # The view emits [first_generated, flowcell_id] as key
             # Sort descending by first_generated to get most recent first
+            demux_view_params = {
+                "db": "demux_sample_info",
+                "ddoc": "summary",
+                "view": "date_flowcell_id",
+                "include_docs": False,
+                "descending": True,
+            }
+            if not show_all:
+                # With descending=True, end_key specifies where to stop
+                # Use array with just the date to stop at that date (includes all flowcells on that date)
+                demux_view_params["end_key"] = [six_months_ago]
+            else:
+                demux_view_params["limit"] = 500
+
             demux_view_result = self.application.cloudant.post_view(
-                db="demux_sample_info",
-                ddoc="summary",
-                view="date_flowcell_id",
-                include_docs=False,
-                descending=True,
-                limit=100,
+                **demux_view_params
             ).get_result()
 
             demux_rows = demux_view_result.get("rows", [])
@@ -67,18 +87,32 @@ class DemuxSampleInfoListHandler(SafeHandler):
 
             # Query y_flowcells database for event status
             try:
+                # The view now emits [run_date, flowcell_id] as key
+                y_flowcells_view_params = {
+                    "db": "y_flowcells",
+                    "ddoc": "summary",
+                    "view": "date_flowcell_id",
+                    "include_docs": False,
+                    "descending": True,
+                }
+                if not show_all:
+                    # With descending=True, end_key specifies where to stop
+                    # Use array with just the date to stop at that date (includes all flowcells on that date)
+                    y_flowcells_view_params["end_key"] = [six_months_ago]
+                else:
+                    y_flowcells_view_params["limit"] = 500
+
                 y_flowcells_view_result = self.application.cloudant.post_view(
-                    db="y_flowcells",
-                    ddoc="summary",
-                    view="flowcell_id",
-                    include_docs=False,
+                    **y_flowcells_view_params
                 ).get_result()
 
                 y_flowcells_rows = y_flowcells_view_result.get("rows", [])
 
                 # Merge event data from y_flowcells
                 for row in y_flowcells_rows:
-                    flowcell_id = row.get("key")
+                    # Key is now [run_date, flowcell_id]
+                    key = row.get("key", [])
+                    flowcell_id = key[1] if len(key) >= 2 else None
                     if flowcell_id:
                         events_data = row.get("value", {})
 
@@ -145,9 +179,15 @@ class DemuxSampleInfoListHandler(SafeHandler):
             self.write(json.dumps({"flowcells": flowcells}))
 
         except Exception as e:
+            logging.error(f"Error retrieving flowcell list: {str(e)}", exc_info=True)
             self.set_status(500)
             self.write(
-                json.dumps({"error": f"Error retrieving flowcell list: {str(e)}"})
+                json.dumps(
+                    {
+                        "error": f"Error retrieving flowcell list: {str(e)}",
+                        "error_type": type(e).__name__,
+                    }
+                )
             )
 
 

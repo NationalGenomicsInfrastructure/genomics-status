@@ -7,6 +7,7 @@ const vDemuxSampleInfoEditor = {
             flowcell_id: '',
             demux_data: null,
             flowcell_list: [],  // List of recent flowcells
+            showAllFlowcells: false,  // Toggle between recent (6 months) and all flowcells
             loadingFlowcells: false,
             editedData: {},  // Stores edited settings per sample: { lane: { uuid: settings_object } }
             error_messages: [],
@@ -754,10 +755,14 @@ const vDemuxSampleInfoEditor = {
                 });
         },
         fetchFlowcellList() {
-            // Fetch the list of recent flowcells
+            // Fetch the list of flowcells (recent or all based on showAllFlowcells)
             this.loadingFlowcells = true;
 
-            axios.get('/api/v1/demux_sample_info_list')
+            const url = this.showAllFlowcells
+                ? '/api/v1/demux_sample_info_list?all=true'
+                : '/api/v1/demux_sample_info_list';
+
+            axios.get(url)
                 .then(response => {
                     this.flowcell_list = response.data.flowcells || [];
                     this.loadingFlowcells = false;
@@ -766,6 +771,11 @@ const vDemuxSampleInfoEditor = {
                     console.error('Error fetching flowcell list:', error);
                     this.loadingFlowcells = false;
                 });
+        },
+        toggleShowAllFlowcells() {
+            // Toggle between showing recent (6 months) and all flowcells
+            this.showAllFlowcells = !this.showAllFlowcells;
+            this.fetchFlowcellList();
         },
         selectFlowcell(flowcellId) {
             // Select a flowcell from the list
@@ -1371,7 +1381,16 @@ const vDemuxSampleInfoEditor = {
                     <!-- Recent Flowcells List (hidden when viewing a flowcell) -->
                     <div v-if="!demux_data" class="card mt-4 mb-4">
                         <div class="card-body">
-                            <h5 class="card-title">Recent Flowcells (Latest 50)</h5>
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h5 class="card-title mb-0">{{ showAllFlowcells ? 'All Flowcells' : 'Recent Flowcells (Last 6 Months)' }}</h5>
+                                <button
+                                    class="btn btn-sm btn-outline-secondary"
+                                    @click="toggleShowAllFlowcells"
+                                    :disabled="loadingFlowcells">
+                                    <i class="fa fa-filter me-1"></i>
+                                    {{ showAllFlowcells ? 'Show Recent Only' : 'Show All' }}
+                                </button>
+                            </div>
 
                             <!-- Loading state -->
                             <div v-if="loadingFlowcells" class="text-center py-3">
@@ -1387,11 +1406,9 @@ const vDemuxSampleInfoEditor = {
                                     <thead class="sticky-top bg-white">
                                         <tr>
                                             <th>Flowcell ID</th>
-                                            <th>Demux Info</th>
+                                            <th>Status</th>
                                             <th>Run Setup</th>
                                             <th>Instrument Type</th>
-                                            <th>Sequencing Finished</th>
-                                            <th>Transferred to HPC</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -1405,29 +1422,58 @@ const vDemuxSampleInfoEditor = {
                                             <td>
                                                 {{ fc.runfolder_id || fc.flowcell_id }}
                                                 <!-- Status icons -->
-                                                <i v-if="fc.sequencing_finished" 
-                                                   class="fa fa-check ms-2" 
+                                                <i v-if="fc.sequencing_finished"
+                                                   class="fa fa-check ms-2"
                                                    title="Sequencing finished"
                                                    aria-hidden="true"></i>
-                                                <i v-else-if="fc.sequencing_started" 
-                                                   class="fa fa-hourglass-half ms-2" 
+                                                <i v-else-if="fc.sequencing_started"
+                                                   class="fa fa-hourglass-half ms-2"
                                                    title="Sequencing in progress"
                                                    aria-hidden="true"></i>
-                                                <i v-else-if="fc.has_demux_info && !fc.sequencing_started" 
-                                                   class="fa fa-spinner ms-2" 
+                                                <i v-else-if="fc.has_demux_info && !fc.sequencing_started"
+                                                   class="fa fa-spinner ms-2"
                                                    title="Awaiting event data"
                                                    aria-hidden="true"></i>
                                                 <small v-if="fc.runfolder_id && fc.runfolder_id !== fc.flowcell_id" class="text-muted d-block" style="font-size: 0.75rem;">
                                                     {{ fc.flowcell_id }}
                                                 </small>
                                             </td>
-                                            <td>
-                                                <span v-if="fc.has_demux_info" class="badge bg-success">
-                                                    <i class="fa fa-check"></i> Yes
-                                                </span>
-                                                <span v-else class="badge bg-secondary">
-                                                    <i class="fa fa-times"></i> No
-                                                </span>
+                                            <td class="text-nowrap">
+                                                <!-- Demux Info -->
+                                                <i v-if="fc.has_demux_info"
+                                                   class="fa fa-list-alt"
+                                                   style="font-size: 1.15em; margin-right: 0.4em;"
+                                                   title="Has demux info"
+                                                   aria-hidden="true"></i>
+                                                <i v-else
+                                                   class="fa fa-list-alt"
+                                                   style="opacity: 0.2; font-size: 1.15em; margin-right: 0.4em;"
+                                                   title="No demux info"
+                                                   aria-hidden="true"></i>
+
+                                                <!-- Sequencing Finished -->
+                                                <i v-if="fc.sequencing_finished"
+                                                   class="fa fa-check-circle"
+                                                   style="font-size: 1.15em; margin-right: 0.4em;"
+                                                   :title="'Sequencing finished' + (fc.sequencing_finished_timestamp ? ': ' + fc.sequencing_finished_timestamp.split('T')[0] : '')"
+                                                   aria-hidden="true"></i>
+                                                <i v-else
+                                                   class="fa fa-check-circle"
+                                                   style="opacity: 0.2; font-size: 1.15em; margin-right: 0.4em;"
+                                                   title="Sequencing not finished"
+                                                   aria-hidden="true"></i>
+
+                                                <!-- Transferred to HPC -->
+                                                <i v-if="fc.transferred_to_hpc"
+                                                   class="fa fa-cloud-upload"
+                                                   style="font-size: 1.15em;"
+                                                   :title="'Transferred to HPC' + (fc.transferred_to_hpc_timestamp ? ': ' + fc.transferred_to_hpc_timestamp.split('T')[0] : '')"
+                                                   aria-hidden="true"></i>
+                                                <i v-else
+                                                   class="fa fa-cloud-upload"
+                                                   style="opacity: 0.2; font-size: 1.15em;"
+                                                   title="Not transferred to HPC"
+                                                   aria-hidden="true"></i>
                                             </td>
                                             <td>
                                                 <small v-if="fc.run_setup">{{ fc.run_setup }}</small>
@@ -1436,28 +1482,6 @@ const vDemuxSampleInfoEditor = {
                                             <td>
                                                 <small v-if="fc.instrument_type">{{ fc.instrument_type }}</small>
                                                 <span v-else class="text-muted">-</span>
-                                            </td>
-                                            <td>
-                                                <span v-if="fc.sequencing_finished" class="text-success" :title="fc.sequencing_finished_timestamp">
-                                                    <i class="fa fa-check-circle"></i>
-                                                    <small v-if="fc.sequencing_finished_timestamp">
-                                                        {{ fc.sequencing_finished_timestamp.split('T')[0] }}
-                                                    </small>
-                                                </span>
-                                                <span v-else class="text-muted">
-                                                    <i class="fa fa-minus-circle"></i> No
-                                                </span>
-                                            </td>
-                                            <td>
-                                                <span v-if="fc.transferred_to_hpc" class="text-success" :title="fc.transferred_to_hpc_timestamp">
-                                                    <i class="fa fa-check-circle"></i>
-                                                    <small v-if="fc.transferred_to_hpc_timestamp">
-                                                        {{ fc.transferred_to_hpc_timestamp.split('T')[0] }}
-                                                    </small>
-                                                </span>
-                                                <span v-else class="text-muted">
-                                                    <i class="fa fa-minus-circle"></i> No
-                                                </span>
                                             </td>
                                         </tr>
                                     </tbody>
