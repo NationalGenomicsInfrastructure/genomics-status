@@ -12,6 +12,19 @@ from dateutil.relativedelta import relativedelta
 from status.util import SafeHandler
 
 
+class DemuxSampleInfoListPageHandler(SafeHandler):
+    """Serves the demux sample info list page."""
+
+    def get(self):
+        t = self.application.loader.load("demux_sample_info_list.html")
+        self.write(
+            t.generate(
+                user=self.get_current_user(),
+                gs_globals=self.application.gs_globals,
+            )
+        )
+
+
 class DemuxSampleInfoEditorHandler(SafeHandler):
     """Serves the demux sample info editor page."""
 

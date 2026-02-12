@@ -6,9 +6,6 @@ const vDemuxSampleInfoEditor = {
             limsUrl: config.lims_url || '',
             flowcell_id: '',
             demux_data: null,
-            flowcell_list: [],  // List of recent flowcells
-            showAllFlowcells: false,  // Toggle between recent (6 months) and all flowcells
-            loadingFlowcells: false,
             editedData: {},  // Stores edited settings per sample: { lane: { uuid: settings_object } }
             error_messages: [],
             loading: false,
@@ -754,44 +751,9 @@ const vDemuxSampleInfoEditor = {
                     this.loading = false;
                 });
         },
-        fetchFlowcellList() {
-            // Fetch the list of flowcells (recent or all based on showAllFlowcells)
-            this.loadingFlowcells = true;
-
-            const url = this.showAllFlowcells
-                ? '/api/v1/demux_sample_info_list?all=true'
-                : '/api/v1/demux_sample_info_list';
-
-            axios.get(url)
-                .then(response => {
-                    this.flowcell_list = response.data.flowcells || [];
-                    this.loadingFlowcells = false;
-                })
-                .catch(error => {
-                    console.error('Error fetching flowcell list:', error);
-                    this.loadingFlowcells = false;
-                });
-        },
-        toggleShowAllFlowcells() {
-            // Toggle between showing recent (6 months) and all flowcells
-            this.showAllFlowcells = !this.showAllFlowcells;
-            this.fetchFlowcellList();
-        },
-        selectFlowcell(flowcellId) {
-            // Select a flowcell from the list
-            this.flowcell_id = flowcellId;
-            this.fetchDemuxInfo();
-        },
         backToList() {
-            // Return to the flowcell list view
-            this.flowcell_id = '';
-            this.demux_data = null;
-            this.error_messages = [];
-            this.editedData = {};
-            
-            // Update URL to remove flowcell parameter
-            const newUrl = window.location.pathname;
-            history.pushState({}, '', newUrl);
+            // Return to the flowcell list page
+            window.location.href = '/y_flowcells';
         },
         formatTimestamp(timestamp) {
             if (!timestamp) return '';
@@ -1352,9 +1314,6 @@ const vDemuxSampleInfoEditor = {
         }
     },
     mounted() {
-        // Fetch the list of recent flowcells
-        this.fetchFlowcellList();
-
         // Check if flowcell ID is in the URL
         const urlParams = new URLSearchParams(window.location.search);
         const flowcellId = urlParams.get('flowcell');
@@ -1376,126 +1335,17 @@ const vDemuxSampleInfoEditor = {
         <div class="container">
             <div class="row">
                 <div class="col-12">
-                    <h1>Demux Sample Info Editor</h1>
+                    <h1>Y Flowcells</h1>
 
-                    <!-- Recent Flowcells List (hidden when viewing a flowcell) -->
+                    <!-- Input form (shown when no flowcell loaded) -->
                     <div v-if="!demux_data" class="card mt-4 mb-4">
                         <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-center mb-3">
-                                <h5 class="card-title mb-0">{{ showAllFlowcells ? 'All Flowcells' : 'Recent Flowcells (Last 6 Months)' }}</h5>
-                                <button
-                                    class="btn btn-sm btn-outline-secondary"
-                                    @click="toggleShowAllFlowcells"
-                                    :disabled="loadingFlowcells">
-                                    <i class="fa fa-filter me-1"></i>
-                                    {{ showAllFlowcells ? 'Show Recent Only' : 'Show All' }}
-                                </button>
-                            </div>
-
-                            <!-- Loading state -->
-                            <div v-if="loadingFlowcells" class="text-center py-3">
-                                <div class="spinner-border spinner-border-sm" role="status">
-                                    <span class="visually-hidden">Loading...</span>
-                                </div>
-                                <span class="ms-2">Loading flowcells...</span>
-                            </div>
-
-                            <!-- Flowcell list -->
-                            <div v-else-if="flowcell_list.length > 0" class="table-responsive" style="max-height: 500px; overflow-y: auto;">
-                                <table class="table table-hover table-sm mb-0">
-                                    <thead class="sticky-top bg-white">
-                                        <tr>
-                                            <th>Flowcell ID</th>
-                                            <th>Status</th>
-                                            <th>Run Setup</th>
-                                            <th>Instrument Type</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr
-                                            v-for="fc in flowcell_list"
-                                            :key="fc.flowcell_id"
-                                            class="cursor-pointer"
-                                            :class="{ 'table-active': flowcell_id === fc.flowcell_id }"
-                                            @click="selectFlowcell(fc.flowcell_id)"
-                                            style="cursor: pointer;">
-                                            <td>
-                                                {{ fc.runfolder_id || fc.flowcell_id }}
-                                                <!-- Status icons -->
-                                                <i v-if="fc.sequencing_finished"
-                                                   class="fa fa-check ms-2"
-                                                   title="Sequencing finished"
-                                                   aria-hidden="true"></i>
-                                                <i v-else-if="fc.sequencing_started"
-                                                   class="fa fa-hourglass-half ms-2"
-                                                   title="Sequencing in progress"
-                                                   aria-hidden="true"></i>
-                                                <i v-else-if="fc.has_demux_info && !fc.sequencing_started"
-                                                   class="fa fa-spinner ms-2"
-                                                   title="Awaiting event data"
-                                                   aria-hidden="true"></i>
-                                                <small v-if="fc.runfolder_id && fc.runfolder_id !== fc.flowcell_id" class="text-muted d-block" style="font-size: 0.75rem;">
-                                                    {{ fc.flowcell_id }}
-                                                </small>
-                                            </td>
-                                            <td class="text-nowrap">
-                                                <!-- Demux Info -->
-                                                <i v-if="fc.has_demux_info"
-                                                   class="fa fa-list-alt"
-                                                   style="font-size: 1.15em; margin-right: 0.4em;"
-                                                   title="Has demux info"
-                                                   aria-hidden="true"></i>
-                                                <i v-else
-                                                   class="fa fa-list-alt"
-                                                   style="opacity: 0.2; font-size: 1.15em; margin-right: 0.4em;"
-                                                   title="No demux info"
-                                                   aria-hidden="true"></i>
-
-                                                <!-- Sequencing Finished -->
-                                                <i v-if="fc.sequencing_finished"
-                                                   class="fa fa-check-circle"
-                                                   style="font-size: 1.15em; margin-right: 0.4em;"
-                                                   :title="'Sequencing finished' + (fc.sequencing_finished_timestamp ? ': ' + fc.sequencing_finished_timestamp.split('T')[0] : '')"
-                                                   aria-hidden="true"></i>
-                                                <i v-else
-                                                   class="fa fa-check-circle"
-                                                   style="opacity: 0.2; font-size: 1.15em; margin-right: 0.4em;"
-                                                   title="Sequencing not finished"
-                                                   aria-hidden="true"></i>
-
-                                                <!-- Transferred to HPC -->
-                                                <i v-if="fc.transferred_to_hpc"
-                                                   class="fa fa-cloud-upload"
-                                                   style="font-size: 1.15em;"
-                                                   :title="'Transferred to HPC' + (fc.transferred_to_hpc_timestamp ? ': ' + fc.transferred_to_hpc_timestamp.split('T')[0] : '')"
-                                                   aria-hidden="true"></i>
-                                                <i v-else
-                                                   class="fa fa-cloud-upload"
-                                                   style="opacity: 0.2; font-size: 1.15em;"
-                                                   title="Not transferred to HPC"
-                                                   aria-hidden="true"></i>
-                                            </td>
-                                            <td>
-                                                <small v-if="fc.run_setup">{{ fc.run_setup }}</small>
-                                                <span v-else class="text-muted">-</span>
-                                            </td>
-                                            <td>
-                                                <small v-if="fc.instrument_type">{{ fc.instrument_type }}</small>
-                                                <span v-else class="text-muted">-</span>
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-
-                            <!-- No flowcells found -->
-                            <div v-else class="alert alert-info mb-0">
-                                No flowcells found in the database.
-                            </div>
-
-                            <!-- Manual entry option -->
-                            <div class="mt-3 pt-3 border-top">
-                                <label class="form-label"><strong>Or enter a flowcell ID manually:</strong></label>
+                            <p class="mb-3">
+                                <a href="/y_flowcells" class="btn btn-sm btn-outline-primary">
+                                    <i class="fa fa-list me-1"></i> View Flowcell List
+                                </a>
+                            </p>
+                            <label class="form-label"><strong>Enter a flowcell ID:</strong></label>
                                 <div class="row g-2 align-items-end">
                                     <div class="col-auto flex-grow-1">
                                         <input
