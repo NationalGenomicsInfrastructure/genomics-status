@@ -28,30 +28,41 @@ class DemuxSampleInfoListHandler(SafeHandler):
     """API handler to list recent flowcells."""
 
     def get(self):
-        """Get the latest 50 flowcells, merged from demux_sample_info and y_flowcells databases."""
+        """Get the latest 100 flowcells, merged from demux_sample_info and y_flowcells databases."""
         self.set_header("Content-type", "application/json")
 
         try:
-            # Query demux_sample_info database
+            # Query demux_sample_info database using the summary view
+            # The view emits [first_generated, flowcell_id] as key
+            # Sort descending by first_generated to get most recent first
             demux_view_result = self.application.cloudant.post_view(
                 db="demux_sample_info",
-                ddoc="info",
-                view="flowcell_id",
+                ddoc="summary",
+                view="date_flowcell_id",
                 include_docs=False,
+                descending=True,
+                limit=100,
             ).get_result()
 
             demux_rows = demux_view_result.get("rows", [])
 
-            # Get unique flowcells from demux_sample_info
+            # Build flowcells dict from view results
             flowcells_dict = {}
 
             for row in demux_rows:
-                flowcell_id = row.get("key")
-                if flowcell_id:
+                # Key is [first_generated, flowcell_id]
+                key = row.get("key", [])
+                if len(key) >= 2:
+                    flowcell_id = key[1]
+                    value = row.get("value", {})
+
                     flowcells_dict[flowcell_id] = {
                         "flowcell_id": flowcell_id,
                         "doc_id": row.get("id"),
                         "has_demux_info": True,
+                        "first_generated": value.get("first_generated"),
+                        "run_setup": value.get("run_setup"),
+                        "instrument_type": value.get("instrument_type"),
                     }
 
             # Query y_flowcells database for event status
@@ -91,13 +102,14 @@ class DemuxSampleInfoListHandler(SafeHandler):
                             "transferred_to_hpc_timestamp": events_data.get(
                                 "transferred_to_hpc_timestamp"
                             ),
+                            "runfolder_id": events_data.get("runfolder_id"),
                         }
 
                         if flowcell_id in flowcells_dict:
                             # Merge with existing entry
                             flowcells_dict[flowcell_id].update(event_info)
                         else:
-                            # Add new entry from y_flowcells
+                            # Add new entry from y_flowcells (no demux info)
                             flowcells_dict[flowcell_id] = {
                                 "flowcell_id": flowcell_id,
                                 "has_demux_info": False,
@@ -110,12 +122,15 @@ class DemuxSampleInfoListHandler(SafeHandler):
             # Convert dict to list
             flowcells = list(flowcells_dict.values())
 
-            # Sort by flowcell_id descending (most recent first, assuming naming convention)
-            flowcells.sort(key=lambda x: x["flowcell_id"], reverse=True)
-
-            # Limit to 50 most recent
-            flowcells = flowcells[:50]
-
+            # Sort by first_generated descending (most recent first)
+            # For flowcells without demux info, use sequencing_started_timestamp as fallback
+            flowcells.sort(
+                key=lambda x: (
+                    x.get("sequencing_started_timestamp") or "",
+                    x.get("first_generated") or "",
+                ),
+                reverse=True,
+            )
             self.write(json.dumps({"flowcells": flowcells}))
 
         except Exception as e:
@@ -1058,6 +1073,9 @@ class DemuxSampleInfoDataHandler(SafeHandler):
         samplesheets = self._generate_samplesheets(
             flowcell_id, calculated_lanes, metadata
         )
+
+        # Add first_generated timestamp to metadata
+        metadata["first_generated"] = timestamp
 
         # Construct the full document
         document = {

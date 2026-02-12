@@ -1388,6 +1388,9 @@ const vDemuxSampleInfoEditor = {
                                         <tr>
                                             <th>Flowcell ID</th>
                                             <th>Demux Info</th>
+                                            <th>First Generated</th>
+                                            <th>Run Setup</th>
+                                            <th>Instrument Type</th>
                                             <th>Sequencing Started</th>
                                             <th>Sequencing Finished</th>
                                             <th>Transferred to HPC</th>
@@ -1402,7 +1405,10 @@ const vDemuxSampleInfoEditor = {
                                             @click="selectFlowcell(fc.flowcell_id)"
                                             style="cursor: pointer;">
                                             <td>
-                                                <i class="fa fa-file-text-o me-2"></i>{{ fc.flowcell_id }}
+                                                {{ fc.runfolder_id || fc.flowcell_id }}
+                                                <small v-if="fc.runfolder_id && fc.runfolder_id !== fc.flowcell_id" class="text-muted d-block" style="font-size: 0.75rem;">
+                                                    {{ fc.flowcell_id }}
+                                                </small>
                                             </td>
                                             <td>
                                                 <span v-if="fc.has_demux_info" class="badge bg-success">
@@ -1413,10 +1419,24 @@ const vDemuxSampleInfoEditor = {
                                                 </span>
                                             </td>
                                             <td>
+                                                <small v-if="fc.first_generated">
+                                                    {{ fc.first_generated.split('T')[0] }}
+                                                </small>
+                                                <span v-else class="text-muted">-</span>
+                                            </td>
+                                            <td>
+                                                <small v-if="fc.run_setup">{{ fc.run_setup }}</small>
+                                                <span v-else class="text-muted">-</span>
+                                            </td>
+                                            <td>
+                                                <small v-if="fc.instrument_type">{{ fc.instrument_type }}</small>
+                                                <span v-else class="text-muted">-</span>
+                                            </td>
+                                            <td>
                                                 <span v-if="fc.sequencing_started" class="text-success" :title="fc.sequencing_started_timestamp">
                                                     <i class="fa fa-check-circle"></i>
                                                     <small v-if="fc.sequencing_started_timestamp">
-                                                        {{ new Date(fc.sequencing_started_timestamp).toLocaleString() }}
+                                                        {{ fc.sequencing_started_timestamp.split('T')[0] }}
                                                     </small>
                                                 </span>
                                                 <span v-else class="text-muted">
@@ -1427,7 +1447,7 @@ const vDemuxSampleInfoEditor = {
                                                 <span v-if="fc.sequencing_finished" class="text-success" :title="fc.sequencing_finished_timestamp">
                                                     <i class="fa fa-check-circle"></i>
                                                     <small v-if="fc.sequencing_finished_timestamp">
-                                                        {{ new Date(fc.sequencing_finished_timestamp).toLocaleString() }}
+                                                        {{ fc.sequencing_finished_timestamp.split('T')[0] }}
                                                     </small>
                                                 </span>
                                                 <span v-else class="text-muted">
@@ -1438,7 +1458,7 @@ const vDemuxSampleInfoEditor = {
                                                 <span v-if="fc.transferred_to_hpc" class="text-success" :title="fc.transferred_to_hpc_timestamp">
                                                     <i class="fa fa-check-circle"></i>
                                                     <small v-if="fc.transferred_to_hpc_timestamp">
-                                                        {{ new Date(fc.transferred_to_hpc_timestamp).toLocaleString() }}
+                                                        {{ fc.transferred_to_hpc_timestamp.split('T')[0] }}
                                                     </small>
                                                 </span>
                                                 <span v-else class="text-muted">
