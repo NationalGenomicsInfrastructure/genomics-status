@@ -11,13 +11,12 @@
               <th>Total yield (Mb):</th>
               <td>{% for thousand in lane.get('yield', '').split(',') %}<span class="thousand_group">{{ thousand }}</span>{% end %}</td>
               <th>Total clusters:</th> {% set threshold = thresholds.get(flowcell.get('run_mode', ''), 0) %}
-              {% set thr_per_sp = float(threshold) * 0.75 / len([x for x in fc_sample_yields[lane_number] if x['sample_name'] not in ['Undetermined', 'default']]) %}
               <td class="text-left
               {% if flowcell.get('run_mode') %}
                 {% if int(lane.get('clustersnb', '0').replace(',', '')) < threshold * 1000000 %} table-warning
                 {% else %} table-success {% end %}
               {% end %}" data-toggle="tooltip" data-placement="bottom" data-html="true"
-              title="Threshold: {{ threshold }} million <br /> {{ "Per sample : {:.2f} million".format(thr_per_sp) }}">
+              title="Threshold: {{ threshold }} million">
               {% set lane_total_yield_m = "{0:.2f}".format(float(lane.get('clustersnb', '').replace(',', ''))/1000000) %}
               {% for thousand in lane.get('clustersnb', '').split(',') %}<span class="thousand_group">{{ thousand }}</span>{% end %}
               </td>
@@ -90,14 +89,12 @@
             <tr>
               <td>{{ sample.get('modified_proj_name', '') }}</td>
               <td>{{ sample.get('sample_name', '') }}</td>
-              <td class="text-right
-                  {% if not thr_per_sp or sample.get('sample_name') == 'Undetermined' %}
-                  {% elif float(sample.get('sum_sample_lane_yield', 0).replace(',','')) > thr_per_sp *1000000 %}
-                  table-success
-                  {% else %}
-                  table-warning
-                  {% end %}
-              ">{% for thousand in sample['sum_sample_lane_yield'].split(',') %}<span class="thousand_group">{{ thousand }}</span>{% end %}</td>
+              <td class="text-right {{ sample.get('universal_yield_class', '') }}" {% if sample.get('universal_tooltip', '' )
+                %}data-toggle="tooltip" data-placement="right" data-html="true" title="{{ sample.get('universal_tooltip', '') }}" {%
+                end %}>
+                {% for thousand in sample['sum_sample_lane_yield'].split(',') %}<span class="thousand_group">{{ thousand }}</span>{%
+                end %}
+              </td>
               <td class="text-center {% if float(sample_q30) < 40.0 %} table-danger
                   {% elif sample_q30 < q30_threshold %} table-warning
                   {% else %} table-success {% end %}">{{ "{0:.2f}".format(float(sample_q30)) }}</td>
