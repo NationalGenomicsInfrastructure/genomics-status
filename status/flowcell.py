@@ -29,6 +29,10 @@ thresholds = {
     "NextSeq 2000 P3": 550,
 }
 
+# For universal units, each unit corresponds to 600M reads which equals:
+reads_per_unit = 600_000_000
+lanes_with_units = ["NovaSeqXPlus 25B", "NovaSeqXPlus 10B", "NovaSeqXPlus 5B"]
+
 
 class FlowcellHandler(SafeHandler):
     """Serves a page which shows information for a given flowcell."""
@@ -51,6 +55,35 @@ class FlowcellHandler(SafeHandler):
             for row in view:
                 self._project_names[project_name] = row["value"]
         return self._project_names.get(project_name, "")
+
+    def _get_project_details(self, project_ids):
+        """Fetch flowcell, sequence_units_ordered_(lanes), and library_construction_method fields from project documents by project IDs"""
+        if not project_ids:
+            return {}
+
+        project_details = {}
+        view = self.application.cloudant.post_view(
+            db="projects",
+            ddoc="project",
+            view="project_id",
+            keys=list(project_ids),
+            include_docs=True,
+        ).get_result()["rows"]
+
+        for row in view:
+            if "doc" in row:
+                project_id = row["key"]
+                project_details[project_id] = {
+                    "flowcell": row["doc"].get("details", {}).get("flowcell", ""),
+                    "sequence_units_ordered_(lanes)": row["doc"]
+                    .get("details", {})
+                    .get("sequence_units_ordered_(lanes)", ""),
+                    "library_construction_method": row["doc"]
+                    .get("details", {})
+                    .get("library_construction_method", ""),
+                }
+
+        return project_details
 
     def _get_project_list(self, flowcell):
         # replace '__' in project name
@@ -132,6 +165,8 @@ class FlowcellHandler(SafeHandler):
                 project_name: self._get_project_id_by_name(project_name)
                 for project_name in entry["value"]["plist"]
             }
+            # Get project details (flowcell and lanes ordered) for additional information
+            project_details = self._get_project_details(project_names.values())
             # Prepare summary table for total project/sample yields in each lane
             fc_project_yields = dict()
             fc_sample_yields = dict()
@@ -145,6 +180,14 @@ class FlowcellHandler(SafeHandler):
                 unique_projects = list(set(lane["Project"] for lane in lane_details))
                 unique_samples = list(set(lane["SampleName"] for lane in lane_details))
                 threshold = thresholds.get(entry["value"].get("run_mode", ""), 0)
+
+                # Calculate lane capacity in units
+                # threshold is in millions of clusters
+                clusters_per_unit_millions = reads_per_unit / 1_000_000
+                lane_capacity_units = (
+                    threshold / clusters_per_unit_millions if threshold > 0 else 0
+                )
+
                 for proj in unique_projects:
                     if proj == "default":
                         modified_proj_name = "undetermined"
@@ -183,6 +226,62 @@ class FlowcellHandler(SafeHandler):
                         if threshold
                         else 0
                     )
+
+                    # Calculate Universal-* project thresholds
+                    universal_yield_class = ""
+                    universal_tooltip = ""
+                    if proj != "default":
+                        proj_name_for_lookup = modified_proj_name
+                        project_id = project_names.get(proj_name_for_lookup, "")
+                        if project_id and project_id in project_details:
+                            proj_flowcell = project_details[project_id].get(
+                                "flowcell", ""
+                            )
+                            if proj_flowcell and proj_flowcell.startswith("Universal-"):
+                                units_ordered_str = project_details[project_id].get(
+                                    "sequence_units_ordered_(lanes)", ""
+                                )
+                                # Safely convert units_ordered to float
+                                units_ordered = 0
+                                if units_ordered_str:
+                                    try:
+                                        units_ordered = float(units_ordered_str)
+                                    except (ValueError, TypeError):
+                                        units_ordered = 0
+
+                                if units_ordered > 0 and lane_capacity_units > 0:
+                                    # Determine targeted units on this lane:
+                                    # - If project orders <= lane capacity, it targets all its units
+                                    # - If project orders > lane capacity, it targets only lane capacity
+                                    # Note, these are just the best assumptions we can make and will very often be incorrect due to pooling strategies
+                                    targeted_units = min(
+                                        units_ordered, lane_capacity_units
+                                    )
+
+                                    # Each unit targets reads_per_unit clusters, threshold is 90% of that
+                                    target_clusters = targeted_units * reads_per_unit
+                                    threshold_90 = target_clusters * 0.90
+                                    threshold_80 = target_clusters * 0.80
+
+                                    # Apply color coding
+                                    if sum_project_lane_yield >= threshold_90:
+                                        universal_yield_class = "table-success"
+                                    elif sum_project_lane_yield >= threshold_80:
+                                        universal_yield_class = "table-warning"
+                                    else:
+                                        universal_yield_class = "table-danger"
+
+                                    # Generate tooltip
+                                    universal_tooltip = (
+                                        f"Universal-* Project<br/>"
+                                        f"Units ordered: {units_ordered}<br/>"
+                                        f"Lane capacity: {lane_capacity_units:.2f} units<br/>"
+                                        f"Assumed targeted units on this lane: {targeted_units:.2f}<br/>"
+                                        f"Target: {targeted_units:.2f} × {reads_per_unit / 1000000:.0f}M = {target_clusters / 1000000:.0f}M clusters<br/>"
+                                        f"90% threshold: {threshold_90 / 1000000:.0f}M (green)<br/>"
+                                        f"80% threshold: {threshold_80 / 1000000:.0f}M (yellow)"
+                                    )
+
                     fc_project_yields_lane_list.append(
                         {
                             "modified_proj_name": modified_proj_name,
@@ -192,6 +291,8 @@ class FlowcellHandler(SafeHandler):
                             "weighted_mean_q30": weighted_mean_q30,
                             "proj_lane_percentage_obtained": proj_lane_percentage_obtained,
                             "proj_lane_percentage_threshold": proj_lane_percentage_threshold,
+                            "universal_yield_class": universal_yield_class,
+                            "universal_tooltip": universal_tooltip,
                         }
                     )
                 fc_project_yields[lane_nr] = sorted(
@@ -292,9 +393,11 @@ class FlowcellHandler(SafeHandler):
                     flowcell=entry["value"],
                     flowcell_id=flowcell_id,
                     thresholds=thresholds,
+                    reads_per_unit=reads_per_unit,
                     fc_project_yields=fc_project_yields,
                     fc_sample_yields=fc_sample_yields,
                     project_names=project_names,
+                    project_details=project_details,
                     user=self.get_current_user(),
                     statusdb_url=self.settings["couch_url"],
                     statusdb_id=entry["id"],
