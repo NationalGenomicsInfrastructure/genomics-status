@@ -298,6 +298,28 @@ class FlowcellHandler(SafeHandler):
                 fc_project_yields[lane_nr] = sorted(
                     fc_project_yields_lane_list, key=lambda d: d["modified_proj_name"]
                 )
+
+                # Count samples per project on this lane (excluding Undetermined)
+                samples_per_project = {}
+                for sample in unique_samples:
+                    if sample != "Undetermined":
+                        # Get the project(s) for this sample
+                        sample_projects = list(
+                            set(
+                                [
+                                    lane["Project"]
+                                    for lane in lane_details
+                                    if lane["SampleName"] == sample and lane["Project"]
+                                ]
+                            )
+                        )
+                        for proj in sample_projects:
+                            if proj != "default":
+                                proj_key = proj.replace("__", ".")
+                                samples_per_project[proj_key] = (
+                                    samples_per_project.get(proj_key, 0) + 1
+                                )
+
                 for sample in unique_samples:
                     if sample == "Undetermined":
                         modified_proj_name = "default"
@@ -370,6 +392,105 @@ class FlowcellHandler(SafeHandler):
                         if total_lane_yield
                         else 0
                     )
+
+                    # Calculate sample thresholds
+                    universal_yield_class = ""
+                    universal_tooltip = ""
+                    if sample != "Undetermined" and modified_proj_name != "default":
+                        # Count samples in this project on this lane
+                        num_samples_in_project = samples_per_project.get(
+                            modified_proj_name, 1
+                        )
+
+                        # Get the project details to check if it's Universal-*
+                        proj_name_for_lookup = modified_proj_name
+                        project_id = project_names.get(proj_name_for_lookup, "")
+
+                        # Check if this is a Universal-* project with project details
+                        is_universal = False
+                        if project_id and project_id in project_details:
+                            proj_flowcell = project_details[project_id].get(
+                                "flowcell", ""
+                            )
+                            if proj_flowcell and proj_flowcell.startswith("Universal-"):
+                                is_universal = True
+                                units_ordered_str = project_details[project_id].get(
+                                    "sequence_units_ordered_(lanes)", ""
+                                )
+                                # Safely convert units_ordered to float
+                                units_ordered = 0
+                                if units_ordered_str:
+                                    try:
+                                        units_ordered = float(units_ordered_str)
+                                    except (ValueError, TypeError):
+                                        units_ordered = 0
+
+                                if units_ordered > 0 and lane_capacity_units > 0:
+                                    # Determine targeted units on this lane (same logic as project-level)
+                                    targeted_units = min(
+                                        units_ordered, lane_capacity_units
+                                    )
+
+                                    # Project target = targeted_units * reads_per_unit
+                                    # Samples get 75% of project target, divided by number of samples
+                                    # Then apply 90% and 80% thresholds to that
+                                    project_target = targeted_units * reads_per_unit
+                                    per_sample_allocation = (
+                                        project_target * 0.75 / num_samples_in_project
+                                    )
+                                    threshold_90 = per_sample_allocation * 0.90
+                                    threshold_80 = per_sample_allocation * 0.80
+
+                                    # Apply color coding
+                                    if sum_sample_lane_yield >= threshold_90:
+                                        universal_yield_class = "table-success"
+                                    elif sum_sample_lane_yield >= threshold_80:
+                                        universal_yield_class = "table-warning"
+                                    else:
+                                        universal_yield_class = "table-danger"
+
+                                    # Generate tooltip
+                                    samples_target_total = project_target * 0.75
+                                    universal_tooltip = (
+                                        f"Universal-* Sample<br/>"
+                                        f"Project units ordered: {units_ordered}<br/>"
+                                        f"Lane capacity: {lane_capacity_units:.2f} units<br/>"
+                                        f"Assumed project targeted units: {targeted_units:.2f}<br/>"
+                                        f"Project target: {project_target / 1000000:.0f}M clusters<br/>"
+                                        f"Samples get 75% of project target: {samples_target_total / 1000000:.0f}M<br/>"
+                                        f"Number of samples in project: {num_samples_in_project}<br/>"
+                                        f"Per sample allocation: {per_sample_allocation / 1000000:.0f}M clusters<br/>"
+                                        f"90% threshold: {threshold_90 / 1000000:.0f}M (green)<br/>"
+                                        f"80% threshold: {threshold_80 / 1000000:.0f}M (yellow)"
+                                    )
+
+                        # For non-Universal projects or when project details unavailable: use flowcell threshold approach
+                        if not is_universal and threshold > 0:
+                            per_sample_allocation = (
+                                threshold * 1000000 * 0.75 / num_samples_in_project
+                            )
+                            threshold_90 = per_sample_allocation * 0.90
+                            threshold_80 = per_sample_allocation * 0.80
+
+                            # Apply color coding
+                            if sum_sample_lane_yield >= threshold_90:
+                                universal_yield_class = "table-success"
+                            elif sum_sample_lane_yield >= threshold_80:
+                                universal_yield_class = "table-warning"
+                            else:
+                                universal_yield_class = "table-danger"
+
+                            # Generate tooltip
+                            samples_allocation_total = threshold * 0.75
+                            universal_tooltip = (
+                                f"Lane threshold: {threshold}M clusters<br/>"
+                                f"Samples get 75% of lane: {samples_allocation_total:.0f}M<br/>"
+                                f"Number of samples in project: {num_samples_in_project}<br/>"
+                                f"Per sample allocation: {per_sample_allocation / 1000000:.0f}M clusters<br/>"
+                                f"90% threshold: {threshold_90 / 1000000:.0f}M (green)<br/>"
+                                f"80% threshold: {threshold_80 / 1000000:.0f}M (yellow)"
+                            )
+
                     fc_sample_yields_lane_list.append(
                         {
                             "modified_proj_name": modified_proj_name,
@@ -379,6 +500,8 @@ class FlowcellHandler(SafeHandler):
                             "sample_barcode": sample_barcode,
                             "sample_lane_percentage": sample_lane_percentage,
                             "weighted_mqs": weighted_mqs,
+                            "universal_yield_class": universal_yield_class,
+                            "universal_tooltip": universal_tooltip,
                         }
                     )
                 fc_sample_yields[lane_nr] = sorted(
