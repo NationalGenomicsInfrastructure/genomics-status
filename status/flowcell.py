@@ -34,6 +34,125 @@ reads_per_unit = 600_000_000
 lanes_with_units = ["NovaSeqXPlus 25B", "NovaSeqXPlus 10B", "NovaSeqXPlus 5B"]
 
 
+def calculate_sample_threshold(
+    sample_yield,
+    num_samples_in_project,
+    threshold=0,
+    units_ordered=0,
+    lane_capacity_units=0,
+    is_universal=False,
+):
+    """
+    Calculate sample threshold and color coding.
+
+    Args:
+        sample_yield: Sample yield in clusters
+        num_samples_in_project: Number of samples in the project on this lane
+        threshold: Lane threshold in millions (for non-Universal projects)
+        units_ordered: Number of units ordered (for Universal-* projects)
+        lane_capacity_units: Lane capacity in units (for Universal-* projects)
+        is_universal: Whether this is a Universal-* project
+
+    Returns:
+        Tuple of (yield_class, tooltip_data) where tooltip_data is a dict
+    """
+    universal_yield_class = ""
+    tooltip_data = {}
+
+    if is_universal and units_ordered > 0 and lane_capacity_units > 0:
+        # Universal-* project logic
+        targeted_units = min(units_ordered, lane_capacity_units)
+        project_target = targeted_units * reads_per_unit
+        per_sample_allocation = project_target * 0.75 / num_samples_in_project
+        threshold_90 = per_sample_allocation * 0.90
+        threshold_80 = per_sample_allocation * 0.80
+
+        # Apply color coding
+        if sample_yield >= threshold_90:
+            universal_yield_class = "table-success"
+        elif sample_yield >= threshold_80:
+            universal_yield_class = "table-warning"
+        else:
+            universal_yield_class = "table-danger"
+
+        tooltip_data = {
+            "type": "universal",
+            "units_ordered": units_ordered,
+            "lane_capacity_units": lane_capacity_units,
+            "targeted_units": targeted_units,
+            "project_target": project_target,
+            "samples_target_total": project_target * 0.75,
+            "num_samples": num_samples_in_project,
+            "per_sample_allocation": per_sample_allocation,
+            "threshold_90": threshold_90,
+            "threshold_80": threshold_80,
+        }
+    elif not is_universal and threshold > 0:
+        # Standard project logic
+        per_sample_allocation = threshold * 1000000 * 0.75 / num_samples_in_project
+        threshold_90 = per_sample_allocation * 0.90
+        threshold_80 = per_sample_allocation * 0.80
+
+        # Apply color coding
+        if sample_yield >= threshold_90:
+            universal_yield_class = "table-success"
+        elif sample_yield >= threshold_80:
+            universal_yield_class = "table-warning"
+        else:
+            universal_yield_class = "table-danger"
+
+        tooltip_data = {
+            "type": "standard",
+            "lane_threshold": threshold,
+            "samples_allocation_total": threshold * 0.75,
+            "num_samples": num_samples_in_project,
+            "per_sample_allocation": per_sample_allocation,
+            "threshold_90": threshold_90,
+            "threshold_80": threshold_80,
+        }
+
+    return universal_yield_class, tooltip_data
+
+
+def format_sample_tooltip(tooltip_data):
+    """
+    Format tooltip HTML from tooltip data.
+
+    Args:
+        tooltip_data: Dictionary with tooltip information
+
+    Returns:
+        HTML string for tooltip
+    """
+    if not tooltip_data:
+        return ""
+
+    if tooltip_data.get("type") == "universal":
+        return (
+            f"Universal-* Sample<br/>"
+            f"Project units ordered: {tooltip_data['units_ordered']}<br/>"
+            f"Lane capacity: {tooltip_data['lane_capacity_units']:.2f} units<br/>"
+            f"Assumed project targeted units: {tooltip_data['targeted_units']:.2f}<br/>"
+            f"Project target: {tooltip_data['project_target'] / 1000000:.0f}M clusters<br/>"
+            f"Samples get 75% of project target: {tooltip_data['samples_target_total'] / 1000000:.0f}M<br/>"
+            f"Number of samples in project: {tooltip_data['num_samples']}<br/>"
+            f"Per sample allocation: {tooltip_data['per_sample_allocation'] / 1000000:.0f}M clusters<br/>"
+            f"90% threshold: {tooltip_data['threshold_90'] / 1000000:.0f}M (green)<br/>"
+            f"80% threshold: {tooltip_data['threshold_80'] / 1000000:.0f}M (yellow)"
+        )
+    elif tooltip_data.get("type") == "standard":
+        return (
+            f"Lane threshold: {tooltip_data['lane_threshold']}M clusters<br/>"
+            f"Samples get 75% of lane: {tooltip_data['samples_allocation_total']:.0f}M<br/>"
+            f"Number of samples in project: {tooltip_data['num_samples']}<br/>"
+            f"Per sample allocation: {tooltip_data['per_sample_allocation'] / 1000000:.0f}M clusters<br/>"
+            f"90% threshold: {tooltip_data['threshold_90'] / 1000000:.0f}M (green)<br/>"
+            f"80% threshold: {tooltip_data['threshold_80'] / 1000000:.0f}M (yellow)"
+        )
+
+    return ""
+
+
 class FlowcellHandler(SafeHandler):
     """Serves a page which shows information for a given flowcell."""
 
@@ -408,6 +527,7 @@ class FlowcellHandler(SafeHandler):
 
                         # Check if this is a Universal-* project with project details
                         is_universal = False
+                        units_ordered = 0
                         if project_id and project_id in project_details:
                             proj_flowcell = project_details[project_id].get(
                                 "flowcell", ""
@@ -418,78 +538,24 @@ class FlowcellHandler(SafeHandler):
                                     "sequence_units_ordered_(lanes)", ""
                                 )
                                 # Safely convert units_ordered to float
-                                units_ordered = 0
                                 if units_ordered_str:
                                     try:
                                         units_ordered = float(units_ordered_str)
                                     except (ValueError, TypeError):
                                         units_ordered = 0
 
-                                if units_ordered > 0 and lane_capacity_units > 0:
-                                    # Determine targeted units on this lane (same logic as project-level)
-                                    targeted_units = min(
-                                        units_ordered, lane_capacity_units
-                                    )
-
-                                    # Project target = targeted_units * reads_per_unit
-                                    # Samples get 75% of project target, divided by number of samples
-                                    # Then apply 90% and 80% thresholds to that
-                                    project_target = targeted_units * reads_per_unit
-                                    per_sample_allocation = (
-                                        project_target * 0.75 / num_samples_in_project
-                                    )
-                                    threshold_90 = per_sample_allocation * 0.90
-                                    threshold_80 = per_sample_allocation * 0.80
-
-                                    # Apply color coding
-                                    if sum_sample_lane_yield >= threshold_90:
-                                        universal_yield_class = "table-success"
-                                    elif sum_sample_lane_yield >= threshold_80:
-                                        universal_yield_class = "table-warning"
-                                    else:
-                                        universal_yield_class = "table-danger"
-
-                                    # Generate tooltip
-                                    samples_target_total = project_target * 0.75
-                                    universal_tooltip = (
-                                        f"Universal-* Sample<br/>"
-                                        f"Project units ordered: {units_ordered}<br/>"
-                                        f"Lane capacity: {lane_capacity_units:.2f} units<br/>"
-                                        f"Assumed project targeted units: {targeted_units:.2f}<br/>"
-                                        f"Project target: {project_target / 1000000:.0f}M clusters<br/>"
-                                        f"Samples get 75% of project target: {samples_target_total / 1000000:.0f}M<br/>"
-                                        f"Number of samples in project: {num_samples_in_project}<br/>"
-                                        f"Per sample allocation: {per_sample_allocation / 1000000:.0f}M clusters<br/>"
-                                        f"90% threshold: {threshold_90 / 1000000:.0f}M (green)<br/>"
-                                        f"80% threshold: {threshold_80 / 1000000:.0f}M (yellow)"
-                                    )
-
-                        # For non-Universal projects or when project details unavailable: use flowcell threshold approach
-                        if not is_universal and threshold > 0:
-                            per_sample_allocation = (
-                                threshold * 1000000 * 0.75 / num_samples_in_project
+                        # Use the extracted function to calculate thresholds
+                        universal_yield_class, tooltip_data = (
+                            calculate_sample_threshold(
+                                sample_yield=sum_sample_lane_yield,
+                                num_samples_in_project=num_samples_in_project,
+                                threshold=threshold,
+                                units_ordered=units_ordered,
+                                lane_capacity_units=lane_capacity_units,
+                                is_universal=is_universal,
                             )
-                            threshold_90 = per_sample_allocation * 0.90
-                            threshold_80 = per_sample_allocation * 0.80
-
-                            # Apply color coding
-                            if sum_sample_lane_yield >= threshold_90:
-                                universal_yield_class = "table-success"
-                            elif sum_sample_lane_yield >= threshold_80:
-                                universal_yield_class = "table-warning"
-                            else:
-                                universal_yield_class = "table-danger"
-
-                            # Generate tooltip
-                            samples_allocation_total = threshold * 0.75
-                            universal_tooltip = (
-                                f"Lane threshold: {threshold}M clusters<br/>"
-                                f"Samples get 75% of lane: {samples_allocation_total:.0f}M<br/>"
-                                f"Number of samples in project: {num_samples_in_project}<br/>"
-                                f"Per sample allocation: {per_sample_allocation / 1000000:.0f}M clusters<br/>"
-                                f"90% threshold: {threshold_90 / 1000000:.0f}M (green)<br/>"
-                                f"80% threshold: {threshold_80 / 1000000:.0f}M (yellow)"
-                            )
+                        )
+                        universal_tooltip = format_sample_tooltip(tooltip_data)
 
                     fc_sample_yields_lane_list.append(
                         {
