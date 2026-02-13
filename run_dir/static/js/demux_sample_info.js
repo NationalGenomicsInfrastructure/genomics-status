@@ -1391,7 +1391,7 @@ const vDemuxSampleInfoEditor = {
                         <!-- Back button -->
                         <div class="mb-3">
                             <button class="btn btn-outline-secondary" @click="backToList">
-                                <i class="fa fa-arrow-left me-2"></i>Back to Flowcell List
+                                <i class="fa fa-arrow-left mr-2"></i>Back to Flowcell List
                             </button>
                         </div>
                         

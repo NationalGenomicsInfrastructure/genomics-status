@@ -152,6 +152,7 @@ class DemuxSampleInfoListHandler(SafeHandler):
                             ),
                             "runfolder_id": events_data.get("runfolder_id"),
                             "lane_info": events_data.get("lane_info"),
+                            "run_mode": events_data.get("run_mode"),
                         }
 
                         if flowcell_id in flowcells_dict:

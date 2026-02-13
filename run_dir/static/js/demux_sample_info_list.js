@@ -73,9 +73,9 @@ const vDemuxSampleInfoList = {
                 <thead>
                     <tr class="sticky darkth">
                         <th>Flowcell ID</th>
-                        <th>Status</th>
+                        <th>Run Mode</th>
                         <th>Run Setup</th>
-                        <th>Instrument Type</th>
+                        <th>Status</th>
                         <th>Lanes / Projects</th>
                     </tr>
                 </thead>
@@ -116,9 +116,14 @@ const vDemuxSampleInfoList = {
                                class="fa fa-spinner ml-2"
                                title="Awaiting event data"
                                aria-hidden="true"></i>
-                            <small v-if="fc.runfolder_id && fc.runfolder_id !== fc.flowcell_id" class="text-muted d-block" style="font-size: 0.75rem;">
-                                {{ fc.flowcell_id }}
-                            </small>
+                        </td>
+                        <td>
+                            <span v-if="fc.run_mode">{{ fc.run_mode }}</span>
+                            <span v-else class="text-muted">-</span>
+                        </td>
+                        <td>
+                            <span v-if="fc.run_setup">{{ fc.run_setup }}</span>
+                            <span v-else class="text-muted">-</span>
                         </td>
                         <td class="text-nowrap">
                             <!-- Demux Info -->
@@ -156,14 +161,6 @@ const vDemuxSampleInfoList = {
                                style="opacity: 0.2; font-size: 1.15em;"
                                title="Not transferred to HPC"
                                aria-hidden="true"></i>
-                        </td>
-                        <td>
-                            <span v-if="fc.run_setup">{{ fc.run_setup }}</span>
-                            <span v-else class="text-muted">-</span>
-                        </td>
-                        <td>
-                            <span v-if="fc.instrument_type">{{ fc.instrument_type }}</span>
-                            <span v-else class="text-muted">-</span>
                         </td>
                         <td>
                             <div v-if="fc.lane_info && Object.keys(fc.lane_info).length > 0">
