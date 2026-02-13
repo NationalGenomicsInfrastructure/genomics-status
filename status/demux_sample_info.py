@@ -96,6 +96,7 @@ class DemuxSampleInfoListHandler(SafeHandler):
                         "first_generated": value.get("first_generated"),
                         "run_setup": value.get("run_setup"),
                         "instrument_type": value.get("instrument_type"),
+                        "lane_info": value.get("lane_info"),
                     }
 
             # Query y_flowcells database for event status
@@ -150,6 +151,7 @@ class DemuxSampleInfoListHandler(SafeHandler):
                                 "transferred_to_hpc_timestamp"
                             ),
                             "runfolder_id": events_data.get("runfolder_id"),
+                            "lane_info": events_data.get("lane_info"),
                         }
 
                         if flowcell_id in flowcells_dict:

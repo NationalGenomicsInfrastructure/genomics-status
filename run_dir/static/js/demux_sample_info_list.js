@@ -42,7 +42,7 @@ const vDemuxSampleInfoList = {
                 <span>Y Flowcells</span>
                 <span v-if="showAllFlowcells" class="ms-3">
                     <small class="text-muted">Showing all flowcells</small>
-                    <button 
+                    <button
                         class="btn btn-outline-dark ml-1"
                         @click="toggleShowAllFlowcells"
                         :disabled="loadingFlowcells">
@@ -51,7 +51,7 @@ const vDemuxSampleInfoList = {
                 </span>
                 <span v-else class="ms-3">
                     <small class="text-muted ml-2">Showing flowcells from the last 6 months</small>
-                    <button 
+                    <button
                         class="btn btn-outline-dark ml-2"
                         @click="toggleShowAllFlowcells"
                         :disabled="loadingFlowcells">
@@ -76,6 +76,7 @@ const vDemuxSampleInfoList = {
                         <th>Status</th>
                         <th>Run Setup</th>
                         <th>Instrument Type</th>
+                        <th>Lanes / Projects</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -157,11 +158,31 @@ const vDemuxSampleInfoList = {
                                aria-hidden="true"></i>
                         </td>
                         <td>
-                            <small v-if="fc.run_setup">{{ fc.run_setup }}</small>
+                            <span v-if="fc.run_setup">{{ fc.run_setup }}</span>
                             <span v-else class="text-muted">-</span>
                         </td>
                         <td>
-                            <small v-if="fc.instrument_type">{{ fc.instrument_type }}</small>
+                            <span v-if="fc.instrument_type">{{ fc.instrument_type }}</span>
+                            <span v-else class="text-muted">-</span>
+                        </td>
+                        <td>
+                            <div v-if="fc.lane_info && Object.keys(fc.lane_info).length > 0">
+                                <div v-for="(laneData, laneNum) in fc.lane_info" :key="laneNum" class="mb-2">
+                                    <div v-if="laneData.projects && laneData.projects.length > 0">
+                                        <div v-for="(project, idx) in laneData.projects" :key="project.project_id">
+                                            <span v-if="idx === 0" style="display: inline-block; width: 1.5em;">{{ laneNum }}:</span>
+                                            <span v-else style="display: inline-block; width: 1.5em;"></span>
+                                            <a :href="'/project/' + project.project_id"
+                                               class="text-decoration-none"
+                                               :title="project.project_name">{{ project.project_name }}</a>
+                                        </div>
+                                    </div>
+                                    <div v-else>
+                                        <strong style="display: inline-block; width: 4.5em;">Lane {{ laneNum }}:</strong>
+                                        <span class="text-muted">No projects</span>
+                                    </div>
+                                </div>
+                            </div>
                             <span v-else class="text-muted">-</span>
                         </td>
                     </tr>
