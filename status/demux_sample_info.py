@@ -156,8 +156,16 @@ class DemuxSampleInfoListHandler(SafeHandler):
                         }
 
                         if flowcell_id in flowcells_dict:
-                            # Merge with existing entry
+                            # Merge with existing entry, but preserve lane_info if it already exists
+                            # and the new value is None (prioritize demux_sample_info lane_info)
+                            existing_lane_info = flowcells_dict[flowcell_id].get(
+                                "lane_info"
+                            )
                             flowcells_dict[flowcell_id].update(event_info)
+                            if existing_lane_info and not event_info.get("lane_info"):
+                                flowcells_dict[flowcell_id]["lane_info"] = (
+                                    existing_lane_info
+                                )
                         else:
                             # Add new entry from y_flowcells (no demux info)
                             flowcells_dict[flowcell_id] = {

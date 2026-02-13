@@ -73,6 +73,7 @@ const vDemuxSampleInfoList = {
                 <thead>
                     <tr class="sticky darkth">
                         <th>Flowcell ID</th>
+                        <th>Start date</th>
                         <th>Run Mode</th>
                         <th>Run Setup</th>
                         <th>Status</th>
@@ -116,6 +117,10 @@ const vDemuxSampleInfoList = {
                                class="fa fa-spinner ml-2"
                                title="Awaiting event data"
                                aria-hidden="true"></i>
+                        </td>
+                        <td>
+                            <span v-if="fc.sequencing_started_timestamp">{{ fc.sequencing_started_timestamp.split('T')[0] }}</span>
+                            <span v-else class="text-muted">-</span>
                         </td>
                         <td>
                             <span v-if="fc.run_mode">{{ fc.run_mode }}</span>
