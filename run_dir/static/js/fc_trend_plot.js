@@ -159,12 +159,12 @@ function make_plot(key, name, display_by, filter_inst_type, filter_inst, color_t
 
     // Styling the default view
     if (color_type == "chemver" && key == "total_clusters" && display_by == "flowcell") {
-        applyThresholds([0.75e6, 3e6, 10e6, 18e6, 100e6, 400e6, 1100e6, 650e6, 1300e6, 3300e6, 8000e6, 8000e6, 1500e6, 24000e6], [0, 1, 2]);
+        applyThresholds([0.75e6, 3e6, 10e6, 18e6, 100e6, 400e6, 1100e6, 650e6, 1300e6, 3300e6, 8000e6, 10000e6, 1500e6, 24000e6], [0, 1, 2]);
     }
 
     // Styling the lane view
     if (color_type == "chemver" && key == "total_clusters" && display_by == "lane") {
-        applyThresholds([0.75e6, 3e6, 10e6, 18e6, 100e6, 400e6, 550e6, 325e6, 650e6, 1650e6, 2000e6, 1000e6, 750e6, 3000e6], [0, 1, 2]);
+        applyThresholds([0.75e6, 3e6, 10e6, 18e6, 100e6, 400e6, 550e6, 325e6, 650e6, 1650e6, 2000e6, 1200e6, 750e6, 3000e6], [0, 1, 2]);
     }
 
     var serie = build_series(window.current_plot_data, key, name, display_by, filter_inst_type, filter_inst, color_type);
