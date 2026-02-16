@@ -85,13 +85,13 @@
                     <th>Total yield (Mb):</th>
                     <td>{% for thousand in lane.get('yield', '').split(',') %}<span class="thousand_group">{{ thousand }}</span>{% end %}</td>
                     <th>Total clusters:</th> {% set threshold = thresholds.get(flowcell.get('run_mode', ''), 0) %}
-                    {% set thr_per_sp = float(threshold) * 0.75 / len([x for x in flowcell['lane'][lane_number] if x['SampleName'] not in ['Undetermined', 'default']]) %}
+                    {% set project_thresholds = lane.get('project_threshold_summary', []) %}
                     <td class="text-left
                     {% if flowcell.get('run_mode') %}
                       {% if int(lane.get('clustersnb', '0').replace(',', '')) < threshold * 1000000 %} table-warning
                       {% else %} table-success {% end %}
                     {% end %}" data-toggle="tooltip" data-placement="bottom" data-html="true"
-                    title="Threshold: {{ threshold }} million <br /> {{ "Per sample : {:.2f} million".format(thr_per_sp) }}">
+                    title="Lane threshold: {{ threshold }} million{% if project_thresholds %}<br/><br/><strong>Sample thresholds per project:</strong>{% for proj_info in project_thresholds %}<br/>• {{ proj_info['project'] }} ({{ proj_info['type'] }}, {{ proj_info['num_samples'] }} sample{{ 's' if proj_info['num_samples'] > 1 else '' }}): {{ '{:.0f}'.format(proj_info['success_threshold_m']) }}M{% end %}{% end %}">
                     {% for thousand in lane.get('clustersnb', '').split(',') %}<span class="thousand_group">{{ thousand }}</span>{% end %}
                     </td>
                     <th>% bases > Q30:</th>
@@ -189,14 +189,10 @@
                     <td>{{ sample.get('Project', '').replace('__', '.') }}</td>
                     <td>{{ sample.get('SampleName') }}</td>
                     <td class="text-right">{% for thousand in sample.get('yield', '').split(',') %}<span class="thousand_group">{{ thousand }}</span>{% end %}</td>
-                    <td class="text-right
-                        {% if not thr_per_sp or sample.get('SampleName') == 'Undetermined' %}
-                        {% elif float(sample.get('readsnb', sample.get('clustersnb', 0)).replace(',','')) > thr_per_sp *1000000 %}
-                        table-success
-                        {% else %}
-                        table-warning
-                        {% end %}
-                    ">{% for thousand in sample.get('readsnb', sample.get('clustersnb', '')).split(',') %}<span class="thousand_group">{{ thousand }}</span>{% end %}</td>
+                    <td class="text-right {{ sample.get('sample_yield_class', '') }}" {% if sample.get('sample_tooltip', '' )
+                      %}data-toggle="tooltip" data-placement="right" data-html="true" title="{{ sample.get('sample_tooltip', '') }}" {% end
+                      %}>{% for thousand in sample.get('readsnb', sample.get('clustersnb', '')).split(',') %}<span class="thousand_group">{{
+                        thousand }}</span>{% end %}</td>
 
                     {% if flowcell.get('two_reads') %}
                       {% try %}{% set overthirty_r1 = float(sample.get('overthirty_r1', 0.0)) %}{% except %}{% set overthirty_r1 = 0.0 %}{% end %}
