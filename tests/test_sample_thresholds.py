@@ -6,14 +6,18 @@ Tests the actual code from flowcell.py to ensure thresholds are calculated corre
 based on lane capacity, project units, and number of samples.
 """
 
-import sys
 import os
+import sys
 import unittest
 
 # Add parent directory to path to import status module
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from status.flowcell import calculate_sample_threshold, format_sample_tooltip, reads_per_unit
+from status.flowcell import (
+    calculate_sample_threshold,
+    format_sample_tooltip,
+    reads_per_unit,
+)
 
 
 class TestSampleThresholds(unittest.TestCase):
