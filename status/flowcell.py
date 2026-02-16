@@ -61,16 +61,24 @@ def calculate_sample_threshold(
 
     if is_universal and units_ordered > 0 and lane_capacity_units > 0:
         # Universal-* project logic
+        # Apply threshold percentages to project target first, then apply 75% sample allocation
         targeted_units = min(units_ordered, lane_capacity_units)
         project_target = targeted_units * reads_per_unit
-        per_sample_allocation = project_target * 0.75 / num_samples_in_project
-        threshold_90 = per_sample_allocation * 0.90
-        threshold_80 = per_sample_allocation * 0.80
+
+        # Required project lane yield for success (90% of target)
+        required_project_yield_90 = project_target * 0.90
+        # Perfect sample fraction: equal share of required yield
+        perfect_sample_fraction_90 = required_project_yield_90 / num_samples_in_project
+        # Success threshold: 75% of perfect sample fraction
+        success_threshold = perfect_sample_fraction_90 * 0.75
+
+        # Required project lane yield for red flag (1% of target)
+        threshold_red = success_threshold * 0.01
 
         # Apply color coding
-        if sample_yield >= threshold_90:
+        if sample_yield >= success_threshold:
             universal_yield_class = "table-success"
-        elif sample_yield >= threshold_80:
+        elif sample_yield >= threshold_red:
             universal_yield_class = "table-warning"
         else:
             universal_yield_class = "table-danger"
@@ -81,22 +89,29 @@ def calculate_sample_threshold(
             "lane_capacity_units": lane_capacity_units,
             "targeted_units": targeted_units,
             "project_target": project_target,
-            "samples_target_total": project_target * 0.75,
+            "required_project_yield_90": required_project_yield_90,
+            "perfect_sample_fraction_90": perfect_sample_fraction_90,
             "num_samples": num_samples_in_project,
-            "per_sample_allocation": per_sample_allocation,
-            "threshold_90": threshold_90,
-            "threshold_80": threshold_80,
+            "success_threshold": success_threshold,
+            "threshold_red": threshold_red,
         }
     elif not is_universal and threshold > 0:
         # Standard project logic
-        per_sample_allocation = threshold * 1000000 * 0.75 / num_samples_in_project
-        threshold_90 = per_sample_allocation * 0.90
-        threshold_80 = per_sample_allocation * 0.80
+        # Apply threshold percentages to lane target first, then apply 75% sample allocation
+        lane_target = threshold * 1_000_000
+
+        # Perfect sample fraction: equal share of required yield
+        perfect_sample_fraction = lane_target / num_samples_in_project
+        # success threshold: 75% of perfect sample fraction
+        success_threshold = perfect_sample_fraction * 0.75
+
+        # Required lane yield for red flag (1% of target)
+        threshold_red = success_threshold * 0.01
 
         # Apply color coding
-        if sample_yield >= threshold_90:
+        if sample_yield >= success_threshold:
             universal_yield_class = "table-success"
-        elif sample_yield >= threshold_80:
+        elif sample_yield >= threshold_red:
             universal_yield_class = "table-warning"
         else:
             universal_yield_class = "table-danger"
@@ -104,11 +119,11 @@ def calculate_sample_threshold(
         tooltip_data = {
             "type": "standard",
             "lane_threshold": threshold,
-            "samples_allocation_total": threshold * 0.75,
+            "lane_target": lane_target,
+            "perfect_sample_fraction": perfect_sample_fraction,
             "num_samples": num_samples_in_project,
-            "per_sample_allocation": per_sample_allocation,
-            "threshold_90": threshold_90,
-            "threshold_80": threshold_80,
+            "success_threshold": success_threshold,
+            "threshold_red": threshold_red,
         }
 
     return universal_yield_class, tooltip_data
@@ -134,20 +149,20 @@ def format_sample_tooltip(tooltip_data):
             f"Lane capacity: {tooltip_data['lane_capacity_units']:.2f} units<br/>"
             f"Assumed project targeted units: {tooltip_data['targeted_units']:.2f}<br/>"
             f"Project target: {tooltip_data['project_target'] / 1000000:.0f}M clusters<br/>"
-            f"Samples get 75% of project target: {tooltip_data['samples_target_total'] / 1000000:.0f}M<br/>"
+            f"Required project lane yield (90%): {tooltip_data['required_project_yield_90'] / 1000000:.0f}M<br/>"
             f"Number of samples in project: {tooltip_data['num_samples']}<br/>"
-            f"Per sample allocation: {tooltip_data['per_sample_allocation'] / 1000000:.0f}M clusters<br/>"
-            f"90% threshold: {tooltip_data['threshold_90'] / 1000000:.0f}M (green)<br/>"
-            f"80% threshold: {tooltip_data['threshold_80'] / 1000000:.0f}M (yellow)"
+            f"Perfect sample fraction: {tooltip_data['perfect_sample_fraction_90'] / 1000000:.0f}M<br/>"
+            f"Success threshold (75% of perfect sample fraction): {tooltip_data['success_threshold'] / 1000000:.0f}M (green)<br/>"
+            f"Red flag threshold: {tooltip_data['threshold_red'] / 1000000:.2f}M (red)"
         )
     elif tooltip_data.get("type") == "standard":
         return (
             f"Lane threshold: {tooltip_data['lane_threshold']}M clusters<br/>"
-            f"Samples get 75% of lane: {tooltip_data['samples_allocation_total']:.0f}M<br/>"
+            f"Lane target: {tooltip_data['lane_target'] / 1000000:.0f}M<br/>"
             f"Number of samples in project: {tooltip_data['num_samples']}<br/>"
-            f"Per sample allocation: {tooltip_data['per_sample_allocation'] / 1000000:.0f}M clusters<br/>"
-            f"90% threshold: {tooltip_data['threshold_90'] / 1000000:.0f}M (green)<br/>"
-            f"80% threshold: {tooltip_data['threshold_80'] / 1000000:.0f}M (yellow)"
+            f"Perfect sample fraction: {tooltip_data['perfect_sample_fraction'] / 1000000:.0f}M<br/>"
+            f"Success threshold (75% of perfect sample fraction): {tooltip_data['success_threshold'] / 1000000:.0f}M (green)<br/>"
+            f"Red flag threshold: {tooltip_data['threshold_red'] / 1000000:.2f}M (red)"
         )
 
     return ""

@@ -1,5 +1,8 @@
 /* flowcell.html */
 
+// Initialize Bootstrap tooltips
+$('[data-toggle="tooltip"]').tooltip({html: true});
+
 const display_undetermined = (lane) => {
     $(`#table_ud_lane_${lane}:first`).slideToggle();
 };
