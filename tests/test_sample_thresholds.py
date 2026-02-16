@@ -11,7 +11,7 @@ import sys
 import unittest
 
 # Add parent directory to path to import status module
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from status.flowcell import (
     calculate_sample_threshold,
@@ -27,16 +27,16 @@ class TestSampleThresholds(unittest.TestCase):
         """Set up common test parameters."""
         # Standard reads per unit for Universal-* projects (from flowcell.py)
         self.reads_per_unit = reads_per_unit
-        
+
     # Universal-* Project Tests
-    
+
     def test_universal_single_sample_meets_threshold(self):
         """Test Universal-* project with 1 sample that meets 90% threshold."""
         sample_yield = 420_000_000  # 420M clusters
         num_samples = 1
         units_ordered = 1.0
         lane_capacity_units = 2.0
-        
+
         yield_class, tooltip_data = calculate_sample_threshold(
             sample_yield=sample_yield,
             num_samples_in_project=num_samples,
@@ -76,14 +76,14 @@ class TestSampleThresholds(unittest.TestCase):
 
         # 404M is between 4.05M (red) and 405M (success) -> warning
         self.assertEqual(yield_class, "table-warning")
-    
+
     def test_universal_single_sample_fails_threshold(self):
         """Test Universal-* project with 1 sample that fails to meet red threshold."""
         sample_yield = 3_000_000  # 3M clusters
         num_samples = 1
         units_ordered = 1.0
         lane_capacity_units = 2.0
-        
+
         yield_class, tooltip_data = calculate_sample_threshold(
             sample_yield=sample_yield,
             num_samples_in_project=num_samples,
@@ -142,10 +142,10 @@ class TestSampleThresholds(unittest.TestCase):
         test_cases = [
             (250_000_000, "table-success"),  # Exceeds success threshold
             (195_000_000, "table-warning"),  # Between red and success
-            (1_000_000, "table-danger"),     # Below red threshold
+            (1_000_000, "table-danger"),  # Below red threshold
             (220_000_000, "table-success"),  # Above success threshold
         ]
-        
+
         for sample_yield, expected_class in test_cases:
             yield_class, tooltip_data = calculate_sample_threshold(
                 sample_yield=sample_yield,
@@ -183,13 +183,13 @@ class TestSampleThresholds(unittest.TestCase):
         self.assertEqual(tooltip_data["success_threshold"], 405_000_000)
 
     # Standard (non-Universal) Project Tests
-    
+
     def test_standard_single_sample_meets_threshold(self):
         """Test standard project with 1 sample that meets success threshold."""
         lane_threshold_m = 300  # 300M lane threshold
         num_samples = 1
         sample_yield = 226_000_000
-        
+
         yield_class, tooltip_data = calculate_sample_threshold(
             sample_yield=sample_yield,
             num_samples_in_project=num_samples,
@@ -206,24 +206,24 @@ class TestSampleThresholds(unittest.TestCase):
         self.assertEqual(yield_class, "table-success")
         self.assertEqual(tooltip_data["type"], "standard")
         self.assertEqual(tooltip_data["success_threshold"], 225_000_000)
-    
+
     def test_standard_multiple_samples_split_threshold(self):
         """Test standard project with 4 samples splitting the lane allocation."""
         lane_threshold_m = 320  # NovaSeq S4 threshold
         num_samples = 4
-        
+
         # lane_target = 320M
         # perfect_sample_fraction = 320M / 4 = 80M
         # success_threshold = 80M * 0.75 = 60M
         # threshold_red = 60M * 0.01 = 0.6M
-        
+
         test_cases = [
             (62_000_000, "table-success"),  # 62M >= 60M
             (65_000_000, "table-success"),  # 65M >= 60M
             (50_000_000, "table-warning"),  # 0.6M <= 50M < 60M
-            (500_000, "table-danger"),      # 0.5M < 0.6M
+            (500_000, "table-danger"),  # 0.5M < 0.6M
         ]
-        
+
         for sample_yield, expected_class in test_cases:
             yield_class, tooltip_data = calculate_sample_threshold(
                 sample_yield=sample_yield,
@@ -235,13 +235,13 @@ class TestSampleThresholds(unittest.TestCase):
             )
             self.assertEqual(yield_class, expected_class)
             self.assertEqual(tooltip_data["success_threshold"], 60_000_000)
-    
+
     def test_standard_hiseq_x_eight_samples(self):
         """Test HiSeq X lane with 8 samples."""
         lane_threshold_m = 320  # HiSeq X threshold
         num_samples = 8
         sample_yield = 31_000_000
-        
+
         yield_class, tooltip_data = calculate_sample_threshold(
             sample_yield=sample_yield,
             num_samples_in_project=num_samples,
@@ -257,11 +257,11 @@ class TestSampleThresholds(unittest.TestCase):
         # 31M >= 30M -> success
         self.assertEqual(yield_class, "table-success")
         self.assertEqual(tooltip_data["success_threshold"], 30_000_000)
-    
+
     def test_standard_novaseq_xplus_multiple_projects(self):
         """Test NovaSeqXPlus lane with samples from different projects."""
         lane_threshold_m = 1200  # NovaSeqXPlus 10B
-        
+
         # Project A: 3 samples
         num_samples_proj_a = 3
         yield_class_a, tooltip_data_a = calculate_sample_threshold(
@@ -277,7 +277,7 @@ class TestSampleThresholds(unittest.TestCase):
         # success_threshold = 400M * 0.75 = 300M
         self.assertEqual(tooltip_data_a["success_threshold"], 300_000_000)
         self.assertEqual(yield_class_a, "table-warning")  # 280M < 300M but > 3M
-        
+
         # Project B: 2 samples
         num_samples_proj_b = 2
         yield_class_b, tooltip_data_b = calculate_sample_threshold(
@@ -293,15 +293,15 @@ class TestSampleThresholds(unittest.TestCase):
         # success_threshold = 600M * 0.75 = 450M
         self.assertEqual(tooltip_data_b["success_threshold"], 450_000_000)
         self.assertEqual(yield_class_b, "table-warning")  # 420M < 450M but > 4.5M
-    
+
     # Edge Cases
-    
+
     def test_edge_case_fractional_units(self):
         """Test with fractional unit orders."""
         units_ordered = 0.5  # Half a unit
         num_samples = 2
         sample_yield = 105_000_000
-        
+
         yield_class, tooltip_data = calculate_sample_threshold(
             sample_yield=sample_yield,
             num_samples_in_project=num_samples,
@@ -314,13 +314,13 @@ class TestSampleThresholds(unittest.TestCase):
         # 105M >= 101.25M -> success
         self.assertEqual(tooltip_data["success_threshold"], 101_250_000)
         self.assertEqual(yield_class, "table-success")
-    
+
     def test_edge_case_many_samples(self):
         """Test with many samples in a project."""
         units_ordered = 2.0
         num_samples = 10
         sample_yield = 85_000_000
-        
+
         yield_class, tooltip_data = calculate_sample_threshold(
             sample_yield=sample_yield,
             num_samples_in_project=num_samples,
@@ -333,9 +333,9 @@ class TestSampleThresholds(unittest.TestCase):
         # 85M >= 81M -> success
         self.assertEqual(tooltip_data["success_threshold"], 81_000_000)
         self.assertEqual(yield_class, "table-success")
-    
+
     # Tooltip Formatting Tests
-    
+
     def test_tooltip_format_universal(self):
         """Test tooltip formatting for Universal-* projects."""
         _, tooltip_data = calculate_sample_threshold(
@@ -346,16 +346,16 @@ class TestSampleThresholds(unittest.TestCase):
             lane_capacity_units=5.0,
             is_universal=True,
         )
-        
+
         tooltip = format_sample_tooltip(tooltip_data)
-        
+
         # Check that key information is in the tooltip
         self.assertIn("Universal-* Sample", tooltip)
         self.assertIn("Project units ordered: 2.0", tooltip)
         self.assertIn("Required project lane yield", tooltip)
         self.assertIn("Success threshold", tooltip)
         self.assertIn("Red flag threshold", tooltip)
-    
+
     def test_tooltip_format_standard(self):
         """Test tooltip formatting for standard projects."""
         _, tooltip_data = calculate_sample_threshold(
@@ -366,9 +366,9 @@ class TestSampleThresholds(unittest.TestCase):
             lane_capacity_units=0,
             is_universal=False,
         )
-        
+
         tooltip = format_sample_tooltip(tooltip_data)
-        
+
         # Check that key information is in the tooltip
         self.assertIn("Lane threshold: 300M", tooltip)
         self.assertIn("Number of samples in project: 3", tooltip)
