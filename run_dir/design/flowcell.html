@@ -96,30 +96,7 @@
                     </td>
                     <th>% bases > Q30:</th>
                     {% set run_setup = flowcell.get('longer_read_length', '') %}
-                    {% try %} {% set run_setup = int(run_setup) %} {% except %}{% end %}
-                    {% if flowcell.get('run_mode', '') == 'HiSeq X' %}
-                      {% set q30_threshold = 75.0 %}
-                    {% elif 'MiSeq' in flowcell.get('run_mode', '') %}
-                      {% if run_setup >= 250 %}
-                        {% set q30_threshold = 60.0 %}
-                      {% elif run_setup >= 150 %}
-                        {% set q30_threshold = 70.0 %}
-                      {% elif run_setup >= 100 %}
-                        {% set q30_threshold = 75.0 %}
-                      {% elif run_setup < 100 %}
-                        {% set q30_threshold = 80.0 %}
-                      {% end %}
-                    {% else %}
-                      {% if run_setup >= 250 %}
-                        {% set q30_threshold = 60.0 %}
-                      {% elif run_setup >= 150 %}
-                        {% set q30_threshold = 75.0 %}
-                      {% elif run_setup >= 100 %}
-                        {% set q30_threshold = 80.0 %}
-                      {% elif run_setup < 100 %}
-                        {% set q30_threshold = 85.0 %}
-                      {% end %}
-                    {% end %}
+                    {% set q30_threshold = get_q30_threshold(flowcell.get('run_mode', ''), run_setup) %}
                     {% set lane_q30 = lane.get('overthirty', 0.0) %}
                     {% try %}{% set lane_q30 = float(lane_q30) %}{% except %}{% end %}
                     <td class="text-left {% if lane_q30 < 40.0 %} table-danger
