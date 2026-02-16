@@ -89,7 +89,7 @@
             <tr>
               <td>{{ sample.get('modified_proj_name', '') }}</td>
               <td>{{ sample.get('sample_name', '') }}</td>
-              <td class="text-right {{ sample.get('universal_yield_class', '') }}" {% if sample.get('universal_tooltip', '' )
+              <td class="text-right {{ sample.get('yield_css_class', '') }}" {% if sample.get('universal_tooltip', '' )
                 %}data-toggle="tooltip" data-placement="right" data-html="true" title="{{ sample.get('universal_tooltip', '') }}" {%
                 end %}>
                 {% for thousand in sample['sum_sample_lane_yield'].split(',') %}<span class="thousand_group">{{ thousand }}</span>{%
