@@ -149,6 +149,7 @@ from status.sample_requirements import (
     SampleRequirementsValidateDraftDataHandler,
     SampleRequirementsViewHandler,
 )
+from status.yield_calculator import YieldCalculatorHandler
 from status.sensorpush import (
     SensorpushDataHandler,
     SensorpushHandler,
@@ -400,6 +401,7 @@ class Application(tornado.web.Application):
             ("/sample_requirements_update", SampleRequirementsUpdateHandler),
             ("/sensorpush", SensorpushHandler),
             ("/sequencing_queues", SequencingQueuesHandler),
+            ("/yield_calculator", YieldCalculatorHandler),
             (
                 "/singlecell_sample_summary_report/(P[^/]*)/([^/]*)/([^/]*)$",
                 SingleCellSampleSummaryReportHandler,

@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+<!--
+Template file: yield_calculator.html
+URL: /yield_calculator
+Title: Yield Calculator
+Description: Calculate yields for genomics sequencing projects
+-->
+
+{% block stuff %}
+
+<div class="container-fluid" id="yield_calculator_main">
+  <div class="my-4">
+    <h1>Yield Calculator</h1>
+    <v-yield-calculator/>
+  </div>
+</div>
+
+{% end %}
+
+{% block js %}
+
+<!-- Vue 3 -->
+<script src="/static/js/vue.v3.2.47.global.prod.js"></script>
+<script src="/static/js/yield_calculator.js?v={{ gs_globals['git_commit'] }}"></script>
+
+{% end %}

@@ -723,12 +723,30 @@ class ProjectDataHandler(ProjectsBaseDataHandler):
         is_universal = project_flowcell.startswith("Universal-")
 
         # 1 unit = 600 million reads - only show units for Universal projects
+        # For Universal projects, check if reads meet 90% of (units_ordered * 600M)
+        units_achieved = reads_sum / 600000000
+        meets_threshold = True  # Default for non-Universal projects
+
         if is_universal:
+            units_ordered_str = summary_row["value"].get(
+                "sequence_units_ordered_(lanes)", ""
+            )
+            try:
+                units_ordered = float(units_ordered_str) if units_ordered_str else 0
+                if units_ordered > 0:
+                    expected_reads = units_ordered * 600000000
+                    threshold = expected_reads * 0.9
+                    meets_threshold = reads_sum >= threshold
+            except (ValueError, TypeError):
+                units_ordered = 0
+
             summary_row["value"]["reads_sequenced"] = (
-                str(reads_sum) + f" (~ {round(reads_sum / 600000000, 2)} units)"
+                str(reads_sum) + f" (~ {round(units_achieved, 2)} units)"
             )
         else:
             summary_row["value"]["reads_sequenced"] = str(reads_sum)
+
+        summary_row["value"]["reads_sequenced_meets_threshold"] = meets_threshold
 
         field_sources["reads_sequenced"] = (
             "Calculated by Genomics Status (backend) from all non-failed samples in the project"
