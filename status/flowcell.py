@@ -395,12 +395,12 @@ class FlowcellHandler(SafeHandler):
                                     # Each unit targets reads_per_unit clusters, threshold is 90% of that
                                     target_clusters = targeted_units * reads_per_unit
                                     threshold_90 = target_clusters * 0.90
-                                    threshold_80 = target_clusters * 0.80
+                                    threshold_red = threshold_90 * 0.01
 
                                     # Apply color coding
                                     if sum_project_lane_yield >= threshold_90:
                                         universal_yield_class = "table-success"
-                                    elif sum_project_lane_yield >= threshold_80:
+                                    elif sum_project_lane_yield >= threshold_red:
                                         universal_yield_class = "table-warning"
                                     else:
                                         universal_yield_class = "table-danger"
@@ -412,8 +412,8 @@ class FlowcellHandler(SafeHandler):
                                         f"Lane capacity: {lane_capacity_units:.2f} units<br/>"
                                         f"Assumed targeted units on this lane: {targeted_units:.2f}<br/>"
                                         f"Target: {targeted_units:.2f} × {reads_per_unit / 1000000:.0f}M = {target_clusters / 1000000:.0f}M clusters<br/>"
-                                        f"90% threshold: {threshold_90 / 1000000:.0f}M (green)<br/>"
-                                        f"80% threshold: {threshold_80 / 1000000:.0f}M (yellow)"
+                                        f"Success threshold (90%): {threshold_90 / 1000000:.0f}M (green)<br/>"
+                                        f"Red flag threshold: {threshold_red / 1000000:.2f}M (red)"
                                     )
 
                     fc_project_yields_lane_list.append(
@@ -589,6 +589,114 @@ class FlowcellHandler(SafeHandler):
                     fc_sample_yields_lane_list,
                     key=lambda d: (d["modified_proj_name"], d["sample_name"]),
                 )
+
+            # Add threshold information to flowcell lane data for the flowcell information tab
+            for lane_nr in sorted(entry["value"].get("lanedata", {}).keys()):
+                lane_details = entry["value"]["lane"][lane_nr]
+                threshold = thresholds.get(entry["value"].get("run_mode", ""), 0)
+
+                # Calculate lane capacity in units
+                clusters_per_unit_millions = reads_per_unit / 1_000_000
+                lane_capacity_units = (
+                    threshold / clusters_per_unit_millions if threshold > 0 else 0
+                )
+
+                # Count samples per project on this lane (excluding Undetermined)
+                samples_per_project = {}
+                for lane_entry in lane_details:
+                    sample_name = lane_entry.get("SampleName", "")
+                    project = lane_entry.get("Project", "")
+                    if sample_name != "Undetermined" and project and project != "default":
+                        proj_key = project.replace("__", ".")
+                        # Only count each unique sample once per project
+                        if proj_key not in samples_per_project:
+                            samples_per_project[proj_key] = set()
+                        samples_per_project[proj_key].add(sample_name)
+
+                # Convert sets to counts
+                samples_per_project = {
+                    proj: len(samples) for proj, samples in samples_per_project.items()
+                }
+
+                # Store project threshold information for lane summary tooltip
+                project_threshold_summary = []
+
+                # Add threshold info to each sample in lane_details
+                for lane_entry in lane_details:
+                    sample_name = lane_entry.get("SampleName", "")
+                    project = lane_entry.get("Project", "")
+                    modified_proj_name = project.replace("__", ".")
+
+                    # Skip Undetermined and default samples
+                    if sample_name == "Undetermined" or modified_proj_name == "default":
+                        lane_entry["sample_yield_class"] = ""
+                        lane_entry["sample_tooltip"] = ""
+                        continue
+
+                    # Get sample yield
+                    sample_yield_str = lane_entry.get("clustersnb", "0")
+                    sample_yield = int(sample_yield_str.replace(",", ""))
+
+                    # Count samples in this project on this lane
+                    num_samples_in_project = samples_per_project.get(
+                        modified_proj_name, 1
+                    )
+
+                    # Check if this is a Universal-* project
+                    is_universal = False
+                    units_ordered = 0
+                    proj_name_for_lookup = modified_proj_name
+                    project_id = project_names.get(proj_name_for_lookup, "")
+
+                    if project_id and project_id in project_details:
+                        proj_flowcell = project_details[project_id].get("flowcell", "")
+                        if proj_flowcell and proj_flowcell.startswith("Universal-"):
+                            is_universal = True
+                            units_ordered_str = project_details[project_id].get(
+                                "sequence_units_ordered_(lanes)", ""
+                            )
+                            if units_ordered_str:
+                                try:
+                                    units_ordered = float(units_ordered_str)
+                                except (ValueError, TypeError):
+                                    units_ordered = 0
+
+                    # Calculate thresholds using the same function
+                    yield_class, tooltip_data = calculate_sample_threshold(
+                        sample_yield=sample_yield,
+                        num_samples_in_project=num_samples_in_project,
+                        threshold=threshold,
+                        units_ordered=units_ordered,
+                        lane_capacity_units=lane_capacity_units,
+                        is_universal=is_universal,
+                    )
+                    sample_tooltip = format_sample_tooltip(tooltip_data)
+
+                    # Add to lane entry
+                    lane_entry["sample_yield_class"] = yield_class
+                    lane_entry["sample_tooltip"] = sample_tooltip
+
+                    # Collect project threshold info for lane summary (one per project)
+                    if modified_proj_name not in [
+                        item["project"] for item in project_threshold_summary
+                    ]:
+                        project_type = "Universal" if is_universal else "Standard"
+                        success_threshold_m = (
+                            tooltip_data.get("success_threshold", 0) / 1_000_000
+                        )
+                        project_threshold_summary.append(
+                            {
+                                "project": modified_proj_name,
+                                "type": project_type,
+                                "num_samples": num_samples_in_project,
+                                "success_threshold_m": success_threshold_m,
+                            }
+                        )
+
+                # Add project threshold summary to lanedata for tooltip
+                entry["value"]["lanedata"][lane_nr][
+                    "project_threshold_summary"
+                ] = project_threshold_summary
 
             t = self.application.loader.load("flowcell.html")
             self.write(
