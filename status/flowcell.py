@@ -652,7 +652,11 @@ class FlowcellHandler(SafeHandler):
                 for lane_entry in lane_details:
                     sample_name = lane_entry.get("SampleName", "")
                     project = lane_entry.get("Project", "")
-                    if sample_name != "Undetermined" and project and project != "default":
+                    if (
+                        sample_name != "Undetermined"
+                        and project
+                        and project != "default"
+                    ):
                         proj_key = project.replace("__", ".")
                         if proj_key not in samples_per_project_set:
                             samples_per_project_set[proj_key] = set()
@@ -726,9 +730,9 @@ class FlowcellHandler(SafeHandler):
                         )
 
                 # Add project threshold summary to lanedata for tooltip
-                entry["value"]["lanedata"][lane_nr][
-                    "project_threshold_summary"
-                ] = project_threshold_summary
+                entry["value"]["lanedata"][lane_nr]["project_threshold_summary"] = (
+                    project_threshold_summary
+                )
 
             t = self.application.loader.load("flowcell.html")
             self.write(

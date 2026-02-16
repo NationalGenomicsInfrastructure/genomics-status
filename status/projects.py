@@ -718,10 +718,18 @@ class ProjectDataHandler(ProjectsBaseDataHandler):
                 if flowcell.get("sample_status", {}) not in ["Failed"]:
                     reads_sum += flowcell["cl"]
 
-        # 1 unit = 600 million reads
-        summary_row["value"]["reads_sequenced"] = (
-            str(reads_sum) + f" (~ {round(reads_sum / 600000000, 2)} units)"
-        )
+        # Check if the project's flowcell field contains "Universal-"
+        project_flowcell = summary_row["value"].get("flowcell", "")
+        is_universal = project_flowcell.startswith("Universal-")
+
+        # 1 unit = 600 million reads - only show units for Universal projects
+        if is_universal:
+            summary_row["value"]["reads_sequenced"] = (
+                str(reads_sum) + f" (~ {round(reads_sum / 600000000, 2)} units)"
+            )
+        else:
+            summary_row["value"]["reads_sequenced"] = str(reads_sum)
+
         field_sources["reads_sequenced"] = (
             "Calculated by Genomics Status (backend) from all non-failed samples in the project"
         )
