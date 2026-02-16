@@ -871,26 +871,33 @@ class ONTFlowcellHandler(SafeHandler):
             )
 
             df["average_read_length_passed"] = df.apply(
-                lambda x: int(
-                    round(
-                        x["basecalled_pass_bases"] / x["basecalled_pass_read_count"], 0
+                lambda x: (
+                    int(
+                        round(
+                            x["basecalled_pass_bases"]
+                            / x["basecalled_pass_read_count"],
+                            0,
+                        )
                     )
-                )
-                if x["basecalled_pass_bases"] > 0
-                and x["basecalled_pass_read_count"] > 0
-                else 0,
+                    if x["basecalled_pass_bases"] > 0
+                    and x["basecalled_pass_read_count"] > 0
+                    else 0
+                ),
                 axis=1,
             )
 
             df["accuracy"] = df.apply(
-                lambda x: round(
-                    x["basecalled_pass_bases"]
-                    / (x["basecalled_pass_bases"] + x["basecalled_fail_bases"])
-                    * 100,
-                    2,
-                )
-                if x["basecalled_pass_bases"] > 0 or x["basecalled_pass_read_count"] > 0
-                else 0,
+                lambda x: (
+                    round(
+                        x["basecalled_pass_bases"]
+                        / (x["basecalled_pass_bases"] + x["basecalled_fail_bases"])
+                        * 100,
+                        2,
+                    )
+                    if x["basecalled_pass_bases"] > 0
+                    or x["basecalled_pass_read_count"] > 0
+                    else 0
+                ),
                 axis=1,
             )
 
