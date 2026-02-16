@@ -22,30 +22,7 @@
               </td>
               <th>% bases > Q30:</th>
               {% set run_setup = flowcell.get('longer_read_length', '') %}
-              {% try %} {% set run_setup = int(run_setup) %} {% except %}{% end %}
-              {% if flowcell.get('run_mode', '') == 'HiSeq X' %}
-                {% set q30_threshold = 75.0 %}
-              {% elif 'MiSeq' in flowcell.get('run_mode', '') %}
-                {% if run_setup >= 250 %}
-                  {% set q30_threshold = 60.0 %}
-                {% elif run_setup >= 150 %}
-                  {% set q30_threshold = 70.0 %}
-                {% elif run_setup >= 100 %}
-                  {% set q30_threshold = 75.0 %}
-                {% elif run_setup < 100 %}
-                  {% set q30_threshold = 80.0 %}
-                {% end %}
-              {% else %}
-                {% if run_setup >= 250 %}
-                  {% set q30_threshold = 60.0 %}
-                {% elif run_setup >= 150 %}
-                  {% set q30_threshold = 75.0 %}
-                {% elif run_setup >= 100 %}
-                  {% set q30_threshold = 80.0 %}
-                {% elif run_setup < 100 %}
-                  {% set q30_threshold = 85.0 %}
-                {% end %}
-              {% end %}
+              {% set q30_threshold = get_q30_threshold(flowcell.get('run_mode', ''), run_setup) %}
               {% set lane_q30 = lane.get('overthirty', 0.0) %}
               {% try %}{% set lane_q30 = float(lane_q30) %}{% except %}{% end %}
               <td class="text-left {% if lane_q30 < 40.0 %} table-danger
@@ -86,7 +63,7 @@
             {% try %}{% set project_q30 = float(project_q30) %}{% except %}{% set project_q30 = 0.0 %}{% end %}
             <tr>
               <td>{{ project.get('modified_proj_name', '') }}</td>
-              <td class="text-right {{ project.get('universal_yield_class', '') }}" {% if project.get('universal_tooltip', '' )
+              <td class="text-right {{ project.get('yield_css_class', '') }}" {% if project.get('universal_tooltip', '' )
                 %}data-toggle="tooltip" data-placement="right" data-html="true" title="{{ project.get('universal_tooltip', '') }}" {%
                 end %}>
                 {% for thousand in project['sum_project_lane_yield'].split(',') %}<span class="thousand_group">{{ thousand }}</span>{%

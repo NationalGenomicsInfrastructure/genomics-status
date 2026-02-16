@@ -34,6 +34,63 @@ reads_per_unit = 600_000_000
 lanes_with_units = ["NovaSeqXPlus 25B", "NovaSeqXPlus 10B", "NovaSeqXPlus 5B"]
 
 
+def get_q30_threshold(run_mode, read_length):
+    """
+    Calculate Q30 threshold based on platform and read length.
+
+    Args:
+        run_mode: Flowcell run mode (e.g., 'MiSeq Version3', 'NextSeq High', 'NovaSeqXPlus 10B')
+        read_length: Read length in bp (the longer read if paired-end)
+
+    Returns:
+        Q30 threshold percentage
+    """
+    try:
+        read_length = int(read_length)
+    except (ValueError, TypeError):
+        read_length = 0
+
+    # HiSeq X
+    if run_mode == "HiSeq X":
+        return 75.0
+
+    # MiSeq
+    if "MiSeq" in run_mode:
+        if read_length >= 250:
+            return 60.0
+        elif read_length >= 150:
+            return 70.0
+        elif read_length >= 100:
+            return 75.0
+        else:  # <= 50 bp
+            return 80.0
+
+    # NextSeq (but not NovaSeqXPlus)
+    if "NextSeq" in run_mode or ("NovaSeq" in run_mode and "XPlus" not in run_mode):
+        if read_length >= 250:
+            return 75.0
+        elif read_length >= 150:
+            return 75.0
+        elif read_length >= 100:
+            return 80.0
+        else:  # <= 50 bp
+            return 80.0
+
+    # NovaSeqXPlus
+    if "NovaSeqXPlus" in run_mode:
+        if read_length >= 250:
+            return 75.0
+        elif read_length >= 150:
+            return 75.0
+        elif read_length >= 100:
+            return 80.0
+        else:  # <= 50 bp
+            return 85.0
+
+    # Default fallback
+    return 75.0
+
+
 def calculate_sample_threshold(
     sample_yield,
     num_samples_in_project,
@@ -685,6 +742,7 @@ class FlowcellHandler(SafeHandler):
                     fc_sample_yields=fc_sample_yields,
                     project_names=project_names,
                     project_details=project_details,
+                    get_q30_threshold=get_q30_threshold,
                     user=self.get_current_user(),
                     statusdb_url=self.settings["couch_url"],
                     statusdb_id=entry["id"],
