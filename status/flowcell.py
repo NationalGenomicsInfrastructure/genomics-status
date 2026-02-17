@@ -460,7 +460,7 @@ class FlowcellHandler(SafeHandler):
 
                     # Calculate Universal-* project thresholds
                     yield_css_class = ""
-                    universal_tooltip = ""
+                    yield_tooltip = ""
                     if proj != "default":
                         is_universal, units_ordered = self._get_project_universal_info(
                             modified_proj_name, project_names, project_details
@@ -491,7 +491,7 @@ class FlowcellHandler(SafeHandler):
                                 yield_css_class = "table-danger"
 
                             # Generate tooltip
-                            universal_tooltip = (
+                            yield_tooltip = (
                                 f"Universal-* Project<br/>"
                                 f"Units ordered: {units_ordered}<br/>"
                                 f"Lane capacity: {lane_capacity_units:.2f} units<br/>"
@@ -511,7 +511,7 @@ class FlowcellHandler(SafeHandler):
                             "proj_lane_percentage_obtained": proj_lane_percentage_obtained,
                             "proj_lane_percentage_threshold": proj_lane_percentage_threshold,
                             "yield_css_class": yield_css_class,
-                            "universal_tooltip": universal_tooltip,
+                            "yield_tooltip": yield_tooltip,
                         }
                     )
                 fc_project_yields[lane_nr] = sorted(
@@ -594,7 +594,7 @@ class FlowcellHandler(SafeHandler):
 
                     # Calculate sample thresholds
                     yield_css_class = ""
-                    universal_tooltip = ""
+                    yield_tooltip = ""
                     if sample != "Undetermined" and modified_proj_name != "default":
                         # Count samples in this project on this lane
                         num_samples_in_project = samples_per_project.get(
@@ -615,7 +615,7 @@ class FlowcellHandler(SafeHandler):
                             lane_capacity_units=lane_capacity_units,
                             is_universal=is_universal,
                         )
-                        universal_tooltip = format_sample_tooltip(tooltip_data)
+                        yield_tooltip = format_sample_tooltip(tooltip_data)
 
                     fc_sample_yields_lane_list.append(
                         {
@@ -627,7 +627,7 @@ class FlowcellHandler(SafeHandler):
                             "sample_lane_percentage": sample_lane_percentage,
                             "weighted_mqs": weighted_mqs,
                             "yield_css_class": yield_css_class,
-                            "universal_tooltip": universal_tooltip,
+                            "yield_tooltip": yield_tooltip,
                         }
                     )
                 fc_sample_yields[lane_nr] = sorted(
