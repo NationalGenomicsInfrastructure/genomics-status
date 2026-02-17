@@ -149,7 +149,6 @@ from status.sample_requirements import (
     SampleRequirementsValidateDraftDataHandler,
     SampleRequirementsViewHandler,
 )
-from status.yield_calculator import YieldCalculatorHandler
 from status.sensorpush import (
     SensorpushDataHandler,
     SensorpushHandler,
@@ -190,6 +189,7 @@ from status.worksets import (
     WorksetSearchHandler,
     WorksetsHandler,
 )
+from status.yield_calculator import YieldCalculatorHandler
 
 ONT_RUN_PATTERN = r"\d{8}_\d{4}_[0-9a-zA-Z]+_[0-9a-zA-Z]+_[0-9a-zA-Z]+"
 
