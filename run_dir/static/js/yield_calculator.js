@@ -68,7 +68,7 @@ const vYieldCalculator = {
                         </div>
                         <div class="col-md-4">
                             <label for="numberOfUnits" class="form-label">Number of Units Ordered</label>
-                            <input type="number" class="form-control" id="numberOfUnits" v-model.number="numberOfUnits" min="1" step="0.5">
+                            <input type="number" class="form-control" id="numberOfUnits" v-model.number="numberOfUnits" min="1" step="1">
                         </div>
                         <div class="col-md-4">
                             <label for="targetPhiX" class="form-label">Target PhiX (%)</label>
