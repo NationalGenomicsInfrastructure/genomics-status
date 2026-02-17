@@ -5,7 +5,7 @@ const vYieldCalculator = {
             // Input fields
             numSamples: 1,
             numberOfUnits: 2,
-            targetPhiX: 0.01,
+            targetPhiX: 1,
             enableCoverage: false,
             readLengthTotal: 302,
             genomeSize: 3000,
@@ -25,7 +25,7 @@ const vYieldCalculator = {
         calculate() {
             // 600M clusters per unit
             const clustersPerUnit = 600000000;
-            const extraPhiX = (this.targetPhiX - 0.01) // 1 % is standard, so calculate the extra percentage needed
+            const extraPhiX = (this.targetPhiX / 100 - 0.01) // 1 % is standard, so calculate the extra percentage needed
             this.targetProjectYield = clustersPerUnit * this.numberOfUnits;
             this.requiredProjectYield = clustersPerUnit * this.numberOfUnits * 0.9
             if (extraPhiX > 0) {
@@ -72,7 +72,7 @@ const vYieldCalculator = {
                         </div>
                         <div class="col-md-4">
                             <label for="targetPhiX" class="form-label">Target PhiX (%)</label>
-                            <input type="number" class="form-control" id="targetPhiX" v-model.number="targetPhiX" min="0" max="100" step="0.01">
+                            <input type="number" class="form-control" id="targetPhiX" v-model.number="targetPhiX" min="0" max="100" step="1">
                             <small class="form-text text-muted">Standard is 1%</small>
                         </div>
                     </div>
