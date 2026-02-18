@@ -10,6 +10,17 @@ const vYieldCalculator = {
             readLengthTotal: 302,
             genomeSize: 3000,
             
+            // Calculated input values (stored when calculate is run)
+            calculatedNumSamples: 0,
+            calculatedNumberOfUnits: 0,
+            calculatedTargetPhiX: 0,
+            calculatedEnableCoverage: false,
+            calculatedReadLengthTotal: 0,
+            calculatedGenomeSize: 0,
+
+            // UI state
+            showCalculationDetails: false,
+
             // Output fields
             targetProjectYield: 0,
             targetYieldPerSample: 0,
@@ -23,6 +34,14 @@ const vYieldCalculator = {
     },
     methods: {
         calculate() {
+            // Store the input values used for this calculation
+            this.calculatedNumSamples = this.numSamples;
+            this.calculatedNumberOfUnits = this.numberOfUnits;
+            this.calculatedTargetPhiX = this.targetPhiX;
+            this.calculatedEnableCoverage = this.enableCoverage;
+            this.calculatedReadLengthTotal = this.readLengthTotal;
+            this.calculatedGenomeSize = this.genomeSize;
+
             // 600M clusters per unit
             const clustersPerUnit = 600000000;
             const extraPhiX = (this.targetPhiX / 100 - 0.01) // 1 % is standard, so calculate the extra percentage needed
@@ -52,6 +71,9 @@ const vYieldCalculator = {
             return new Intl.NumberFormat('en-US', {
                 maximumFractionDigits: 2
             }).format(num / 1000000);
+        },
+        toggleCalculationDetails() {
+            this.showCalculationDetails = !this.showCalculationDetails;
         }
     },
     template: `
@@ -111,8 +133,8 @@ const vYieldCalculator = {
                 <div v-if="requiredProjectYield > 0" class="mt-4">
                     <h5>Results</h5>
                     <div class="row">
-                        <div class="col-md-6">
-                            <div class="card border-primary">
+                        <div class="col-md-6 d-flex">
+                            <div class="card border-primary h-100 w-100">
                                 <div class="card-body">
                                     <h6 class="card-subtitle mb-2 text-muted">Required Project Yield (90% threshold)</h6>
                                     <p class="card-text fs-4 fw-bold text-primary">{{ formatNumber(requiredProjectYield) }} M clusters</p>
@@ -120,8 +142,8 @@ const vYieldCalculator = {
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-6">
-                            <div class="card border-success">
+                        <div class="col-md-6 d-flex">
+                            <div class="card border-success h-100 w-100">
                                 <div class="card-body">
                                     <h6 class="card-subtitle mb-2 text-muted">Required Yield per Sample (75% allocation)</h6>
                                     <p class="card-text fs-4 fw-bold text-success">{{ formatNumber(requiredYieldPerSample) }} M clusters</p>
@@ -140,8 +162,8 @@ const vYieldCalculator = {
                         </div>
                     </div>
                     <div class="row mt-2">
-                        <div class="col-md-6">
-                            <div class="card bg-light">
+                        <div class="col-md-6 d-flex">
+                            <div class="card bg-light h-100 w-100">
                                 <div class="card-body">
                                     <h6 class="card-subtitle mb-2 text-muted">Target Project Yield (100%)</h6>
                                     <p class="card-text fs-5">{{ formatNumber(targetProjectYield) }} M clusters</p>
@@ -151,14 +173,62 @@ const vYieldCalculator = {
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-6">
-                            <div class="card bg-light">
+                        <div class="col-md-6 d-flex">
+                            <div class="card bg-light h-100 w-100">
                                 <div class="card-body">
                                     <h6 class="card-subtitle mb-2 text-muted">Target Yield per Sample (75% allocation)</h6>
                                     <p class="card-text fs-5">{{ formatNumber(targetYieldPerSample) }} M clusters</p>
                                     <small class="text-muted">Expected clusters per sample at 100% delivery</small>
                                     <div v-if="enableCoverage && targetCoveragePerSample > 0" class="mt-2">
                                         <small class="text-muted"><strong>Average coverage: {{ targetCoveragePerSample.toFixed(1) }}X</strong></small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="card border-info">
+                                <div class="card-header bg-info text-white" @click="toggleCalculationDetails" style="cursor: pointer;">
+                                    <h6 class="mb-0">
+                                        <span>Calculation Details</span>
+                                        <span class="float-end">
+                                            <i :class="showCalculationDetails ? 'bi bi-chevron-up' : 'bi bi-chevron-down'"></i>
+                                        </span>
+                                    </h6>
+                                </div>
+                                <div class="card-body" v-show="showCalculationDetails">
+                                    <div class="mb-3">
+                                        <strong>Base Calculation:</strong><br>
+                                        <code>{{ calculatedNumberOfUnits }} units × 600M clusters/unit = {{ formatNumber(calculatedNumberOfUnits * 600000000) }} M clusters</code>
+                                    </div>
+
+                                    <div v-if="calculatedTargetPhiX > 1" class="mb-3">
+                                        <strong>PhiX Adjustment:</strong><br>
+                                        <code>Extra PhiX: {{ calculatedTargetPhiX }}% - 1% (standard) = {{ calculatedTargetPhiX - 1 }}%</code><br>
+                                        <code>PhiX clusters to subtract: {{ formatNumber(calculatedNumberOfUnits * 600000000 * (calculatedTargetPhiX - 1) / 100) }} M</code><br>
+                                        <code>Adjusted yield: {{ formatNumber(calculatedNumberOfUnits * 600000000) }} M - {{ formatNumber(calculatedNumberOfUnits * 600000000 * (calculatedTargetPhiX - 1) / 100) }} M = {{ formatNumber(targetProjectYield) }} M clusters</code>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <strong>Project Threshold (90%):</strong><br>
+                                        <code>{{ formatNumber(targetProjectYield) }} M × 0.90 = {{ formatNumber(requiredProjectYield) }} M clusters</code>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <strong>Per-Sample Yields (75% allocation):</strong><br>
+                                        <code>Required: {{ formatNumber(requiredProjectYield) }} M × 0.75 ÷ {{ calculatedNumSamples }} samples = {{ formatNumber(requiredYieldPerSample) }} M clusters/sample</code><br>
+                                        <code>Target: {{ formatNumber(targetProjectYield) }} M × 0.75 ÷ {{ calculatedNumSamples }} samples = {{ formatNumber(targetYieldPerSample) }} M clusters/sample</code><br>
+                                        <code>Perfect: {{ formatNumber(targetProjectYield) }} M ÷ {{ calculatedNumSamples }} samples = {{ formatNumber(perfectYieldPerSample) }} M clusters/sample</code>
+                                    </div>
+
+                                    <div v-if="calculatedEnableCoverage && requiredCoveragePerSample > 0" class="mb-0">
+                                        <strong>Coverage Calculation:</strong><br>
+                                        <code>Genome size: {{ calculatedGenomeSize }} Mbp = {{ (calculatedGenomeSize * 1000000).toLocaleString() }} bp</code><br>
+                                        <code>Required coverage: ({{ formatNumber(requiredYieldPerSample) }} M clusters × {{ calculatedReadLengthTotal }} bp) ÷ {{ (calculatedGenomeSize * 1000000).toLocaleString() }} bp = {{ requiredCoveragePerSample.toFixed(1) }}X</code><br>
+                                        <code>Target coverage: ({{ formatNumber(targetYieldPerSample) }} M clusters × {{ calculatedReadLengthTotal }} bp) ÷ {{ (calculatedGenomeSize * 1000000).toLocaleString() }} bp = {{ targetCoveragePerSample.toFixed(1) }}X</code><br>
+                                        <code>Perfect coverage: ({{ formatNumber(perfectYieldPerSample) }} M clusters × {{ calculatedReadLengthTotal }} bp) ÷ {{ (calculatedGenomeSize * 1000000).toLocaleString() }} bp = {{ perfectCoveragePerSample.toFixed(1) }}X</code>
                                     </div>
                                 </div>
                             </div>
