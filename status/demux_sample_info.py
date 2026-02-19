@@ -1018,7 +1018,7 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                                 },
                                 "per_sample_fields": {
                                     "Lane": sample_in_lane["lane"],
-                                    "Sample_ID": sample_in_lane["sample_id"],
+                                    "Sample_ID": f"Sample_{sample_in_lane['sample_id']}",
                                     "index": index_1,
                                     "index2": index_2,
                                     "MaskShortReads": 0,
