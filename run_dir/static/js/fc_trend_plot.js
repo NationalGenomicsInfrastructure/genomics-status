@@ -42,8 +42,8 @@ function make_plot(key, name, display_by, filter_inst_type, filter_inst, color_t
             type: plot_type,
             events: {
                 render: function(){
-                    var formatted_sum = (sumBPYield(this.series)).toLocaleString();
-                    this.setTitle({text: 'Accumulated yield in Mbp: ' + formatted_sum}, false, false);
+                    var formatted_sum = (Math.round(sumBPYield(this.series))).toLocaleString();
+                    this.setTitle({ text: 'Accumulated yield in Gbp: ' + formatted_sum }, false, false);
                 }
             }
         },
@@ -100,8 +100,9 @@ function make_plot(key, name, display_by, filter_inst_type, filter_inst, color_t
         }
     };
 
-    if (display_by == "flowcell") {
-        toplot.tooltip.pointFormat = '{series.name} : <b>{point.y}</b><br />Mbp: <b>{point.bp_yield:,.0f}</b>';
+    // Add Mbp to tooltip for both flowcell and lane display
+    if (display_by == "flowcell" || display_by == "lane") {
+        toplot.tooltip.pointFormat = '{series.name} : <b>{point.y}</b><br />Mbp: <b>{point.mbp_yield:,.0f}</b>';
     }
 
     var thresholdColors = ['#696868', '#696868', '#696868', '#696868', '#696868', '#696868', '#696868', '#ffb700', '#ff00ae', '#0080ff', '#11ad11', '#8400ff', '#e65c00', '#1B9E97'];
@@ -159,12 +160,12 @@ function make_plot(key, name, display_by, filter_inst_type, filter_inst, color_t
 
     // Styling the default view
     if (color_type == "chemver" && key == "total_clusters" && display_by == "flowcell") {
-        applyThresholds([0.75e6, 3e6, 10e6, 18e6, 100e6, 400e6, 1100e6, 650e6, 1300e6, 3300e6, 8000e6, 8000e6, 1500e6, 24000e6], [0, 1, 2]);
+        applyThresholds([0.75e6, 3e6, 10e6, 18e6, 100e6, 400e6, 1100e6, 650e6, 1300e6, 3300e6, 8000e6, 10000e6, 1500e6, 24000e6], [0, 1, 2]);
     }
 
     // Styling the lane view
     if (color_type == "chemver" && key == "total_clusters" && display_by == "lane") {
-        applyThresholds([0.75e6, 3e6, 10e6, 18e6, 100e6, 400e6, 550e6, 325e6, 650e6, 1650e6, 2000e6, 1000e6, 750e6, 3000e6], [0, 1, 2]);
+        applyThresholds([0.75e6, 3e6, 10e6, 18e6, 100e6, 400e6, 550e6, 325e6, 650e6, 1650e6, 2000e6, 1200e6, 750e6, 3000e6], [0, 1, 2]);
     }
 
     var serie = build_series(window.current_plot_data, key, name, display_by, filter_inst_type, filter_inst, color_type);
@@ -189,11 +190,12 @@ function build_series(data, key, name, display_by, filter_inst_type, filter_inst
         }
         else{
             fcid = tmp[0]+'_'+tmp[tmp.length-1];
-            flowcell_link="/flowcell/"+fcid;
+            flowcell_link = "/flowcells/" + fcid;
         }
         var col_color = "";
         var series_name = "";
-        var bp_yield = data[d].total_yield;
+        // Convert from Mbp to Gbp
+        var bp_yield = data[d].total_yield / 1000;
         //Seq platform filter
         if (data[d].instrument.indexOf('M') != -1 && filter_inst_type.includes('M')){
             continue;
@@ -326,10 +328,17 @@ function build_series(data, key, name, display_by, filter_inst_type, filter_inst
                 if (key in data[d].lanes[l]){
                     value=data[d].lanes[l][key];
                 }
+                // Get lane yield in Gbp for accumulated yield calculation
+                // Lane total_yield is in clusters, so convert to Gbp
+                var lane_bp_yield = (data[d].lanes[l].total_yield || 0) / 1000000000;
+                // Get lane yield in Mbp for tooltip display
+                var lane_mbp_yield = (data[d].lanes[l].total_yield || 0) / 1000000;
                 dp = {
                     y: value,
                     name: fcid_lane,
-                    ownURL: flowcell_link
+                    ownURL: flowcell_link,
+                    bp_yield: lane_bp_yield,
+                    mbp_yield: lane_mbp_yield
                 };
                 series[series_name].data.push(dp);
                 categories.push(fcid_lane);
@@ -339,7 +348,8 @@ function build_series(data, key, name, display_by, filter_inst_type, filter_inst
                 y: data[d][key],
                 name: fcid,
                 ownURL: flowcell_link,
-                bp_yield: bp_yield
+                bp_yield: bp_yield,
+                mbp_yield: data[d].total_yield
             };
             series[series_name].data.push(dp);
             categories.push(fcid);

@@ -147,30 +147,7 @@ Description: Shows a table with all flow cells.
                                             {% for onelane in flowcells[onefc]['lane_info'] %}
                                                 <samp style="max-width:50px;">{{ flowcells[onefc]['lane_info'][onelane].get('q30_bases', 'NA') }}</samp>
                                                 {% set run_setup = flowcells[onefc].get('longer_read_length', '') %}
-                                                {% try %} {% set run_setup = int(run_setup) %} {% except %}{% end %}
-                                                {% if flowcells[onefc].get('run_mode', '') == 'HiSeq X' %}
-                                                    {% set q30_threshold = 75.0 %}
-                                                {% elif 'MiSeq' in flowcells[onefc].get('run_mode', '') %}
-                                                    {% if run_setup >= 250 %}
-                                                        {% set q30_threshold = 60.0 %}
-                                                    {% elif run_setup >= 150 %}
-                                                        {% set q30_threshold = 70.0 %}
-                                                    {% elif run_setup >= 100 %}
-                                                        {% set q30_threshold = 75.0 %}
-                                                    {% elif run_setup < 100 %}
-                                                        {% set q30_threshold = 80.0 %}
-                                                    {% end %}
-                                                {% else %}
-                                                    {% if run_setup >= 250 %}
-                                                        {% set q30_threshold = 60.0 %}
-                                                    {% elif run_setup >= 150 %}
-                                                        {% set q30_threshold = 75.0 %}
-                                                    {% elif run_setup >= 100 %}
-                                                        {% set q30_threshold = 80.0 %}
-                                                    {% elif run_setup < 100 %}
-                                                        {% set q30_threshold = 85.0 %}
-                                                    {% end %}
-                                                {% end %}
+                                                {% set q30_threshold = get_q30_threshold(flowcells[onefc].get('run_mode', ''), run_setup) %}
                                                 {% if flowcells[onefc]['lane_info'][onelane].get('q30_bases') %}
                                                     {% if float(flowcells[onefc]['lane_info'][onelane]['q30_bases']) >= q30_threshold %}
                                                         <span class="fa fa-check-circle" style="color:green"></span><br>

@@ -189,6 +189,7 @@ from status.worksets import (
     WorksetSearchHandler,
     WorksetsHandler,
 )
+from status.yield_calculator import YieldCalculatorHandler
 
 ONT_RUN_PATTERN = r"\d{8}_\d{4}_[0-9a-zA-Z]+_[0-9a-zA-Z]+_[0-9a-zA-Z]+"
 
@@ -400,6 +401,7 @@ class Application(tornado.web.Application):
             ("/sample_requirements_update", SampleRequirementsUpdateHandler),
             ("/sensorpush", SensorpushHandler),
             ("/sequencing_queues", SequencingQueuesHandler),
+            ("/yield_calculator", YieldCalculatorHandler),
             (
                 "/singlecell_sample_summary_report/(P[^/]*)/([^/]*)/([^/]*)$",
                 SingleCellSampleSummaryReportHandler,

@@ -516,7 +516,33 @@ function load_all_udfs(){
       }
       else if (prettify(key) == 'reads_sequenced'){
         let values = value.split('(');
-        prettyobj(key).html(nice_numbers(values[0].trim()) + (values.length > 1 ? ' (' + values[1] : ''));
+        if (values.length > 1) {
+          // Has units - format with badge only on units
+          prettyobj(key).html(nice_numbers(values[0].trim()) + ' <span class="badge bg-secondary" id="reads_sequenced_badge">(' + values[1]);
+        } else {
+          // No units - just the number
+          prettyobj(key).html(nice_numbers(values[0].trim()));
+        }
+      }
+      else if (prettify(key) == 'reads_sequenced_meets_threshold') {
+        // Set badge color based on threshold
+        if (value) {
+          $('#reads_sequenced_badge').removeClass('bg-secondary bg-warning').addClass('bg-success');
+        } else {
+          $('#reads_sequenced_badge').removeClass('bg-secondary bg-success').addClass('bg-warning');
+        }
+      }
+      else if (prettify(key) == 'flowcell') {
+        // Check if it's a Universal project and update the label
+        if (value && value.startsWith('Universal-')) {
+          $('#lanes_ordered_label').text('Units Ordered');
+        }
+        // Continue with normal processing
+        if (prettyobj(key).length > 0) {
+          prettyobj(key).html(auto_format(value));
+        } else if (safeobj(key).length > 0) {
+          safeobj(key).html(auto_format(value));
+        }
       }
       // Everything else
       else {

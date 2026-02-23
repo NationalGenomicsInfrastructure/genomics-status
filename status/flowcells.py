@@ -9,7 +9,7 @@ from dateutil.relativedelta import relativedelta
 from genologics import lims
 from genologics.config import BASEURI, PASSWORD, USERNAME
 
-from status.flowcell import get_project_names_from_ids, thresholds
+from status.flowcell import get_project_names_from_ids, get_q30_threshold, thresholds
 from status.running_notes import LatestRunningNoteHandler
 from status.util import SafeHandler
 
@@ -242,6 +242,7 @@ class FlowcellsHandler(SafeHandler):
             t.generate(
                 gs_globals=self.application.gs_globals,
                 thresholds=thresholds,
+                get_q30_threshold=get_q30_threshold,
                 user=self.get_current_user(),
                 flowcells=fcs,
                 ont_flowcells=ont_fcs,

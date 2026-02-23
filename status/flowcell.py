@@ -19,15 +19,213 @@ thresholds = {
     "NovaSeq S1": 650,
     "NovaSeq S2": 1650,
     "NovaSeq S4": 2000,
-    "NovaSeqXPlus 10B": 1000,
-    "NovaSeqXPlus 1.5B": 750,  # Might need to be reviewed when we settle for a number in AM
-    "NovaSeqXPlus 25B": 3000,  # Might need to be reviewed when we settle for a number in AM
+    "NovaSeqXPlus 10B": 1200,
+    "NovaSeqXPlus 1.5B": 750,
+    "NovaSeqXPlus 25B": 3000,
     "NextSeq Mid": 25,
     "NextSeq High": 75,
     "NextSeq 2000 P1": 100,
     "NextSeq 2000 P2": 400,
     "NextSeq 2000 P3": 550,
 }
+
+# For universal units, each unit corresponds to 600M reads:
+reads_per_unit = 600_000_000
+lanes_with_units = ["NovaSeqXPlus 25B", "NovaSeqXPlus 10B", "NovaSeqXPlus 5B"]
+
+
+def get_q30_threshold(run_mode, read_length):
+    """
+    Calculate Q30 threshold based on platform and read length.
+
+    Args:
+        run_mode: Flowcell run mode (e.g., 'MiSeq Version3', 'NextSeq High', 'NovaSeqXPlus 10B')
+        read_length: Read length in bp (the longer read if paired-end)
+
+    Returns:
+        Q30 threshold percentage
+    """
+    try:
+        read_length = int(read_length)
+    except (ValueError, TypeError):
+        read_length = 0
+
+    # HiSeq X
+    if run_mode == "HiSeq X":
+        return 75.0
+
+    # MiSeq
+    if "MiSeq" in run_mode:
+        if read_length >= 250:
+            return 60.0
+        elif read_length >= 150:
+            return 70.0
+        elif read_length >= 100:
+            return 75.0
+        else:  # <= 50 bp
+            return 80.0
+
+    # NextSeq (but not NovaSeqXPlus)
+    if "NextSeq" in run_mode or ("NovaSeq" in run_mode and "XPlus" not in run_mode):
+        if read_length >= 250:
+            return 75.0
+        elif read_length >= 150:
+            return 75.0
+        elif read_length >= 100:
+            return 80.0
+        else:  # <= 50 bp
+            return 80.0
+
+    # NovaSeqXPlus
+    if "NovaSeqXPlus" in run_mode:
+        if read_length >= 250:
+            return 75.0
+        elif read_length >= 150:
+            return 75.0
+        elif read_length >= 100:
+            return 80.0
+        else:  # <= 50 bp
+            return 85.0
+
+    # Default fallback
+    return 75.0
+
+
+def calculate_sample_threshold(
+    sample_yield,
+    num_samples_in_project,
+    threshold=0,
+    units_ordered=0,
+    lane_capacity_units=0,
+    is_universal=False,
+):
+    """
+    Calculate sample threshold and color coding.
+
+    Args:
+        sample_yield: Sample yield in clusters
+        num_samples_in_project: Number of samples in the project on this lane
+        threshold: Lane threshold in millions (for non-Universal projects)
+        units_ordered: Number of units ordered (for Universal-* projects)
+        lane_capacity_units: Lane capacity in units (for Universal-* projects)
+        is_universal: Whether this is a Universal-* project
+
+    Returns:
+        Tuple of (yield_class, tooltip_data) where tooltip_data is a dict
+    """
+    yield_css_class = ""
+    tooltip_data = {}
+
+    if is_universal and units_ordered > 0 and lane_capacity_units > 0:
+        # Universal-* project logic
+        # Apply threshold percentages to project target first, then apply 75% sample allocation
+        # Here we assume that the project targets either all its ordered units or lane capacity, whichever is lower, and then calculate thresholds based on that
+        # this assumption is frequently wrong, then the bioinformatician will have to calculate the thresholds manually
+        targeted_units = min(units_ordered, lane_capacity_units)
+        project_lane_target = targeted_units * reads_per_unit
+
+        # Required project lane yield for success (90% of target)
+        required_project_yield_90 = project_lane_target * 0.90
+        # Sample success threshold: 75% of sample fraction of required project yield
+        success_threshold = 0.75 * required_project_yield_90 / num_samples_in_project
+
+        # Required sample lane yield for red flag (1% of target)
+        threshold_red = success_threshold * 0.01
+
+        # Apply color coding
+        if sample_yield >= success_threshold:
+            yield_css_class = "table-success"
+        elif sample_yield >= threshold_red:
+            yield_css_class = "table-warning"
+        else:
+            yield_css_class = "table-danger"
+
+        tooltip_data = {
+            "type": "universal",
+            "units_ordered": units_ordered,
+            "lane_capacity_units": lane_capacity_units,
+            "targeted_units": targeted_units,
+            "project_target": project_lane_target,
+            "required_project_yield_90": required_project_yield_90,
+            "sample_fraction_90": required_project_yield_90 / num_samples_in_project,
+            "num_samples": num_samples_in_project,
+            "success_threshold": success_threshold,
+            "threshold_red": threshold_red,
+        }
+    elif not is_universal and threshold > 0:
+        # Standard project logic
+        # Apply threshold percentages to lane target first, then apply 75% sample allocation
+        # Making the assumption the project targets either its full fraction ordered (e.g. 0.5 lane was ordered) or lane capacity,
+        # whichever is lower, and then calculate thresholds based on that
+        fraction_threshold_for_project = min(units_ordered, 1)
+        lane_target = fraction_threshold_for_project * threshold * 1_000_000
+
+        # Perfect sample fraction: equal share of required yield
+        perfect_sample_fraction = lane_target / num_samples_in_project
+        # success threshold: 75% of sample fraction of lane threshold
+        success_threshold = perfect_sample_fraction * 0.75
+
+        # Required lane yield for red flag (1% of target)
+        threshold_red = success_threshold * 0.01
+
+        # Apply color coding
+        if sample_yield >= success_threshold:
+            yield_css_class = "table-success"
+        elif sample_yield >= threshold_red:
+            yield_css_class = "table-warning"
+        else:
+            yield_css_class = "table-danger"
+
+        tooltip_data = {
+            "type": "standard",
+            "lane_threshold": threshold,
+            "lane_target": lane_target,
+            "perfect_sample_fraction": perfect_sample_fraction,
+            "num_samples": num_samples_in_project,
+            "success_threshold": success_threshold,
+            "threshold_red": threshold_red,
+        }
+
+    return yield_css_class, tooltip_data
+
+
+def format_sample_tooltip(tooltip_data):
+    """
+    Format tooltip HTML from tooltip data.
+
+    Args:
+        tooltip_data: Dictionary with tooltip information
+
+    Returns:
+        HTML string for tooltip
+    """
+    if not tooltip_data:
+        return ""
+
+    if tooltip_data.get("type") == "universal":
+        return (
+            f"Universal-* Sample<br/>"
+            f"Project units ordered: {tooltip_data['units_ordered']}<br/>"
+            f"Lane capacity: {tooltip_data['lane_capacity_units']:.2f} units<br/>"
+            f"Assumed project targeted units: {tooltip_data['targeted_units']:.2f}<br/>"
+            f"Project target: {tooltip_data['project_target'] / 1000000:.0f}M clusters<br/>"
+            f"Required project lane yield (90%): {tooltip_data['required_project_yield_90'] / 1000000:.0f}M<br/>"
+            f"Number of samples in project: {tooltip_data['num_samples']}<br/>"
+            f"Sample fraction: {tooltip_data['sample_fraction_90'] / 1000000:.0f}M<br/>"
+            f"Success threshold (75% of perfect sample fraction): {tooltip_data['success_threshold'] / 1000000:.0f}M (green)<br/>"
+            f"Red flag threshold: {tooltip_data['threshold_red'] / 1000000:.2f}M (red)"
+        )
+    elif tooltip_data.get("type") == "standard":
+        return (
+            f"Lane threshold: {tooltip_data['lane_threshold']}M clusters<br/>"
+            f"Lane target: {tooltip_data['lane_target'] / 1000000:.0f}M<br/>"
+            f"Number of samples in project: {tooltip_data['num_samples']}<br/>"
+            f"Perfect sample fraction: {tooltip_data['perfect_sample_fraction'] / 1000000:.0f}M<br/>"
+            f"Success threshold (75% of perfect sample fraction): {tooltip_data['success_threshold'] / 1000000:.0f}M (green)<br/>"
+            f"Red flag threshold: {tooltip_data['threshold_red'] / 1000000:.2f}M (red)"
+        )
+
+    return ""
 
 
 class FlowcellHandler(SafeHandler):
@@ -51,6 +249,35 @@ class FlowcellHandler(SafeHandler):
             for row in view:
                 self._project_names[project_name] = row["value"]
         return self._project_names.get(project_name, "")
+
+    def _get_project_details(self, project_ids):
+        """Fetch flowcell, sequence_units_ordered_(lanes), and library_construction_method fields from project documents by project IDs"""
+        if not project_ids:
+            return {}
+
+        project_details = {}
+        view = self.application.cloudant.post_view(
+            db="projects",
+            ddoc="project",
+            view="project_id",
+            keys=list(project_ids),
+            include_docs=True,
+        ).get_result()["rows"]
+
+        for row in view:
+            if "doc" in row:
+                project_id = row["key"]
+                project_details[project_id] = {
+                    "flowcell": row["doc"].get("details", {}).get("flowcell", ""),
+                    "sequence_units_ordered_(lanes)": row["doc"]
+                    .get("details", {})
+                    .get("sequence_units_ordered_(lanes)", ""),
+                    "library_construction_method": row["doc"]
+                    .get("details", {})
+                    .get("library_construction_method", ""),
+                }
+
+        return project_details
 
     def _get_project_list(self, flowcell):
         # replace '__' in project name
@@ -99,6 +326,399 @@ class FlowcellHandler(SafeHandler):
 
         return False
 
+    def _get_project_info(self, project_name, project_names, project_details):
+        """Get project information (is_universal, units_lanes_ordered)."""
+        is_universal = False
+        units_lanes_ordered = 0
+
+        project_id = project_names.get(project_name, "")
+        if project_id and project_id in project_details:
+            proj_flowcell = project_details[project_id].get("flowcell", "")
+            if proj_flowcell:
+                is_universal = proj_flowcell.startswith("Universal-")
+
+                units_ordered_str = project_details[project_id].get(
+                    "sequence_units_ordered_(lanes)", ""
+                )
+                if units_ordered_str:
+                    try:
+                        units_lanes_ordered = float(units_ordered_str)
+                    except (ValueError, TypeError):
+                        units_lanes_ordered = 0
+
+        return is_universal, units_lanes_ordered
+
+    def _aggregate_lane_data(self, lane_details):
+        """
+        Aggregate lane data by project and sample in a single pass.
+
+        Args:
+            lane_details: List of lane entry dictionaries
+
+        Returns:
+            tuple: (project_aggregations, sample_aggregations, samples_per_project)
+        """
+        project_aggregations = {}
+        sample_aggregations = {}
+        samples_per_project = {}
+
+        for lane_entry in lane_details:
+            project = lane_entry.get("Project", "")
+            sample = lane_entry.get("SampleName", "")
+            clusters_str = lane_entry.get("clustersnb", "0")
+            clusters = int(clusters_str.replace(",", "")) if clusters_str else 0
+
+            # Normalize project name
+            if project == "default":
+                modified_proj = "undetermined"
+            else:
+                modified_proj = project.replace("__", ".")
+
+            # Aggregate by project
+            if modified_proj not in project_aggregations:
+                project_aggregations[modified_proj] = {
+                    "yield": 0,
+                    "weighted_q30_sum": 0,
+                    "yield_with_zero_q30": 0,
+                }
+            project_aggregations[modified_proj]["yield"] += clusters
+            if lane_entry.get("overthirty"):
+                project_aggregations[modified_proj]["weighted_q30_sum"] += (
+                    clusters * float(lane_entry["overthirty"])
+                )
+            else:
+                project_aggregations[modified_proj]["yield_with_zero_q30"] += clusters
+
+            # Aggregate by sample
+            sample_key = (sample, modified_proj)
+            if sample_key not in sample_aggregations:
+                sample_aggregations[sample_key] = {
+                    "yield": 0,
+                    "weighted_q30_sum": 0,
+                    "weighted_mqs_sum": 0,
+                    "yield_with_zero_q30": 0,
+                    "yield_with_zero_mqs": 0,
+                    "barcodes": set(),
+                }
+            sample_aggregations[sample_key]["yield"] += clusters
+            if lane_entry.get("overthirty"):
+                sample_aggregations[sample_key]["weighted_q30_sum"] += clusters * float(
+                    lane_entry["overthirty"]
+                )
+            else:
+                sample_aggregations[sample_key]["yield_with_zero_q30"] += clusters
+            if lane_entry.get("mqs"):
+                sample_aggregations[sample_key]["weighted_mqs_sum"] += clusters * float(
+                    lane_entry["mqs"]
+                )
+            else:
+                sample_aggregations[sample_key]["yield_with_zero_mqs"] += clusters
+            if lane_entry.get("barcode"):
+                sample_aggregations[sample_key]["barcodes"].add(lane_entry["barcode"])
+
+            # Count unique samples per project (excluding Undetermined and default)
+            if sample != "Undetermined" and modified_proj not in [
+                "undetermined",
+                "default",
+            ]:
+                if modified_proj not in samples_per_project:
+                    samples_per_project[modified_proj] = set()
+                samples_per_project[modified_proj].add(sample)
+
+        # Convert sample sets to counts
+        samples_per_project = {
+            proj: len(samples) for proj, samples in samples_per_project.items()
+        }
+
+        return project_aggregations, sample_aggregations, samples_per_project
+
+    def _build_project_yields_for_lane(
+        self,
+        project_aggregations,
+        total_lane_yield,
+        threshold,
+        lane_capacity_units,
+        get_cached_project_info,
+    ):
+        """
+        Build project yields list from aggregated project data.
+
+        Args:
+            project_aggregations: Dictionary of aggregated project data
+            total_lane_yield: Total yield for the lane
+            threshold: Lane threshold in millions
+            lane_capacity_units: Lane capacity in units
+            get_cached_project_info: Function to get cached project info
+
+        Returns:
+            list: List of project yield dictionaries
+        """
+        fc_project_yields_lane_list = []
+
+        for modified_proj_name, proj_data in project_aggregations.items():
+            sum_project_lane_yield = proj_data["yield"]
+
+            # Calculate weighted mean Q30
+            if sum_project_lane_yield > proj_data["yield_with_zero_q30"]:
+                weighted_mean_q30 = proj_data["weighted_q30_sum"] / (
+                    sum_project_lane_yield - proj_data["yield_with_zero_q30"]
+                )
+            else:
+                weighted_mean_q30 = 0
+
+            proj_lane_percentage_obtained = (
+                (sum_project_lane_yield / total_lane_yield) * 100
+                if total_lane_yield
+                else 0
+            )
+            proj_lane_percentage_threshold = (
+                (sum_project_lane_yield / (threshold * 1000000)) * 100
+                if threshold
+                else 0
+            )
+
+            # Calculate Universal-* project thresholds
+            yield_css_class = ""
+            yield_tooltip = ""
+            if modified_proj_name not in ["undetermined", "default"]:
+                is_universal, units_ordered = get_cached_project_info(
+                    modified_proj_name
+                )
+
+                if is_universal and units_ordered > 0 and lane_capacity_units > 0:
+                    # Determine targeted units on this lane
+                    targeted_units = min(units_ordered, lane_capacity_units)
+
+                    # Each unit targets reads_per_unit clusters, threshold is 90% of that
+                    target_clusters = targeted_units * reads_per_unit
+                    threshold_90 = target_clusters * 0.90
+                    threshold_red = threshold_90 * 0.01
+
+                    # Apply color coding
+                    if sum_project_lane_yield >= threshold_90:
+                        yield_css_class = "table-success"
+                    elif sum_project_lane_yield >= threshold_red:
+                        yield_css_class = "table-warning"
+                    else:
+                        yield_css_class = "table-danger"
+
+                    # Generate tooltip
+                    yield_tooltip = (
+                        f"Universal-* Project<br/>"
+                        f"Units ordered: {units_ordered}<br/>"
+                        f"Lane capacity: {lane_capacity_units:.2f} units<br/>"
+                        f"Assumed targeted units on this lane: {targeted_units:.2f}<br/>"
+                        f"Target: {targeted_units:.2f} × {reads_per_unit / 1000000:.0f}M = {target_clusters / 1000000:.0f}M clusters<br/>"
+                        f"Success threshold (90%): {threshold_90 / 1000000:.0f}M (green)<br/>"
+                        f"Red flag threshold: {threshold_red / 1000000:.2f}M (red)"
+                    )
+
+            fc_project_yields_lane_list.append(
+                {
+                    "modified_proj_name": modified_proj_name,
+                    "sum_project_lane_yield": format(sum_project_lane_yield, ","),
+                    "weighted_mean_q30": weighted_mean_q30,
+                    "proj_lane_percentage_obtained": proj_lane_percentage_obtained,
+                    "proj_lane_percentage_threshold": proj_lane_percentage_threshold,
+                    "yield_css_class": yield_css_class,
+                    "yield_tooltip": yield_tooltip,
+                }
+            )
+
+        return sorted(
+            fc_project_yields_lane_list, key=lambda d: d["modified_proj_name"]
+        )
+
+    def _build_sample_yields_for_lane(
+        self,
+        sample_aggregations,
+        samples_per_project,
+        total_lane_yield,
+        threshold,
+        lane_capacity_units,
+        get_cached_project_info,
+    ):
+        """
+        Build sample yields list from aggregated sample data.
+
+        Args:
+            sample_aggregations: Dictionary of aggregated sample data
+            samples_per_project: Dictionary of sample counts per project
+            total_lane_yield: Total yield for the lane
+            threshold: Lane threshold in millions
+            lane_capacity_units: Lane capacity in units
+            get_cached_project_info: Function to get cached project info
+
+        Returns:
+            list: List of sample yield dictionaries
+        """
+        fc_sample_yields_lane_list = []
+
+        for (
+            sample,
+            modified_proj_name,
+        ), sample_data in sample_aggregations.items():
+            sum_sample_lane_yield = sample_data["yield"]
+
+            # Determine barcode
+            if sample == "Undetermined":
+                sample_barcode = "unknown"
+            elif len(sample_data["barcodes"]) == 0:
+                sample_barcode = "unknown"
+            elif len(sample_data["barcodes"]) == 1:
+                sample_barcode = list(sample_data["barcodes"])[0]
+            else:
+                sample_barcode = "multiple"
+
+            # Calculate weighted means
+            if sum_sample_lane_yield > sample_data["yield_with_zero_q30"]:
+                weighted_mean_q30 = sample_data["weighted_q30_sum"] / (
+                    sum_sample_lane_yield - sample_data["yield_with_zero_q30"]
+                )
+            else:
+                weighted_mean_q30 = 0
+
+            if sum_sample_lane_yield > sample_data["yield_with_zero_mqs"]:
+                weighted_mqs = sample_data["weighted_mqs_sum"] / (
+                    sum_sample_lane_yield - sample_data["yield_with_zero_mqs"]
+                )
+            else:
+                weighted_mqs = 0
+
+            sample_lane_percentage = (
+                (sum_sample_lane_yield / total_lane_yield) * 100
+                if total_lane_yield
+                else 0
+            )
+
+            # Calculate sample thresholds
+            yield_css_class = ""
+            yield_tooltip = ""
+            if sample != "Undetermined" and modified_proj_name not in [
+                "undetermined",
+                "default",
+            ]:
+                # Count samples in this project on this lane
+                num_samples_in_project = samples_per_project.get(modified_proj_name, 1)
+
+                # Get Universal-* info for this project (cached)
+                is_universal, units_ordered = get_cached_project_info(
+                    modified_proj_name
+                )
+
+                # Use the extracted function to calculate thresholds
+                yield_css_class, tooltip_data = calculate_sample_threshold(
+                    sample_yield=sum_sample_lane_yield,
+                    num_samples_in_project=num_samples_in_project,
+                    threshold=threshold,
+                    units_ordered=units_ordered,
+                    lane_capacity_units=lane_capacity_units,
+                    is_universal=is_universal,
+                )
+                yield_tooltip = format_sample_tooltip(tooltip_data)
+
+            fc_sample_yields_lane_list.append(
+                {
+                    "modified_proj_name": modified_proj_name,
+                    "sample_name": sample,
+                    "sum_sample_lane_yield": format(sum_sample_lane_yield, ","),
+                    "weighted_mean_q30": weighted_mean_q30,
+                    "sample_barcode": sample_barcode,
+                    "sample_lane_percentage": sample_lane_percentage,
+                    "weighted_mqs": weighted_mqs,
+                    "yield_css_class": yield_css_class,
+                    "yield_tooltip": yield_tooltip,
+                }
+            )
+
+        return sorted(
+            fc_sample_yields_lane_list,
+            key=lambda d: (d["modified_proj_name"], d["sample_name"]),
+        )
+
+    def _enrich_lane_entries_with_thresholds(
+        self,
+        lane_details,
+        samples_per_project,
+        threshold,
+        lane_capacity_units,
+        get_cached_project_info,
+    ):
+        """
+        Add threshold info to individual lane entries and build project summary.
+
+        Args:
+            lane_details: List of lane entry dictionaries
+            samples_per_project: Dictionary of sample counts per project
+            threshold: Lane threshold in millions
+            lane_capacity_units: Lane capacity in units
+            get_cached_project_info: Function to get cached project info
+
+        Returns:
+            list: Project threshold summary for the lane
+        """
+        project_threshold_summary = []
+        project_summary_added = set()
+
+        for lane_entry in lane_details:
+            sample_name = lane_entry.get("SampleName", "")
+            project = lane_entry.get("Project", "")
+            modified_proj_name = project.replace("__", ".")
+
+            # Skip Undetermined and default samples
+            if sample_name == "Undetermined" or modified_proj_name in [
+                "undetermined",
+                "default",
+            ]:
+                lane_entry["sample_yield_class"] = ""
+                lane_entry["sample_tooltip"] = ""
+                continue
+
+            # Get sample yield
+            sample_yield_str = lane_entry.get("clustersnb", "0")
+            sample_yield = (
+                int(sample_yield_str.replace(",", "")) if sample_yield_str else 0
+            )
+
+            # Count samples in this project on this lane
+            num_samples_in_project = samples_per_project.get(modified_proj_name, 1)
+
+            # Get Universal-* info for this project (cached)
+            is_universal, units_ordered = get_cached_project_info(modified_proj_name)
+
+            # Calculate thresholds using the same function
+            yield_class, tooltip_data = calculate_sample_threshold(
+                sample_yield=sample_yield,
+                num_samples_in_project=num_samples_in_project,
+                threshold=threshold,
+                units_ordered=units_ordered,
+                lane_capacity_units=lane_capacity_units,
+                is_universal=is_universal,
+            )
+            sample_tooltip = format_sample_tooltip(tooltip_data)
+
+            # Add to lane entry
+            lane_entry["sample_yield_class"] = yield_class
+            lane_entry["sample_tooltip"] = sample_tooltip
+
+            # Collect project threshold info for lane summary (one per project)
+            if modified_proj_name not in project_summary_added:
+                project_type = "Universal" if is_universal else "Standard"
+                success_threshold_m = (
+                    tooltip_data.get("success_threshold", 0) / 1_000_000
+                )
+                project_threshold_summary.append(
+                    {
+                        "project": modified_proj_name,
+                        "type": project_type,
+                        "num_samples": num_samples_in_project,
+                        "success_threshold_m": success_threshold_m,
+                    }
+                )
+                project_summary_added.add(modified_proj_name)
+
+        return project_threshold_summary
+
     def get(self, flowcell_id):
         entry = self.find_DB_entry(flowcell_id)
 
@@ -126,163 +746,80 @@ class FlowcellHandler(SafeHandler):
             return
         else:
             # replace '__' in project name
+            # We're modifying the entry variable for historic reasons, we'll keep it for now
+            # since we don't want to refactor the flowcell page tooo much.
             entry["value"]["plist"] = self._get_project_list(entry["value"])
             # list of project_names -> to create links to project page and bioinfo tab
             project_names = {
                 project_name: self._get_project_id_by_name(project_name)
                 for project_name in entry["value"]["plist"]
             }
+            # Get project details (flowcell and lanes ordered) for additional information
+            project_details = self._get_project_details(project_names.values())
+
+            # Cache project info to avoid repeated lookups
+            project_info_cache = {}
+
+            def get_cached_project_info(modified_proj_name):
+                if modified_proj_name not in project_info_cache:
+                    project_info_cache[modified_proj_name] = self._get_project_info(
+                        modified_proj_name, project_names, project_details
+                    )
+                return project_info_cache[modified_proj_name]
+
+            # Prepare thresholds and lane capacity for this flowcell based on run mode
+            threshold = thresholds.get(entry["value"].get("run_mode", ""), 0)
+            # Calculate lane capacity in units (shared across all calculations)
+            clusters_per_unit_millions = reads_per_unit / 1_000_000
+            lane_capacity_units = (
+                threshold / clusters_per_unit_millions if threshold > 0 else 0
+            )
+
             # Prepare summary table for total project/sample yields in each lane
             fc_project_yields = dict()
             fc_sample_yields = dict()
             for lane_nr in sorted(entry["value"].get("lanedata", {}).keys()):
-                fc_project_yields_lane_list = []
-                fc_sample_yields_lane_list = []
                 lane_details = entry["value"]["lane"][lane_nr]
                 total_lane_yield = int(
                     entry["value"]["lanedata"][lane_nr]["clustersnb"].replace(",", "")
                 )
-                unique_projects = list(set(lane["Project"] for lane in lane_details))
-                unique_samples = list(set(lane["SampleName"] for lane in lane_details))
-                threshold = thresholds.get(entry["value"].get("run_mode", ""), 0)
-                for proj in unique_projects:
-                    if proj == "default":
-                        modified_proj_name = "undetermined"
-                    else:
-                        modified_proj_name = proj.replace("__", ".")
-                    sum_project_lane_yield = sum(
-                        int(lane["clustersnb"].replace(",", ""))
-                        for lane in lane_details
-                        if lane["Project"] == proj and lane["clustersnb"]
-                    )
-                    if sum_project_lane_yield:
-                        weighted_sum_q30 = 0
-                        sum_yield_with_zero_q30 = 0
-                        for lane in lane_details:
-                            if lane["Project"] == proj and lane["clustersnb"]:
-                                if lane["overthirty"]:
-                                    weighted_sum_q30 += int(
-                                        lane["clustersnb"].replace(",", "")
-                                    ) * float(lane["overthirty"])
-                                else:
-                                    sum_yield_with_zero_q30 += int(
-                                        lane["clustersnb"].replace(",", "")
-                                    )
-                        weighted_mean_q30 = weighted_sum_q30 / (
-                            sum_project_lane_yield - sum_yield_with_zero_q30
-                        )
-                    else:
-                        weighted_mean_q30 = 0
-                    proj_lane_percentage_obtained = (
-                        (sum_project_lane_yield / total_lane_yield) * 100
-                        if total_lane_yield
-                        else 0
-                    )
-                    proj_lane_percentage_threshold = (
-                        (sum_project_lane_yield / (threshold * 1000000)) * 100
-                        if threshold
-                        else 0
-                    )
-                    fc_project_yields_lane_list.append(
-                        {
-                            "modified_proj_name": modified_proj_name,
-                            "sum_project_lane_yield": format(
-                                sum_project_lane_yield, ","
-                            ),
-                            "weighted_mean_q30": weighted_mean_q30,
-                            "proj_lane_percentage_obtained": proj_lane_percentage_obtained,
-                            "proj_lane_percentage_threshold": proj_lane_percentage_threshold,
-                        }
-                    )
-                fc_project_yields[lane_nr] = sorted(
-                    fc_project_yields_lane_list, key=lambda d: d["modified_proj_name"]
+
+                # Aggregate lane data in a single pass
+                project_aggregations, sample_aggregations, samples_per_project = (
+                    self._aggregate_lane_data(lane_details)
                 )
-                for sample in unique_samples:
-                    if sample == "Undetermined":
-                        modified_proj_name = "default"
-                        sample_barcode = "unknown"
-                    else:
-                        modified_proj_name = ",".join(
-                            list(
-                                set(
-                                    [
-                                        lane["Project"]
-                                        for lane in lane_details
-                                        if lane["SampleName"] == sample
-                                        and lane["Project"]
-                                    ]
-                                )
-                            )
-                        ).replace("__", ".")
-                        barcode_list = list(
-                            set(
-                                [
-                                    lane["barcode"]
-                                    for lane in lane_details
-                                    if lane["SampleName"] == sample and lane["barcode"]
-                                ]
-                            )
-                        )
-                        if len(barcode_list) < 2:
-                            sample_barcode = barcode_list[0]
-                        else:
-                            sample_barcode = "multiple"
-                    sum_sample_lane_yield = sum(
-                        int(lane["clustersnb"].replace(",", ""))
-                        for lane in lane_details
-                        if lane["SampleName"] == sample and lane["clustersnb"]
-                    )
-                    if sum_sample_lane_yield:
-                        weighted_sum_q30 = 0
-                        weighted_sum_mqs = 0
-                        sum_yield_with_zero_q30 = 0
-                        sum_yield_with_zero_mqs = 0
-                        for lane in lane_details:
-                            if lane["SampleName"] == sample and lane["clustersnb"]:
-                                if lane["overthirty"]:
-                                    weighted_sum_q30 += int(
-                                        lane["clustersnb"].replace(",", "")
-                                    ) * float(lane["overthirty"])
-                                else:
-                                    sum_yield_with_zero_q30 += int(
-                                        lane["clustersnb"].replace(",", "")
-                                    )
-                                if lane["mqs"]:
-                                    weighted_sum_mqs += int(
-                                        lane["clustersnb"].replace(",", "")
-                                    ) * float(lane["mqs"])
-                                else:
-                                    sum_yield_with_zero_mqs += int(
-                                        lane["clustersnb"].replace(",", "")
-                                    )
-                        weighted_mean_q30 = weighted_sum_q30 / (
-                            sum_sample_lane_yield - sum_yield_with_zero_q30
-                        )
-                        weighted_mqs = weighted_sum_mqs / (
-                            sum_sample_lane_yield - sum_yield_with_zero_mqs
-                        )
-                    else:
-                        weighted_mean_q30 = 0
-                        weighted_mqs = 0
-                    sample_lane_percentage = (
-                        (sum_sample_lane_yield / total_lane_yield) * 100
-                        if total_lane_yield
-                        else 0
-                    )
-                    fc_sample_yields_lane_list.append(
-                        {
-                            "modified_proj_name": modified_proj_name,
-                            "sample_name": sample,
-                            "sum_sample_lane_yield": format(sum_sample_lane_yield, ","),
-                            "weighted_mean_q30": weighted_mean_q30,
-                            "sample_barcode": sample_barcode,
-                            "sample_lane_percentage": sample_lane_percentage,
-                            "weighted_mqs": weighted_mqs,
-                        }
-                    )
-                fc_sample_yields[lane_nr] = sorted(
-                    fc_sample_yields_lane_list,
-                    key=lambda d: (d["modified_proj_name"], d["sample_name"]),
+
+                # Build project yields for this lane
+                fc_project_yields[lane_nr] = self._build_project_yields_for_lane(
+                    project_aggregations,
+                    total_lane_yield,
+                    threshold,
+                    lane_capacity_units,
+                    get_cached_project_info,
+                )
+
+                # Build sample yields for this lane
+                fc_sample_yields[lane_nr] = self._build_sample_yields_for_lane(
+                    sample_aggregations,
+                    samples_per_project,
+                    total_lane_yield,
+                    threshold,
+                    lane_capacity_units,
+                    get_cached_project_info,
+                )
+
+                # Enrich lane entries with threshold information
+                project_threshold_summary = self._enrich_lane_entries_with_thresholds(
+                    lane_details,
+                    samples_per_project,
+                    threshold,
+                    lane_capacity_units,
+                    get_cached_project_info,
+                )
+
+                # Add project threshold summary to lanedata for tooltip
+                entry["value"]["lanedata"][lane_nr]["project_threshold_summary"] = (
+                    project_threshold_summary
                 )
 
             t = self.application.loader.load("flowcell.html")
@@ -292,9 +829,12 @@ class FlowcellHandler(SafeHandler):
                     flowcell=entry["value"],
                     flowcell_id=flowcell_id,
                     thresholds=thresholds,
+                    reads_per_unit=reads_per_unit,
                     fc_project_yields=fc_project_yields,
                     fc_sample_yields=fc_sample_yields,
                     project_names=project_names,
+                    project_details=project_details,
+                    get_q30_threshold=get_q30_threshold,
                     user=self.get_current_user(),
                     statusdb_url=self.settings["couch_url"],
                     statusdb_id=entry["id"],
@@ -564,26 +1104,33 @@ class ONTFlowcellHandler(SafeHandler):
             )
 
             df["average_read_length_passed"] = df.apply(
-                lambda x: int(
-                    round(
-                        x["basecalled_pass_bases"] / x["basecalled_pass_read_count"], 0
+                lambda x: (
+                    int(
+                        round(
+                            x["basecalled_pass_bases"]
+                            / x["basecalled_pass_read_count"],
+                            0,
+                        )
                     )
-                )
-                if x["basecalled_pass_bases"] > 0
-                and x["basecalled_pass_read_count"] > 0
-                else 0,
+                    if x["basecalled_pass_bases"] > 0
+                    and x["basecalled_pass_read_count"] > 0
+                    else 0
+                ),
                 axis=1,
             )
 
             df["accuracy"] = df.apply(
-                lambda x: round(
-                    x["basecalled_pass_bases"]
-                    / (x["basecalled_pass_bases"] + x["basecalled_fail_bases"])
-                    * 100,
-                    2,
-                )
-                if x["basecalled_pass_bases"] > 0 or x["basecalled_pass_read_count"] > 0
-                else 0,
+                lambda x: (
+                    round(
+                        x["basecalled_pass_bases"]
+                        / (x["basecalled_pass_bases"] + x["basecalled_fail_bases"])
+                        * 100,
+                        2,
+                    )
+                    if x["basecalled_pass_bases"] > 0
+                    or x["basecalled_pass_read_count"] > 0
+                    else 0
+                ),
                 axis=1,
             )
 
