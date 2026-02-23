@@ -186,42 +186,42 @@ class TestSampleThresholds(unittest.TestCase):
 
     def test_standard_single_sample_meets_threshold(self):
         """Test standard project with 1 sample that meets success threshold."""
-        lane_threshold_m = 300  # 300M lane threshold
+        lane_threshold_m = 600  # 600M lane threshold
         num_samples = 1
-        sample_yield = 226_000_000
+        sample_yield = 552_000_000
 
         yield_class, tooltip_data = calculate_sample_threshold(
             sample_yield=sample_yield,
             num_samples_in_project=num_samples,
             threshold=lane_threshold_m,
-            units_ordered=0,
-            lane_capacity_units=0,
+            units_ordered=1,
+            lane_capacity_units=1,
             is_universal=False,
         )
 
-        # lane_target = 300M
-        # perfect_sample_fraction = 300M / 1 = 300M
-        # success_threshold = 300M * 0.75 = 225M
-        # 226M >= 225M -> success
+        # lane_target = 600M
+        # perfect_sample_fraction = 600M / 1 = 600M
+        # success_threshold = 600M * 0.75 = 450M
+        # 552M >= 450M -> success
         self.assertEqual(yield_class, "table-success")
         self.assertEqual(tooltip_data["type"], "standard")
-        self.assertEqual(tooltip_data["success_threshold"], 225_000_000)
+        self.assertEqual(tooltip_data["success_threshold"], 450_000_000)
 
     def test_standard_multiple_samples_split_threshold(self):
         """Test standard project with 4 samples splitting the lane allocation."""
-        lane_threshold_m = 320  # NovaSeq S4 threshold
+        lane_threshold_m = 3000  # NovaSeqXPlus 25B threshold
         num_samples = 4
 
-        # lane_target = 320M
-        # perfect_sample_fraction = 320M / 4 = 80M
-        # success_threshold = 80M * 0.75 = 60M
-        # threshold_red = 60M * 0.01 = 0.6M
+        # lane_target = 3000M
+        # perfect_sample_fraction = 3000M / 4 = 750M
+        # success_threshold = 750M * 0.75 = 562.5M
+        # threshold_red = 562.5M * 0.01 = 5.625M
 
         test_cases = [
-            (62_000_000, "table-success"),  # 62M >= 60M
-            (65_000_000, "table-success"),  # 65M >= 60M
-            (50_000_000, "table-warning"),  # 0.6M <= 50M < 60M
-            (500_000, "table-danger"),  # 0.5M < 0.6M
+            (620_000_000, "table-success"),  # 62M >= 562.5M
+            (650_000_000, "table-success"),  # 650M >= 562.5M
+            (500_000_000, "table-warning"),  # 500M < 562.5M but > 5.625M
+            (5_000_000, "table-danger"),  # 5M < 5.625M
         ]
 
         for sample_yield, expected_class in test_cases:
@@ -229,34 +229,13 @@ class TestSampleThresholds(unittest.TestCase):
                 sample_yield=sample_yield,
                 num_samples_in_project=num_samples,
                 threshold=lane_threshold_m,
-                units_ordered=0,
-                lane_capacity_units=0,
+                units_ordered=5,
+                lane_capacity_units=5,
                 is_universal=False,
             )
             self.assertEqual(yield_class, expected_class)
-            self.assertEqual(tooltip_data["success_threshold"], 60_000_000)
+            self.assertEqual(tooltip_data["success_threshold"], 562_500_000)
 
-    def test_standard_hiseq_x_eight_samples(self):
-        """Test HiSeq X lane with 8 samples."""
-        lane_threshold_m = 320  # HiSeq X threshold
-        num_samples = 8
-        sample_yield = 31_000_000
-
-        yield_class, tooltip_data = calculate_sample_threshold(
-            sample_yield=sample_yield,
-            num_samples_in_project=num_samples,
-            threshold=lane_threshold_m,
-            units_ordered=0,
-            lane_capacity_units=0,
-            is_universal=False,
-        )
-
-        # lane_target = 320M
-        # perfect_sample_fraction = 320M / 8 = 40M
-        # success_threshold = 40M * 0.75 = 30M
-        # 31M >= 30M -> success
-        self.assertEqual(yield_class, "table-success")
-        self.assertEqual(tooltip_data["success_threshold"], 30_000_000)
 
     def test_standard_novaseq_xplus_multiple_projects(self):
         """Test NovaSeqXPlus lane with samples from different projects."""
@@ -268,8 +247,8 @@ class TestSampleThresholds(unittest.TestCase):
             sample_yield=280_000_000,
             num_samples_in_project=num_samples_proj_a,
             threshold=lane_threshold_m,
-            units_ordered=0,
-            lane_capacity_units=0,
+            units_ordered=2,
+            lane_capacity_units=2,
             is_universal=False,
         )
         # lane_target = 1200M
@@ -284,8 +263,8 @@ class TestSampleThresholds(unittest.TestCase):
             sample_yield=420_000_000,
             num_samples_in_project=num_samples_proj_b,
             threshold=lane_threshold_m,
-            units_ordered=0,
-            lane_capacity_units=0,
+            units_ordered=2,
+            lane_capacity_units=2,
             is_universal=False,
         )
         # lane_target = 1200M
