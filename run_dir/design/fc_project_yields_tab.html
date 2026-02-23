@@ -16,7 +16,7 @@
                 {% if int(lane.get('clustersnb', '0').replace(',', '')) < threshold * 1000000 %} table-warning
                 {% else %} table-success {% end %}
               {% end %}" data-toggle="tooltip" data-placement="bottom" data-html="true"
-              title="Threshold: {{ threshold }} million">
+              title="Lane threshold: {{ threshold }} million">
               {% set lane_total_yield_m = "{0:.2f}".format(float(lane.get('clustersnb', '').replace(',', ''))/1000000) %}
               {% for thousand in lane.get('clustersnb', '').split(',') %}<span class="thousand_group">{{ thousand }}</span>{% end %}
               </td>
