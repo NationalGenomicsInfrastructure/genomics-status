@@ -236,7 +236,6 @@ class TestSampleThresholds(unittest.TestCase):
             self.assertEqual(yield_class, expected_class)
             self.assertEqual(tooltip_data["success_threshold"], 562_500_000)
 
-
     def test_standard_novaseq_xplus_multiple_projects(self):
         """Test NovaSeqXPlus lane with samples from different projects."""
         lane_threshold_m = 1200  # NovaSeqXPlus 10B
