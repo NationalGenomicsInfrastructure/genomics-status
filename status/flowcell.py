@@ -746,6 +746,8 @@ class FlowcellHandler(SafeHandler):
             return
         else:
             # replace '__' in project name
+            # We're modifying the entry variable for historic reasons, we'll keep it for now
+            # since we don't want to refactor the flowcell page tooo much.
             entry["value"]["plist"] = self._get_project_list(entry["value"])
             # list of project_names -> to create links to project page and bioinfo tab
             project_names = {
@@ -765,6 +767,14 @@ class FlowcellHandler(SafeHandler):
                     )
                 return project_info_cache[modified_proj_name]
 
+            # Prepare thresholds and lane capacity for this flowcell based on run mode
+            threshold = thresholds.get(entry["value"].get("run_mode", ""), 0)
+            # Calculate lane capacity in units (shared across all calculations)
+            clusters_per_unit_millions = reads_per_unit / 1_000_000
+            lane_capacity_units = (
+                threshold / clusters_per_unit_millions if threshold > 0 else 0
+            )
+
             # Prepare summary table for total project/sample yields in each lane
             fc_project_yields = dict()
             fc_sample_yields = dict()
@@ -772,13 +782,6 @@ class FlowcellHandler(SafeHandler):
                 lane_details = entry["value"]["lane"][lane_nr]
                 total_lane_yield = int(
                     entry["value"]["lanedata"][lane_nr]["clustersnb"].replace(",", "")
-                )
-                threshold = thresholds.get(entry["value"].get("run_mode", ""), 0)
-
-                # Calculate lane capacity in units (shared across all calculations)
-                clusters_per_unit_millions = reads_per_unit / 1_000_000
-                lane_capacity_units = (
-                    threshold / clusters_per_unit_millions if threshold > 0 else 0
                 )
 
                 # Aggregate lane data in a single pass
