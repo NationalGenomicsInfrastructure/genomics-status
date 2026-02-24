@@ -600,17 +600,7 @@ class ProjectsBaseDataHandler(SafeHandler):
             ProjectsBaseDataHandler.cached_search_list is None
             or ProjectsBaseDataHandler.search_list_last_fetched < t_threshold
         ):
-            projects_view = self.application.cloudant.post_view(
-                db="projects",
-                ddoc="projects",
-                view="name_to_id_cust_ref",
-                descending=True,
-            ).get_result()["rows"]
-
-            ProjectsBaseDataHandler.cached_search_list = [
-                (row["key"], row["value"]) for row in projects_view
-            ]
-            ProjectsBaseDataHandler.search_list_last_fetched = datetime.datetime.now()
+            self.update_projects_cache()
 
         search_string = search_string.lower().strip()
 
@@ -636,6 +626,20 @@ class ProjectsBaseDataHandler(SafeHandler):
         )
 
         return projects
+
+    def update_projects_cache(self):
+        # Update of cached project search list
+        projects_view = self.application.cloudant.post_view(
+            db="projects",
+            ddoc="projects",
+            view="name_to_id_cust_ref",
+            descending=True,
+        ).get_result()["rows"]
+
+        ProjectsBaseDataHandler.cached_search_list = [
+            (row["key"], row["value"]) for row in projects_view
+        ]
+        ProjectsBaseDataHandler.search_list_last_fetched = datetime.datetime.now()
 
 
 def prettify_css_names(s):
