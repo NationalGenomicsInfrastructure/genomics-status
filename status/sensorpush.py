@@ -118,7 +118,7 @@ class SensorpushHandler(SensorpushBaseHandler):
     """Serves a page which lists all sensors with temperature info."""
 
     def get(self):
-        sensor_data = self.get_samples(start_days_ago=28)
+        sensor_data = self.get_samples(start_days_ago=90)
         sensor_24h_data = self.get_samples(start_days_ago=1)
 
         t = self.application.loader.load("sensorpush.html")

@@ -19,6 +19,30 @@
       </div>
     </div>
 
+    <h2 class="my-4">Sensor Status</h2>
+    <div class="row mb-4">
+      <div class="col-lg-6">
+        <div id="sensor_status_freezers" class="card">
+          <div class="card-header bg-info text-white">
+            <h5 class="mb-0">Expected Freezers</h5>
+          </div>
+          <div class="card-body">
+            <ul id="freezer_status_list" class="list-unstyled mb-0"></ul>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-6">
+        <div id="sensor_status_fridges" class="card">
+          <div class="card-header bg-info text-white">
+            <h5 class="mb-0">Expected Fridges</h5>
+          </div>
+          <div class="card-body">
+            <ul id="fridge_status_list" class="list-unstyled mb-0"></ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <h2 class="my-4">Summary of the last 24 hours</h2>
     <div id="loading_spinner" style="text-align:center; margin:100px 0;">
       <span class="fa fa-sync fa-spin"></span> Loading summary plots...

@@ -1,3 +1,7 @@
+// Hard-coded lists of expected sensors
+const EXPECTED_FREEZERS = ['TestF35', 'K06 A3590', 'F29 A3590'];
+const EXPECTED_FRIDGES = ['Test F36'];
+
 // when generate javascript in the template, strings are escaped.
 // need to unescape them again to execute js
 function date_parse(data) {
@@ -18,9 +22,9 @@ Highcharts.setOptions({
 */
 
 function plot_chart(title, plot_data, limit_lower, limit_upper, min_temp, max_temp, min_limit_lower, max_limit_upper, div_id) {
-    // Get timestamp for 2 months ago
+    // Get timestamp for 3 months ago
     var d = new Date();
-    d.setMonth(d.getMonth() - 1);
+    d.setMonth(d.getMonth() - 3);
     d.setHours(0,0,0);
     d = d.getTime();
 
@@ -87,6 +91,9 @@ function plot_sum_data(){
     $.getJSON("/api/v1/sensorpush", {'start_days_ago': 1}, function(data) {
         var frig_series = [];
         var freez_series = [];
+        var found_freezers = [];
+        var found_fridges = [];
+
         $.each(data, function(id, sensordata){
             var timedata = sensordata.samples;
             var sensname = sensordata.sensor_name;
@@ -100,11 +107,40 @@ function plot_sum_data(){
             };
             if (sensname.startsWith('F') || sensname == 'TestF35' || sensname == 'K06 A3590'){
             freez_series.push(dp_var);
+                found_freezers.push(sensname);
             }
             else if (sensname.startsWith('K') || sensname == 'Test F36'){
             frig_series.push(dp_var);
+                found_fridges.push(sensname);
             }
         });
+
+        // Display sensor status on webpage
+        var freezer_html = '';
+        EXPECTED_FREEZERS.forEach(function (freezer) {
+            var is_active = found_freezers.includes(freezer);
+            var status_class = is_active ? 'text-success' : 'text-danger';
+            var status_icon = is_active ? 'fa-check-circle' : 'fa-times-circle';
+            var status_text = is_active ? 'ACTIVE' : 'MISSING';
+            freezer_html += '<li class="' + status_class + ' mb-2">' +
+                '<i class="fas ' + status_icon + ' mr-2"></i>' +
+                '<strong>' + freezer + '</strong>: ' + status_text +
+                '</li>';
+        });
+        $('#freezer_status_list').html(freezer_html);
+
+        var fridge_html = '';
+        EXPECTED_FRIDGES.forEach(function (fridge) {
+            var is_active = found_fridges.includes(fridge);
+            var status_class = is_active ? 'text-success' : 'text-danger';
+            var status_icon = is_active ? 'fa-check-circle' : 'fa-times-circle';
+            var status_text = is_active ? 'ACTIVE' : 'MISSING';
+            fridge_html += '<li class="' + status_class + ' mb-2">' +
+                '<i class="fas ' + status_icon + ' mr-2"></i>' +
+                '<strong>' + fridge + '</strong>: ' + status_text +
+                '</li>';
+        });
+        $('#fridge_status_list').html(fridge_html);
 
         $('#fridge_sum_plot').highcharts({
             chart: {
