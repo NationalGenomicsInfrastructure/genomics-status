@@ -1,6 +1,6 @@
-// Hard-coded lists of expected sensors
-const EXPECTED_FREEZERS = ['TestF35', 'K06 A3590', 'F29 A3590'];
-const EXPECTED_FRIDGES = ['Test F36'];
+// Hard-coded lists of expected sensors, I guess this would be more suitable in a config file somewhere.
+const EXPECTED_FRIDGES = ['K01 A3730', 'K02 A3711', 'K10 A3571', 'K04 A3590'];
+const EXPECTED_FREEZERS = ['F29 A3590', 'F25 A3590', 'F07 A3711', "F26 A3330", "F39 Clean Room", "F21 A3590", "F18 A3711", "F17 A3590", "F08 A3590", "F38 A3590", "F22 A3590", "F31 A3590", "F35 A3590", "F24 A3590", "F37 A3730", "F30 A3590", "F32 A3571", "F36 A3590", "F33 A3730", "F34 A3730", "F13 A3590", "F19 A3711"];
 
 // Store chart instances for cleanup
 var chartInstances = {};
@@ -18,9 +18,9 @@ function date_parse(data) {
 }
 
 function plot_chart(title, plot_data, limit_lower, limit_upper, min_temp, max_temp, min_limit_lower, max_limit_upper, div_id) {
-    // Get timestamp for 3 months ago
+    // Get timestamp for 4 months ago
     var d = new Date();
-    d.setMonth(d.getMonth() - 3);
+    d.setMonth(d.getMonth() - 4);
     d.setHours(0,0,0);
     var minTime = d.getTime();
 
@@ -164,27 +164,46 @@ function plot_sum_data(){
                 data: timedata,
                 lineWidth: 1
             };
-            if (sensname.startsWith('F') || sensname == 'TestF35' || sensname == 'K06 A3590'){
+            if (sensname.startsWith('F')) {
             freez_series.push(dp_var);
                 found_freezers.push(sensname);
             }
-            else if (sensname.startsWith('K') || sensname == 'Test F36'){
+            else if (sensname.startsWith('K')) {
             frig_series.push(dp_var);
                 found_fridges.push(sensname);
             }
         });
 
         // Display sensor status on webpage
-        var freezer_html = '';
+        // Group freezers by text after first space
+        var freezer_groups = {};
         EXPECTED_FREEZERS.forEach(function (freezer) {
-            var is_active = found_freezers.includes(freezer);
-            var status_class = is_active ? 'text-success' : 'text-danger';
-            var status_icon = is_active ? 'fa-check-circle' : 'fa-times-circle';
-            var status_text = is_active ? 'ACTIVE' : 'MISSING';
-            freezer_html += '<li class="' + status_class + ' mb-2">' +
-                '<i class="fas ' + status_icon + ' mr-2"></i>' +
-                '<strong>' + freezer + '</strong>: ' + status_text +
-                '</li>';
+            var space_index = freezer.indexOf(' ');
+            var group_name = space_index > -1 ? freezer.substring(space_index + 1) : 'Other';
+            if (!freezer_groups[group_name]) {
+                freezer_groups[group_name] = [];
+            }
+            freezer_groups[group_name].push(freezer);
+        });
+
+        // Create columns for each group
+        var freezer_html = '';
+        var group_names = Object.keys(freezer_groups).sort();
+        group_names.forEach(function (group_name) {
+            freezer_html += '<div class="col-md-' + (12 / Math.max(group_names.length, 1)) + '">';
+            freezer_html += '<h6 class="text-muted mb-2">' + group_name + '</h6>';
+            freezer_html += '<ul class="list-unstyled mb-0">';
+            freezer_groups[group_name].forEach(function (freezer) {
+                var is_active = found_freezers.includes(freezer);
+                var status_class = is_active ? 'text-success' : 'text-danger';
+                var status_icon = is_active ? 'fa-check-circle' : 'fa-times-circle';
+                var status_text = is_active ? 'ACTIVE' : 'MISSING';
+                freezer_html += '<li class="' + status_class + ' mb-2">' +
+                    '<i class="fas ' + status_icon + ' mr-2"></i>' +
+                    '<strong>' + freezer + '</strong>: ' + status_text +
+                    '</li>';
+            });
+            freezer_html += '</ul></div>';
         });
         $('#freezer_status_list').html(freezer_html);
 

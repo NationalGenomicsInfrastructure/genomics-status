@@ -22,18 +22,8 @@
     <h2 class="my-4">Sensor Status</h2>
     <div class="row mb-4">
       <div class="col-lg-6">
-        <div id="sensor_status_freezers" class="card">
-          <div class="card-header bg-info text-white">
-            <h5 class="mb-0">Expected Freezers</h5>
-          </div>
-          <div class="card-body">
-            <ul id="freezer_status_list" class="list-unstyled mb-0"></ul>
-          </div>
-        </div>
-      </div>
-      <div class="col-lg-6">
         <div id="sensor_status_fridges" class="card">
-          <div class="card-header bg-info text-white">
+          <div class="card-header">
             <h5 class="mb-0">Expected Fridges</h5>
           </div>
           <div class="card-body">
@@ -41,11 +31,21 @@
           </div>
         </div>
       </div>
+      <div class="col-lg-6">
+        <div id="sensor_status_freezers" class="card">
+          <div class="card-header">
+            <h5 class="mb-0">Expected Freezers</h5>
+          </div>
+          <div class="card-body">
+            <div id="freezer_status_list" class="row"></div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <h2 class="my-4">Summary of the last 24 hours</h2>
     <p class="text-muted small text-center mb-3">
-      <i class="fas fa-info-circle"></i> Tip: Hold <kbd>Ctrl</kbd> (or <kbd>Cmd</kbd>) and scroll to zoom charts | Click and
+      <i class="fas fa-info-circle"></i> Tip: Hold <kbd>Ctrl</kbd> and scroll to zoom charts | Click and
       drag to pan
     </p>
     <div id="loading_spinner" style="text-align:center; margin:100px 0;">
@@ -64,14 +64,15 @@
       </div>
     </div>
   </div>
-  <h2 class="text-center">Details for each sensor from the last 4 weeks</h2>
+  <h2 class="text-center">Details for each sensor from the last 4 months</h2>
   <p class="text-muted small text-center mb-4">
-    <i class="fas fa-info-circle"></i> Tip: Hold <kbd>Ctrl</kbd> (or <kbd>Cmd</kbd>) and scroll to zoom charts | Click and
+    <i class="fas fa-info-circle"></i> Tip: Hold <kbd>Ctrl</kbd> and scroll to zoom charts | Click and
     drag to pan
   </p>
-  <div id="plots">
+  <div id="plots" class="container-fluid">
     {% for sensor in sensor_data.keys() %}
-    <div class="row">
+    <div class="row justify-content-center mb-5">
+      <div class="col-lg-12 col-xl-10">
         <div class="col-auto">
           <h2 id='header_sensor_{{ sensor }}'>
             {{ sensor_data[sensor]['sensor_name'] }}
@@ -99,11 +100,11 @@
               </div>
             </div>
           {% end %}
-          </div>
         </div>
         <div class="sensorpush_plot" id="sensorpush_{{ sensor }}">
           <canvas id="sensorpush_canvas_{{ sensor }}"></canvas>
         </div>
+      </div>
     </div>
     {% end %}
   </div>
