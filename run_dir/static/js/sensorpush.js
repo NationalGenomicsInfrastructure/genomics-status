@@ -2,6 +2,9 @@
 const EXPECTED_FREEZERS = ['TestF35', 'K06 A3590', 'F29 A3590'];
 const EXPECTED_FRIDGES = ['Test F36'];
 
+// Store chart instances for cleanup
+var chartInstances = {};
+
 // when generate javascript in the template, strings are escaped.
 // need to unescape them again to execute js
 function date_parse(data) {
@@ -13,20 +16,13 @@ function date_parse(data) {
   }
   return data;
 }
-/* Can't get this to work, potentially version incompatibilities? maybe remove this?
-Highcharts.setOptions({
-    time: {
-        timezone: 'Europe/Stockholm'
-    }
-});
-*/
 
 function plot_chart(title, plot_data, limit_lower, limit_upper, min_temp, max_temp, min_limit_lower, max_limit_upper, div_id) {
     // Get timestamp for 3 months ago
     var d = new Date();
     d.setMonth(d.getMonth() - 3);
     d.setHours(0,0,0);
-    d = d.getTime();
+    var minTime = d.getTime();
 
     if (min_limit_lower !== null) {
         y_min = Math.min(min_limit_lower, min_temp) - 1
@@ -40,49 +36,112 @@ function plot_chart(title, plot_data, limit_lower, limit_upper, min_temp, max_te
         y_max = max_temp + 1
     }
 
+    // Convert data format for Chart.js (array of {x, y} objects)
+    var temp_data = plot_data.map(d => ({ x: d[0], y: d[1] }));
+    var upper_limit_data = limit_upper.map(d => ({ x: d[0], y: d[1] }));
+    var lower_limit_data = limit_lower.map(d => ({ x: d[0], y: d[1] }));
 
-    $('#'+div_id).highcharts({
-        chart: {
-            zoomType: 'x',
-            backgroundColor: null
-        },
-        title: { text: title },
-        legend: { enabled: false },
-        xAxis: {
-            title: { text: 'Date' },
-            type: 'datetime',
-            min: d,
-        },
-        yAxis: {
-            min: y_min,
-            max: y_max,
-            title: { text: 'Temperature (C)' },
-        },
-        tooltip: {
-            pointFormat: '<strong>{series.name}</strong>: {point.y:,.2f} C',
-        },
-        series: [
-            {
-                name: 'Temperature',
-                data: plot_data
-            },
-            {
-                name: 'Upper Limit',
-                data: limit_upper,
-                marker: {
-                    enabled: false
+    // Get canvas context
+    var canvas_id = div_id.replace('sensorpush_', 'sensorpush_canvas_');
+    var ctx = document.getElementById(canvas_id).getContext('2d');
+
+    // Destroy existing chart if it exists
+    if (chartInstances[div_id]) {
+        chartInstances[div_id].destroy();
+    }
+
+    // Create Chart.js chart
+    chartInstances[div_id] = new Chart(ctx, {
+        type: 'line',
+        data: {
+            datasets: [
+                {
+                    label: 'Temperature',
+                    data: temp_data,
+                    borderColor: 'rgb(75, 192, 192)',
+                    backgroundColor: 'rgba(75, 192, 192, 0.1)',
+                    borderWidth: 2,
+                    pointRadius: 2,
+                    pointHoverRadius: 4
                 },
-                color: 'red'
-            },
-            {
-                name: 'Lower limit',
-                data: limit_lower,
-                marker: {
-                    enabled: false
+                {
+                    label: 'Upper Limit',
+                    data: upper_limit_data,
+                    borderColor: 'red',
+                    backgroundColor: 'transparent',
+                    borderWidth: 2,
+                    pointRadius: 0,
+                    borderDash: [5, 5]
                 },
-                color: 'blue'
+                {
+                    label: 'Lower Limit',
+                    data: lower_limit_data,
+                    borderColor: 'blue',
+                    backgroundColor: 'transparent',
+                    borderWidth: 2,
+                    pointRadius: 0,
+                    borderDash: [5, 5]
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                title: {
+                    display: true,
+                    text: title
+                },
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function (context) {
+                            return context.dataset.label + ': ' + context.parsed.y.toFixed(2) + ' C';
+                        }
+                    }
+                },
+                zoom: {
+                    pan: {
+                        enabled: true,
+                        mode: 'x',
+                        modifierKey: 'ctrl'
+                    },
+                    zoom: {
+                        wheel: {
+                            enabled: true,
+                            modifierKey: 'ctrl'
+                        },
+                        pinch: {
+                            enabled: true
+                        },
+                        mode: 'x'
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    type: 'time',
+                    min: minTime,
+                    title: {
+                        display: true,
+                        text: 'Date'
+                    },
+                    time: {
+                        unit: 'day'
+                    }
+                },
+                y: {
+                    min: y_min,
+                    max: y_max,
+                    title: {
+                        display: true,
+                        text: 'Temperature (C)'
+                    }
+                }
             }
-        ]
+        }
     });
 };
 
@@ -142,83 +201,210 @@ function plot_sum_data(){
         });
         $('#fridge_status_list').html(fridge_html);
 
-        $('#fridge_sum_plot').highcharts({
-            chart: {
-                zoomType: 'x',
-                backgroundColor: null
+        // Convert data format for Chart.js
+        var frig_datasets = frig_series.map(function (series) {
+            return {
+                label: series.name,
+                data: series.data.map(d => ({ x: d[0], y: d[1] })),
+                borderWidth: 1,
+                pointRadius: 1,
+                pointHoverRadius: 3
+            };
+        });
+
+        var freez_datasets = freez_series.map(function (series) {
+            return {
+                label: series.name,
+                data: series.data.map(d => ({ x: d[0], y: d[1] })),
+                borderWidth: 1,
+                pointRadius: 1,
+                pointHoverRadius: 3
+            };
+        });
+
+        // Destroy existing charts if they exist
+        if (chartInstances['fridge_sum']) {
+            chartInstances['fridge_sum'].destroy();
+        }
+        if (chartInstances['freezer_sum']) {
+            chartInstances['freezer_sum'].destroy();
+        }
+
+        // Create fridge summary chart
+        var fridge_ctx = document.getElementById('fridge_sum_canvas').getContext('2d');
+        chartInstances['fridge_sum'] = new Chart(fridge_ctx, {
+            type: 'line',
+            data: {
+                datasets: frig_datasets
             },
-            title: {
-                text: 'All refrigerators'
-            },
-            xAxis: {
-                title: { text: 'Date' },
-                type: 'datetime'
-            },
-            yAxis: {
-                title: { text: 'Temperature (C) of refrigerators' },
-                tooltip: {
-                    pointFormat: '<strong>{series.name}</strong>: {point.y:,.2f} C',
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'All refrigerators'
+                    },
+                    legend: {
+                        display: true,
+                        position: 'top',
+                        onClick: function (e, legendItem, legend) {
+                            const index = legendItem.datasetIndex;
+                            const chart = legend.chart;
+                            const meta = chart.getDatasetMeta(index);
+                            meta.hidden = !meta.hidden;
+                            chart.update();
+                        },
+                        labels: {
+                            generateLabels: function (chart) {
+                                const datasets = chart.data.datasets;
+                                return datasets.map((dataset, i) => ({
+                                    text: dataset.label,
+                                    fillStyle: dataset.borderColor,
+                                    hidden: !chart.isDatasetVisible(i),
+                                    lineCap: dataset.borderCapStyle,
+                                    lineDash: dataset.borderDash,
+                                    lineDashOffset: dataset.borderDashOffset,
+                                    lineJoin: dataset.borderJoinStyle,
+                                    lineWidth: dataset.borderWidth,
+                                    strokeStyle: dataset.borderColor,
+                                    datasetIndex: i
+                                }));
+                            }
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function (context) {
+                                return context.dataset.label + ': ' + context.parsed.y.toFixed(2) + ' C';
+                            }
+                        }
+                    },
+                    zoom: {
+                        pan: {
+                            enabled: true,
+                            mode: 'x',
+                            modifierKey: 'ctrl'
+                        },
+                        zoom: {
+                            wheel: {
+                                enabled: true,
+                                modifierKey: 'ctrl'
+                            },
+                            pinch: {
+                                enabled: true
+                            },
+                            mode: 'x'
+                        }
+                    }
                 },
-                plotBands: [{
-                color: '#f0f0f0',
-                from: 8,
-                width: 10,
-                to: 2
-                }]
-            },
-            legend: {
-                title: {
-                    text: 'Click to hide:',
-                    align: 'center'
+                scales: {
+                    x: {
+                        type: 'time',
+                        title: {
+                            display: true,
+                            text: 'Date'
+                        },
+                        time: {
+                            unit: 'hour'
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Temperature (C) of refrigerators'
+                        }
+                    }
                 }
-            },
-            series: frig_series,
-            plotOptions: {
-            series: {
-                marker: {
-                    enabledThreshold: 10
-                }
-            }
             }
         });
 
-        $('#freezer_sum_plot').highcharts({
-            chart: {
-                zoomType: 'x',
-                backgroundColor: null
+        // Create freezer summary chart
+        var freezer_ctx = document.getElementById('freezer_sum_canvas').getContext('2d');
+        chartInstances['freezer_sum'] = new Chart(freezer_ctx, {
+            type: 'line',
+            data: {
+                datasets: freez_datasets
             },
-            title: {
-                text: 'All freezers'
-            },
-            xAxis: {
-                title: { text: 'Date' },
-                type: 'datetime'
-            },
-            yAxis: {
-                title: { text: 'Temperature (C) of freezers' },
-                tooltip: {
-                    pointFormat: '<strong>{series.name}</strong>: {point.y:,.2f} C',
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'All freezers'
+                    },
+                    legend: {
+                        display: true,
+                        position: 'top',
+                        onClick: function (e, legendItem, legend) {
+                            const index = legendItem.datasetIndex;
+                            const chart = legend.chart;
+                            const meta = chart.getDatasetMeta(index);
+                            meta.hidden = !meta.hidden;
+                            chart.update();
+                        },
+                        labels: {
+                            generateLabels: function (chart) {
+                                const datasets = chart.data.datasets;
+                                return datasets.map((dataset, i) => ({
+                                    text: dataset.label,
+                                    fillStyle: dataset.borderColor,
+                                    hidden: !chart.isDatasetVisible(i),
+                                    lineCap: dataset.borderCapStyle,
+                                    lineDash: dataset.borderDash,
+                                    lineDashOffset: dataset.borderDashOffset,
+                                    lineJoin: dataset.borderJoinStyle,
+                                    lineWidth: dataset.borderWidth,
+                                    strokeStyle: dataset.borderColor,
+                                    datasetIndex: i
+                                }));
+                            }
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function (context) {
+                                return context.dataset.label + ': ' + context.parsed.y.toFixed(2) + ' C';
+                            }
+                        }
+                    },
+                    zoom: {
+                        pan: {
+                            enabled: true,
+                            mode: 'x',
+                            modifierKey: 'ctrl'
+                        },
+                        zoom: {
+                            wheel: {
+                                enabled: true,
+                                modifierKey: 'ctrl'
+                            },
+                            pinch: {
+                                enabled: true
+                            },
+                            mode: 'x'
+                        }
+                    }
                 },
-                plotBands: [{
-                color: '#f0f0f0',
-                from: -10, 
-                width: 10, 
-                to: -33
-                }]
-            },
-            legend: {
-                title: {
-                    text: 'Click to hide:',
-                    align: 'center'
+                scales: {
+                    x: {
+                        type: 'time',
+                        title: {
+                            display: true,
+                            text: 'Date'
+                        },
+                        time: {
+                            unit: 'hour'
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Temperature (C) of freezers'
+                        }
+                    }
                 }
-            },
-            series: freez_series,
-            plotOptions: {
-            series: {
-                marker: {
-                    enabledThreshold: 10
-                }
-            }
             }
         });
 

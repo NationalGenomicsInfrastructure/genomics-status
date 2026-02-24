@@ -44,23 +44,31 @@
     </div>
 
     <h2 class="my-4">Summary of the last 24 hours</h2>
+    <p class="text-muted small text-center mb-3">
+      <i class="fas fa-info-circle"></i> Tip: Hold <kbd>Ctrl</kbd> (or <kbd>Cmd</kbd>) and scroll to zoom charts | Click and
+      drag to pan
+    </p>
     <div id="loading_spinner" style="text-align:center; margin:100px 0;">
       <span class="fa fa-sync fa-spin"></span> Loading summary plots...
     </div>
     <div class="row">
       <div class="col-lg-6">
         <div id="fridge_sum_plot">
-
+          <canvas id="fridge_sum_canvas"></canvas>
         </div>
       </div>
       <div class="col-lg-6">
         <div id="freezer_sum_plot">
-
+          <canvas id="freezer_sum_canvas"></canvas>
         </div>
       </div>
     </div>
   </div>
   <h2 class="text-center">Details for each sensor from the last 4 weeks</h2>
+  <p class="text-muted small text-center mb-4">
+    <i class="fas fa-info-circle"></i> Tip: Hold <kbd>Ctrl</kbd> (or <kbd>Cmd</kbd>) and scroll to zoom charts | Click and
+    drag to pan
+  </p>
   <div id="plots">
     {% for sensor in sensor_data.keys() %}
     <div class="row">
@@ -93,12 +101,17 @@
           {% end %}
           </div>
         </div>
-        <div class="sensorpush_plot" id="sensorpush_{{ sensor }}"></div>
+        <div class="sensorpush_plot" id="sensorpush_{{ sensor }}">
+          <canvas id="sensorpush_canvas_{{ sensor }}"></canvas>
+        </div>
     </div>
     {% end %}
   </div>
 
-  <script src="https://code.highcharts.com/highcharts.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script
+    src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
   <script src="/static/js/sensorpush.js"></script>
   <script>
     $(document).ready(function(){
