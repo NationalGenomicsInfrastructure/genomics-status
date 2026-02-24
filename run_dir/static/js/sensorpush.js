@@ -150,8 +150,6 @@ function plot_sum_data(){
     $.getJSON("/api/v1/sensorpush", {'start_days_ago': 1}, function(data) {
         var frig_series = [];
         var freez_series = [];
-        var found_freezers = [];
-        var found_fridges = [];
         var all_sensors = [];
 
         $.each(data, function(id, sensordata){
@@ -167,12 +165,10 @@ function plot_sum_data(){
                 lineWidth: 1
             };
             if (sensname.startsWith('F')) {
-            freez_series.push(dp_var);
-                found_freezers.push(sensname);
+                freez_series.push(dp_var);
             }
             else if (sensname.startsWith('K')) {
-            frig_series.push(dp_var);
-                found_fridges.push(sensname);
+                frig_series.push(dp_var);
             }
         });
 
@@ -189,6 +185,7 @@ function plot_sum_data(){
         });
 
         // Create columns for each group
+        // Use ACTIVE_SENSORS from backend (recent data ~2.4 hours) to determine status
         var freezer_html = '';
         var group_names = Object.keys(freezer_groups).sort();
         group_names.forEach(function (group_name) {
@@ -196,7 +193,7 @@ function plot_sum_data(){
             freezer_html += '<h6 class="text-muted mb-2">' + group_name + '</h6>';
             freezer_html += '<ul class="list-unstyled mb-0">';
             freezer_groups[group_name].forEach(function (freezer) {
-                var is_active = found_freezers.includes(freezer);
+                var is_active = ACTIVE_SENSORS.includes(freezer);
                 var status_class = is_active ? 'text-success' : 'text-danger';
                 var status_icon = is_active ? 'fa-check-circle' : 'fa-times-circle';
                 var status_text = is_active ? 'ACTIVE' : 'MISSING';
@@ -211,7 +208,7 @@ function plot_sum_data(){
 
         var fridge_html = '';
         EXPECTED_FRIDGES.forEach(function (fridge) {
-            var is_active = found_fridges.includes(fridge);
+            var is_active = ACTIVE_SENSORS.includes(fridge);
             var status_class = is_active ? 'text-success' : 'text-danger';
             var status_icon = is_active ? 'fa-check-circle' : 'fa-times-circle';
             var status_text = is_active ? 'ACTIVE' : 'MISSING';
@@ -223,8 +220,9 @@ function plot_sum_data(){
         $('#fridge_status_list').html(fridge_html);
 
         // Find and display unknown sensors
+        // Check against all sensors from the 4-month data (passed via all_sensors in 24h API)
         var all_expected = EXPECTED_FREEZERS.concat(EXPECTED_FRIDGES);
-        var unknown_sensors = all_sensors.filter(function (sensor) {
+        var unknown_sensors = ACTIVE_SENSORS.filter(function (sensor) {
             return !all_expected.includes(sensor);
         });
 

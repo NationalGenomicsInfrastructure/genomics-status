@@ -130,6 +130,9 @@
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
   <script src="/static/js/sensorpush.js"></script>
   <script>
+    // Pass active sensors list from backend to JavaScript
+    var ACTIVE_SENSORS = {% raw json_encode(active_sensors) %};
+
     $(document).ready(function(){
       plot_sum_data();
       {% for sensor, data in sensor_data.items() %}
