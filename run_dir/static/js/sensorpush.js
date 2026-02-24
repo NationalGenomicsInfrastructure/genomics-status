@@ -152,10 +152,12 @@ function plot_sum_data(){
         var freez_series = [];
         var found_freezers = [];
         var found_fridges = [];
+        var all_sensors = [];
 
         $.each(data, function(id, sensordata){
             var timedata = sensordata.samples;
             var sensname = sensordata.sensor_name;
+            all_sensors.push(sensname);
             for (i in timedata) {
             timedata[i][0] = Date.parse(timedata[i][0]);
             }
@@ -219,6 +221,26 @@ function plot_sum_data(){
                 '</li>';
         });
         $('#fridge_status_list').html(fridge_html);
+
+        // Find and display unknown sensors
+        var all_expected = EXPECTED_FREEZERS.concat(EXPECTED_FRIDGES);
+        var unknown_sensors = all_sensors.filter(function (sensor) {
+            return !all_expected.includes(sensor);
+        });
+
+        if (unknown_sensors.length > 0) {
+            $('#unknown_sensors_section').show();
+            var unknown_html = '';
+            unknown_sensors.forEach(function (sensor) {
+                unknown_html += '<li class="text-warning mb-2">' +
+                    '<i class="fas fa-question-circle mr-2"></i>' +
+                    '<strong>' + sensor + '</strong>' +
+                    '</li>';
+            });
+            $('#unknown_status_list').html(unknown_html);
+        } else {
+            $('#unknown_sensors_section').hide();
+        }
 
         // Convert data format for Chart.js
         var frig_datasets = frig_series.map(function (series) {

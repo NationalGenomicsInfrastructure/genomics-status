@@ -1,112 +1,127 @@
 {% extends "base.html" %}
 {% block stuff %}
-  <h1 id="page_title" class="mb-2">Temperature info from Sensorpush</h1>
+  <div class="row justify-content-center mb-5">
+    <div class="col-lg-12 col-xl-10">
+      <h1 id="page_title" class="mb-2">Temperature info from Sensorpush</h1>
 
-  <div class="mb-5 py-5 text-center">
-    <div class="col-6 mx-auto">
-      <div class="mb-5 alert alert-danger py-3">
-      <h3>Sensors with warnings the last 24h</h3>
-      {% for sensor in sensor_24h_data.keys() %}
-        {% if sensor_24h_data[sensor]['intervals_higher'] %}
-          <h5> <a href="#header_sensor_{{sensor}}">{{sensor_24h_data[sensor]['sensor_name']}}</a> (too high)</h5>
-        {% end %}
-      {% end %}
-      {% for sensor in sensor_24h_data.keys() %}
-        {% if sensor_24h_data[sensor]['intervals_lower'] %}
+      <div class="mb-5 py-5 text-center">
+        <div class="col-6 mx-auto">
+          <div class="mb-5 alert alert-danger py-3">
+            <h3>Sensors with warnings the last 24h</h3>
+            {% for sensor in sensor_24h_data.keys() %}
+            {% if sensor_24h_data[sensor]['intervals_higher'] %}
+            <h5> <a href="#header_sensor_{{sensor}}">{{sensor_24h_data[sensor]['sensor_name']}}</a> (too high)</h5>
+            {% end %}
+            {% end %}
+            {% for sensor in sensor_24h_data.keys() %}
+            {% if sensor_24h_data[sensor]['intervals_lower'] %}
             <h5> <a href="#header_sensor_{{sensor}}">{{sensor_24h_data[sensor]['sensor_name']}}</a> (too low)</h5>
-        {% end %}
-      {% end %}
-      </div>
-    </div>
+            {% end %}
+            {% end %}
+          </div>
+        </div>
 
-    <h2 class="my-4">Sensor Status</h2>
-    <div class="row mb-4">
-      <div class="col-lg-6">
-        <div id="sensor_status_fridges" class="card">
-          <div class="card-header">
-            <h5 class="mb-0">Expected Fridges</h5>
+        <h2 class="my-4">Sensor Status</h2>
+        <div class="row mb-4">
+          <div class="col-lg-6">
+            <div id="sensor_status_fridges" class="card">
+              <div class="card-header">
+                <h5 class="mb-0">Expected Fridges</h5>
+              </div>
+              <div class="card-body">
+                <ul id="fridge_status_list" class="list-unstyled mb-0"></ul>
+              </div>
+            </div>
           </div>
-          <div class="card-body">
-            <ul id="fridge_status_list" class="list-unstyled mb-0"></ul>
+          <div class="col-lg-6">
+            <div id="sensor_status_freezers" class="card">
+              <div class="card-header">
+                <h5 class="mb-0">Expected Freezers</h5>
+              </div>
+              <div class="card-body">
+                <div id="freezer_status_list" class="row"></div>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
-      <div class="col-lg-6">
-        <div id="sensor_status_freezers" class="card">
-          <div class="card-header">
-            <h5 class="mb-0">Expected Freezers</h5>
-          </div>
-          <div class="card-body">
-            <div id="freezer_status_list" class="row"></div>
-          </div>
-        </div>
-      </div>
-    </div>
 
-    <h2 class="my-4">Summary of the last 24 hours</h2>
-    <p class="text-muted small text-center mb-3">
-      <i class="fas fa-info-circle"></i> Tip: Hold <kbd>Ctrl</kbd> and scroll to zoom charts | Click and
-      drag to pan
-    </p>
-    <div id="loading_spinner" style="text-align:center; margin:100px 0;">
-      <span class="fa fa-sync fa-spin"></span> Loading summary plots...
-    </div>
-    <div class="row">
-      <div class="col-lg-6">
-        <div id="fridge_sum_plot">
-          <canvas id="fridge_sum_canvas"></canvas>
+        <div class="row mb-4" id="unknown_sensors_section" style="display: none;">
+          <div class="col-12">
+            <div class="card border-warning">
+              <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0"><i class="fas fa-exclamation-triangle mr-2"></i>Unknown Sensors</h5>
+              </div>
+              <div class="card-body">
+                <p class="text-muted small mb-2">These sensors are reporting data but are not in the expected freezer or fridge
+                  lists:</p>
+                <ul id="unknown_status_list" class="list-unstyled mb-0"></ul>
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
-      <div class="col-lg-6">
-        <div id="freezer_sum_plot">
-          <canvas id="freezer_sum_canvas"></canvas>
-        </div>
-      </div>
-    </div>
-  </div>
-  <h2 class="text-center">Details for each sensor from the last 4 months</h2>
-  <p class="text-muted small text-center mb-4">
-    <i class="fas fa-info-circle"></i> Tip: Hold <kbd>Ctrl</kbd> and scroll to zoom charts | Click and
-    drag to pan
-  </p>
-  <div id="plots" class="container-fluid">
-    {% for sensor in sensor_data.keys() %}
-    <div class="row justify-content-center mb-5">
-      <div class="col-lg-12 col-xl-10">
-        <div class="col-auto">
-          <h2 id='header_sensor_{{ sensor }}'>
-            {{ sensor_data[sensor]['sensor_name'] }}
-            {% if (sensor_data[sensor]['intervals_lower'] != []) or (sensor_data[sensor]['intervals_higher'] != []) %}
-            <button class="btn btn-danger btn-lg ml-2" type="button" data-toggle="collapse" data-target="#intervals_{{sensor}}" aria-expanded="false" aria-controls="collapseExample">
-              Show warnings <i class="far fa-sensor-alert ml-2"></i>
-            </button>
-          {% end %}
-          </h2>
-          {% if (sensor_data[sensor]['intervals_lower'] != []) or (sensor_data[sensor]['intervals_higher'] != []) %}
+        
+        <h2 class="mt-5 mb-3">Summary of the last 24 hours</h2>
+        <p class="text-muted small text-center mb-3">
+          <i class="fas fa-info-circle"></i> Tip: Hold <kbd>Ctrl</kbd> and scroll to zoom charts | Click and drag to pan
+          </p>
+          <div id="loading_spinner" style="text-align:center; margin:100px 0;">
+            <span class="fa fa-sync fa-spin"></span> Loading summary plots...
+          </div>
+          <div class="row">
+            <div class="col-lg-6">
+              <div id="fridge_sum_plot">
+                <canvas id="fridge_sum_canvas"></canvas>
+              </div>
+            </div>
+            <div class="col-lg-6">
+              <div id="freezer_sum_plot">
+                <canvas id="freezer_sum_canvas"></canvas>
+              </div>
+            </div>
+          </div>
+          </div>
+
+      <h2 class="text-center">Details for each sensor from the last 4 months</h2>
+      <p class="text-muted small text-center mb-4">
+        <i class="fas fa-info-circle"></i> Tip: Hold <kbd>Ctrl</kbd> and scroll to zoom charts | Click and drag to pan
+        </p>
+<div id="plots">
+  {% for sensor in sensor_data.keys() %}
+          <div class="col-auto">
+            <h2 id='header_sensor_{{ sensor }}'>
+              {{ sensor_data[sensor]['sensor_name'] }}
+              {% if (sensor_data[sensor]['intervals_lower'] != []) or (sensor_data[sensor]['intervals_higher'] != []) %}
+              <button class="btn btn-danger btn-lg ml-2" type="button" data-toggle="collapse" data-target="#intervals_{{sensor}}"
+                aria-expanded="false" aria-controls="collapseExample">
+                Show warnings <i class="far fa-sensor-alert ml-2"></i>
+              </button>
+              {% end %}
+              </h2>
+              {% if (sensor_data[sensor]['intervals_lower'] != []) or (sensor_data[sensor]['intervals_higher'] != []) %}
             <div class="collapse" id="intervals_{{sensor}}">
               <div class="card card-body bg-light">
                 {% if sensor_data[sensor]['intervals_lower'] %}
-                  <h3>Intervals where temperature was too low (Stockholm timezone):</h3>
-                  {% for interval in sensor_data[sensor]['intervals_lower'] %}
-                    <h5> {{ interval[0] }} - {{ interval[1] }} </h5>
-                  {% end %}
+                <h3>Intervals where temperature was too low (Stockholm timezone):</h3>
+                {% for interval in sensor_data[sensor]['intervals_lower'] %}
+                <h5> {{ interval[0] }} - {{ interval[1] }} </h5>
+                {% end %}
                 {% end %}
                 {% if sensor_data[sensor]['intervals_higher'] %}
-                  <h3>Intervals where temperature was too high (Stockholm timezone):</h3>
-                  {% for interval in sensor_data[sensor]['intervals_higher'] %}
-                    <h5> {{ interval[0] }} - {{ interval[1] }} </h5>
-                  {% end %}
+                <h3>Intervals where temperature was too high (Stockholm timezone):</h3>
+                {% for interval in sensor_data[sensor]['intervals_higher'] %}
+                <h5> {{ interval[0] }} - {{ interval[1] }} </h5>
+                {% end %}
                 {% end %}
               </div>
             </div>
-          {% end %}
-        </div>
-        <div class="sensorpush_plot" id="sensorpush_{{ sensor }}">
-          <canvas id="sensorpush_canvas_{{ sensor }}"></canvas>
-        </div>
+            {% end %}
+            </div>
+            <div class="sensorpush_plot" id="sensorpush_{{ sensor }}">
+              <canvas id="sensorpush_canvas_{{ sensor }}"></canvas>
+            </div>
+        {% end %}
       </div>
     </div>
-    {% end %}
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
