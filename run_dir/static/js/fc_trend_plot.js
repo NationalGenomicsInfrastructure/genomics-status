@@ -274,7 +274,7 @@ function build_series(data, key, name, display_by, filter_inst_type, filter_inst
             if(data[d].cver.includes('150Cycles_High')){
                 series_name = "Aviti 150Cycles_High";
             }
-            if(data[d].cver.includes('1500Cycles_Med')){
+            if(data[d].cver.includes('150Cycles_Med')){
                 series_name = "Aviti 150Cycles_Med";
             }
             if(data[d].cver.includes('150Cycles_Low')){
