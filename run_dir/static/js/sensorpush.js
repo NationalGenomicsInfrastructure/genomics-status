@@ -5,6 +5,48 @@ const EXPECTED_FREEZERS = ['F29 A3590', 'F25 A3590', 'F07 A3711', "F26 A3330", "
 // Store chart instances for cleanup
 var chartInstances = {};
 
+// Check for warnings in the last 24 hours and display them
+function check_and_display_warnings(sensor_24h_data) {
+    var has_warnings = false;
+    var warnings_high = [];
+    var warnings_low = [];
+    
+    for (var sensor in sensor_24h_data) {
+        if (sensor_24h_data[sensor]['intervals_higher'] && sensor_24h_data[sensor]['intervals_higher'].length > 0) {
+            has_warnings = true;
+            warnings_high.push({
+                sensor: sensor,
+                name: sensor_24h_data[sensor]['sensor_name']
+            });
+        }
+        if (sensor_24h_data[sensor]['intervals_lower'] && sensor_24h_data[sensor]['intervals_lower'].length > 0) {
+            has_warnings = true;
+            warnings_low.push({
+                sensor: sensor,
+                name: sensor_24h_data[sensor]['sensor_name']
+            });
+        }
+    }
+    
+    // Display warnings if any exist
+    if (has_warnings) {
+        warnings_high.forEach(function(item) {
+            $('#warnings_high_list').append(
+                '<h5><a href="#header_sensor_' + item.sensor + '">' + item.name + '</a> (too high)</h5>'
+            );
+        });
+        warnings_low.forEach(function(item) {
+            $('#warnings_low_list').append(
+                '<h5><a href="#header_sensor_' + item.sensor + '">' + item.name + '</a> (too low)</h5>'
+            );
+        });
+        $('#warnings_24h').show();
+    }
+}
+
+// Configure timezone for all charts (Stockholm time)
+const TIMEZONE = 'Europe/Stockholm';
+
 // when generate javascript in the template, strings are escaped.
 // need to unescape them again to execute js
 function date_parse(data) {
@@ -61,8 +103,23 @@ function plot_chart(title, plot_data, limit_lower, limit_upper, min_temp, max_te
                     borderColor: 'rgb(75, 192, 192)',
                     backgroundColor: 'rgba(75, 192, 192, 0.1)',
                     borderWidth: 2,
-                    pointRadius: 2,
-                    pointHoverRadius: 4
+                    pointRadius: 1,
+                    pointHoverRadius: 4,
+                    spanGaps: 86400000, // Don't connect points if gap is > 1 day (in milliseconds)
+                    segment: {
+                        borderColor: ctx => {
+                            // Check if this segment spans more than 1 day
+                            const dataIndex = ctx.p0DataIndex;
+                            if (dataIndex < temp_data.length - 1) {
+                                const timeDiff = temp_data[dataIndex + 1].x - temp_data[dataIndex].x;
+                                // If gap is larger than 1 day, make the line transparent
+                                if (timeDiff > 86400000) {
+                                    return 'transparent';
+                                }
+                            }
+                            return 'rgb(75, 192, 192)';
+                        }
+                    }
                 },
                 {
                     label: 'Upper Limit',
@@ -99,6 +156,11 @@ function plot_chart(title, plot_data, limit_lower, limit_upper, min_temp, max_te
                     callbacks: {
                         label: function (context) {
                             return context.dataset.label + ': ' + context.parsed.y.toFixed(2) + ' C';
+                        },
+                        title: function (context) {
+                            // Format the tooltip title with Stockholm timezone
+                            const luxonDate = luxon.DateTime.fromMillis(context[0].parsed.x).setZone(TIMEZONE);
+                            return luxonDate.toFormat('MMM d, yyyy HH:mm');
                         }
                     }
                 },
@@ -126,10 +188,14 @@ function plot_chart(title, plot_data, limit_lower, limit_upper, min_temp, max_te
                     min: minTime,
                     title: {
                         display: true,
-                        text: 'Date'
+                        text: 'Date (Stockholm Time)'
                     },
                     time: {
-                        unit: 'day'
+                        unit: 'day',
+                        displayFormats: {
+                            day: 'MMM d'
+                        },
+                        timezone: TIMEZONE
                     }
                 },
                 y: {
@@ -240,216 +306,194 @@ function plot_sum_data(){
             $('#unknown_sensors_section').hide();
         }
 
-        // Convert data format for Chart.js
-        var frig_datasets = frig_series.map(function (series) {
-            return {
+        // Group freezers by room for plotting
+        var freezer_by_room = {};
+        freez_series.forEach(function (series) {
+            var space_index = series.name.indexOf(' ');
+            var room = space_index > -1 ? series.name.substring(space_index + 1) : 'Other';
+            if (!freezer_by_room[room]) {
+                freezer_by_room[room] = [];
+            }
+            var dataset_data = series.data.map(d => ({ x: d[0], y: d[1] }));
+            freezer_by_room[room].push({
                 label: series.name,
-                data: series.data.map(d => ({ x: d[0], y: d[1] })),
+                data: dataset_data,
                 borderWidth: 1,
                 pointRadius: 1,
-                pointHoverRadius: 3
+                pointHoverRadius: 3,
+                spanGaps: 86400000,
+                segment: {
+                    borderColor: ctx => {
+                        const dataIndex = ctx.p0DataIndex;
+                        if (dataIndex < dataset_data.length - 1) {
+                            const timeDiff = dataset_data[dataIndex + 1].x - dataset_data[dataIndex].x;
+                            if (timeDiff > 86400000) {
+                                return 'transparent';
+                            }
+                        }
+                        return undefined;
+                    }
+                }
+            });
+        });
+
+        // Keep all fridges in a single dataset
+        var fridge_datasets = frig_series.map(function (series) {
+            var dataset_data = series.data.map(d => ({ x: d[0], y: d[1] }));
+            return {
+                label: series.name,
+                data: dataset_data,
+                borderWidth: 1,
+                pointRadius: 1,
+                pointHoverRadius: 3,
+                spanGaps: 86400000,
+                segment: {
+                    borderColor: ctx => {
+                        const dataIndex = ctx.p0DataIndex;
+                        if (dataIndex < dataset_data.length - 1) {
+                            const timeDiff = dataset_data[dataIndex + 1].x - dataset_data[dataIndex].x;
+                            if (timeDiff > 86400000) {
+                                return 'transparent';
+                            }
+                        }
+                        return undefined;
+                    }
+                }
             };
         });
 
-        var freez_datasets = freez_series.map(function (series) {
-            return {
-                label: series.name,
-                data: series.data.map(d => ({ x: d[0], y: d[1] })),
-                borderWidth: 1,
-                pointRadius: 1,
-                pointHoverRadius: 3
-            };
-        });
-
-        // Destroy existing charts if they exist
-        if (chartInstances['fridge_sum']) {
-            chartInstances['fridge_sum'].destroy();
-        }
-        if (chartInstances['freezer_sum']) {
-            chartInstances['freezer_sum'].destroy();
-        }
-
-        // Create fridge summary chart
-        var fridge_ctx = document.getElementById('fridge_sum_canvas').getContext('2d');
-        chartInstances['fridge_sum'] = new Chart(fridge_ctx, {
-            type: 'line',
-            data: {
-                datasets: frig_datasets
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: true,
-                plugins: {
-                    title: {
-                        display: true,
-                        text: 'All refrigerators'
-                    },
-                    legend: {
-                        display: true,
-                        position: 'top',
-                        onClick: function (e, legendItem, legend) {
-                            const index = legendItem.datasetIndex;
-                            const chart = legend.chart;
-                            const meta = chart.getDatasetMeta(index);
-                            meta.hidden = !meta.hidden;
-                            chart.update();
-                        },
-                        labels: {
-                            generateLabels: function (chart) {
-                                const datasets = chart.data.datasets;
-                                return datasets.map((dataset, i) => ({
-                                    text: dataset.label,
-                                    fillStyle: dataset.borderColor,
-                                    hidden: !chart.isDatasetVisible(i),
-                                    lineCap: dataset.borderCapStyle,
-                                    lineDash: dataset.borderDash,
-                                    lineDashOffset: dataset.borderDashOffset,
-                                    lineJoin: dataset.borderJoinStyle,
-                                    lineWidth: dataset.borderWidth,
-                                    strokeStyle: dataset.borderColor,
-                                    datasetIndex: i
-                                }));
-                            }
-                        }
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function (context) {
-                                return context.dataset.label + ': ' + context.parsed.y.toFixed(2) + ' C';
-                            }
-                        }
-                    },
-                    zoom: {
-                        pan: {
-                            enabled: true,
-                            mode: 'x',
-                            modifierKey: 'ctrl'
-                        },
-                        zoom: {
-                            wheel: {
-                                enabled: true,
-                                modifierKey: 'ctrl'
-                            },
-                            pinch: {
-                                enabled: true
-                            },
-                            mode: 'x'
-                        }
-                    }
-                },
-                scales: {
-                    x: {
-                        type: 'time',
-                        title: {
-                            display: true,
-                            text: 'Date'
-                        },
-                        time: {
-                            unit: 'hour'
-                        }
-                    },
-                    y: {
-                        title: {
-                            display: true,
-                            text: 'Temperature (C) of refrigerators'
-                        }
-                    }
-                }
+        // Destroy all existing summary chart instances
+        Object.keys(chartInstances).forEach(function(key) {
+            if (key.startsWith('summary_')) {
+                chartInstances[key].destroy();
+                delete chartInstances[key];
             }
         });
 
-        // Create freezer summary chart
-        var freezer_ctx = document.getElementById('freezer_sum_canvas').getContext('2d');
-        chartInstances['freezer_sum'] = new Chart(freezer_ctx, {
-            type: 'line',
-            data: {
-                datasets: freez_datasets
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: true,
-                plugins: {
-                    title: {
-                        display: true,
-                        text: 'All freezers'
-                    },
-                    legend: {
-                        display: true,
-                        position: 'top',
-                        onClick: function (e, legendItem, legend) {
-                            const index = legendItem.datasetIndex;
-                            const chart = legend.chart;
-                            const meta = chart.getDatasetMeta(index);
-                            meta.hidden = !meta.hidden;
-                            chart.update();
+        // Clear and rebuild the container
+        var container = $('#summary_plots_container');
+        container.empty();
+
+        // Function to create a chart for a room
+        function createRoomChart(room, datasets, type) {
+            var chart_id = 'summary_' + type + '_' + room.replace(/\s+/g, '_');
+            var canvas_id = chart_id + '_canvas';
+            
+            // Create the HTML structure
+            var col = $('<div class="col-lg-6 mb-4"></div>');
+            var plot_div = $('<div id="' + chart_id + '"></div>');
+            var canvas = $('<canvas id="' + canvas_id + '"></canvas>');
+            plot_div.append(canvas);
+            col.append(plot_div);
+            container.append(col);
+
+            // Create the chart
+            var ctx = document.getElementById(canvas_id).getContext('2d');
+            var chart_title = room.startsWith('All ') ? room : (type === 'freezer' ? 'Freezers' : 'Fridges') + ' - ' + room;
+            
+            chartInstances[chart_id] = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: chart_title
                         },
-                        labels: {
-                            generateLabels: function (chart) {
-                                const datasets = chart.data.datasets;
-                                return datasets.map((dataset, i) => ({
-                                    text: dataset.label,
-                                    fillStyle: dataset.borderColor,
-                                    hidden: !chart.isDatasetVisible(i),
-                                    lineCap: dataset.borderCapStyle,
-                                    lineDash: dataset.borderDash,
-                                    lineDashOffset: dataset.borderDashOffset,
-                                    lineJoin: dataset.borderJoinStyle,
-                                    lineWidth: dataset.borderWidth,
-                                    strokeStyle: dataset.borderColor,
-                                    datasetIndex: i
-                                }));
+                        legend: {
+                            display: true,
+                            position: 'top',
+                            onClick: function (e, legendItem, legend) {
+                                const index = legendItem.datasetIndex;
+                                const chart = legend.chart;
+                                const meta = chart.getDatasetMeta(index);
+                                meta.hidden = !meta.hidden;
+                                chart.update();
+                            },
+                            labels: {
+                                generateLabels: function (chart) {
+                                    const datasets = chart.data.datasets;
+                                    return datasets.map((dataset, i) => ({
+                                        text: dataset.label,
+                                        fillStyle: dataset.borderColor,
+                                        hidden: !chart.isDatasetVisible(i),
+                                        lineCap: dataset.borderCapStyle,
+                                        lineDash: dataset.borderDash,
+                                        lineDashOffset: dataset.borderDashOffset,
+                                        lineJoin: dataset.borderJoinStyle,
+                                        lineWidth: dataset.borderWidth,
+                                        strokeStyle: dataset.borderColor,
+                                        datasetIndex: i
+                                    }));
+                                }
                             }
-                        }
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function (context) {
-                                return context.dataset.label + ': ' + context.parsed.y.toFixed(2) + ' C';
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function (context) {
+                                    return context.dataset.label + ': ' + context.parsed.y.toFixed(2) + ' C';
+                                }
                             }
-                        }
-                    },
-                    zoom: {
-                        pan: {
-                            enabled: true,
-                            mode: 'x',
-                            modifierKey: 'ctrl'
                         },
                         zoom: {
-                            wheel: {
+                            pan: {
                                 enabled: true,
+                                mode: 'x',
                                 modifierKey: 'ctrl'
                             },
-                            pinch: {
-                                enabled: true
-                            },
-                            mode: 'x'
-                        }
-                    }
-                },
-                scales: {
-                    x: {
-                        type: 'time',
-                        title: {
-                            display: true,
-                            text: 'Date'
-                        },
-                        time: {
-                            unit: 'hour'
+                            zoom: {
+                                wheel: {
+                                    enabled: true,
+                                    modifierKey: 'ctrl'
+                                },
+                                pinch: {
+                                    enabled: true
+                                },
+                                mode: 'x'
+                            }
                         }
                     },
-                    y: {
-                        title: {
-                            display: true,
-                            text: 'Temperature (C) of freezers'
+                    scales: {
+                        x: {
+                            type: 'time',
+                            title: {
+                                display: true,
+                                text: 'Date (Stockholm Time)'
+                            },
+                            time: {
+                                unit: 'hour',
+                                displayFormats: {
+                                    hour: 'MMM d HH:mm'
+                                },
+                                timezone: TIMEZONE
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Temperature (C)'
+                            }
                         }
                     }
                 }
-            }
+            });
+        }
+
+        // Create single fridge chart with all fridges
+        if (fridge_datasets.length > 0) {
+            createRoomChart('All Refrigerators', fridge_datasets, 'fridge');
+        }
+
+        // Create charts for each freezer room
+        var freezer_rooms = Object.keys(freezer_by_room).sort();
+        freezer_rooms.forEach(function(room) {
+            createRoomChart(room, freezer_by_room[room], 'freezer');
         });
 
-        $('#loading_spinner').hide(function(){
-            $('#fridge_sum_plot').show();
-            $('#freezer_sum_plot').show();
-        });
+        $('#loading_spinner').hide();
     });
 };
