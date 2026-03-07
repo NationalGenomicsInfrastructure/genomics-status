@@ -26,9 +26,9 @@ class SensorpushBaseHandler(SafeHandler):
             end_key=end_time_str,
         ).get_result()["rows"]
 
-        assert len(sensor_id_view) > 0, (
-            "No sensors found in the given time range. Check that the data is being saved correctly and that the start time is reasonable."
-        )
+        # Return empty dict if no sensors found in the time range
+        if len(sensor_id_view) == 0:
+            return {}
 
         sensors = sensor_id_view[0]["value"]
         if sensors == []:

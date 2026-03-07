@@ -7,11 +7,18 @@ var chartInstances = {};
 
 // Check for warnings in the last 24 hours and display them
 function check_and_display_warnings(sensor_24h_data) {
+    // Handle null, undefined, or empty data
+    if (!sensor_24h_data || typeof sensor_24h_data !== 'object') {
+        return;
+    }
+    
     var has_warnings = false;
     var warnings_high = [];
     var warnings_low = [];
     
     for (var sensor in sensor_24h_data) {
+        if (!sensor_24h_data[sensor]) continue;
+        
         if (sensor_24h_data[sensor]['intervals_higher'] && sensor_24h_data[sensor]['intervals_higher'].length > 0) {
             has_warnings = true;
             warnings_high.push({
@@ -144,6 +151,11 @@ function plot_chart(title, plot_data, limit_lower, limit_upper, min_temp, max_te
         options: {
             responsive: true,
             maintainAspectRatio: true,
+            interaction: {
+                mode: 'nearest',
+                axis: 'x',
+                intersect: false
+            },
             plugins: {
                 title: {
                     display: true,
@@ -168,7 +180,7 @@ function plot_chart(title, plot_data, limit_lower, limit_upper, min_temp, max_te
                     pan: {
                         enabled: true,
                         mode: 'x',
-                        modifierKey: 'ctrl'
+                        modifierKey: null
                     },
                     zoom: {
                         wheel: {
@@ -218,12 +230,31 @@ function plot_sum_data(){
         var freez_series = [];
         var all_sensors = [];
 
+        // Handle null or empty data
+        if (!data || Object.keys(data).length === 0) {
+            console.log('No sensor data available for the last 24 hours');
+            $('#loading_spinner').hide();
+            $('#summary_plots_container').html('<div class="col-12 text-center"><p class="text-muted">No data available for the last 24 hours</p></div>');
+            return;
+        }
+
         $.each(data, function(id, sensordata){
+            // Skip if sensordata is invalid or missing required fields
+            if (!sensordata || !sensordata.samples || !sensordata.sensor_name) {
+                return true; // Continue to next iteration
+            }
+            
             var timedata = sensordata.samples;
             var sensname = sensordata.sensor_name;
             all_sensors.push(sensname);
+            
+            // Skip if timedata is empty
+            if (!timedata || timedata.length === 0) {
+                return true; // Continue to next iteration
+            }
+            
             for (i in timedata) {
-            timedata[i][0] = Date.parse(timedata[i][0]);
+                timedata[i][0] = Date.parse(timedata[i][0]);
             }
             var dp_var = {
                 name: sensname,
@@ -240,6 +271,9 @@ function plot_sum_data(){
 
         // Display sensor status on webpage
         // Group freezers by text after first space
+        // Ensure ACTIVE_SENSORS is defined and is an array
+        var activeSensors = (typeof ACTIVE_SENSORS !== 'undefined' && Array.isArray(ACTIVE_SENSORS)) ? ACTIVE_SENSORS : [];
+        
         var freezer_groups = {};
         EXPECTED_FREEZERS.forEach(function (freezer) {
             var space_index = freezer.indexOf(' ');
@@ -259,7 +293,7 @@ function plot_sum_data(){
             freezer_html += '<h6 class="text-muted mb-2">' + group_name + '</h6>';
             freezer_html += '<ul class="list-unstyled mb-0">';
             freezer_groups[group_name].forEach(function (freezer) {
-                var is_active = ACTIVE_SENSORS.includes(freezer);
+                var is_active = activeSensors.includes(freezer);
                 var status_class = is_active ? 'text-success' : 'text-danger';
                 var status_icon = is_active ? 'fa-check-circle' : 'fa-times-circle';
                 var status_text = is_active ? 'ACTIVE' : 'MISSING';
@@ -274,7 +308,7 @@ function plot_sum_data(){
 
         var fridge_html = '';
         EXPECTED_FRIDGES.forEach(function (fridge) {
-            var is_active = ACTIVE_SENSORS.includes(fridge);
+            var is_active = activeSensors.includes(fridge);
             var status_class = is_active ? 'text-success' : 'text-danger';
             var status_icon = is_active ? 'fa-check-circle' : 'fa-times-circle';
             var status_text = is_active ? 'ACTIVE' : 'MISSING';
@@ -288,7 +322,7 @@ function plot_sum_data(){
         // Find and display unknown sensors
         // Check against all sensors from the 4-month data (passed via all_sensors in 24h API)
         var all_expected = EXPECTED_FREEZERS.concat(EXPECTED_FRIDGES);
-        var unknown_sensors = ACTIVE_SENSORS.filter(function (sensor) {
+        var unknown_sensors = activeSensors.filter(function (sensor) {
             return !all_expected.includes(sensor);
         });
 
@@ -399,6 +433,11 @@ function plot_sum_data(){
                 options: {
                     responsive: true,
                     maintainAspectRatio: true,
+                    interaction: {
+                        mode: 'nearest',
+                        axis: 'x',
+                        intersect: false
+                    },
                     plugins: {
                         title: {
                             display: true,
@@ -443,7 +482,7 @@ function plot_sum_data(){
                             pan: {
                                 enabled: true,
                                 mode: 'x',
-                                modifierKey: 'ctrl'
+                                modifierKey: null
                             },
                             zoom: {
                                 wheel: {
@@ -495,5 +534,9 @@ function plot_sum_data(){
         });
 
         $('#loading_spinner').hide();
+    }).fail(function(jqxhr, textStatus, error) {
+        console.error('Error fetching sensor data:', textStatus, error);
+        $('#loading_spinner').hide();
+        $('#summary_plots_container').html('<div class="col-12 text-center"><div class="alert alert-warning"><i class="fas fa-exclamation-triangle mr-2"></i>Error loading sensor data. Please try again later.</div></div>');
     });
 };

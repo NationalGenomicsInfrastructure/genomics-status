@@ -54,20 +54,20 @@
         
         <h2 class="mt-5 mb-3">Summary of the last 24 hours</h2>
         <p class="text-muted small text-center mb-3">
-          <i class="fas fa-info-circle"></i> Tip: Hold <kbd>Ctrl</kbd> and scroll to zoom charts | Click and drag to pan
-          </p>
-          <div id="loading_spinner" style="text-align:center; margin:100px 0;">
-            <span class="fa fa-sync fa-spin"></span> Loading summary plots...
-          </div>
-          <div id="summary_plots_container" class="row">
-            <!-- Plots will be dynamically created here by JavaScript -->
-          </div>
-          </div>
+          <i class="fas fa-info-circle"></i> Tip: Hold <kbd>Ctrl</kbd> and scroll to zoom in/out | After zooming, click and drag to pan
+        </p>
+        <div id="loading_spinner" style="text-align:center; margin:100px 0;">
+          <span class="fa fa-sync fa-spin"></span> Loading summary plots...
+        </div>
+        <div id="summary_plots_container" class="row">
+          <!-- Plots will be dynamically created here by JavaScript -->
+        </div>
+      </div>
 
       <h2 class="text-center">Details for each sensor from the last 4 months</h2>
       <p class="text-muted small text-center mb-4">
-        <i class="fas fa-info-circle"></i> Tip: Hold <kbd>Ctrl</kbd> and scroll to zoom charts | Click and drag to pan
-        </p>
+        <i class="fas fa-info-circle"></i> Tip: Hold <kbd>Ctrl</kbd> and scroll to zoom in/out | After zooming, click and drag to pan
+      </p>
 <div id="plots">
   {% for sensor in sensor_data.keys() %}
           <div class="col-auto">
@@ -107,10 +107,17 @@
     </div>
   </div>
 
+  <!-- Chart.js: Core charting library for creating interactive line charts -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <!-- Luxon: Date/time library for handling timezone conversions (Stockholm time) -->
   <script src="https://cdn.jsdelivr.net/npm/luxon@3.4.4/build/global/luxon.min.js"></script>
+  <!-- Chart.js Luxon Adapter: Enables Chart.js to use Luxon for time scale formatting -->
   <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@1.3.1/dist/chartjs-adapter-luxon.umd.min.js"></script>
+  <!-- Hammer.js: Touch gesture library needed for pan/drag functionality on charts -->
+  <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8/hammer.min.js"></script>
+  <!-- Chart.js Zoom Plugin: Adds zoom (Ctrl+scroll) and pan (click+drag) capabilities to charts -->
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
+  <!-- Sensorpush custom JavaScript: Application-specific chart creation and data handling -->
   <script src="/static/js/sensorpush.js"></script>
   <script>
     // Pass active sensors list from backend to JavaScript
