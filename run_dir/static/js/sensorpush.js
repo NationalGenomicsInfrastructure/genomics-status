@@ -229,47 +229,43 @@ function plot_sum_data(){
         var frig_series = [];
         var freez_series = [];
         var all_sensors = [];
+        var hasData = data && Object.keys(data).length > 0;
 
-        // Handle null or empty data
-        if (!data || Object.keys(data).length === 0) {
-            console.log('No sensor data available for the last 24 hours');
-            $('#loading_spinner').hide();
-            $('#summary_plots_container').html('<div class="col-12 text-center"><p class="text-muted">No data available for the last 24 hours</p></div>');
-            return;
+        // Process data if available
+        if (hasData) {
+            $.each(data, function (id, sensordata) {
+                // Skip if sensordata is invalid or missing required fields
+                if (!sensordata || !sensordata.samples || !sensordata.sensor_name) {
+                    return true; // Continue to next iteration
+                }
+
+                var timedata = sensordata.samples;
+                var sensname = sensordata.sensor_name;
+                all_sensors.push(sensname);
+            
+                // Skip if timedata is empty
+                if (!timedata || timedata.length === 0) {
+                    return true; // Continue to next iteration
+                }
+
+                for (i in timedata) {
+                    timedata[i][0] = Date.parse(timedata[i][0]);
+                }
+                var dp_var = {
+                    name: sensname,
+                    data: timedata,
+                    lineWidth: 1
+                };
+                if (sensname.startsWith('F')) {
+                    freez_series.push(dp_var);
+                }
+                else if (sensname.startsWith('K')) {
+                    frig_series.push(dp_var);
+                }
+            });
         }
 
-        $.each(data, function(id, sensordata){
-            // Skip if sensordata is invalid or missing required fields
-            if (!sensordata || !sensordata.samples || !sensordata.sensor_name) {
-                return true; // Continue to next iteration
-            }
-            
-            var timedata = sensordata.samples;
-            var sensname = sensordata.sensor_name;
-            all_sensors.push(sensname);
-            
-            // Skip if timedata is empty
-            if (!timedata || timedata.length === 0) {
-                return true; // Continue to next iteration
-            }
-            
-            for (i in timedata) {
-                timedata[i][0] = Date.parse(timedata[i][0]);
-            }
-            var dp_var = {
-                name: sensname,
-                data: timedata,
-                lineWidth: 1
-            };
-            if (sensname.startsWith('F')) {
-                freez_series.push(dp_var);
-            }
-            else if (sensname.startsWith('K')) {
-                frig_series.push(dp_var);
-            }
-        });
-
-        // Display sensor status on webpage
+        // Display sensor status on webpage (always, even if no data)
         // Group freezers by text after first space
         // Ensure ACTIVE_SENSORS is defined and is an array
         var activeSensors = (typeof ACTIVE_SENSORS !== 'undefined' && Array.isArray(ACTIVE_SENSORS)) ? ACTIVE_SENSORS : [];
@@ -340,198 +336,206 @@ function plot_sum_data(){
             $('#unknown_sensors_section').hide();
         }
 
-        // Group freezers by room for plotting
-        var freezer_by_room = {};
-        freez_series.forEach(function (series) {
-            var space_index = series.name.indexOf(' ');
-            var room = space_index > -1 ? series.name.substring(space_index + 1) : 'Other';
-            if (!freezer_by_room[room]) {
-                freezer_by_room[room] = [];
-            }
-            var dataset_data = series.data.map(d => ({ x: d[0], y: d[1] }));
-            freezer_by_room[room].push({
-                label: series.name,
-                data: dataset_data,
-                borderWidth: 1,
-                pointRadius: 1,
-                pointHoverRadius: 3,
-                spanGaps: 86400000,
-                segment: {
-                    borderColor: ctx => {
-                        const dataIndex = ctx.p0DataIndex;
-                        if (dataIndex < dataset_data.length - 1) {
-                            const timeDiff = dataset_data[dataIndex + 1].x - dataset_data[dataIndex].x;
-                            if (timeDiff > 86400000) {
-                                return 'transparent';
+        // Only create plots if there's data available
+        if (hasData && (freez_series.length > 0 || frig_series.length > 0)) {
+            // Group freezers by room for plotting
+            var freezer_by_room = {};
+            freez_series.forEach(function (series) {
+                var space_index = series.name.indexOf(' ');
+                var room = space_index > -1 ? series.name.substring(space_index + 1) : 'Other';
+                if (!freezer_by_room[room]) {
+                    freezer_by_room[room] = [];
+                }
+                var dataset_data = series.data.map(d => ({ x: d[0], y: d[1] }));
+                freezer_by_room[room].push({
+                    label: series.name,
+                    data: dataset_data,
+                    borderWidth: 1,
+                    pointRadius: 1,
+                    pointHoverRadius: 3,
+                    spanGaps: 86400000,
+                    segment: {
+                        borderColor: ctx => {
+                            const dataIndex = ctx.p0DataIndex;
+                            if (dataIndex < dataset_data.length - 1) {
+                                const timeDiff = dataset_data[dataIndex + 1].x - dataset_data[dataIndex].x;
+                                if (timeDiff > 86400000) {
+                                    return 'transparent';
+                                }
                             }
+                            return undefined;
                         }
-                        return undefined;
                     }
+                });
+            });
+
+            // Keep all fridges in a single dataset
+            var fridge_datasets = frig_series.map(function (series) {
+                var dataset_data = series.data.map(d => ({ x: d[0], y: d[1] }));
+                return {
+                    label: series.name,
+                    data: dataset_data,
+                    borderWidth: 1,
+                    pointRadius: 1,
+                    pointHoverRadius: 3,
+                    spanGaps: 86400000,
+                    segment: {
+                        borderColor: ctx => {
+                            const dataIndex = ctx.p0DataIndex;
+                            if (dataIndex < dataset_data.length - 1) {
+                                const timeDiff = dataset_data[dataIndex + 1].x - dataset_data[dataIndex].x;
+                                if (timeDiff > 86400000) {
+                                    return 'transparent';
+                                }
+                            }
+                            return undefined;
+                        }
+                    }
+                };
+            });
+
+            // Destroy all existing summary chart instances
+            Object.keys(chartInstances).forEach(function (key) {
+                if (key.startsWith('summary_')) {
+                    chartInstances[key].destroy();
+                    delete chartInstances[key];
                 }
             });
-        });
 
-        // Keep all fridges in a single dataset
-        var fridge_datasets = frig_series.map(function (series) {
-            var dataset_data = series.data.map(d => ({ x: d[0], y: d[1] }));
-            return {
-                label: series.name,
-                data: dataset_data,
-                borderWidth: 1,
-                pointRadius: 1,
-                pointHoverRadius: 3,
-                spanGaps: 86400000,
-                segment: {
-                    borderColor: ctx => {
-                        const dataIndex = ctx.p0DataIndex;
-                        if (dataIndex < dataset_data.length - 1) {
-                            const timeDiff = dataset_data[dataIndex + 1].x - dataset_data[dataIndex].x;
-                            if (timeDiff > 86400000) {
-                                return 'transparent';
-                            }
-                        }
-                        return undefined;
-                    }
-                }
-            };
-        });
+            // Clear and rebuild the container
+            var container = $('#summary_plots_container');
+            container.empty();
 
-        // Destroy all existing summary chart instances
-        Object.keys(chartInstances).forEach(function(key) {
-            if (key.startsWith('summary_')) {
-                chartInstances[key].destroy();
-                delete chartInstances[key];
-            }
-        });
+            // Function to create a chart for a room
+            function createRoomChart(room, datasets, type) {
+                var chart_id = 'summary_' + type + '_' + room.replace(/\s+/g, '_');
+                var canvas_id = chart_id + '_canvas';
 
-        // Clear and rebuild the container
-        var container = $('#summary_plots_container');
-        container.empty();
+                // Create the HTML structure
+                var col = $('<div class="col-lg-6 mb-4"></div>');
+                var plot_div = $('<div id="' + chart_id + '"></div>');
+                var canvas = $('<canvas id="' + canvas_id + '"></canvas>');
+                plot_div.append(canvas);
+                col.append(plot_div);
+                container.append(col);
 
-        // Function to create a chart for a room
-        function createRoomChart(room, datasets, type) {
-            var chart_id = 'summary_' + type + '_' + room.replace(/\s+/g, '_');
-            var canvas_id = chart_id + '_canvas';
-            
-            // Create the HTML structure
-            var col = $('<div class="col-lg-6 mb-4"></div>');
-            var plot_div = $('<div id="' + chart_id + '"></div>');
-            var canvas = $('<canvas id="' + canvas_id + '"></canvas>');
-            plot_div.append(canvas);
-            col.append(plot_div);
-            container.append(col);
+                // Create the chart
+                var ctx = document.getElementById(canvas_id).getContext('2d');
+                var chart_title = room.startsWith('All ') ? room : (type === 'freezer' ? 'Freezers' : 'Fridges') + ' - ' + room;
 
-            // Create the chart
-            var ctx = document.getElementById(canvas_id).getContext('2d');
-            var chart_title = room.startsWith('All ') ? room : (type === 'freezer' ? 'Freezers' : 'Fridges') + ' - ' + room;
-            
-            chartInstances[chart_id] = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    datasets: datasets
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: true,
-                    interaction: {
-                        mode: 'nearest',
-                        axis: 'x',
-                        intersect: false
+                chartInstances[chart_id] = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        datasets: datasets
                     },
-                    plugins: {
-                        title: {
-                            display: true,
-                            text: chart_title
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        interaction: {
+                            mode: 'nearest',
+                            axis: 'x',
+                            intersect: false
                         },
-                        legend: {
-                            display: true,
-                            position: 'top',
-                            onClick: function (e, legendItem, legend) {
-                                const index = legendItem.datasetIndex;
-                                const chart = legend.chart;
-                                const meta = chart.getDatasetMeta(index);
-                                meta.hidden = !meta.hidden;
-                                chart.update();
+                        plugins: {
+                            title: {
+                                display: true,
+                                text: chart_title
                             },
-                            labels: {
-                                generateLabels: function (chart) {
-                                    const datasets = chart.data.datasets;
-                                    return datasets.map((dataset, i) => ({
-                                        text: dataset.label,
-                                        fillStyle: dataset.borderColor,
-                                        hidden: !chart.isDatasetVisible(i),
-                                        lineCap: dataset.borderCapStyle,
-                                        lineDash: dataset.borderDash,
-                                        lineDashOffset: dataset.borderDashOffset,
-                                        lineJoin: dataset.borderJoinStyle,
-                                        lineWidth: dataset.borderWidth,
-                                        strokeStyle: dataset.borderColor,
-                                        datasetIndex: i
-                                    }));
+                            legend: {
+                                display: true,
+                                position: 'top',
+                                onClick: function (e, legendItem, legend) {
+                                    const index = legendItem.datasetIndex;
+                                    const chart = legend.chart;
+                                    const meta = chart.getDatasetMeta(index);
+                                    meta.hidden = !meta.hidden;
+                                    chart.update();
+                                },
+                                labels: {
+                                    generateLabels: function (chart) {
+                                        const datasets = chart.data.datasets;
+                                        return datasets.map((dataset, i) => ({
+                                            text: dataset.label,
+                                            fillStyle: dataset.borderColor,
+                                            hidden: !chart.isDatasetVisible(i),
+                                            lineCap: dataset.borderCapStyle,
+                                            lineDash: dataset.borderDash,
+                                            lineDashOffset: dataset.borderDashOffset,
+                                            lineJoin: dataset.borderJoinStyle,
+                                            lineWidth: dataset.borderWidth,
+                                            strokeStyle: dataset.borderColor,
+                                            datasetIndex: i
+                                        }));
+                                    }
                                 }
-                            }
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: function (context) {
-                                    return context.dataset.label + ': ' + context.parsed.y.toFixed(2) + ' C';
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function (context) {
+                                        return context.dataset.label + ': ' + context.parsed.y.toFixed(2) + ' C';
+                                    }
                                 }
-                            }
-                        },
-                        zoom: {
-                            pan: {
-                                enabled: true,
-                                mode: 'x',
-                                modifierKey: null
                             },
                             zoom: {
-                                wheel: {
+                                pan: {
                                     enabled: true,
-                                    modifierKey: 'ctrl'
+                                    mode: 'x',
+                                    modifierKey: null
                                 },
-                                pinch: {
-                                    enabled: true
-                                },
-                                mode: 'x'
-                            }
-                        }
-                    },
-                    scales: {
-                        x: {
-                            type: 'time',
-                            title: {
-                                display: true,
-                                text: 'Date (Stockholm Time)'
-                            },
-                            time: {
-                                unit: 'hour',
-                                displayFormats: {
-                                    hour: 'MMM d HH:mm'
-                                },
-                                timezone: TIMEZONE
+                                zoom: {
+                                    wheel: {
+                                        enabled: true,
+                                        modifierKey: 'ctrl'
+                                    },
+                                    pinch: {
+                                        enabled: true
+                                    },
+                                    mode: 'x'
+                                }
                             }
                         },
-                        y: {
-                            title: {
-                                display: true,
-                                text: 'Temperature (C)'
+                        scales: {
+                            x: {
+                                type: 'time',
+                                title: {
+                                    display: true,
+                                    text: 'Date (Stockholm Time)'
+                                },
+                                time: {
+                                    unit: 'hour',
+                                    displayFormats: {
+                                        hour: 'MMM d HH:mm'
+                                    },
+                                    timezone: TIMEZONE
+                                }
+                            },
+                            y: {
+                                title: {
+                                    display: true,
+                                    text: 'Temperature (C)'
+                                }
                             }
                         }
                     }
-                }
+                });
+            }
+
+            // Create single fridge chart with all fridges
+            if (fridge_datasets.length > 0) {
+                createRoomChart('All Refrigerators', fridge_datasets, 'fridge');
+            }
+
+            // Create charts for each freezer room
+            var freezer_rooms = Object.keys(freezer_by_room).sort();
+            freezer_rooms.forEach(function (room) {
+                createRoomChart(room, freezer_by_room[room], 'freezer');
             });
+        } else {
+            // No data available - display message in plots container
+            var container = $('#summary_plots_container');
+            container.empty();
+            container.html('<div class="col-12 text-center"><p class="text-muted">No data available for the last 24 hours</p></div>');
         }
-
-        // Create single fridge chart with all fridges
-        if (fridge_datasets.length > 0) {
-            createRoomChart('All Refrigerators', fridge_datasets, 'fridge');
-        }
-
-        // Create charts for each freezer room
-        var freezer_rooms = Object.keys(freezer_by_room).sort();
-        freezer_rooms.forEach(function(room) {
-            createRoomChart(room, freezer_by_room[room], 'freezer');
-        });
 
         $('#loading_spinner').hide();
     }).fail(function(jqxhr, textStatus, error) {
