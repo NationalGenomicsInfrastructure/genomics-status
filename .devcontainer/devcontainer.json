@@ -2,8 +2,13 @@
     "name": "Genomics Status",
     "dockerComposeFile": "docker-compose.yml",
     "service": "genomics-status",
+    "workspaceMounts": [
+        "source=${localWorkspaceFolder},target=/workspace,type=bind",
+        "source=${localWorkspaceFolder}/../StatusDB_seed_data,target=/StatusDB_seed_data,type=bind"
+    ],
     "workspaceFolder": "/workspace",
 
+    "initializeCommand": "bash -c 'if [ ! -d ../StatusDB_seed_data ]; then echo \"Cloning StatusDB_seed_data...\"; git clone https://github.com/SciLifeLab/StatusDB_seed_data.git ../StatusDB_seed_data; else echo \"StatusDB_seed_data already exists\"; fi'",
     "features": {},
 
     "customizations": {

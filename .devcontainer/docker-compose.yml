@@ -1,11 +1,11 @@
 services:
   couchdb:
     # For local development, build from sibling repo:
-    # build:
-    #   context: ../../statusdb_seed_data
-    #   dockerfile: Dockerfile
+    build:
+      context: ../../StatusDB_seed_data
+      dockerfile: Dockerfile
     # For production, use published image:
-    image: ghcr.io/scilifelab/statusdb_seed_data:latest
+    # image: ghcr.io/scilifelab/statusdb_seed_data:latest
     environment:
       - COUCHDB_USER=admin
       - COUCHDB_PASSWORD=admin
@@ -28,6 +28,7 @@ services:
       dockerfile: Dockerfile
     volumes:
       - ..:/workspace:cached
+      - ../../StatusDB_seed_data:/StatusDB_seed_data:cached
     ports:
       - "9761:9761"
     networks:

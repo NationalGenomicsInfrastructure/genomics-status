@@ -16,7 +16,7 @@ ln -sf /workspace/.devcontainer/config/settings.yaml /workspace/run_dir/settings
 ln -sf /workspace/.devcontainer/config/.genologicsrc /home/mambauser/.genologicsrc
 
 # Link genosqlrc.yaml to home directory (where genologics_sql library looks for it)
-ln -sf /workspace/.devcontainer/config/genosqlrc.yaml /home/mambauser/.genosqlrc.yaml
+ln -sf /workspace/.devcontainer/config/.genosqlrc.yaml /home/mambauser/.genosqlrc.yaml
 
 # If user has their own conf directory mounted, prefer those configs
 if [ -d /home/mambauser/conf ]; then
