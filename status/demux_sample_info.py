@@ -155,15 +155,24 @@ class DemuxSampleInfoListHandler(SafeHandler):
                             "run_mode": events_data.get("run_mode"),
                         }
 
-                        if flowcell_id in flowcells_dict:
+                        # Special case: MiSeq i100 flowcells may have "A" prepended in y_flowcells
+                        # Try to match with the flowcell_id from demux_sample_info
+                        lookup_id = flowcell_id
+                        if flowcell_id not in flowcells_dict and flowcell_id.startswith("A"):
+                            # Try without the leading "A"
+                            without_a = flowcell_id[1:]
+                            if without_a in flowcells_dict:
+                                lookup_id = without_a
+
+                        if lookup_id in flowcells_dict:
                             # Merge with existing entry, but preserve lane_info if it already exists
                             # and the new value is None (prioritize demux_sample_info lane_info)
-                            existing_lane_info = flowcells_dict[flowcell_id].get(
+                            existing_lane_info = flowcells_dict[lookup_id].get(
                                 "lane_info"
                             )
-                            flowcells_dict[flowcell_id].update(event_info)
+                            flowcells_dict[lookup_id].update(event_info)
                             if existing_lane_info and not event_info.get("lane_info"):
-                                flowcells_dict[flowcell_id]["lane_info"] = (
+                                flowcells_dict[lookup_id]["lane_info"] = (
                                     existing_lane_info
                                 )
                         else:
@@ -392,8 +401,8 @@ class DemuxSampleInfoDataHandler(SafeHandler):
             "sample_id",
             "sample_name",
             "sample_ref",
-            "index_1",
-            "index_2",
+            "index",
+            "index2",
             "description",
             "control",
             "recipe",
@@ -678,8 +687,8 @@ class DemuxSampleInfoDataHandler(SafeHandler):
         library_method_mapping = config.get("library_method_mapping", {})
 
         # Normalize index fields
-        index1 = sample_in_lane.get("index_1", "")
-        index2 = sample_in_lane.get("index_2", "")
+        index1 = sample_in_lane.get("index", "")
+        index2 = sample_in_lane.get("index2", "")
         sample_name = sample_in_lane.get("sample_name", "")
 
         # Track which configs were applied
@@ -939,7 +948,7 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                     bcl_convert_settings.update(classification_overrides)
 
                 # Check if we need to expand named indices
-                index_1_value = sample_in_lane["index_1"]
+                index_1_value = sample_in_lane["index"]
                 named_indices_file = sample_classification.get("named_indices")
                 sequences_to_create = []
                 named_index = ""  # Only set if found in named indices lookup
@@ -957,12 +966,12 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                     else:
                         # Named index not found - treat as standard sample with single entry
                         sequences_to_create = [
-                            [index_1_value, sample_in_lane.get("index_2", "")]
+                            [index_1_value, sample_in_lane.get("index2", "")]
                         ]
                 else:
                     # No named indices file specified - use original indices
                     sequences_to_create = [
-                        [index_1_value, sample_in_lane.get("index_2", "")]
+                        [index_1_value, sample_in_lane.get("index2", "")]
                     ]
 
                 # Create a sample row for each sequence entry
@@ -974,7 +983,7 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                     index_2 = (
                         sequences[1]
                         if len(sequences) > 1
-                        else sample_in_lane.get("index_2", "")
+                        else sample_in_lane.get("index2", "")
                     )
 
                     # Generate OverrideCycles if not already set in BCLConvert_Settings
@@ -1296,7 +1305,7 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                 "lane_1": {
                     "uuid123": {
                         "sample_id": "new_value",
-                        "index_1": "ATCG",
+                        "index": "ATCG",
                         ...
                     }
                 }
@@ -1325,8 +1334,8 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                 "sample_id": ("per_sample_fields", "Sample_ID"),
                 "sample_name": ("per_sample_fields", "Sample_Name"),
                 "sample_project": ("per_sample_fields", "Sample_Project"),
-                "index_1": ("per_sample_fields", "index"),
-                "index_2": ("per_sample_fields", "index2"),
+                "index": ("per_sample_fields", "index"),
+                "index2": ("per_sample_fields", "index2"),
                 "mask_short_reads": ("per_sample_fields", "MaskShortReads"),
                 "minimum_trimmed_read_length": (
                     "per_sample_fields",
@@ -1462,7 +1471,7 @@ class DemuxSampleInfoDataHandler(SafeHandler):
 
                     # Recalculate OverrideCycles if recipe or indices were changed
                     # Check if any relevant fields were edited
-                    relevant_fields = {"recipe", "index_1", "index_2", "umi_config"}
+                    relevant_fields = {"recipe", "index", "index2", "umi_config"}
                     if relevant_fields.intersection(edited_fields.keys()):
                         run_setup = document.get("metadata", {}).get("run_setup", "")
                         recipe = new_settings["other_details"].get("recipe", "")
