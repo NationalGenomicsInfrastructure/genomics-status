@@ -158,7 +158,9 @@ class DemuxSampleInfoListHandler(SafeHandler):
                         # Special case: MiSeq i100 flowcells may have "A" prepended in y_flowcells
                         # Try to match with the flowcell_id from demux_sample_info
                         lookup_id = flowcell_id
-                        if flowcell_id not in flowcells_dict and flowcell_id.startswith("A"):
+                        if flowcell_id not in flowcells_dict and flowcell_id.startswith(
+                            "A"
+                        ):
                             # Try without the leading "A"
                             without_a = flowcell_id[1:]
                             if without_a in flowcells_dict:
@@ -463,7 +465,7 @@ class DemuxSampleInfoDataHandler(SafeHandler):
         # Parse run_setup and recipe
         run_parts = run_setup.split("-")
         recipe_parts = recipe.split("-")
-        
+
         # Allow 2-part recipe format (Y-Z) as shorthand for Y-X-X-Z
         if len(recipe_parts) == 2:
             recipe_parts = [recipe_parts[0], "X", "X", recipe_parts[1]]
@@ -719,8 +721,10 @@ class DemuxSampleInfoDataHandler(SafeHandler):
             ),
             (
                 "idt_umi",
-                lambda: sample_patterns["idt_umi"]["pattern"].match(index1)
-                or sample_patterns["idt_umi"]["pattern"].match(index2),
+                lambda: (
+                    sample_patterns["idt_umi"]["pattern"].match(index1)
+                    or sample_patterns["idt_umi"]["pattern"].match(index2)
+                ),
             ),
             ("smartseq", lambda: sample_patterns["smartseq"]["pattern"].match(index1)),
         ]

@@ -29,7 +29,7 @@ class TestInstrumentTypeMapping(unittest.TestCase):
             / "configuration_files"
             / "sample_classification_patterns.json"
         )
-        with open(config_path, "r") as f:
+        with open(config_path) as f:
             self.handler.application.sample_classification_config = json.load(f)
 
     def test_instrument_type_only(self):
