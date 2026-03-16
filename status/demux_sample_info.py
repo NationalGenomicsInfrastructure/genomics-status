@@ -1075,6 +1075,8 @@ class DemuxSampleInfoDataHandler(SafeHandler):
 
                 # Get BCLConvert_Settings for this sample
                 bcl_settings = latest_settings.get("BCLConvert_Settings", {})
+                # Filter out None values - they mean "use default" and shouldn't affect grouping
+                bcl_settings = {k: v for k, v in bcl_settings.items() if v is not None}
                 settings_key = json.dumps(bcl_settings, sort_keys=True)
 
                 if settings_key not in settings_groups:
@@ -1355,6 +1357,20 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                 "index_length": ("other_details", "index_length"),
                 "umi_config": ("other_details", "umi_config"),
                 "library_method": ("other_details", "library_method"),
+                # BCLConvert_Settings (lane-wide settings that apply to grouped samples)
+                "trim_umi": ("BCLConvert_Settings", "TrimUMI"),
+                "create_fastq_for_index_reads": (
+                    "BCLConvert_Settings",
+                    "CreateFastqForIndexReads",
+                ),
+                "barcode_mismatches_index1": (
+                    "BCLConvert_Settings",
+                    "BarcodeMismatchesIndex1",
+                ),
+                "barcode_mismatches_index2": (
+                    "BCLConvert_Settings",
+                    "BarcodeMismatchesIndex2",
+                ),
                 # sample_row level (top level of sample, not in settings)
                 "control": ("sample_row", "control"),
                 "description": ("sample_row", "description"),
@@ -1405,6 +1421,36 @@ class DemuxSampleInfoDataHandler(SafeHandler):
             # Track which samples were changed
             modified_samples = set()
 
+            # Validation function for BCLConvert_Settings
+            def validate_bcl_setting(field_key, value):
+                """Validate BCLConvert_Settings values."""
+                # Allow None (null) values - they mean "use default"
+                if value is None:
+                    return True
+                if field_key in ["trim_umi", "create_fastq_for_index_reads"]:
+                    # Boolean fields
+                    if not isinstance(value, bool):
+                        raise ValueError(
+                            f"{field_key} must be a boolean value (true/false)"
+                        )
+                elif field_key in ["barcode_mismatches_index1", "barcode_mismatches_index2"]:
+                    # Integer fields with 0-2 range
+                    if not isinstance(value, int):
+                        raise ValueError(f"{field_key} must be an integer")
+                    if value < 0 or value > 2:
+                        raise ValueError(
+                            f"{field_key} must be between 0 and 2 (got {value})"
+                        )
+                elif field_key in ["mask_short_reads", "minimum_trimmed_read_length"]:
+                    # Non-negative integers
+                    if not isinstance(value, int):
+                        raise ValueError(f"{field_key} must be an integer")
+                    if value < 0:
+                        raise ValueError(
+                            f"{field_key} must be non-negative (got {value})"
+                        )
+                return True
+
             # Process edited settings
             for lane, samples in edited_settings.items():
                 # Convert lane to string to match database structure
@@ -1451,6 +1497,9 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                         if field_key not in allowed_fields:
                             # Skip fields that aren't in the allowed list
                             continue
+
+                        # Validate the value (especially for BCLConvert_Settings)
+                        validate_bcl_setting(field_key, new_value)
 
                         section, actual_key = allowed_fields[field_key]
 
@@ -1573,6 +1622,10 @@ class DemuxSampleInfoDataHandler(SafeHandler):
         except json.JSONDecodeError as e:
             self.set_status(400)
             self.write(json.dumps({"error": f"Invalid JSON in request body: {str(e)}"}))
+        except ValueError as e:
+            # Validation errors (e.g., invalid BCLConvert_Settings values)
+            self.set_status(400)
+            self.write(json.dumps({"error": f"Validation error: {str(e)}"}))
         except Exception as e:
             self.set_status(500)
             self.write(json.dumps({"error": f"Internal server error: {str(e)}"}))

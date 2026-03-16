@@ -984,7 +984,11 @@ const vDemuxSampleInfoEditor = {
                 operator: currentSettings.operator || latestSettings.other_details?.operator || '',
                 description: currentSettings.description || sample.description || '',
                 control: currentSettings.control || sample.control || 'N',
-                override_cycles: currentSettings.override_cycles || latestSettings.per_sample_fields?.OverrideCycles || ''
+                override_cycles: currentSettings.override_cycles || latestSettings.per_sample_fields?.OverrideCycles || '',
+                trim_umi: currentSettings.trim_umi !== undefined ? currentSettings.trim_umi : (latestSettings.BCLConvert_Settings?.TrimUMI !== undefined ? latestSettings.BCLConvert_Settings.TrimUMI : null),
+                create_fastq_for_index_reads: currentSettings.create_fastq_for_index_reads !== undefined ? currentSettings.create_fastq_for_index_reads : (latestSettings.BCLConvert_Settings?.CreateFastqForIndexReads !== undefined ? latestSettings.BCLConvert_Settings.CreateFastqForIndexReads : null),
+                barcode_mismatches_index1: currentSettings.barcode_mismatches_index1 !== undefined ? currentSettings.barcode_mismatches_index1 : (latestSettings.BCLConvert_Settings?.BarcodeMismatchesIndex1 !== undefined ? latestSettings.BCLConvert_Settings.BarcodeMismatchesIndex1 : null),
+                barcode_mismatches_index2: currentSettings.barcode_mismatches_index2 !== undefined ? currentSettings.barcode_mismatches_index2 : (latestSettings.BCLConvert_Settings?.BarcodeMismatchesIndex2 !== undefined ? latestSettings.BCLConvert_Settings.BarcodeMismatchesIndex2 : null)
             };
 
             this.editModalLane = lane;
@@ -1034,7 +1038,11 @@ const vDemuxSampleInfoEditor = {
                 operator: templateSettings.other_details?.operator || '',
                 description: '',
                 control: templateSettings.control || 'N',
-                override_cycles: templateSettings.per_sample_fields?.OverrideCycles || ''
+                override_cycles: templateSettings.per_sample_fields?.OverrideCycles || '',
+                trim_umi: templateSettings.BCLConvert_Settings?.TrimUMI !== undefined ? templateSettings.BCLConvert_Settings.TrimUMI : null,
+                create_fastq_for_index_reads: templateSettings.BCLConvert_Settings?.CreateFastqForIndexReads !== undefined ? templateSettings.BCLConvert_Settings.CreateFastqForIndexReads : null,
+                barcode_mismatches_index1: templateSettings.BCLConvert_Settings?.BarcodeMismatchesIndex1 !== undefined ? templateSettings.BCLConvert_Settings.BarcodeMismatchesIndex1 : null,
+                barcode_mismatches_index2: templateSettings.BCLConvert_Settings?.BarcodeMismatchesIndex2 !== undefined ? templateSettings.BCLConvert_Settings.BarcodeMismatchesIndex2 : null
             } : {
                 sample_id: newSampleId,
                 sample_name: newSampleId,
@@ -1047,7 +1055,11 @@ const vDemuxSampleInfoEditor = {
                 operator: '',
                 description: '',
                 control: 'N',
-                override_cycles: ''
+                    override_cycles: '',
+                    trim_umi: null,
+                    create_fastq_for_index_reads: null,
+                    barcode_mismatches_index1: null,
+                    barcode_mismatches_index2: null
             };
 
             this.editModalLane = lane;
@@ -1103,7 +1115,15 @@ const vDemuxSampleInfoEditor = {
             } else {
                 // Update existing sample - only save changed fields
                 Object.keys(this.editFormData).forEach(field => {
-                    const newValue = this.editFormData[field];
+                    let newValue = this.editFormData[field];
+
+                    // Sanitize BCLConvert_Settings number fields: convert NaN or empty string to null
+                    if (field === 'barcode_mismatches_index1' || field === 'barcode_mismatches_index2') {
+                        if (newValue === '' || Number.isNaN(newValue)) {
+                            newValue = null;
+                        }
+                    }
+
                     this.updateValue(lane, uuid, field, newValue);
                 });
                 alert(`Updated sample in lane ${lane}`);
@@ -1394,7 +1414,7 @@ const vDemuxSampleInfoEditor = {
                                 <i class="fa fa-arrow-left mr-2"></i>Back to Flowcell List
                             </button>
                         </div>
-                        
+
                         <h2>Flowcell: {{ demux_data.flowcell_id }}</h2>
 
                         <!-- Metadata Card -->
@@ -2061,6 +2081,67 @@ const vDemuxSampleInfoEditor = {
                                                 <span class="text-muted small">(auto-calculated from recipe and UMI config)</span>
                                             </label>
                                             <input type="text" class="form-control font-monospace bg-light" id="edit_override_cycles" v-model="editFormData.override_cycles" readonly>
+                                        </div>
+
+                                        <!-- BCLConvert Settings Section -->
+                                        <div class="col-md-12 mb-3">
+                                            <hr>
+                                            <h6 class="mb-3">
+                                                <i class="fa fa-cog"></i> BCLConvert Settings
+                                                <span class="text-muted small">(Values not included use BCLConvert defaults)</span>
+                                            </h6>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Trim UMI:</label>
+                                            <div class="form-check">
+                                                <input type="radio" class="form-check-input" id="edit_trim_umi_yes" v-model="editFormData.trim_umi" :value="true">
+                                                <label class="form-check-label" for="edit_trim_umi_yes">
+                                                    Yes
+                                                </label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input type="radio" class="form-check-input" id="edit_trim_umi_no" v-model="editFormData.trim_umi" :value="false">
+                                                <label class="form-check-label" for="edit_trim_umi_no">
+                                                    No
+                                                </label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input type="radio" class="form-check-input" id="edit_trim_umi_default" v-model="editFormData.trim_umi" :value="null">
+                                                <label class="form-check-label" for="edit_trim_umi_default">
+                                                    Do not include in samplesheet
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Create FASTQ for Index Reads:</label>
+                                            <div class="form-check">
+                                                <input type="radio" class="form-check-input" id="edit_create_fastq_yes" v-model="editFormData.create_fastq_for_index_reads" :value="true">
+                                                <label class="form-check-label" for="edit_create_fastq_yes">
+                                                    Yes
+                                                </label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input type="radio" class="form-check-input" id="edit_create_fastq_no" v-model="editFormData.create_fastq_for_index_reads" :value="false">
+                                                <label class="form-check-label" for="edit_create_fastq_no">
+                                                    No
+                                                </label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input type="radio" class="form-check-input" id="edit_create_fastq_default" v-model="editFormData.create_fastq_for_index_reads" :value="null">
+                                                <label class="form-check-label" for="edit_create_fastq_default">
+                                                    Do not include in samplesheet
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label for="edit_barcode_mismatches_index1" class="form-label">Barcode Mismatches Index 1:</label>
+                                            <input type="number" class="form-control" id="edit_barcode_mismatches_index1" v-model.number="editFormData.barcode_mismatches_index1" min="0" max="2" placeholder="Default">
+                                            <small class="form-text text-muted">0-2 mismatches allowed (leave blank for default)</small>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label for="edit_barcode_mismatches_index2" class="form-label">Barcode Mismatches Index 2:</label>
+                                            <input type="number" class="form-control" id="edit_barcode_mismatches_index2" v-model.number="editFormData.barcode_mismatches_index2" min="0" max="2" placeholder="Default">
+                                            <small class="form-text text-muted">0-2 mismatches allowed (leave blank for default)</small>
                                         </div>
                                     </div>
                                 </div>
