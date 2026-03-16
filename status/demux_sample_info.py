@@ -1433,7 +1433,10 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                         raise ValueError(
                             f"{field_key} must be a boolean value (true/false)"
                         )
-                elif field_key in ["barcode_mismatches_index1", "barcode_mismatches_index2"]:
+                elif field_key in [
+                    "barcode_mismatches_index1",
+                    "barcode_mismatches_index2",
+                ]:
                     # Integer fields with 0-2 range
                     if not isinstance(value, int):
                         raise ValueError(f"{field_key} must be an integer")
