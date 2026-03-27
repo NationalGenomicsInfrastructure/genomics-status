@@ -1,5 +1,6 @@
 """Handlers for demultiplexing sample info functionality."""
 
+import copy
 import datetime
 import json
 import logging
@@ -706,6 +707,19 @@ class DemuxSampleInfoDataHandler(SafeHandler):
             "BCLConvert_Settings": {},
         }
 
+        # Initialize sample_data for conditional rule evaluation
+        # This will be updated after each tier to reflect current state
+        sample_data = {
+            "sample_type": result["sample_type"],
+            "umi_config": result["umi_config"],
+            "index_length": result["index_length"],
+            "named_index": result["named_indices"],
+            "index": index1,
+            "index2": index2,
+            "sample_name": sample_name,
+            "override_cycles": None,  # Will be set later if available
+        }
+
         # STEP 2: Apply regex-based pattern configurations
         pattern_matched = False
 
@@ -763,6 +777,26 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                 config_sources.append(f"patterns.{pattern_name}")
                 pattern_matched = True
 
+                # Update sample_data with current state
+                sample_data.update(
+                    {
+                        "sample_type": result["sample_type"],
+                        "umi_config": result["umi_config"],
+                        "index_length": result["index_length"],
+                        "named_index": result["named_indices"],
+                    }
+                )
+
+                # Apply conditional rules for this pattern
+                if pattern_config.get("conditional_rules"):
+                    applied_rules = self._apply_conditional_rules(
+                        result, pattern_config["conditional_rules"], sample_data
+                    )
+                    for rule_name in applied_rules:
+                        config_sources.append(
+                            f"patterns.{pattern_name}.conditional_rule.{rule_name}"
+                        )
+
         # STEP 3: Apply other general sample type configurations (if no pattern matched)
         if not pattern_matched:
             # Check noindex
@@ -779,6 +813,27 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                         noindex_config["BCLConvert_Settings"]
                     )
                 config_sources.append("other_general_sample_types.noindex")
+
+                # Update sample_data with current state
+                sample_data.update(
+                    {
+                        "sample_type": result["sample_type"],
+                        "umi_config": result["umi_config"],
+                        "index_length": result["index_length"],
+                        "named_index": result["named_indices"],
+                    }
+                )
+
+                # Apply conditional rules for noindex
+                if noindex_config.get("conditional_rules"):
+                    applied_rules = self._apply_conditional_rules(
+                        result, noindex_config["conditional_rules"], sample_data
+                    )
+                    for rule_name in applied_rules:
+                        config_sources.append(
+                            f"other_general_sample_types.noindex.conditional_rule.{rule_name}"
+                        )
+
             else:
                 # Use standard as default
                 standard_config = sample_patterns["standard"]["config"]
@@ -788,6 +843,26 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                         standard_config["BCLConvert_Settings"]
                     )
                 config_sources.append("other_general_sample_types.standard")
+
+                # Update sample_data with current state
+                sample_data.update(
+                    {
+                        "sample_type": result["sample_type"],
+                        "umi_config": result["umi_config"],
+                        "index_length": result["index_length"],
+                        "named_index": result["named_indices"],
+                    }
+                )
+
+                # Apply conditional rules for standard
+                if standard_config.get("conditional_rules"):
+                    applied_rules = self._apply_conditional_rules(
+                        result, standard_config["conditional_rules"], sample_data
+                    )
+                    for rule_name in applied_rules:
+                        config_sources.append(
+                            f"other_general_sample_types.standard.conditional_rule.{rule_name}"
+                        )
 
         # STEP 4: Apply library method mapping (overrides previous configurations)
         if library_method and library_method in library_method_mapping:
@@ -810,6 +885,26 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                 )
 
             config_sources.append(f"library_method_mapping.{library_method}")
+
+            # Update sample_data with current state
+            sample_data.update(
+                {
+                    "sample_type": result["sample_type"],
+                    "umi_config": result["umi_config"],
+                    "index_length": result["index_length"],
+                    "named_index": result["named_indices"],
+                }
+            )
+
+            # Apply conditional rules for library method
+            if mapped_config.get("conditional_rules"):
+                applied_rules = self._apply_conditional_rules(
+                    result, mapped_config["conditional_rules"], sample_data
+                )
+                for rule_name in applied_rules:
+                    config_sources.append(
+                        f"library_method_mapping.{library_method}.conditional_rule.{rule_name}"
+                    )
 
         # STEP 5: Apply instrument type and run mode mapping (overrides previous configurations)
         if metadata:
@@ -837,6 +932,26 @@ class DemuxSampleInfoDataHandler(SafeHandler):
 
                 config_sources.append(f"instrument_type_mapping.{instrument_type}")
 
+                # Update sample_data with current state
+                sample_data.update(
+                    {
+                        "sample_type": result["sample_type"],
+                        "umi_config": result["umi_config"],
+                        "index_length": result["index_length"],
+                        "named_index": result["named_indices"],
+                    }
+                )
+
+                # Apply conditional rules for instrument type
+                if instrument_config.get("conditional_rules"):
+                    applied_rules = self._apply_conditional_rules(
+                        result, instrument_config["conditional_rules"], sample_data
+                    )
+                    for rule_name in applied_rules:
+                        config_sources.append(
+                            f"instrument_type_mapping.{instrument_type}.conditional_rule.{rule_name}"
+                        )
+
                 # Apply run mode-specific settings (overrides instrument-level)
                 if run_mode and "run_modes" in instrument_config:
                     run_modes = instrument_config["run_modes"]
@@ -861,6 +976,28 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                             f"instrument_type_mapping.{instrument_type}.run_modes.{run_mode}"
                         )
 
+                        # Update sample_data with current state
+                        sample_data.update(
+                            {
+                                "sample_type": result["sample_type"],
+                                "umi_config": result["umi_config"],
+                                "index_length": result["index_length"],
+                                "named_index": result["named_indices"],
+                            }
+                        )
+
+                        # Apply conditional rules for run mode
+                        if run_mode_config.get("conditional_rules"):
+                            applied_rules = self._apply_conditional_rules(
+                                result,
+                                run_mode_config["conditional_rules"],
+                                sample_data,
+                            )
+                            for rule_name in applied_rules:
+                                config_sources.append(
+                                    f"instrument_type_mapping.{instrument_type}.run_modes.{run_mode}.conditional_rule.{rule_name}"
+                                )
+
         # STEP 6: Check for control samples (highest priority override)
         if any(pattern in sample_name.lower() for pattern in control_patterns):
             result["sample_type"] = "control"
@@ -869,8 +1006,150 @@ class DemuxSampleInfoDataHandler(SafeHandler):
             result["BCLConvert_Settings"] = {}
             config_sources.append("control_patterns")
 
+            # Update sample_data with current state
+            sample_data.update(
+                {
+                    "sample_type": result["sample_type"],
+                    "umi_config": result["umi_config"],
+                    "index_length": result["index_length"],
+                    "named_index": result["named_indices"],
+                }
+            )
+
+            # Apply conditional rules for control patterns (if defined)
+            control_conditional_rules = config.get("control_conditional_rules")
+            if control_conditional_rules:
+                applied_rules = self._apply_conditional_rules(
+                    result, control_conditional_rules, sample_data
+                )
+                for rule_name in applied_rules:
+                    config_sources.append(
+                        f"control_patterns.conditional_rule.{rule_name}"
+                    )
+
         result["config_sources"] = config_sources
         return result
+
+    def _evaluate_condition(self, condition, sample_data):
+        """Evaluate a single condition against sample data.
+
+        Args:
+            condition: Dict with 'field', 'operator', and optionally 'value'
+            sample_data: Dict containing sample settings and fields
+
+        Returns:
+            bool: True if condition is met
+        """
+        field = condition.get("field")
+        operator = condition.get("operator")
+        expected_value = condition.get("value")
+
+        # Special operator: always true
+        if operator == "always":
+            return True
+
+        # Get the actual value from sample data
+        actual_value = sample_data.get(field)
+
+        if operator == "is_null":
+            return actual_value is None
+        elif operator == "is_empty":
+            return not actual_value or actual_value == ""
+        elif operator == "equals":
+            return actual_value == expected_value
+        elif operator == "not_equals":
+            return actual_value != expected_value
+        elif operator == "contains":
+            return expected_value in str(actual_value) if actual_value else False
+        elif operator == "not_contains":
+            return expected_value not in str(actual_value) if actual_value else True
+        elif operator == "in":
+            return (
+                actual_value in expected_value
+                if isinstance(expected_value, list)
+                else False
+            )
+        elif operator == "not_in":
+            return (
+                actual_value not in expected_value
+                if isinstance(expected_value, list)
+                else True
+            )
+        elif operator == "greater_than":
+            return actual_value > expected_value if actual_value is not None else False
+        elif operator == "less_than":
+            return actual_value < expected_value if actual_value is not None else False
+
+        return False
+
+    def _evaluate_conditions(self, conditions, sample_data):
+        """Evaluate complex condition logic with all_of/any_of.
+
+        Args:
+            conditions: Dict with 'all_of', 'any_of', or direct condition fields
+            sample_data: Dict containing sample settings and fields
+
+        Returns:
+            bool: True if all conditions are met
+        """
+        # Handle all_of (AND logic)
+        if "all_of" in conditions:
+            for condition_group in conditions["all_of"]:
+                if "or" in condition_group:
+                    # Any condition in the OR group must be true
+                    if not any(
+                        self._evaluate_condition(c, sample_data)
+                        for c in condition_group["or"]
+                    ):
+                        return False
+                else:
+                    # Single condition must be true
+                    if not self._evaluate_condition(condition_group, sample_data):
+                        return False
+            return True
+
+        # Handle any_of (OR logic)
+        if "any_of" in conditions:
+            return any(
+                self._evaluate_condition(condition, sample_data)
+                for condition in conditions["any_of"]
+            )
+
+        # Single condition (direct fields like {"always": true})
+        return self._evaluate_condition(conditions, sample_data)
+
+    def _apply_conditional_rules(self, settings, rules_config, sample_data):
+        """Apply conditional rules to BCLConvert_Settings.
+
+        Args:
+            settings: Dict containing the sample settings (modified in place)
+            rules_config: Dict mapping setting names to rule lists
+            sample_data: Dict with current field values for condition evaluation
+
+        Returns:
+            List of applied rule names for config_sources tracking
+        """
+        applied_rules = []
+
+        # Check each BCLConvert setting that has conditional rules
+        for setting_name, rules_list in rules_config.items():
+            for rule in rules_list:
+                # Evaluate conditions
+                if self._evaluate_conditions(rule["conditions"], sample_data):
+                    # Apply action
+                    action = rule.get("action", "set_value")
+                    value = rule.get("value")
+
+                    if action == "set_value":
+                        if "BCLConvert_Settings" not in settings:
+                            settings["BCLConvert_Settings"] = {}
+                        settings["BCLConvert_Settings"][setting_name] = value
+                        applied_rules.append(f"{setting_name}:{rule['name']}")
+
+                    # Stop after first matching rule for this setting
+                    break
+
+        return applied_rules
 
     def _group_samples_by_lane(self, uploaded_lims_info):
         """Group samples by lane number.
@@ -990,6 +1269,12 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                         else sample_in_lane.get("index2", "")
                     )
 
+                    # Normalize "NoIndex" to empty string for BCLConvert samplesheets
+                    if index_1.upper() == "NOINDEX":
+                        index_1 = ""
+                    if index_2.upper() == "NOINDEX":
+                        index_2 = ""
+
                     # Generate OverrideCycles if not already set in BCLConvert_Settings
                     override_cycles = ""
                     if (
@@ -1075,8 +1360,12 @@ class DemuxSampleInfoDataHandler(SafeHandler):
 
                 # Get BCLConvert_Settings for this sample
                 bcl_settings = latest_settings.get("BCLConvert_Settings", {})
-                # Filter out None values - they mean "use default" and shouldn't affect grouping
-                bcl_settings = {k: v for k, v in bcl_settings.items() if v is not None}
+                # Filter out None and EXCLUDE values - they shouldn't appear in samplesheet
+                bcl_settings = {
+                    k: v
+                    for k, v in bcl_settings.items()
+                    if v is not None and v != "EXCLUDE"
+                }
                 settings_key = json.dumps(bcl_settings, sort_keys=True)
 
                 if settings_key not in settings_groups:
@@ -1483,17 +1772,7 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                     latest_settings = sample_row["settings"][latest_version]
 
                     # Create a deep copy of the latest settings for the new version
-                    new_settings = {
-                        "per_sample_fields": latest_settings.get(
-                            "per_sample_fields", {}
-                        ).copy(),
-                        "other_details": latest_settings.get(
-                            "other_details", {}
-                        ).copy(),
-                        "BCLConvert_Settings": latest_settings.get(
-                            "BCLConvert_Settings", {}
-                        ).copy(),
-                    }
+                    new_settings = copy.deepcopy(latest_settings)
 
                     # Apply edits to the appropriate sections
                     for field_key, new_value in edited_fields.items():
@@ -1747,3 +2026,253 @@ class SampleClassificationConfigHandler(SafeHandler):
         except Exception as e:
             self.set_status(500)
             self.write(json.dumps({"error": f"Failed to load configuration: {str(e)}"}))
+
+
+class CustomConfigHandler(DemuxSampleInfoDataHandler):
+    """Handles custom configurations for specific samples."""
+
+    def post(self, flowcell_id, config_index=None):
+        """Add or update a custom configuration for a flowcell."""
+        # Parse request body
+        try:
+            body = json.loads(self.request.body)
+        except json.JSONDecodeError as e:
+            self.set_status(400)
+            self.write(json.dumps({"error": f"Invalid JSON in request body: {str(e)}"}))
+            return
+
+        custom_config = body.get("custom_config")
+
+        if not custom_config:
+            self.set_status(400)
+            self.write(json.dumps({"error": "Missing custom_config in request body"}))
+            return
+
+        # Validate required fields
+        if not custom_config.get("name"):
+            self.set_status(400)
+            self.write(json.dumps({"error": "Custom config must have a name"}))
+            return
+
+        # target_project is only required for 'project' and 'project_lane' types
+        # For 'lane' type, target_project is optional (applies to all projects in that lane)
+        target_type = custom_config.get("target_type", "project")
+        if target_type in ["project", "project_lane"] and not custom_config.get(
+            "target_project"
+        ):
+            self.set_status(400)
+            self.write(
+                json.dumps(
+                    {
+                        "error": f"Custom config with target_type '{target_type}' must have a target_project"
+                    }
+                )
+            )
+            return
+
+        if not custom_config.get("BCLConvert_Settings"):
+            self.set_status(400)
+            self.write(
+                json.dumps({"error": "Custom config must have BCLConvert_Settings"})
+            )
+            return
+
+        # Fetch the existing document
+        view_result = self.application.cloudant.post_view(
+            db="demux_sample_info",
+            ddoc="info",
+            view="flowcell_id",
+            key=flowcell_id,
+        ).get_result()
+
+        existing_rows = view_result.get("rows", [])
+
+        if not existing_rows:
+            self.set_status(404)
+            self.write(
+                json.dumps(
+                    {"error": f"No demux sample info found for flowcell {flowcell_id}"}
+                )
+            )
+            return
+
+        # Get the document
+        doc_id = existing_rows[0]["id"]
+        document = self.application.cloudant.get_document(
+            db="demux_sample_info", doc_id=doc_id
+        ).get_result()
+
+        # Initialize custom_configs if it doesn't exist
+        if "custom_configs" not in document:
+            document["custom_configs"] = []
+
+        # Check if we're editing an existing config or creating a new one
+        edit_mode = custom_config.get("edit_mode", False)
+        edit_index = custom_config.get("edit_index")
+
+        # Remove edit_mode and edit_index from the config before saving
+        custom_config.pop("edit_mode", None)
+        custom_config.pop("edit_index", None)
+        
+        # Always set auto_run to False for custom configs
+        custom_config["auto_run"] = False
+
+        if edit_mode and edit_index is not None:
+            # Edit mode - update existing config
+            if 0 <= edit_index < len(document["custom_configs"]):
+                # Preserve original created_at and created_by
+                original_config = document["custom_configs"][edit_index]
+                custom_config["created_at"] = original_config.get("created_at")
+                custom_config["created_by"] = original_config.get("created_by")
+                # Add updated timestamp
+                custom_config["updated_at"] = datetime.datetime.now(
+                    datetime.timezone.utc
+                ).isoformat(timespec="milliseconds")
+                custom_config["updated_by"] = (
+                    self.get_current_user().email if self.get_current_user() else None
+                )
+                # Replace the config at the specified index
+                document["custom_configs"][edit_index] = custom_config
+            else:
+                self.set_status(400)
+                self.write(json.dumps({"error": "Invalid config index"}))
+                return
+        else:
+            # Create mode - add new config
+            custom_config["created_at"] = datetime.datetime.now(
+                datetime.timezone.utc
+            ).isoformat(timespec="milliseconds")
+            custom_config["created_by"] = (
+                self.get_current_user().email if self.get_current_user() else None
+            )
+            # Append the custom config
+            document["custom_configs"].append(custom_config)
+
+        # Create timestamp for the new version (same for all affected samples)
+        timestamp = datetime.datetime.now(datetime.timezone.utc).isoformat(
+            timespec="milliseconds"
+        )
+
+        # Re-apply custom configs to all matching samples
+        calculated_lanes = document.get("calculated", {}).get("lanes", {})
+
+        for lane, lane_data in calculated_lanes.items():
+            for sample_uuid, sample_row in lane_data["sample_rows"].items():
+                # Get the latest settings
+                settings_versions = sorted(sample_row["settings"].keys(), reverse=True)
+                if not settings_versions:
+                    continue
+
+                latest_settings = sample_row["settings"][settings_versions[0]]
+
+                # Check if this sample matches the custom config target
+                sample_project = latest_settings.get("per_sample_fields", {}).get(
+                    "Sample_Project"
+                )
+                should_apply = False
+
+                if custom_config.get("target_type") == "project":
+                    # Apply to all lanes in project
+                    should_apply = sample_project == custom_config.get("target_project")
+                elif custom_config.get("target_type") == "lane":
+                    # Apply to all projects in lane (target_project is optional)
+                    should_apply = lane == custom_config.get("target_lane")
+                elif custom_config.get("target_type") == "project_lane":
+                    # Apply to specific project + lane
+                    should_apply = sample_project == custom_config.get(
+                        "target_project"
+                    ) and lane == custom_config.get("target_lane")
+
+                if should_apply:
+                    # Create a deep copy of the latest settings for the new version
+                    new_settings = copy.deepcopy(latest_settings)
+
+                    # Apply the custom config BCLConvert_Settings to the copy
+                    bcl_settings = new_settings.get("BCLConvert_Settings", {})
+
+                    # Apply settings updates (including EXCLUDE values)
+                    # EXCLUDE means "don't include in samplesheet" but we keep it in settings for traceability
+                    for key, value in custom_config["BCLConvert_Settings"].items():
+                        bcl_settings[key] = value
+
+                    new_settings["BCLConvert_Settings"] = bcl_settings
+
+                    # Add custom config to config_sources
+                    config_sources = (
+                        new_settings.get("other_details", {})
+                        .get("config_sources", [])
+                        .copy()
+                    )  # Copy list to avoid mutation
+                    custom_config_source = f"custom_config.{custom_config['name']}"
+                    if custom_config_source not in config_sources:
+                        config_sources.append(custom_config_source)
+                        if "other_details" not in new_settings:
+                            new_settings["other_details"] = {}
+                        new_settings["other_details"]["config_sources"] = config_sources
+
+                    # Add the new settings version with the timestamp
+                    sample_row["settings"][timestamp] = new_settings
+
+                    # Update last_modified
+                    sample_row["last_modified"] = timestamp
+
+        # Update version_history
+        if "version_history" not in document["calculated"]:
+            document["calculated"]["version_history"] = {}
+
+        document["calculated"]["version_history"][timestamp] = {
+            "generated_by": self.get_current_user().email
+            if self.get_current_user()
+            else None,
+            "autogenerated": False,
+            "comment": f"Applied custom config: {custom_config['name']}",
+            "auto_run": False,
+        }
+
+        # Regenerate samplesheets
+        metadata = document.get("metadata", {})
+        samplesheets = self._generate_samplesheets(
+            flowcell_id, calculated_lanes, metadata
+        )
+        document["samplesheets"] = samplesheets
+
+        # Save the updated document
+        response = self.application.cloudant.post_document(
+            db="demux_sample_info", document=document
+        ).get_result()
+
+        if not response.get("ok"):
+            self.set_status(500)
+            self.write(
+                json.dumps(
+                    {
+                        "error": "Failed to update document in database",
+                        "response": response,
+                    }
+                )
+            )
+            return
+
+        # Fetch the updated document to return to the client
+        updated_doc = self.application.cloudant.get_document(
+            db="demux_sample_info", doc_id=doc_id
+        ).get_result()
+
+        self.set_status(200)
+        self.set_header("Content-type", "application/json")
+        self.write(json.dumps(updated_doc))
+
+    def delete(self, flowcell_id, config_index_str):
+        """Deletion of custom configurations is not allowed to maintain traceability."""
+        self.set_status(405)  # Method Not Allowed
+        self.set_header("Content-type", "application/json")
+        self.write(
+            json.dumps(
+                {
+                    "error": "Deletion of custom configurations is not allowed",
+                    "reason": "To maintain complete traceability of all configuration changes, "
+                    "custom configurations cannot be deleted. They remain in the version history. "
+                    "If you need to change a configuration, please edit it instead.",
+                }
+            )
+        )

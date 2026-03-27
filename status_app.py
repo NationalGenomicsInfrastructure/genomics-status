@@ -36,6 +36,7 @@ from status.controls import ControlsHandler
 from status.data_deliveries_plot import DataDeliveryHandler, DeliveryPlotHandler
 from status.deliveries import DeliveriesPageHandler
 from status.demux_sample_info import (
+    CustomConfigHandler,
     DemuxSampleInfoDataHandler,
     DemuxSampleInfoEditorHandler,
     DemuxSampleInfoListHandler,
@@ -362,6 +363,10 @@ class Application(tornado.web.Application):
             ("/api/v1/workset_queues", WorksetQueuesDataHandler),
             ("/api/v1/closed_worksets", ClosedWorksetsHandler),
             ("/api/v1/demux_sample_info/([^/]*)$", DemuxSampleInfoDataHandler),
+            (
+                "/api/v1/demux_sample_info/([^/]*)/custom_config(?:/([^/]*))?$",
+                CustomConfigHandler,
+            ),
             ("/api/v1/demux_sample_info_list", DemuxSampleInfoListHandler),
             (
                 "/api/v1/sample_classification_presets",
