@@ -7,7 +7,7 @@
       "sample_type": "10X_SINGLE",
       "umi_config": null,
       "named_indices": "Chromium_10X_indexes",
-      "BCLConvert_Settings": {
+      "raw_samplesheet_settings": {
         "TrimUMI": false
       }
     },
@@ -70,14 +70,14 @@
   "instrument_type_mapping": {
     "NovaSeqXPlus": {
       "description": "NovaSeq X Plus sequencer defaults",
-      "BCLConvert_Settings": {
+      "raw_samplesheet_settings": {
         "BarcodeMismatchesIndex1": 1,
         "BarcodeMismatchesIndex2": 1
       },
       "run_modes": {
         "10B": {
           "description": "10B flow cell mode",
-          "BCLConvert_Settings": {
+          "raw_samplesheet_settings": {
             "BarcodeMismatchesIndex1": 2
           }
         },
@@ -88,7 +88,7 @@
     },
     "NovaSeq6000": {
       "description": "NovaSeq 6000 sequencer defaults",
-      "BCLConvert_Settings": {}
+      "raw_samplesheet_settings": {}
     }
   },
   "bcl_convert_settings": {
@@ -154,7 +154,7 @@
         "can_be_on_BCLConvert_settings": true
       }
     },
-    "BCLConvert_Settings": {
+    "raw_samplesheet_settings": {
       "TrimUMI": {
         "type": "boolean",
         "help": "If set to 'false', UMI sequences are not trimmed from output FASTQ reads. The UMI is still placed in sequence header. Can only be enabled (1) if a UMI is present for at least 1 sample according to the OverrideCycles setting.",

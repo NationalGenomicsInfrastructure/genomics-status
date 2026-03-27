@@ -6,7 +6,7 @@ Tests the _generate_samplesheets method in DemuxSampleInfoDataHandler including:
 - Single lane with multiple projects (same settings)
 - Single lane with multiple projects (different settings)
 - Multiple lanes with different settings
-- Complex BCLConvert_Settings variations
+- Complex raw_samplesheet_settings variations
 - Edge cases (empty lanes, missing fields)
 """
 
@@ -46,7 +46,7 @@ class TestGenerateSamplesheets(unittest.TestCase):
                                     "Sample_Project": "Project_A",
                                     "OverrideCycles": "Y151;I8;I8;Y151",
                                 },
-                                "BCLConvert_Settings": {
+                                "raw_samplesheet_settings": {
                                     "SoftwareVersion": "4.0.3",
                                     "FastqCompressionFormat": "gzip",
                                 },
@@ -66,7 +66,7 @@ class TestGenerateSamplesheets(unittest.TestCase):
                                     "Sample_Project": "Project_A",
                                     "OverrideCycles": "Y151;I8;I8;Y151",
                                 },
-                                "BCLConvert_Settings": {
+                                "raw_samplesheet_settings": {
                                     "SoftwareVersion": "4.0.3",
                                     "FastqCompressionFormat": "gzip",
                                 },
@@ -98,10 +98,10 @@ class TestGenerateSamplesheets(unittest.TestCase):
         self.assertEqual(samplesheet["Header"]["RunName"], "TEST123")
         self.assertIn("Date", samplesheet["Header"])
 
-        # Check BCLConvert_Settings
-        self.assertEqual(samplesheet["BCLConvert_Settings"]["SoftwareVersion"], "4.0.3")
+        # Check raw_samplesheet_settings
+        self.assertEqual(samplesheet["raw_samplesheet_settings"]["SoftwareVersion"], "4.0.3")
         self.assertEqual(
-            samplesheet["BCLConvert_Settings"]["FastqCompressionFormat"], "gzip"
+            samplesheet["raw_samplesheet_settings"]["FastqCompressionFormat"], "gzip"
         )
 
         # Check BCLConvert_Data
@@ -127,7 +127,7 @@ class TestGenerateSamplesheets(unittest.TestCase):
                                     "Sample_Project": "Project_X",
                                     "OverrideCycles": "",
                                 },
-                                "BCLConvert_Settings": {
+                                "raw_samplesheet_settings": {
                                     "BarcodeMismatchesIndex1": "1",
                                     "BarcodeMismatchesIndex2": "1",
                                 },
@@ -147,7 +147,7 @@ class TestGenerateSamplesheets(unittest.TestCase):
                                     "Sample_Project": "Project_Y",
                                     "OverrideCycles": "",
                                 },
-                                "BCLConvert_Settings": {
+                                "raw_samplesheet_settings": {
                                     "BarcodeMismatchesIndex1": "1",
                                     "BarcodeMismatchesIndex2": "1",
                                 },
@@ -192,7 +192,7 @@ class TestGenerateSamplesheets(unittest.TestCase):
                                     "Sample_Project": "Project_A",
                                     "OverrideCycles": "",
                                 },
-                                "BCLConvert_Settings": {
+                                "raw_samplesheet_settings": {
                                     "BarcodeMismatchesIndex1": "0",
                                 },
                                 "other_details": {},
@@ -211,7 +211,7 @@ class TestGenerateSamplesheets(unittest.TestCase):
                                     "Sample_Project": "Project_B",
                                     "OverrideCycles": "",
                                 },
-                                "BCLConvert_Settings": {
+                                "raw_samplesheet_settings": {
                                     "BarcodeMismatchesIndex1": "1",
                                 },
                                 "other_details": {},
@@ -242,8 +242,8 @@ class TestGenerateSamplesheets(unittest.TestCase):
 
         # Verify settings differ
         self.assertNotEqual(
-            result[0]["BCLConvert_Settings"],
-            result[1]["BCLConvert_Settings"],
+            result[0]["raw_samplesheet_settings"],
+            result[1]["raw_samplesheet_settings"],
         )
 
     def test_multiple_lanes(self):
@@ -264,7 +264,7 @@ class TestGenerateSamplesheets(unittest.TestCase):
                                     "Sample_Project": "Lane1_Project",
                                     "OverrideCycles": "",
                                 },
-                                "BCLConvert_Settings": {"Setting": "Value1"},
+                                "raw_samplesheet_settings": {"Setting": "Value1"},
                                 "other_details": {},
                             }
                         }
@@ -285,7 +285,7 @@ class TestGenerateSamplesheets(unittest.TestCase):
                                     "Sample_Project": "Lane2_Project",
                                     "OverrideCycles": "",
                                 },
-                                "BCLConvert_Settings": {"Setting": "Value2"},
+                                "raw_samplesheet_settings": {"Setting": "Value2"},
                                 "other_details": {},
                             }
                         }
@@ -329,7 +329,7 @@ class TestGenerateSamplesheets(unittest.TestCase):
                                     "Sample_Project": "Project_UMI",
                                     "OverrideCycles": "ORIGINAL",
                                 },
-                                "BCLConvert_Settings": {},
+                                "raw_samplesheet_settings": {},
                                 "other_details": {
                                     "override_cycles": override_value,
                                 },
@@ -367,7 +367,7 @@ class TestGenerateSamplesheets(unittest.TestCase):
                                     "index2": "",
                                     "Sample_Project": "",
                                 },
-                                "BCLConvert_Settings": {},
+                                "raw_samplesheet_settings": {},
                                 "other_details": {},
                             }
                         }
@@ -405,7 +405,7 @@ class TestGenerateSamplesheets(unittest.TestCase):
                                     "index2": "",
                                     "Sample_Project": "Old_Project",
                                 },
-                                "BCLConvert_Settings": {"Version": "Old"},
+                                "raw_samplesheet_settings": {"Version": "Old"},
                                 "other_details": {},
                             },
                             new_timestamp: {
@@ -417,7 +417,7 @@ class TestGenerateSamplesheets(unittest.TestCase):
                                     "index2": "",
                                     "Sample_Project": "New_Project",
                                 },
-                                "BCLConvert_Settings": {"Version": "New"},
+                                "raw_samplesheet_settings": {"Version": "New"},
                                 "other_details": {},
                             },
                         }
@@ -434,7 +434,7 @@ class TestGenerateSamplesheets(unittest.TestCase):
         # Should use the newer version
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0]["BCLConvert_Data"][0]["Sample_ID"], "S1_NEW")
-        self.assertEqual(result[0]["BCLConvert_Settings"]["Version"], "New")
+        self.assertEqual(result[0]["raw_samplesheet_settings"]["Version"], "New")
 
     def test_empty_lanes(self):
         """Test handling of empty calculated_lanes."""
@@ -467,7 +467,7 @@ class TestGenerateSamplesheets(unittest.TestCase):
                                     "index2": "",
                                     "Sample_Project": "Project_A",
                                 },
-                                "BCLConvert_Settings": {},
+                                "raw_samplesheet_settings": {},
                                 "other_details": {},
                             }
                         }
@@ -518,7 +518,7 @@ class TestGenerateSamplesheets(unittest.TestCase):
                                     "index2": "",
                                     "Sample_Project": "Project_A",
                                 },
-                                "BCLConvert_Settings": settings_a,
+                                "raw_samplesheet_settings": settings_a,
                                 "other_details": {},
                             }
                         }
@@ -534,7 +534,7 @@ class TestGenerateSamplesheets(unittest.TestCase):
                                     "index2": "",
                                     "Sample_Project": "Project_B",
                                 },
-                                "BCLConvert_Settings": settings_a,  # Same as s1
+                                "raw_samplesheet_settings": settings_a,  # Same as s1
                                 "other_details": {},
                             }
                         }
@@ -550,7 +550,7 @@ class TestGenerateSamplesheets(unittest.TestCase):
                                     "index2": "",
                                     "Sample_Project": "Project_C",
                                 },
-                                "BCLConvert_Settings": settings_b,  # Different
+                                "raw_samplesheet_settings": settings_b,  # Different
                                 "other_details": {},
                             }
                         }
@@ -596,7 +596,7 @@ class TestGenerateSamplesheets(unittest.TestCase):
                                     "index2": "",
                                     "Sample_Project": "L3_P1",
                                 },
-                                "BCLConvert_Settings": {"Setting": "A"},
+                                "raw_samplesheet_settings": {"Setting": "A"},
                                 "other_details": {},
                             }
                         }
@@ -611,7 +611,7 @@ class TestGenerateSamplesheets(unittest.TestCase):
                                     "index2": "",
                                     "Sample_Project": "L3_P2",
                                 },
-                                "BCLConvert_Settings": {"Setting": "B"},
+                                "raw_samplesheet_settings": {"Setting": "B"},
                                 "other_details": {},
                             }
                         }
@@ -630,7 +630,7 @@ class TestGenerateSamplesheets(unittest.TestCase):
                                     "index2": "",
                                     "Sample_Project": "L1_P1",
                                 },
-                                "BCLConvert_Settings": {},
+                                "raw_samplesheet_settings": {},
                                 "other_details": {},
                             }
                         }
@@ -674,7 +674,7 @@ class TestGenerateSamplesheets(unittest.TestCase):
                                     "Sample_Project": "Project_ABC",
                                     "OverrideCycles": "",
                                 },
-                                "BCLConvert_Settings": {
+                                "raw_samplesheet_settings": {
                                     "SoftwareVersion": "4.0.3",
                                     "BarcodeMismatchesIndex1": "1",
                                 },
@@ -694,7 +694,7 @@ class TestGenerateSamplesheets(unittest.TestCase):
                                     "Sample_Project": "Project_ABC",
                                     "OverrideCycles": "",
                                 },
-                                "BCLConvert_Settings": {
+                                "raw_samplesheet_settings": {
                                     "SoftwareVersion": "4.0.3",
                                     "BarcodeMismatchesIndex1": "1",
                                 },
@@ -718,7 +718,7 @@ class TestGenerateSamplesheets(unittest.TestCase):
                                     "Sample_Project": "Project_ABC",
                                     "OverrideCycles": "",
                                 },
-                                "BCLConvert_Settings": {
+                                "raw_samplesheet_settings": {
                                     "SoftwareVersion": "4.0.3",
                                     "BarcodeMismatchesIndex1": "1",
                                 },
@@ -742,7 +742,7 @@ class TestGenerateSamplesheets(unittest.TestCase):
                                     "Sample_Project": "Project_ABC",
                                     "OverrideCycles": "",
                                 },
-                                "BCLConvert_Settings": {
+                                "raw_samplesheet_settings": {
                                     "SoftwareVersion": "4.0.3",
                                     "BarcodeMismatchesIndex1": "1",
                                 },
@@ -762,7 +762,7 @@ class TestGenerateSamplesheets(unittest.TestCase):
                                     "Sample_Project": "Project_ABC",
                                     "OverrideCycles": "",
                                 },
-                                "BCLConvert_Settings": {
+                                "raw_samplesheet_settings": {
                                     "SoftwareVersion": "4.0.3",
                                     "BarcodeMismatchesIndex1": "1",
                                 },

@@ -44,8 +44,8 @@
             "named_indices": {
               "$ref": "#/$defs/sampleConfig/properties/named_indices"
             },
-            "BCLConvert_Settings": {
-                "$ref": "#/$defs/sampleConfig/properties/BCLConvert_Settings"
+            "raw_samplesheet_settings": {
+                "$ref": "#/$defs/sampleConfig/properties/raw_samplesheet_settings"
             }
         },
         "additionalProperties": false
@@ -82,8 +82,8 @@
             "named_indices": {
                 "$ref": "#/$defs/sampleConfig/properties/named_indices"
             },
-            "BCLConvert_Settings": {
-                "$ref": "#/$defs/sampleConfig/properties/BCLConvert_Settings"
+            "raw_samplesheet_settings": {
+                "$ref": "#/$defs/sampleConfig/properties/raw_samplesheet_settings"
             }
           },
           "additionalProperties": false
@@ -117,8 +117,8 @@
             "named_indices": {
               "$ref": "#/$defs/sampleConfig/properties/named_indices"
             },
-            "BCLConvert_Settings": {
-                "$ref": "#/$defs/sampleConfig/properties/BCLConvert_Settings"
+            "raw_samplesheet_settings": {
+                "$ref": "#/$defs/sampleConfig/properties/raw_samplesheet_settings"
             }
           },
           "additionalProperties": false
@@ -145,8 +145,8 @@
             "named_indices": {
               "$ref": "#/$defs/sampleConfig/properties/named_indices"
             },
-            "BCLConvert_Settings": {
-              "$ref": "#/$defs/sampleConfig/properties/BCLConvert_Settings"
+            "raw_samplesheet_settings": {
+              "$ref": "#/$defs/sampleConfig/properties/raw_samplesheet_settings"
             },
             "run_modes": {
               "type": "object",
@@ -167,8 +167,8 @@
                     "named_indices": {
                       "$ref": "#/$defs/sampleConfig/properties/named_indices"
                     },
-                    "BCLConvert_Settings": {
-                      "$ref": "#/$defs/sampleConfig/properties/BCLConvert_Settings"
+                    "raw_samplesheet_settings": {
+                      "$ref": "#/$defs/sampleConfig/properties/raw_samplesheet_settings"
                     }
                   },
                   "additionalProperties": false
@@ -243,7 +243,7 @@
                             },
                             "can_be_on_BCLConvert_settings": {
                                 "type": "boolean",
-                                "description": "Whether this setting can be placed in the BCLConvert_Settings section instead"
+                                "description": "Whether this setting can be placed in the raw_samplesheet_settings section instead"
                             }
                         },
                         "additionalProperties": false
@@ -251,7 +251,7 @@
                 },
                 "additionalProperties": false
             },
-            "BCLConvert_Settings": {
+            "raw_samplesheet_settings": {
                 "type": "object",
                 "description": "Global BCL Convert settings",
                 "patternProperties": {
@@ -363,7 +363,7 @@
           "type": "string",
           "description": "Name of the named indices file (without .csv extension) to use for expanding this configuration"
         },
-        "BCLConvert_Settings": {
+        "raw_samplesheet_settings": {
             "type": "object",
             "description": "Override BCL Convert global settings for this pattern/library method. Keys are setting names (e.g., TrimUMI, CreateFastqForIndexReads), values are booleans, integers, or strings matching the setting type.",
             "patternProperties": {

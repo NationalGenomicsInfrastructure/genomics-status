@@ -668,7 +668,7 @@ class DemuxSampleInfoDataHandler(SafeHandler):
         configs override less specific ones.
 
         Order of application:
-        1. Default BCLConvert_Settings
+        1. Default raw_samplesheet_settings
         2. Regex-based patterns (patterns)
         3. Other general sample types (other_general_sample_types)
         4. Library method mapping (library_method_mapping)
@@ -681,7 +681,7 @@ class DemuxSampleInfoDataHandler(SafeHandler):
             metadata: Optional metadata dict containing instrument_type and run_mode
 
         Returns:
-            dict: Contains sample_type, index_length, umi_config, config_sources, named_indices, BCLConvert_Settings
+            dict: Contains sample_type, index_length, umi_config, config_sources, named_indices, raw_samplesheet_settings
         """
         # Get configuration from application
         config = self.application.sample_classification_config
@@ -704,7 +704,7 @@ class DemuxSampleInfoDataHandler(SafeHandler):
             "index_length": index_length,
             "umi_config": None,
             "named_indices": None,
-            "BCLConvert_Settings": {},
+            "raw_samplesheet_settings": {},
         }
 
         # STEP 2: Apply regex-based pattern configurations
@@ -756,9 +756,9 @@ class DemuxSampleInfoDataHandler(SafeHandler):
 
                 if pattern_config.get("named_indices"):
                     result["named_indices"] = pattern_config["named_indices"]
-                if pattern_config.get("BCLConvert_Settings"):
-                    result["BCLConvert_Settings"].update(
-                        pattern_config["BCLConvert_Settings"]
+                if pattern_config.get("raw_samplesheet_settings"):
+                    result["raw_samplesheet_settings"].update(
+                        pattern_config["raw_samplesheet_settings"]
                     )
 
                 config_sources.append(f"patterns.{pattern_name}")
@@ -775,9 +775,9 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                     result["umi_config"] = noindex_config["umi_config"]
                 if noindex_config.get("named_indices"):
                     result["named_indices"] = noindex_config["named_indices"]
-                if noindex_config.get("BCLConvert_Settings"):
-                    result["BCLConvert_Settings"].update(
-                        noindex_config["BCLConvert_Settings"]
+                if noindex_config.get("raw_samplesheet_settings"):
+                    result["raw_samplesheet_settings"].update(
+                        noindex_config["raw_samplesheet_settings"]
                     )
                 config_sources.append("other_general_sample_types.noindex")
 
@@ -785,9 +785,9 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                 # Use standard as default
                 standard_config = sample_patterns["standard"]["config"]
                 result["sample_type"] = standard_config.get("sample_type", "STANDARD")
-                if standard_config.get("BCLConvert_Settings"):
-                    result["BCLConvert_Settings"].update(
-                        standard_config["BCLConvert_Settings"]
+                if standard_config.get("raw_samplesheet_settings"):
+                    result["raw_samplesheet_settings"].update(
+                        standard_config["raw_samplesheet_settings"]
                     )
                 config_sources.append("other_general_sample_types.standard")
 
@@ -806,9 +806,9 @@ class DemuxSampleInfoDataHandler(SafeHandler):
             if mapped_config.get("named_indices"):
                 result["named_indices"] = mapped_config["named_indices"]
 
-            if mapped_config.get("BCLConvert_Settings"):
-                result["BCLConvert_Settings"].update(
-                    mapped_config["BCLConvert_Settings"]
+            if mapped_config.get("raw_samplesheet_settings"):
+                result["raw_samplesheet_settings"].update(
+                    mapped_config["raw_samplesheet_settings"]
                 )
 
             config_sources.append(f"library_method_mapping.{library_method}")
@@ -832,9 +832,9 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                 if instrument_config.get("named_indices"):
                     result["named_indices"] = instrument_config["named_indices"]
 
-                if instrument_config.get("BCLConvert_Settings"):
-                    result["BCLConvert_Settings"].update(
-                        instrument_config["BCLConvert_Settings"]
+                if instrument_config.get("raw_samplesheet_settings"):
+                    result["raw_samplesheet_settings"].update(
+                        instrument_config["raw_samplesheet_settings"]
                     )
 
                 config_sources.append(f"instrument_type_mapping.{instrument_type}")
@@ -854,9 +854,9 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                         if run_mode_config.get("named_indices"):
                             result["named_indices"] = run_mode_config["named_indices"]
 
-                        if run_mode_config.get("BCLConvert_Settings"):
-                            result["BCLConvert_Settings"].update(
-                                run_mode_config["BCLConvert_Settings"]
+                        if run_mode_config.get("raw_samplesheet_settings"):
+                            result["raw_samplesheet_settings"].update(
+                                run_mode_config["raw_samplesheet_settings"]
                             )
 
                         config_sources.append(
@@ -868,7 +868,7 @@ class DemuxSampleInfoDataHandler(SafeHandler):
             result["sample_type"] = "control"
             result["umi_config"] = None
             result["named_indices"] = None
-            result["BCLConvert_Settings"] = {}
+            result["raw_samplesheet_settings"] = {}
             config_sources.append("control_patterns")
 
         result["config_sources"] = config_sources
@@ -963,7 +963,7 @@ class DemuxSampleInfoDataHandler(SafeHandler):
         return self._evaluate_condition(conditions, sample_data)
 
     def _apply_conditional_rules(self, settings, rules_config, sample_data):
-        """Apply conditional rules to BCLConvert_Settings.
+        """Apply conditional rules to raw_samplesheet_settings.
 
         Args:
             settings: Dict containing the sample settings (modified in place)
@@ -985,9 +985,9 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                     value = rule.get("value")
 
                     if action == "set_value":
-                        if "BCLConvert_Settings" not in settings:
-                            settings["BCLConvert_Settings"] = {}
-                        settings["BCLConvert_Settings"][setting_name] = value
+                        if "raw_samplesheet_settings" not in settings:
+                            settings["raw_samplesheet_settings"] = {}
+                        settings["raw_samplesheet_settings"][setting_name] = value
                         applied_rules.append(f"{setting_name}:{rule['name']}")
 
                     # Stop after first matching rule for this setting
@@ -1042,22 +1042,22 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                     library_method = None
                     project_id = ""
 
-                # Build BCLConvert_Settings from defaults first
+                # Build raw_samplesheet_settings from defaults first
                 config = self.application.sample_classification_config
                 bcl_settings_defaults = config.get("bcl_convert_settings", {}).get(
-                    "BCLConvert_Settings", {}
+                    "raw_samplesheet_settings", {}
                 )
                 bcl_convert_settings = {}
 
                 # Track config sources - start with defaults
                 config_sources = []
 
-                # STEP 1: Apply default BCLConvert_Settings
+                # STEP 1: Apply default raw_samplesheet_settings
                 if bcl_settings_defaults:
                     for setting_name, setting_config in bcl_settings_defaults.items():
                         default_value = setting_config.get("default")
                         bcl_convert_settings[setting_name] = default_value
-                    config_sources.append("bcl_convert_settings.BCLConvert_Settings")
+                    config_sources.append("bcl_convert_settings.raw_samplesheet_settings")
 
                 # STEP 2-6: Classify the sample type (applies patterns, other_general_sample_types, library_method_mapping, instrument_type_mapping)
                 sample_classification = self._classify_sample_type(
@@ -1069,7 +1069,7 @@ class DemuxSampleInfoDataHandler(SafeHandler):
 
                 # Apply overrides from the matched pattern, general types, or library method
                 classification_overrides = sample_classification.get(
-                    "BCLConvert_Settings", {}
+                    "raw_samplesheet_settings", {}
                 )
                 if classification_overrides:
                     bcl_convert_settings.update(classification_overrides)
@@ -1119,7 +1119,7 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                     if index_2.upper() == "NOINDEX":
                         index_2 = ""
 
-                    # Generate OverrideCycles if not already set in BCLConvert_Settings
+                    # Generate OverrideCycles if not already set in raw_samplesheet_settings
                     override_cycles = ""
                     if (
                         "OverrideCycles" not in bcl_convert_settings
@@ -1157,6 +1157,7 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                                     "config_sources": config_sources,
                                     "library_method": library_method or "",
                                     "project_id": project_id or "",
+                                    "override_cycles": override_cycles,
                                 },
                                 "per_sample_fields": {
                                     "Lane": sample_in_lane["lane"],
@@ -1169,43 +1170,162 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                                     "Sample_Name": sample_in_lane["sample_name"],
                                     "Sample_Project": sample_in_lane["sample_project"],
                                 },
-                                "BCLConvert_Settings": bcl_convert_settings,
+                                "raw_samplesheet_settings": bcl_convert_settings,
                             }
                         },
                     }
 
+                    # Calculate and store Stage 2 samplesheet settings (without custom configs initially)
+                    settings_entry = calculated_lanes[lane]["sample_rows"][sample_uuid]["settings"][timestamp]
+                    samplesheet_settings = self._calculate_samplesheet_settings(
+                        bcl_convert_settings,
+                        settings_entry["other_details"],
+                        settings_entry["per_sample_fields"],
+                        custom_configs=None,
+                        lane=lane,
+                    )
+                    settings_entry["samplesheet_settings"] = samplesheet_settings
+
         return calculated_lanes
+
+    def _calculate_samplesheet_settings(
+        self, bcl_settings, other_details, per_sample_fields, custom_configs=None, lane=None
+    ):
+        """Calculate the final samplesheet settings for a sample by applying Stage 2 rules.
+
+        This applies samplesheet_generation_rules (conditional rules) to the Stage 1
+        raw_samplesheet_settings to determine what will actually appear in the samplesheet.
+
+        Args:
+            bcl_settings: Dict with raw_samplesheet_settings from Stage 1
+            other_details: Dict with other_details (sample_type, umi_config, etc.)
+            per_sample_fields: Dict with per-sample fields (Sample_Project, etc.)
+            custom_configs: Optional list of custom config dicts
+            lane: Lane number (str) for custom config lane targeting
+
+        Returns:
+            dict: Final BCLConvert settings after Stage 2 rules (filtered, no EXCLUDE/None)
+        """
+        # Copy the Stage 1 raw_samplesheet_settings — never mutate stored data
+        bcl_settings = dict(bcl_settings)
+
+        # Build condition-evaluation context from other_details
+        samplesheet_sample_data = {
+            "sample_type": other_details.get("sample_type"),
+            "umi_config": other_details.get("umi_config"),
+            "index_length": other_details.get("index_length"),
+            "named_index": other_details.get("named_index"),
+        }
+
+        # Get global samplesheet generation rules from config (Stage 2)
+        config = getattr(self.application, "sample_classification_config", None)
+        if not isinstance(config, dict):
+            config = {}
+        global_samplesheet_rules = config.get("samplesheet_generation_rules", {})
+
+        # STAGE 2: Apply global samplesheet generation rules
+        if global_samplesheet_rules:
+            rule_settings = {"raw_samplesheet_settings": bcl_settings}
+            self._apply_conditional_rules(
+                rule_settings, global_samplesheet_rules, samplesheet_sample_data
+            )
+            bcl_settings = rule_settings["raw_samplesheet_settings"]
+
+        # STAGE 2: Apply custom config samplesheet_generation_rules
+        if custom_configs:
+            sample_project = per_sample_fields.get("Sample_Project")
+            for cc in custom_configs:
+                if not cc.get("samplesheet_generation_rules"):
+                    continue
+                cc_target_type = cc.get("target_type", "project")
+                if cc_target_type == "project":
+                    should_apply = sample_project == cc.get("target_project")
+                elif cc_target_type == "lane":
+                    should_apply = lane == cc.get("target_lane")
+                elif cc_target_type == "project_lane":
+                    should_apply = sample_project == cc.get(
+                        "target_project"
+                    ) and lane == cc.get("target_lane")
+                else:
+                    should_apply = False
+
+                if should_apply:
+                    rule_settings = {"raw_samplesheet_settings": bcl_settings}
+                    self._apply_conditional_rules(
+                        rule_settings,
+                        cc["samplesheet_generation_rules"],
+                        samplesheet_sample_data,
+                    )
+                    bcl_settings = rule_settings["raw_samplesheet_settings"]
+
+        # Filter out None and EXCLUDE values — they must not appear in samplesheets
+        bcl_settings_filtered = {
+            k: v
+            for k, v in bcl_settings.items()
+            if v is not None and v != "EXCLUDE"
+        }
+
+        return bcl_settings_filtered
+
+    def _recalculate_all_samplesheet_settings(self, calculated_lanes, custom_configs=None):
+        """Recalculate samplesheet_settings for all samples in all lanes.
+
+        This should be called whenever custom configs change or when the document is updated,
+        to ensure the stored samplesheet_settings reflect the current Stage 2 rules.
+
+        Args:
+            calculated_lanes: Dictionary of calculated lanes with sample data
+            custom_configs: Optional list of custom config dicts
+
+        Returns:
+            None (modifies calculated_lanes in place)
+        """
+        for lane, lane_data in calculated_lanes.items():
+            for sample_uuid, sample in lane_data["sample_rows"].items():
+                # Get the latest settings version
+                settings_versions = sorted(sample["settings"].keys(), reverse=True)
+                if not settings_versions:
+                    continue
+
+                latest_settings_key = settings_versions[0]
+                latest_settings = sample["settings"][latest_settings_key]
+
+                # Recalculate samplesheet_settings with current custom configs
+                samplesheet_settings = self._calculate_samplesheet_settings(
+                    latest_settings.get("raw_samplesheet_settings", {}),
+                    latest_settings.get("other_details", {}),
+                    latest_settings.get("per_sample_fields", {}),
+                    custom_configs=custom_configs,
+                    lane=lane,
+                )
+
+                # Update the stored samplesheet_settings
+                latest_settings["samplesheet_settings"] = samplesheet_settings
 
     def _generate_samplesheets(
         self, flowcell_id, calculated_lanes, metadata, custom_configs=None
     ):
         """Generate Illumina v2 samplesheets grouped by lane and BCLConvert settings.
 
-        Applies the samplesheet generation stream (stream 2) rules, which are the only
-        place where EXCLUDE values and conditional rules are permitted. The calculated
-        BCLConvert_Settings from stream 1 are used as input but never mutated.
+        Stage 3: Samplesheet Assembly - Groups samples by their samplesheet_settings
+        and creates final samplesheet structures. The samplesheet_settings (Stage 2 output)
+        are used as input but never mutated.
 
         Args:
             flowcell_id: Flowcell identifier
             calculated_lanes: Dictionary of calculated lanes with sample data
             metadata: Metadata dictionary with run information
             custom_configs: Optional list of custom config dicts that may contain
-                samplesheet_generation_rules for stream 2 overrides
+                samplesheet_generation_rules for Stage 2 overrides
 
         Returns:
             list: List of samplesheet dictionaries as structured JSON
         """
-        # Get global samplesheet generation rules from config (stream 2)
-        config = getattr(self.application, "sample_classification_config", None)
-        if not isinstance(config, dict):
-            config = {}
-        global_samplesheet_rules = config.get("samplesheet_generation_rules", {})
-
         samplesheets = []
 
         # Process each lane
         for lane, lane_data in calculated_lanes.items():
-            # Group samples by their effective BCLConvert_Settings after stream 2 rules
+            # Group samples by their effective settings (from Stage 2)
             settings_groups = {}
 
             for sample_uuid, sample in lane_data["sample_rows"].items():
@@ -1216,61 +1336,15 @@ class DemuxSampleInfoDataHandler(SafeHandler):
 
                 latest_settings = sample["settings"][settings_versions[0]]
 
-                # Copy the calculated BCLConvert_Settings — never mutate stored data
-                bcl_settings = dict(latest_settings.get("BCLConvert_Settings", {}))
+                # Use the helper method to calculate samplesheet settings with Stage 2 rules
+                bcl_settings_filtered = self._calculate_samplesheet_settings(
+                    latest_settings.get("raw_samplesheet_settings", {}),
+                    latest_settings.get("other_details", {}),
+                    latest_settings.get("per_sample_fields", {}),
+                    custom_configs=custom_configs,
+                    lane=lane,
+                )
 
-                # Build condition-evaluation context from the calculated other_details
-                other_details = latest_settings.get("other_details", {})
-                samplesheet_sample_data = {
-                    "sample_type": other_details.get("sample_type"),
-                    "umi_config": other_details.get("umi_config"),
-                    "index_length": other_details.get("index_length"),
-                    "named_index": other_details.get("named_index"),
-                }
-
-                # STREAM 2: Apply global samplesheet generation rules
-                if global_samplesheet_rules:
-                    rule_settings = {"BCLConvert_Settings": bcl_settings}
-                    self._apply_conditional_rules(
-                        rule_settings, global_samplesheet_rules, samplesheet_sample_data
-                    )
-                    bcl_settings = rule_settings["BCLConvert_Settings"]
-
-                # STREAM 2: Apply custom config samplesheet_generation_rules
-                if custom_configs:
-                    sample_project = latest_settings.get("per_sample_fields", {}).get(
-                        "Sample_Project"
-                    )
-                    for cc in custom_configs:
-                        if not cc.get("samplesheet_generation_rules"):
-                            continue
-                        cc_target_type = cc.get("target_type", "project")
-                        if cc_target_type == "project":
-                            should_apply = sample_project == cc.get("target_project")
-                        elif cc_target_type == "lane":
-                            should_apply = lane == cc.get("target_lane")
-                        elif cc_target_type == "project_lane":
-                            should_apply = sample_project == cc.get(
-                                "target_project"
-                            ) and lane == cc.get("target_lane")
-                        else:
-                            should_apply = False
-
-                        if should_apply:
-                            rule_settings = {"BCLConvert_Settings": bcl_settings}
-                            self._apply_conditional_rules(
-                                rule_settings,
-                                cc["samplesheet_generation_rules"],
-                                samplesheet_sample_data,
-                            )
-                            bcl_settings = rule_settings["BCLConvert_Settings"]
-
-                # Filter out None and EXCLUDE values — they must not appear in samplesheets
-                bcl_settings_filtered = {
-                    k: v
-                    for k, v in bcl_settings.items()
-                    if v is not None and v != "EXCLUDE"
-                }
                 settings_key = json.dumps(bcl_settings_filtered, sort_keys=True)
 
                 if settings_key not in settings_groups:
@@ -1281,6 +1355,7 @@ class DemuxSampleInfoDataHandler(SafeHandler):
 
                 # Build sample data for samplesheet
                 fields = latest_settings.get("per_sample_fields", {})
+                other_details = latest_settings.get("other_details", {})
 
                 sample_data = {
                     "Lane": lane,
@@ -1324,7 +1399,7 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                             "%Y-%m-%d"
                         ),
                     },
-                    "BCLConvert_Settings": group["bcl_settings"],
+                    "raw_samplesheet_settings": group["bcl_settings"],
                     "BCLConvert_Data": group["samples"],
                 }
 
@@ -1553,18 +1628,18 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                 "index_length": ("other_details", "index_length"),
                 "umi_config": ("other_details", "umi_config"),
                 "library_method": ("other_details", "library_method"),
-                # BCLConvert_Settings (lane-wide settings that apply to grouped samples)
-                "trim_umi": ("BCLConvert_Settings", "TrimUMI"),
+                # raw_samplesheet_settings (lane-wide settings that apply to grouped samples)
+                "trim_umi": ("raw_samplesheet_settings", "TrimUMI"),
                 "create_fastq_for_index_reads": (
-                    "BCLConvert_Settings",
+                    "raw_samplesheet_settings",
                     "CreateFastqForIndexReads",
                 ),
                 "barcode_mismatches_index1": (
-                    "BCLConvert_Settings",
+                    "raw_samplesheet_settings",
                     "BarcodeMismatchesIndex1",
                 ),
                 "barcode_mismatches_index2": (
-                    "BCLConvert_Settings",
+                    "raw_samplesheet_settings",
                     "BarcodeMismatchesIndex2",
                 ),
                 # sample_row level (top level of sample, not in settings)
@@ -1617,9 +1692,9 @@ class DemuxSampleInfoDataHandler(SafeHandler):
             # Track which samples were changed
             modified_samples = set()
 
-            # Validation function for BCLConvert_Settings
+            # Validation function for raw_samplesheet_settings
             def validate_bcl_setting(field_key, value):
-                """Validate BCLConvert_Settings values."""
+                """Validate raw_samplesheet_settings values."""
                 # Allow None (null) values - they mean "use default"
                 if value is None:
                     return True
@@ -1687,7 +1762,7 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                             # Skip fields that aren't in the allowed list
                             continue
 
-                        # Validate the value (especially for BCLConvert_Settings)
+                        # Validate the value (especially for raw_samplesheet_settings)
                         validate_bcl_setting(field_key, new_value)
 
                         section, actual_key = allowed_fields[field_key]
@@ -1764,10 +1839,14 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                 "auto_run": False,
             }
 
-            # Regenerate samplesheets after updates, applying stream 2 rules
+            # Regenerate samplesheets after updates, applying Stage 2 rules then Stage 3 assembly
             calculated_lanes = document.get("calculated", {}).get("lanes", {})
             metadata = document.get("metadata", {})
             custom_configs = document.get("custom_configs", [])
+
+            # Recalculate samplesheet_settings for all samples with current custom configs
+            self._recalculate_all_samplesheet_settings(calculated_lanes, custom_configs)
+
             samplesheets = self._generate_samplesheets(
                 flowcell_id, calculated_lanes, metadata, custom_configs
             )
@@ -1813,7 +1892,7 @@ class DemuxSampleInfoDataHandler(SafeHandler):
             self.set_status(400)
             self.write(json.dumps({"error": f"Invalid JSON in request body: {str(e)}"}))
         except ValueError as e:
-            # Validation errors (e.g., invalid BCLConvert_Settings values)
+            # Validation errors (e.g., invalid raw_samplesheet_settings values)
             self.set_status(400)
             self.write(json.dumps({"error": f"Validation error: {str(e)}"}))
         except Exception as e:
@@ -1870,7 +1949,7 @@ class SampleClassificationPresetsHandler(SafeHandler):
                     "sample_type": instrument_config.get("sample_type"),
                     "umi_config": instrument_config.get("umi_config"),
                     "named_indices": instrument_config.get("named_indices"),
-                    "BCLConvert_Settings": instrument_config.get("BCLConvert_Settings"),
+                    "raw_samplesheet_settings": instrument_config.get("raw_samplesheet_settings"),
                 }
 
                 # Include run modes if present
@@ -1883,8 +1962,8 @@ class SampleClassificationPresetsHandler(SafeHandler):
                             "sample_type": mode_config.get("sample_type"),
                             "umi_config": mode_config.get("umi_config"),
                             "named_indices": mode_config.get("named_indices"),
-                            "BCLConvert_Settings": mode_config.get(
-                                "BCLConvert_Settings"
+                            "raw_samplesheet_settings": mode_config.get(
+                                "raw_samplesheet_settings"
                             ),
                         }
                     instrument_types[instrument]["run_modes"] = run_modes
@@ -1978,28 +2057,28 @@ class CustomConfigHandler(DemuxSampleInfoDataHandler):
             )
             return
 
-        if not custom_config.get("BCLConvert_Settings") and not custom_config.get(
+        if not custom_config.get("raw_samplesheet_settings") and not custom_config.get(
             "samplesheet_generation_rules"
         ):
             self.set_status(400)
             self.write(
                 json.dumps(
                     {
-                        "error": "Custom config must have BCLConvert_Settings or samplesheet_generation_rules"
+                        "error": "Custom config must have raw_samplesheet_settings or samplesheet_generation_rules"
                     }
                 )
             )
             return
 
-        # Stream 1 (BCLConvert_Settings) must not use EXCLUDE — that belongs to stream 2
-        for key, value in (custom_config.get("BCLConvert_Settings") or {}).items():
+        # Stage 1 (raw_samplesheet_settings) must not use EXCLUDE — that belongs to Stage 2
+        for key, value in (custom_config.get("raw_samplesheet_settings") or {}).items():
             if value == "EXCLUDE":
                 self.set_status(400)
                 self.write(
                     json.dumps(
                         {
                             "error": (
-                                f"BCLConvert_Settings cannot use 'EXCLUDE' values (found on '{key}'). "
+                                f"raw_samplesheet_settings cannot use 'EXCLUDE' values (found on '{key}'). "
                                 "To exclude a setting from samplesheets, use samplesheet_generation_rules instead."
                             )
                         }
@@ -2113,15 +2192,15 @@ class CustomConfigHandler(DemuxSampleInfoDataHandler):
                         "target_project"
                     ) and lane == custom_config.get("target_lane")
 
-                if should_apply and custom_config.get("BCLConvert_Settings"):
-                    # Stream 1: apply BCLConvert_Settings overrides to the calculated data.
+                if should_apply and custom_config.get("raw_samplesheet_settings"):
+                    # Stage 1: apply raw_samplesheet_settings overrides to the calculated data.
                     # Create a deep copy of the latest settings for the new version.
                     new_settings = copy.deepcopy(latest_settings)
 
-                    bcl_settings = new_settings.get("BCLConvert_Settings", {})
-                    for key, value in custom_config["BCLConvert_Settings"].items():
+                    bcl_settings = new_settings.get("raw_samplesheet_settings", {})
+                    for key, value in custom_config["raw_samplesheet_settings"].items():
                         bcl_settings[key] = value
-                    new_settings["BCLConvert_Settings"] = bcl_settings
+                    new_settings["raw_samplesheet_settings"] = bcl_settings
 
                     # Add custom config to config_sources
                     config_sources = (
@@ -2142,7 +2221,7 @@ class CustomConfigHandler(DemuxSampleInfoDataHandler):
                     # Update last_modified
                     sample_row["last_modified"] = timestamp
                 # samplesheet_generation_rules are stored in the custom_configs array
-                # and applied at samplesheet generation time (stream 2) — no stored version needed.
+                # and applied at samplesheet generation time (Stage 2) — no stored version needed.
 
         # Update version_history
         if "version_history" not in document["calculated"]:
@@ -2158,9 +2237,13 @@ class CustomConfigHandler(DemuxSampleInfoDataHandler):
         }
 
         # Regenerate samplesheets — pass the full custom_configs list so that
-        # samplesheet_generation_rules from any config are applied (stream 2).
+        # samplesheet_generation_rules from any config are applied (Stage 2 then Stage 3).
         metadata = document.get("metadata", {})
         all_custom_configs = document.get("custom_configs", [])
+
+        # Recalculate samplesheet_settings for all samples with current custom configs
+        self._recalculate_all_samplesheet_settings(calculated_lanes, all_custom_configs)
+
         samplesheets = self._generate_samplesheets(
             flowcell_id, calculated_lanes, metadata, all_custom_configs
         )

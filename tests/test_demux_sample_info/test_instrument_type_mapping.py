@@ -45,10 +45,10 @@ class TestInstrumentTypeMapping(unittest.TestCase):
 
         # Should apply NovaSeqXPlus settings
         self.assertEqual(
-            result["BCLConvert_Settings"].get("BarcodeMismatchesIndex1"), 1
+            result["raw_samplesheet_settings"].get("BarcodeMismatchesIndex1"), 1
         )
         self.assertEqual(
-            result["BCLConvert_Settings"].get("BarcodeMismatchesIndex2"), 1
+            result["raw_samplesheet_settings"].get("BarcodeMismatchesIndex2"), 1
         )
         self.assertIn("instrument_type_mapping.NovaSeqXPlus", result["config_sources"])
 
@@ -65,11 +65,11 @@ class TestInstrumentTypeMapping(unittest.TestCase):
 
         # Run mode should override instrument type for BarcodeMismatchesIndex1
         self.assertEqual(
-            result["BCLConvert_Settings"].get("BarcodeMismatchesIndex1"), 2
+            result["raw_samplesheet_settings"].get("BarcodeMismatchesIndex1"), 2
         )
         # But inherit BarcodeMismatchesIndex2 from instrument type
         self.assertEqual(
-            result["BCLConvert_Settings"].get("BarcodeMismatchesIndex2"), 1
+            result["raw_samplesheet_settings"].get("BarcodeMismatchesIndex2"), 1
         )
         self.assertIn("instrument_type_mapping.NovaSeqXPlus", result["config_sources"])
         self.assertIn(
@@ -90,10 +90,10 @@ class TestInstrumentTypeMapping(unittest.TestCase):
 
         # Should use instrument type settings since 25B has no overrides
         self.assertEqual(
-            result["BCLConvert_Settings"].get("BarcodeMismatchesIndex1"), 1
+            result["raw_samplesheet_settings"].get("BarcodeMismatchesIndex1"), 1
         )
         self.assertEqual(
-            result["BCLConvert_Settings"].get("BarcodeMismatchesIndex2"), 1
+            result["raw_samplesheet_settings"].get("BarcodeMismatchesIndex2"), 1
         )
         self.assertIn("instrument_type_mapping.NovaSeqXPlus", result["config_sources"])
         self.assertIn(
@@ -134,7 +134,7 @@ class TestInstrumentTypeMapping(unittest.TestCase):
 
         # Instrument type settings should be present
         self.assertEqual(
-            result["BCLConvert_Settings"].get("BarcodeMismatchesIndex1"), 1
+            result["raw_samplesheet_settings"].get("BarcodeMismatchesIndex1"), 1
         )
 
     def test_control_overrides_instrument_type(self):
@@ -151,7 +151,7 @@ class TestInstrumentTypeMapping(unittest.TestCase):
         # Control pattern should override everything
         self.assertEqual(result["sample_type"], "control")
         self.assertIsNone(result["umi_config"])
-        self.assertEqual(result["BCLConvert_Settings"], {})
+        self.assertEqual(result["raw_samplesheet_settings"], {})
         self.assertIn("control_patterns", result["config_sources"])
 
 

@@ -573,10 +573,10 @@ const vDemuxSampleInfoEditor = {
                     target_type: configToEdit.target_type,
                     target_project: configToEdit.target_project,
                     target_lane: configToEdit.target_lane || '',
-                    trim_umi: configToEdit.BCLConvert_Settings?.TrimUMI ?? null,
-                    create_fastq_for_index_reads: configToEdit.BCLConvert_Settings?.CreateFastqForIndexReads ?? null,
-                    barcode_mismatches_index1: configToEdit.BCLConvert_Settings?.BarcodeMismatchesIndex1 ?? null,
-                    barcode_mismatches_index2: configToEdit.BCLConvert_Settings?.BarcodeMismatchesIndex2 ?? null
+                    trim_umi: configToEdit.raw_samplesheet_settings?.TrimUMI ?? null,
+                    create_fastq_for_index_reads: configToEdit.raw_samplesheet_settings?.CreateFastqForIndexReads ?? null,
+                    barcode_mismatches_index1: configToEdit.raw_samplesheet_settings?.BarcodeMismatchesIndex1 ?? null,
+                    barcode_mismatches_index2: configToEdit.raw_samplesheet_settings?.BarcodeMismatchesIndex2 ?? null
                 };
             } else {
                 // Create mode - reset form
@@ -644,7 +644,7 @@ const vDemuxSampleInfoEditor = {
             const customConfig = {
                 name: this.customConfigFormData.name,
                 target_type: this.customConfigFormData.target_type,
-                BCLConvert_Settings: {},
+                raw_samplesheet_settings: {},
                 edit_mode: this.customConfigEditMode,
                 edit_index: this.customConfigEditIndex
             };
@@ -660,16 +660,16 @@ const vDemuxSampleInfoEditor = {
 
             // Add only non-null BCLConvert settings
             if (this.customConfigFormData.trim_umi !== null) {
-                customConfig.BCLConvert_Settings.TrimUMI = this.customConfigFormData.trim_umi;
+                customConfig.raw_samplesheet_settings.TrimUMI = this.customConfigFormData.trim_umi;
             }
             if (this.customConfigFormData.create_fastq_for_index_reads !== null) {
-                customConfig.BCLConvert_Settings.CreateFastqForIndexReads = this.customConfigFormData.create_fastq_for_index_reads;
+                customConfig.raw_samplesheet_settings.CreateFastqForIndexReads = this.customConfigFormData.create_fastq_for_index_reads;
             }
             if (this.customConfigFormData.barcode_mismatches_index1 !== null) {
-                customConfig.BCLConvert_Settings.BarcodeMismatchesIndex1 = this.customConfigFormData.barcode_mismatches_index1;
+                customConfig.raw_samplesheet_settings.BarcodeMismatchesIndex1 = this.customConfigFormData.barcode_mismatches_index1;
             }
             if (this.customConfigFormData.barcode_mismatches_index2 !== null) {
-                customConfig.BCLConvert_Settings.BarcodeMismatchesIndex2 = this.customConfigFormData.barcode_mismatches_index2;
+                customConfig.raw_samplesheet_settings.BarcodeMismatchesIndex2 = this.customConfigFormData.barcode_mismatches_index2;
             }
 
             // Send to backend
@@ -776,7 +776,7 @@ const vDemuxSampleInfoEditor = {
             if (parts.length < 2) return null;
 
             const category = parts[0];  // e.g., "patterns", "library_method_mapping", "bcl_convert_settings", "instrument_type_mapping", "custom_config"
-            const key = parts.slice(1).join('.');  // e.g., "tenx_single", "BCLConvert_Settings"
+            const key = parts.slice(1).join('.');  // e.g., "tenx_single", "raw_samplesheet_settings"
 
             if (category === 'bcl_convert_settings') {
                 return this.sampleClassificationConfig.bcl_convert_settings?.[key];
@@ -846,8 +846,8 @@ const vDemuxSampleInfoEditor = {
         },
         traceConfigValueSource(configKey, path = null) {
             // Trace which config source set a specific value
-            // configKey can be 'sample_type', 'umi_config', 'named_indices', or 'BCLConvert_Settings'
-            // path is for nested values like 'BCLConvert_Settings.BarcodeMismatchesIndex1'
+            // configKey can be 'sample_type', 'umi_config', 'named_indices', or 'raw_samplesheet_settings'
+            // path is for nested values like 'raw_samplesheet_settings.BarcodeMismatchesIndex1'
 
             if (!this.configModalSources || !this.sampleClassificationConfig) return null;
 
@@ -866,9 +866,9 @@ const vDemuxSampleInfoEditor = {
 
                         // Check if this conditional rule sets the setting we're looking for
                         if (path) {
-                            // For BCLConvert_Settings.TrimUMI, check if settingName matches
+                            // For raw_samplesheet_settings.TrimUMI, check if settingName matches
                             const pathParts = path.split('.');
-                            if (pathParts[0] === 'BCLConvert_Settings' && pathParts[1] === settingName) {
+                            if (pathParts[0] === 'raw_samplesheet_settings' && pathParts[1] === settingName) {
                                 lastSource = source;
                             }
                         }
@@ -880,7 +880,7 @@ const vDemuxSampleInfoEditor = {
                 if (!config) continue;
 
                 if (path) {
-                    // For nested paths like BCLConvert_Settings.BarcodeMismatchesIndex1
+                    // For nested paths like raw_samplesheet_settings.BarcodeMismatchesIndex1
                     const [topKey, ...restPath] = path.split('.');
                     let value = config[topKey];
                     for (const key of restPath) {
@@ -921,7 +921,7 @@ const vDemuxSampleInfoEditor = {
 
             // If config is loaded, start with defaults
             if (this.sampleClassificationConfig) {
-                const bclConvertDefaults = this.sampleClassificationConfig.bcl_convert_settings?.BCLConvert_Settings || {};
+                const bclConvertDefaults = this.sampleClassificationConfig.bcl_convert_settings?.raw_samplesheet_settings || {};
                 for (const [key, config] of Object.entries(bclConvertDefaults)) {
                     if (config.default !== undefined) {
                         allSettings[key] = config.default;
@@ -930,8 +930,8 @@ const vDemuxSampleInfoEditor = {
             }
 
             // Override with actual settings from the sample (including EXCLUDE values)
-            if (sampleSettings?.BCLConvert_Settings) {
-                Object.assign(allSettings, sampleSettings.BCLConvert_Settings);
+            if (sampleSettings?.raw_samplesheet_settings) {
+                Object.assign(allSettings, sampleSettings.raw_samplesheet_settings);
             }
 
             return allSettings;
@@ -958,8 +958,8 @@ const vDemuxSampleInfoEditor = {
             const timestamps = Object.keys(sample.settings).sort();
             if (timestamps.length < 2) return false; // No edits if only one version
 
-            // Get the original (first) BCLConvert_Settings
-            const originalSettings = sample.settings[timestamps[0]].BCLConvert_Settings || {};
+            // Get the original (first) raw_samplesheet_settings
+            const originalSettings = sample.settings[timestamps[0]].raw_samplesheet_settings || {};
             const originalValue = originalSettings[settingKey];
 
             // If current value differs from original, it was manually edited
@@ -1217,10 +1217,10 @@ const vDemuxSampleInfoEditor = {
                 'recipe': ['other_details', 'recipe'],
                 'operator': ['other_details', 'operator'],
                 'override_cycles': ['per_sample_fields', 'OverrideCycles'],
-                'trim_umi': ['BCLConvert_Settings', 'TrimUMI'],
-                'create_fastq_for_index_reads': ['BCLConvert_Settings', 'CreateFastqForIndexReads'],
-                'barcode_mismatches_index1': ['BCLConvert_Settings', 'BarcodeMismatchesIndex1'],
-                'barcode_mismatches_index2': ['BCLConvert_Settings', 'BarcodeMismatchesIndex2'],
+                'trim_umi': ['raw_samplesheet_settings', 'TrimUMI'],
+                'create_fastq_for_index_reads': ['raw_samplesheet_settings', 'CreateFastqForIndexReads'],
+                'barcode_mismatches_index1': ['raw_samplesheet_settings', 'BarcodeMismatchesIndex1'],
+                'barcode_mismatches_index2': ['raw_samplesheet_settings', 'BarcodeMismatchesIndex2'],
                 'control': ['sample_row', 'control'],
                 'description': ['sample_row', 'description']
             };
@@ -1249,7 +1249,7 @@ const vDemuxSampleInfoEditor = {
                 }
 
                 // Normalize null/undefined/empty string for comparison
-                // For BCLConvert_Settings numeric fields, null, undefined, and empty string all mean "not set"
+                // For raw_samplesheet_settings numeric fields, null, undefined, and empty string all mean "not set"
                 let normalizedOriginal = originalValue === undefined ? null : originalValue;
                 let normalizedNew = newValue === undefined ? null : newValue;
 
@@ -1390,10 +1390,10 @@ const vDemuxSampleInfoEditor = {
                 'Recipe': ['other_details', 'recipe'],
                 'Operator': ['other_details', 'operator'],
                 'Override Cycles': ['per_sample_fields', 'OverrideCycles'],
-                'Trim UMI': ['BCLConvert_Settings', 'TrimUMI'],
-                'Create FASTQ for Index Reads': ['BCLConvert_Settings', 'CreateFastqForIndexReads'],
-                'Barcode Mismatches Index 1': ['BCLConvert_Settings', 'BarcodeMismatchesIndex1'],
-                'Barcode Mismatches Index 2': ['BCLConvert_Settings', 'BarcodeMismatchesIndex2'],
+                'Trim UMI': ['raw_samplesheet_settings', 'TrimUMI'],
+                'Create FASTQ for Index Reads': ['raw_samplesheet_settings', 'CreateFastqForIndexReads'],
+                'Barcode Mismatches Index 1': ['raw_samplesheet_settings', 'BarcodeMismatchesIndex1'],
+                'Barcode Mismatches Index 2': ['raw_samplesheet_settings', 'BarcodeMismatchesIndex2'],
                 'Control': ['_top', 'control'],
                 'Description': ['_top', 'description']
             };
@@ -1496,10 +1496,10 @@ const vDemuxSampleInfoEditor = {
                 description: currentSettings.description || sample.description || '',
                 control: currentSettings.control || sample.control || 'N',
                 override_cycles: currentSettings.override_cycles || latestSettings.per_sample_fields?.OverrideCycles || '',
-                trim_umi: currentSettings.trim_umi !== undefined ? currentSettings.trim_umi : (latestSettings.BCLConvert_Settings?.TrimUMI !== undefined ? latestSettings.BCLConvert_Settings.TrimUMI : null),
-                create_fastq_for_index_reads: currentSettings.create_fastq_for_index_reads !== undefined ? currentSettings.create_fastq_for_index_reads : (latestSettings.BCLConvert_Settings?.CreateFastqForIndexReads !== undefined ? latestSettings.BCLConvert_Settings.CreateFastqForIndexReads : null),
-                barcode_mismatches_index1: currentSettings.barcode_mismatches_index1 !== undefined ? currentSettings.barcode_mismatches_index1 : (latestSettings.BCLConvert_Settings?.BarcodeMismatchesIndex1 !== undefined ? latestSettings.BCLConvert_Settings.BarcodeMismatchesIndex1 : null),
-                barcode_mismatches_index2: currentSettings.barcode_mismatches_index2 !== undefined ? currentSettings.barcode_mismatches_index2 : (latestSettings.BCLConvert_Settings?.BarcodeMismatchesIndex2 !== undefined ? latestSettings.BCLConvert_Settings.BarcodeMismatchesIndex2 : null)
+                trim_umi: currentSettings.trim_umi !== undefined ? currentSettings.trim_umi : (latestSettings.raw_samplesheet_settings?.TrimUMI !== undefined ? latestSettings.raw_samplesheet_settings.TrimUMI : null),
+                create_fastq_for_index_reads: currentSettings.create_fastq_for_index_reads !== undefined ? currentSettings.create_fastq_for_index_reads : (latestSettings.raw_samplesheet_settings?.CreateFastqForIndexReads !== undefined ? latestSettings.raw_samplesheet_settings.CreateFastqForIndexReads : null),
+                barcode_mismatches_index1: currentSettings.barcode_mismatches_index1 !== undefined ? currentSettings.barcode_mismatches_index1 : (latestSettings.raw_samplesheet_settings?.BarcodeMismatchesIndex1 !== undefined ? latestSettings.raw_samplesheet_settings.BarcodeMismatchesIndex1 : null),
+                barcode_mismatches_index2: currentSettings.barcode_mismatches_index2 !== undefined ? currentSettings.barcode_mismatches_index2 : (latestSettings.raw_samplesheet_settings?.BarcodeMismatchesIndex2 !== undefined ? latestSettings.raw_samplesheet_settings.BarcodeMismatchesIndex2 : null)
             };
 
             this.editModalLane = lane;
@@ -1555,10 +1555,10 @@ const vDemuxSampleInfoEditor = {
                 description: '',
                 control: templateSettings.control || 'N',
                 override_cycles: templateSettings.per_sample_fields?.OverrideCycles || '',
-                trim_umi: templateSettings.BCLConvert_Settings?.TrimUMI !== undefined ? templateSettings.BCLConvert_Settings.TrimUMI : null,
-                create_fastq_for_index_reads: templateSettings.BCLConvert_Settings?.CreateFastqForIndexReads !== undefined ? templateSettings.BCLConvert_Settings.CreateFastqForIndexReads : null,
-                barcode_mismatches_index1: templateSettings.BCLConvert_Settings?.BarcodeMismatchesIndex1 !== undefined ? templateSettings.BCLConvert_Settings.BarcodeMismatchesIndex1 : null,
-                barcode_mismatches_index2: templateSettings.BCLConvert_Settings?.BarcodeMismatchesIndex2 !== undefined ? templateSettings.BCLConvert_Settings.BarcodeMismatchesIndex2 : null
+                trim_umi: templateSettings.raw_samplesheet_settings?.TrimUMI !== undefined ? templateSettings.raw_samplesheet_settings.TrimUMI : null,
+                create_fastq_for_index_reads: templateSettings.raw_samplesheet_settings?.CreateFastqForIndexReads !== undefined ? templateSettings.raw_samplesheet_settings.CreateFastqForIndexReads : null,
+                barcode_mismatches_index1: templateSettings.raw_samplesheet_settings?.BarcodeMismatchesIndex1 !== undefined ? templateSettings.raw_samplesheet_settings.BarcodeMismatchesIndex1 : null,
+                barcode_mismatches_index2: templateSettings.raw_samplesheet_settings?.BarcodeMismatchesIndex2 !== undefined ? templateSettings.raw_samplesheet_settings.BarcodeMismatchesIndex2 : null
             } : {
                 sample_id: newSampleId,
                 sample_name: newSampleId,
@@ -1635,7 +1635,7 @@ const vDemuxSampleInfoEditor = {
                 Object.keys(this.editFormData).forEach(field => {
                     let newValue = this.editFormData[field];
 
-                    // Sanitize BCLConvert_Settings number fields: convert NaN or empty string to null
+                    // Sanitize raw_samplesheet_settings number fields: convert NaN or empty string to null
                     if (field === 'barcode_mismatches_index1' || field === 'barcode_mismatches_index2') {
                         if (newValue === '' || Number.isNaN(newValue)) {
                             newValue = null;
@@ -1796,13 +1796,13 @@ const vDemuxSampleInfoEditor = {
             // Add BCLConvert settings in standard order
             const settingsOrder = ['SoftwareVersion', 'MinimumTrimmedReadLength', 'MaskShortReads'];
             for (const key of settingsOrder) {
-                if (samplesheet.BCLConvert_Settings[key] !== undefined) {
-                    lines.push(`${key},${samplesheet.BCLConvert_Settings[key]}`);
+                if (samplesheet.raw_samplesheet_settings[key] !== undefined) {
+                    lines.push(`${key},${samplesheet.raw_samplesheet_settings[key]}`);
                 }
             }
 
             // Add remaining settings
-            for (const [key, value] of Object.entries(samplesheet.BCLConvert_Settings)) {
+            for (const [key, value] of Object.entries(samplesheet.raw_samplesheet_settings)) {
                 if (!settingsOrder.includes(key)) {
                     lines.push(`${key},${value}`);
                 }
@@ -2178,21 +2178,21 @@ const vDemuxSampleInfoEditor = {
                                                 <div class="mt-2">
                                                     <strong>BCLConvert Settings:</strong>
                                                     <ul class="mb-0 mt-1 small">
-                                                        <li v-if="config.BCLConvert_Settings.TrimUMI !== undefined">
+                                                        <li v-if="config.raw_samplesheet_settings.TrimUMI !== undefined">
                                                             TrimUMI:
-                                                            <code v-if="config.BCLConvert_Settings.TrimUMI === 'EXCLUDE'" class="text-danger">Do not include</code>
-                                                            <code v-else>{{ config.BCLConvert_Settings.TrimUMI }}</code>
+                                                            <code v-if="config.raw_samplesheet_settings.TrimUMI === 'EXCLUDE'" class="text-danger">Do not include</code>
+                                                            <code v-else>{{ config.raw_samplesheet_settings.TrimUMI }}</code>
                                                         </li>
-                                                        <li v-if="config.BCLConvert_Settings.CreateFastqForIndexReads !== undefined">
+                                                        <li v-if="config.raw_samplesheet_settings.CreateFastqForIndexReads !== undefined">
                                                             CreateFastqForIndexReads:
-                                                            <code v-if="config.BCLConvert_Settings.CreateFastqForIndexReads === 'EXCLUDE'" class="text-danger">Do not include</code>
-                                                            <code v-else>{{ config.BCLConvert_Settings.CreateFastqForIndexReads }}</code>
+                                                            <code v-if="config.raw_samplesheet_settings.CreateFastqForIndexReads === 'EXCLUDE'" class="text-danger">Do not include</code>
+                                                            <code v-else>{{ config.raw_samplesheet_settings.CreateFastqForIndexReads }}</code>
                                                         </li>
-                                                        <li v-if="config.BCLConvert_Settings.BarcodeMismatchesIndex1 !== undefined">
-                                                            BarcodeMismatchesIndex1: <code>{{ config.BCLConvert_Settings.BarcodeMismatchesIndex1 }}</code>
+                                                        <li v-if="config.raw_samplesheet_settings.BarcodeMismatchesIndex1 !== undefined">
+                                                            BarcodeMismatchesIndex1: <code>{{ config.raw_samplesheet_settings.BarcodeMismatchesIndex1 }}</code>
                                                         </li>
-                                                        <li v-if="config.BCLConvert_Settings.BarcodeMismatchesIndex2 !== undefined">
-                                                            BarcodeMismatchesIndex2: <code>{{ config.BCLConvert_Settings.BarcodeMismatchesIndex2 }}</code>
+                                                        <li v-if="config.raw_samplesheet_settings.BarcodeMismatchesIndex2 !== undefined">
+                                                            BarcodeMismatchesIndex2: <code>{{ config.raw_samplesheet_settings.BarcodeMismatchesIndex2 }}</code>
                                                         </li>
                                                     </ul>
                                                 </div>
@@ -2961,8 +2961,8 @@ const vDemuxSampleInfoEditor = {
                                                                     <span v-if="wasBCLSettingManuallyEdited(sortedConfigModalSettings[0][0], key, value)" class="badge bg-warning text-dark">
                                                                         Manual Edit
                                                                     </span>
-                                                                    <span v-else-if="traceConfigValueSource('BCLConvert_Settings', 'BCLConvert_Settings.' + key)" class="badge bg-info">
-                                                                        {{ formatConfigSourceLabel(traceConfigValueSource('BCLConvert_Settings', 'BCLConvert_Settings.' + key)) }}
+                                                                    <span v-else-if="traceConfigValueSource('raw_samplesheet_settings', 'raw_samplesheet_settings.' + key)" class="badge bg-info">
+                                                                        {{ formatConfigSourceLabel(traceConfigValueSource('raw_samplesheet_settings', 'raw_samplesheet_settings.' + key)) }}
                                                                     </span>
                                                                     <span v-else class="badge bg-secondary">default</span>
                                                                 </td>
@@ -3108,8 +3108,8 @@ const vDemuxSampleInfoEditor = {
                                                                         <span v-if="wasBCLSettingManuallyEdited(timestamp, key, value)" class="badge bg-warning text-dark">
                                                                             Manual Edit
                                                                         </span>
-                                                                        <span v-else-if="traceConfigValueSource('BCLConvert_Settings', 'BCLConvert_Settings.' + key)" class="badge bg-info">
-                                                                            {{ formatConfigSourceLabel(traceConfigValueSource('BCLConvert_Settings', 'BCLConvert_Settings.' + key)) }}
+                                                                        <span v-else-if="traceConfigValueSource('raw_samplesheet_settings', 'raw_samplesheet_settings.' + key)" class="badge bg-info">
+                                                                            {{ formatConfigSourceLabel(traceConfigValueSource('raw_samplesheet_settings', 'raw_samplesheet_settings.' + key)) }}
                                                                         </span>
                                                                         <span v-else class="badge bg-secondary">default</span>
                                                                     </td>
