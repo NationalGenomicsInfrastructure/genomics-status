@@ -21,7 +21,7 @@ const vDemuxSampleInfoEditor = {
                 { key: 'project_id', label: 'Project ID' },
                 { key: 'sample_ref', label: 'Sample Ref' },
                 { key: 'sample_type', label: 'Sample Type' },
-                { key: 'config_sources', label: 'Config Sources' },
+                { key: 'config_sources', label: 'Config Sources (Stream 1)' },
                 { key: 'index_1', label: 'Index 1' },
                 { key: 'index_2', label: 'Index 2' },
                 { key: 'index_length', label: 'Index Length' },
@@ -725,7 +725,7 @@ const vDemuxSampleInfoEditor = {
                 // Parse the tier path
                 const tierParts = tierPath.split('.');
                 const category = tierParts[0]; // e.g., "patterns", "other_general_sample_types", "control_patterns"
-                
+
                 let conditionalRules = null;
 
                 if (category === 'control_patterns') {
@@ -744,7 +744,7 @@ const vDemuxSampleInfoEditor = {
                     // Handle: "instrument_type_mapping.NovaSeqXPlus.conditional_rule.X"
                     // or "instrument_type_mapping.NovaSeqXPlus.run_modes.10B.conditional_rule.X"
                     const instrumentType = tierParts[1];
-                    
+
                     if (tierParts.length === 2) {
                         // Instrument type level
                         conditionalRules = this.sampleClassificationConfig.instrument_type_mapping?.[instrumentType]?.conditional_rules;
@@ -792,11 +792,11 @@ const vDemuxSampleInfoEditor = {
                 // Handle instrument type configs: "instrument_type_mapping.NovaSeqXPlus" or "instrument_type_mapping.NovaSeqXPlus.run_modes.10B"
                 const restParts = parts.slice(1);  // e.g., ["NovaSeqXPlus"] or ["NovaSeqXPlus", "run_modes", "10B"]
                 const instrumentType = restParts[0];
-                
+
                 if (!this.sampleClassificationConfig.instrument_type_mapping?.[instrumentType]) {
                     return null;
                 }
-                
+
                 if (restParts.length === 1) {
                     // Just the instrument type
                     return this.sampleClassificationConfig.instrument_type_mapping[instrumentType];
@@ -821,12 +821,12 @@ const vDemuxSampleInfoEditor = {
             if (value === null || value === undefined) {
                 return 'null';
             }
-            
+
             // Special handling for conditional rule objects
             if (typeof value === 'object' && value._type === 'conditional_rule') {
                 const rule = value.rule;
                 const parts = [];
-                
+
                 parts.push(`Setting: ${value.setting_name}`);
                 parts.push(`Rule: ${value.rule_name}`);
                 if (rule.description) {
@@ -835,10 +835,10 @@ const vDemuxSampleInfoEditor = {
                 parts.push(`Action: ${rule.action}`);
                 parts.push(`Value: ${JSON.stringify(rule.value)}`);
                 parts.push(`Conditions: ${JSON.stringify(rule.conditions, null, 2)}`);
-                
+
                 return parts.join('\n');
             }
-            
+
             if (typeof value === 'object') {
                 return JSON.stringify(value, null, 2);
             }
@@ -863,7 +863,7 @@ const vDemuxSampleInfoEditor = {
                     if (conditionalRuleParts.length === 2) {
                         const ruleSpec = conditionalRuleParts[1]; // e.g., "TrimUMI:exclude_if_no_umi_detected"
                         const [settingName] = ruleSpec.split(':');
-                        
+
                         // Check if this conditional rule sets the setting we're looking for
                         if (path) {
                             // For BCLConvert_Settings.TrimUMI, check if settingName matches
@@ -1060,14 +1060,14 @@ const vDemuxSampleInfoEditor = {
         fetchDemuxInfo(updateHistory = true) {
             // Clear previous errors
             this.error_messages = [];
-            
+
             if (!this.flowcell_id.trim()) {
                 this.error_messages.push('Please enter a flowcell ID.');
                 return;
             }
-            
+
             this.loading = true;
-            
+
             axios.get(`/api/v1/demux_sample_info/${this.flowcell_id}`)
                 .then(response => {
                     this.demux_data = response.data;
@@ -1855,7 +1855,7 @@ const vDemuxSampleInfoEditor = {
         // Check if flowcell ID is in the URL
         const urlParams = new URLSearchParams(window.location.search);
         const flowcellId = urlParams.get('flowcell');
-        
+
         if (flowcellId) {
             this.flowcell_id = flowcellId;
             this.fetchDemuxInfo(false); // false = don't push to history on initial load
@@ -2286,7 +2286,7 @@ const vDemuxSampleInfoEditor = {
                                                                     <button v-else-if="columnKey === 'sample_type' && Array.isArray(sample['config_sources']) && sample['config_sources'].length > 0"
                                                                         class="btn btn-sm btn-outline-info"
                                                                         @click="openConfigModal(calculatedLanes[lane].sample_rows[sample.uuid], lane)"
-                                                                        :title="'Click to view configuration details'">
+                                                                        :title="'Click to view Stream 1 configuration details (stored settings)'">
                                                                         <i class="fa fa-info-circle"></i> {{ formatCellValue(sample[columnKey], columnKey) }}
                                                                     </button>
                                                                     <!-- All other columns -->
@@ -2335,7 +2335,7 @@ const vDemuxSampleInfoEditor = {
                                                                             <button v-else-if="columnKey === 'sample_type' && Array.isArray(sample['config_sources']) && sample['config_sources'].length > 0"
                                                                                 class="btn btn-sm btn-outline-info"
                                                                                 @click="openConfigModal(calculatedLanes[lane].sample_rows[sample.uuid], lane)"
-                                                                                :title="'Click to view configuration details'">
+                                                                                :title="'Click to view Stream 1 configuration details (stored settings)'">
                                                                                 <i class="fa fa-info-circle"></i> {{ formatCellValue(sample[columnKey], columnKey) }}
                                                                             </button>
                                                                             <!-- All other columns -->
@@ -2398,7 +2398,7 @@ const vDemuxSampleInfoEditor = {
                                                                         <button v-else-if="columnKey === 'sample_type' && Array.isArray(sample['config_sources']) && sample['config_sources'].length > 0"
                                                                             class="btn btn-sm btn-outline-info"
                                                                             @click="openConfigModal(calculatedLanes[lane].sample_rows[sample.uuid], lane)"
-                                                                            :title="'Click to view configuration details'">
+                                                                            :title="'Click to view Stream 1 configuration details (stored settings)'">
                                                                             <i class="fa fa-info-circle"></i> {{ formatCellValue(sample[columnKey], columnKey) }}
                                                                         </button>
                                                                         <span v-else>{{ formatCellValue(sample[columnKey], columnKey) }}</span>
@@ -2443,7 +2443,7 @@ const vDemuxSampleInfoEditor = {
                                                                                 <button v-else-if="columnKey === 'sample_type' && Array.isArray(sample['config_sources']) && sample['config_sources'].length > 0"
                                                                                     class="btn btn-sm btn-outline-info"
                                                                                     @click="openConfigModal(calculatedLanes[lane].sample_rows[sample.uuid], lane)"
-                                                                                    :title="'Click to view configuration details'">
+                                                                                    :title="'Click to view Stream 1 configuration details (stored settings)'">
                                                                                     <i class="fa fa-info-circle"></i> {{ formatCellValue(sample[columnKey], columnKey) }}
                                                                                 </button>
                                                                                 <span v-else>{{ formatCellValue(sample[columnKey], columnKey) }}</span>
@@ -2756,7 +2756,7 @@ const vDemuxSampleInfoEditor = {
                                             <div class="form-check">
                                                 <input type="radio" class="form-check-input" id="edit_trim_umi_default" v-model="editFormData.trim_umi" :value="null">
                                                 <label class="form-check-label" for="edit_trim_umi_default">
-                                                    Do not include in samplesheet
+                                                    Do not override
                                                 </label>
                                             </div>
                                         </div>
@@ -2777,7 +2777,7 @@ const vDemuxSampleInfoEditor = {
                                             <div class="form-check">
                                                 <input type="radio" class="form-check-input" id="edit_create_fastq_default" v-model="editFormData.create_fastq_for_index_reads" :value="null">
                                                 <label class="form-check-label" for="edit_create_fastq_default">
-                                                    Do not include in samplesheet
+                                                    Do not override
                                                 </label>
                                             </div>
                                         </div>
@@ -2866,24 +2866,41 @@ const vDemuxSampleInfoEditor = {
                                     <button type="button" class="btn-close btn-close-white" @click="closeConfigModal"></button>
                                 </div>
                                 <div class="modal-body">
+                                    <!-- Two-Stream Architecture Info -->
+                                    <div class="alert alert-info" role="alert">
+                                        <h6 class="alert-heading"><i class="fa fa-info-circle"></i> Understanding the Two-Stream Architecture</h6>
+                                        <p class="mb-2 small">
+                                            The system uses a <strong>two-stream approach</strong> to manage sample configurations:
+                                        </p>
+                                        <ul class="small mb-2">
+                                            <li><strong>Stream 1: Classification & Storage</strong> - Settings shown below are calculated and stored permanently in the database based on sample properties (6-tier classification system). These are your "gold standard" settings.</li>
+                                            <li><strong>Stream 2: Samplesheet Generation</strong> - When creating samplesheets, additional rules are applied dynamically (e.g., excluding TrimUMI for NoIndex samples or samples without UMI config). These adjustments are <em>not</em> stored in the database.</li>
+                                        </ul>
+                                        <p class="mb-0 small">
+                                            <i class="fa fa-lightbulb-o"></i> <strong>Note:</strong> The settings displayed here reflect Stream 1 (stored data). To see what will actually appear in generated samplesheets after Stream 2 rules are applied, download the samplesheets from the Samplesheets tab.
+                                        </p>
+                                    </div>
                                     <!-- Current Settings -->
                                     <div v-if="configModalSample && sortedConfigModalSettings.length > 0" class="mb-4">
                                         <h5 class="text-info">
-                                            <i class="fa fa-check-circle"></i> Current Settings
+                                            <i class="fa fa-check-circle"></i> Current Settings (Stream 1: Stored in Database)
                                         </h5>
-                                        <p class="text-muted">The most recent settings for this sample:</p>
+                                        <p class="text-muted">These settings are permanently stored and represent the calculated configuration based on sample classification:</p>
                                         <div class="card">
                                             <div class="card-body">
                                                 <h6 class="text-muted">{{ formatTimestamp(sortedConfigModalSettings[0][0]) }}</h6>
 
                                                 <!-- Show config sources for current version -->
-                                                <div v-if="sortedConfigModalSettings[0][1].other_details?.config_sources && sortedConfigModalSettings[0][1].other_details.config_sources.length > 0" class="alert alert-info small mb-3">
-                                                    <strong>Configuration sources applied:</strong>
+                                                <div v-if="sortedConfigModalSettings[0][1].other_details?.config_sources && sortedConfigModalSettings[0][1].other_details.config_sources.length > 0" class="alert alert-secondary small mb-3">
+                                                    <strong><i class="fa fa-stream"></i> Stream 1: Configuration sources applied (stored in database):</strong>
                                                     <ol class="mb-0 mt-1">
                                                         <li v-for="(source, idx) in sortedConfigModalSettings[0][1].other_details.config_sources" :key="idx" class="font-monospace">
                                                             {{ source }}
                                                         </li>
                                                     </ol>
+                                                    <div class="mt-2 fst-italic">
+                                                        <i class="fa fa-info-circle"></i> These sources show how Stream 1 calculated and stored your settings. Stream 2 samplesheet generation rules may dynamically adjust these for the final output.
+                                                    </div>
                                                 </div>
 
                                                 <div class="table-responsive">
@@ -2929,12 +2946,15 @@ const vDemuxSampleInfoEditor = {
                                                                 </td>
                                                             </tr>
                                                             <tr v-if="getAllBCLConvertSettings(sortedConfigModalSettings[0][1]) && Object.keys(getAllBCLConvertSettings(sortedConfigModalSettings[0][1])).length > 0">
-                                                                <td colspan="3" class="table-secondary"><strong>BCLConvert Settings</strong></td>
+                                                                <td colspan="3" class="table-secondary">
+                                                                    <strong>BCLConvert Settings (Stream 1: Stored)</strong>
+                                                                    <span class="badge bg-info ms-2 small" title="These are the calculated and stored settings. Stream 2 may dynamically exclude some settings during samplesheet generation.">Stream 1</span>
+                                                                </td>
                                                             </tr>
                                                             <tr v-for="(value, key) in getAllBCLConvertSettings(sortedConfigModalSettings[0][1])" :key="key">
                                                                 <td class="ps-4">{{ key }}</td>
                                                                 <td>
-                                                                    <code v-if="value === 'EXCLUDE'" class="text-danger">EXCLUDE (not in samplesheet)</code>
+                                                                    <code v-if="value === 'EXCLUDE'" class="text-danger" title="This value is set to EXCLUDE in stored settings (rare - typically EXCLUDE is used in Stream 2 samplesheet generation rules)">EXCLUDE</code>
                                                                     <code v-else>{{ value }}</code>
                                                                 </td>
                                                                 <td>
@@ -2957,11 +2977,11 @@ const vDemuxSampleInfoEditor = {
                                     <!-- Configuration Source Details -->
                                     <div class="mt-4 mb-4">
                                         <h5 class="text-info">
-                                            <i class="fa fa-list"></i> Configuration Source Details
+                                            <i class="fa fa-list"></i> Stream 1: Configuration Source Details (Stored Settings)
                                         </h5>
                                         <p class="text-muted mb-3">
-                                            Detailed information about each configuration source.
-                                            Configurations are applied in order (from least specific to most specific):
+                                            Detailed information about each Stream 1 configuration source that determined the stored settings.
+                                            Configurations are applied in order during classification (from least specific to most specific):
                                         </p>
 
                                         <div v-if="!sampleClassificationConfig" class="text-center">
@@ -2992,22 +3012,38 @@ const vDemuxSampleInfoEditor = {
                                                 </div>
                                             </div>
                                         </div>
+
+                                        <!-- Stream 2 Information -->
+                                        <div class="alert alert-warning mt-3" role="alert">
+                                            <h6 class="alert-heading"><i class="fa fa-stream"></i> Stream 2: Samplesheet Generation Rules (Not Shown Here)</h6>
+                                            <p class="mb-2 small">
+                                                In addition to the stored settings above, <strong>conditional rules are applied dynamically</strong> when generating samplesheets. These rules:
+                                            </p>
+                                            <ul class="small mb-2">
+                                                <li>May <strong>exclude settings</strong> from the samplesheet based on sample properties (e.g., excluding TrimUMI for samples without UMI configuration)</li>
+                                                <li>Are <strong>not stored</strong> in the database or tracked in config_sources</li>
+                                                <li>Apply to: NoIndex samples, standard samples without UMI, IDT UMI samples without UMI config, and control samples</li>
+                                            </ul>
+                                            <p class="mb-0 small">
+                                                <i class="fa fa-download"></i> <strong>To see the final samplesheet output:</strong> Download the generated samplesheets from the Samplesheets tab. They reflect both Stream 1 (stored settings) and Stream 2 (dynamic rules).
+                                            </p>
+                                        </div>
                                     </div>
 
                                     <!-- Historical Settings -->
                                     <div v-if="configModalSample && sortedConfigModalSettings.length > 1" class="mt-4">
                                         <h3 class="text-secondary">
-                                            <i class="fa fa-history"></i> Historical Settings
+                                            <i class="fa fa-history"></i> Historical Settings (Stream 1: Version History)
                                         </h3>
-                                        <p class="text-muted">Previous versions of settings for this sample:</p>
+                                        <p class="text-muted">Previous versions of stored settings for this sample:</p>
                                         <div class="card">
                                             <div class="card-body">
                                                 <div v-for="[timestamp, settings] in sortedConfigModalSettings.slice(1)" :key="timestamp" class="mb-4 pb-3 border-bottom">
                                                     <h6 class="text-muted">{{ formatTimestamp(timestamp) }}</h6>
 
                                                     <!-- Show config sources for this specific version -->
-                                                    <div v-if="settings.other_details?.config_sources && settings.other_details.config_sources.length > 0" class="alert alert-info small mb-3">
-                                                        <strong>Configuration sources applied:</strong>
+                                                    <div v-if="settings.other_details?.config_sources && settings.other_details.config_sources.length > 0" class="alert alert-secondary small mb-3">
+                                                        <strong><i class="fa fa-stream"></i> Stream 1: Configuration sources applied:</strong>
                                                         <ol class="mb-0 mt-1">
                                                             <li v-for="(source, idx) in settings.other_details.config_sources" :key="idx" class="font-monospace">
                                                                 {{ source }}
@@ -3058,12 +3094,14 @@ const vDemuxSampleInfoEditor = {
                                                                     </td>
                                                                 </tr>
                                                                 <tr v-if="getAllBCLConvertSettings(settings) && Object.keys(getAllBCLConvertSettings(settings)).length > 0">
-                                                                    <td colspan="3" class="table-secondary"><strong>BCLConvert Settings</strong></td>
+                                                                    <td colspan="3" class="table-secondary">
+                                                                        <strong>BCLConvert Settings (Stream 1: Stored)</strong>
+                                                                    </td>
                                                                 </tr>
                                                                 <tr v-for="(value, key) in getAllBCLConvertSettings(settings)" :key="key">
                                                                     <td class="ps-4">{{ key }}</td>
                                                                     <td>
-                                                                        <code v-if="value === 'EXCLUDE'" class="text-danger">EXCLUDE (not in samplesheet)</code>
+                                                                        <code v-if="value === 'EXCLUDE'" class="text-danger" title="This value is set to EXCLUDE in stored settings (rare - typically EXCLUDE is used in Stream 2 samplesheet generation rules)">EXCLUDE</code>
                                                                         <code v-else>{{ value }}</code>
                                                                     </td>
                                                                     <td>
@@ -3102,7 +3140,20 @@ const vDemuxSampleInfoEditor = {
                                     <button type="button" class="btn-close btn-close-white" @click="closeCustomConfigModal"></button>
                                 </div>
                                 <div class="modal-body">
-                                    <p class="text-muted">Define a custom configuration that will be applied to specific samples. This configuration will be layered with other config sources.</p>
+                                    <!-- Two-Stream Architecture Info -->
+                                    <div class="alert alert-info mb-3" role="alert">
+                                        <h6 class="alert-heading"><i class="fa fa-info-circle"></i> Custom Configuration: Stream 1 (Stored Settings)</h6>
+                                        <p class="mb-1 small">
+                                            Custom configurations override <strong>Stream 1</strong> settings, which are permanently stored in the database.
+                                            These overrides will appear in the sample's config_sources and version history.
+                                        </p>
+                                        <p class="mb-0 small">
+                                            <strong>Note:</strong> Stream 2 samplesheet generation rules may still dynamically adjust these settings when creating samplesheets 
+                                            (e.g., excluding TrimUMI for samples without UMI configuration).
+                                        </p>
+                                    </div>
+
+                                    <p class="text-muted">Define custom BCLConvert settings to override the calculated settings for specific samples.</p>
 
                                     <!-- Config Name and Target -->
                                     <div class="row mb-4">
@@ -3149,10 +3200,13 @@ const vDemuxSampleInfoEditor = {
                                     <div class="row mb-4">
                                         <div class="col-md-12 mb-3">
                                             <hr>
-                                            <h6 class="mb-3">
-                                                <i class="fa fa-cog"></i> BCLConvert Settings
-                                                <span class="text-muted small">(Configure settings to override)</span>
+                                            <h6 class="mb-2">
+                                                <i class="fa fa-cog"></i> BCLConvert Settings (Stream 1: Stored Overrides)
                                             </h6>
+                                            <p class="text-muted small mb-3">
+                                                Configure settings to override the calculated Stream 1 values. These will be permanently stored.
+                                                Leave settings at "Do not override" to keep the automatically calculated values.
+                                            </p>
                                         </div>
 
                                         <div class="col-md-6 mb-3">
@@ -3169,10 +3223,6 @@ const vDemuxSampleInfoEditor = {
                                                 <input type="radio" class="form-check-input" id="custom_trim_umi_default" v-model="customConfigFormData.trim_umi" :value="null">
                                                 <label class="form-check-label" for="custom_trim_umi_default">Do not override</label>
                                             </div>
-                                            <div class="form-check">
-                                                <input type="radio" class="form-check-input" id="custom_trim_umi_exclude" v-model="customConfigFormData.trim_umi" value="EXCLUDE">
-                                                <label class="form-check-label" for="custom_trim_umi_exclude">Do not include in samplesheet</label>
-                                            </div>
                                         </div>
 
                                         <div class="col-md-6 mb-3">
@@ -3188,10 +3238,6 @@ const vDemuxSampleInfoEditor = {
                                             <div class="form-check">
                                                 <input type="radio" class="form-check-input" id="custom_create_fastq_default" v-model="customConfigFormData.create_fastq_for_index_reads" :value="null">
                                                 <label class="form-check-label" for="custom_create_fastq_default">Do not override</label>
-                                            </div>
-                                            <div class="form-check">
-                                                <input type="radio" class="form-check-input" id="custom_create_fastq_exclude" v-model="customConfigFormData.create_fastq_for_index_reads" value="EXCLUDE">
-                                                <label class="form-check-label" for="custom_create_fastq_exclude">Do not include in samplesheet</label>
                                             </div>
                                         </div>
 
