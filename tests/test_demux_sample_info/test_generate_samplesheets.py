@@ -99,7 +99,9 @@ class TestGenerateSamplesheets(unittest.TestCase):
         self.assertIn("Date", samplesheet["Header"])
 
         # Check raw_samplesheet_settings
-        self.assertEqual(samplesheet["raw_samplesheet_settings"]["SoftwareVersion"], "4.0.3")
+        self.assertEqual(
+            samplesheet["raw_samplesheet_settings"]["SoftwareVersion"], "4.0.3"
+        )
         self.assertEqual(
             samplesheet["raw_samplesheet_settings"]["FastqCompressionFormat"], "gzip"
         )

@@ -12,7 +12,6 @@ import sys
 from pathlib import Path
 
 try:
-    import jsonschema
     from jsonschema import ValidationError, validate
 except ImportError:
     print("Error: jsonschema package not installed")

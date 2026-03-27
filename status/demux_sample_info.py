@@ -1057,7 +1057,9 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                     for setting_name, setting_config in bcl_settings_defaults.items():
                         default_value = setting_config.get("default")
                         bcl_convert_settings[setting_name] = default_value
-                    config_sources.append("bcl_convert_settings.raw_samplesheet_settings")
+                    config_sources.append(
+                        "bcl_convert_settings.raw_samplesheet_settings"
+                    )
 
                 # STEP 2-6: Classify the sample type (applies patterns, other_general_sample_types, library_method_mapping, instrument_type_mapping)
                 sample_classification = self._classify_sample_type(
@@ -1176,7 +1178,9 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                     }
 
                     # Calculate and store Stage 2 samplesheet settings (without custom configs initially)
-                    settings_entry = calculated_lanes[lane]["sample_rows"][sample_uuid]["settings"][timestamp]
+                    settings_entry = calculated_lanes[lane]["sample_rows"][sample_uuid][
+                        "settings"
+                    ][timestamp]
                     samplesheet_settings = self._calculate_samplesheet_settings(
                         bcl_convert_settings,
                         settings_entry["other_details"],
@@ -1189,7 +1193,12 @@ class DemuxSampleInfoDataHandler(SafeHandler):
         return calculated_lanes
 
     def _calculate_samplesheet_settings(
-        self, bcl_settings, other_details, per_sample_fields, custom_configs=None, lane=None
+        self,
+        bcl_settings,
+        other_details,
+        per_sample_fields,
+        custom_configs=None,
+        lane=None,
     ):
         """Calculate the final samplesheet settings for a sample by applying Stage 2 rules.
 
@@ -1260,14 +1269,14 @@ class DemuxSampleInfoDataHandler(SafeHandler):
 
         # Filter out None and EXCLUDE values — they must not appear in samplesheets
         bcl_settings_filtered = {
-            k: v
-            for k, v in bcl_settings.items()
-            if v is not None and v != "EXCLUDE"
+            k: v for k, v in bcl_settings.items() if v is not None and v != "EXCLUDE"
         }
 
         return bcl_settings_filtered
 
-    def _recalculate_all_samplesheet_settings(self, calculated_lanes, custom_configs=None):
+    def _recalculate_all_samplesheet_settings(
+        self, calculated_lanes, custom_configs=None
+    ):
         """Recalculate samplesheet_settings for all samples in all lanes.
 
         This should be called whenever custom configs change or when the document is updated,
@@ -1949,7 +1958,9 @@ class SampleClassificationPresetsHandler(SafeHandler):
                     "sample_type": instrument_config.get("sample_type"),
                     "umi_config": instrument_config.get("umi_config"),
                     "named_indices": instrument_config.get("named_indices"),
-                    "raw_samplesheet_settings": instrument_config.get("raw_samplesheet_settings"),
+                    "raw_samplesheet_settings": instrument_config.get(
+                        "raw_samplesheet_settings"
+                    ),
                 }
 
                 # Include run modes if present
