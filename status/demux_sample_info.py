@@ -2113,7 +2113,7 @@ class CustomConfigHandler(DemuxSampleInfoDataHandler):
         # Remove edit_mode and edit_index from the config before saving
         custom_config.pop("edit_mode", None)
         custom_config.pop("edit_index", None)
-        
+
         # Always set auto_run to False for custom configs
         custom_config["auto_run"] = False
 
