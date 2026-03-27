@@ -46,9 +46,6 @@
             },
             "BCLConvert_Settings": {
                 "$ref": "#/$defs/sampleConfig/properties/BCLConvert_Settings"
-            },
-            "conditional_rules": {
-                "$ref": "#/$defs/sampleConfig/properties/conditional_rules"
             }
         },
         "additionalProperties": false
@@ -87,9 +84,6 @@
             },
             "BCLConvert_Settings": {
                 "$ref": "#/$defs/sampleConfig/properties/BCLConvert_Settings"
-            },
-            "conditional_rules": {
-                "$ref": "#/$defs/sampleConfig/properties/conditional_rules"
             }
           },
           "additionalProperties": false
@@ -125,9 +119,6 @@
             },
             "BCLConvert_Settings": {
                 "$ref": "#/$defs/sampleConfig/properties/BCLConvert_Settings"
-            },
-            "conditional_rules": {
-                "$ref": "#/$defs/sampleConfig/properties/conditional_rules"
             }
           },
           "additionalProperties": false
@@ -157,9 +148,6 @@
             "BCLConvert_Settings": {
               "$ref": "#/$defs/sampleConfig/properties/BCLConvert_Settings"
             },
-            "conditional_rules": {
-              "$ref": "#/$defs/sampleConfig/properties/conditional_rules"
-            },
             "run_modes": {
               "type": "object",
               "description": "Mapping of run modes to their configurations (inherits from instrument type)",
@@ -181,9 +169,6 @@
                     },
                     "BCLConvert_Settings": {
                       "$ref": "#/$defs/sampleConfig/properties/BCLConvert_Settings"
-                    },
-                    "conditional_rules": {
-                      "$ref": "#/$defs/sampleConfig/properties/conditional_rules"
                     }
                   },
                   "additionalProperties": false
@@ -206,9 +191,9 @@
       },
       "uniqueItems": true
     },
-    "control_conditional_rules": {
+    "samplesheet_generation_rules": {
       "$ref": "#/$defs/conditionalRules",
-      "description": "Conditional rules to apply to control samples identified by control_patterns"
+      "description": "Conditional rules applied during samplesheet generation (stream 2). This is the only place where EXCLUDE values and conditional rules are permitted. Rules are evaluated against the calculated values from stream 1."
     },
     "short_single_index_threshold": {
       "type": "integer",
@@ -397,9 +382,6 @@
                 }
             },
             "additionalProperties": false
-        },
-        "conditional_rules": {
-          "$ref": "#/$defs/conditionalRules"
         }
       }
     },

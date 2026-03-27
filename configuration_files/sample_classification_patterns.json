@@ -35,21 +35,6 @@
           "position": "end",
           "length": "calculated"
         }
-      },
-      "conditional_rules": {
-        "TrimUMI": [
-          {
-            "name": "exclude_if_no_umi_detected",
-            "description": "If UMI calculation failed or no U in OverrideCycles, exclude TrimUMI",
-            "conditions": {
-              "any_of": [
-                {"field": "umi_config", "operator": "is_null"}
-              ]
-            },
-            "action": "set_value",
-            "value": "EXCLUDE"
-          }
-        ]
       }
     },
     "recipe": {
@@ -61,55 +46,12 @@
     "noindex": {
       "description": "No-index samples",
       "sample_type": "NOINDEX",
-      "umi_config": null,
-      "conditional_rules": {
-        "CreateFastqForIndexReads": [
-          {
-            "name": "exclude_for_noindex",
-            "description": "Cannot create index FASTQs when no indices are present",
-            "conditions": {
-              "all_of": [
-                {"field": "sample_type", "operator": "equals", "value": "NOINDEX"}
-              ]
-            },
-            "action": "set_value",
-            "value": "EXCLUDE"
-          }
-        ],
-        "TrimUMI": [
-          {
-            "name": "exclude_for_noindex",
-            "description": "NoIndex samples have no indices where UMIs could be located",
-            "conditions": {
-              "all_of": [
-                {"field": "sample_type", "operator": "equals", "value": "NOINDEX"}
-              ]
-            },
-            "action": "set_value",
-            "value": "EXCLUDE"
-          }
-        ]
-      }
+      "umi_config": null
     },
     "standard": {
       "description": "Standard samples without special classification",
       "sample_type": "STANDARD",
-      "umi_config": null,
-      "conditional_rules": {
-        "TrimUMI": [
-          {
-            "name": "exclude_when_no_umi",
-            "description": "Standard samples need explicit UMI configuration to enable trimming",
-            "conditions": {
-              "any_of": [
-                {"field": "umi_config", "operator": "is_null"}
-              ]
-            },
-            "action": "set_value",
-            "value": "EXCLUDE"
-          }
-        ]
-      }
+      "umi_config": null
     }
   },
   "library_method_mapping": {
@@ -241,13 +183,50 @@
     "blank",
     "negative"
   ],
-  "control_conditional_rules": {
+  "samplesheet_generation_rules": {
     "TrimUMI": [
+      {
+        "name": "exclude_for_idt_umi_with_no_umi_config",
+        "description": "IDT UMI samples where UMI calculation failed should not have TrimUMI set",
+        "conditions": {
+          "all_of": [
+            {"field": "sample_type", "operator": "equals", "value": "IDT_UMI"},
+            {"field": "umi_config", "operator": "is_null"}
+          ]
+        },
+        "action": "set_value",
+        "value": "EXCLUDE"
+      },
+      {
+        "name": "exclude_for_standard_without_umi",
+        "description": "Standard samples without UMI configuration should not have TrimUMI set",
+        "conditions": {
+          "all_of": [
+            {"field": "sample_type", "operator": "equals", "value": "STANDARD"},
+            {"field": "umi_config", "operator": "is_null"}
+          ]
+        },
+        "action": "set_value",
+        "value": "EXCLUDE"
+      },
+      {
+        "name": "exclude_for_noindex",
+        "description": "NoIndex samples have no indices where UMIs could be located",
+        "conditions": {
+          "all_of": [
+            {"field": "sample_type", "operator": "equals", "value": "NOINDEX"}
+          ]
+        },
+        "action": "set_value",
+        "value": "EXCLUDE"
+      },
       {
         "name": "exclude_for_controls",
         "description": "Control samples should not have UMI trimming applied",
         "conditions": {
-          "always": true
+          "all_of": [
+            {"field": "sample_type", "operator": "equals", "value": "control"}
+          ]
         },
         "action": "set_value",
         "value": "EXCLUDE"
@@ -255,10 +234,23 @@
     ],
     "CreateFastqForIndexReads": [
       {
+        "name": "exclude_for_noindex",
+        "description": "Cannot create index FASTQs when no indices are present",
+        "conditions": {
+          "all_of": [
+            {"field": "sample_type", "operator": "equals", "value": "NOINDEX"}
+          ]
+        },
+        "action": "set_value",
+        "value": "EXCLUDE"
+      },
+      {
         "name": "exclude_for_controls",
         "description": "Control samples typically don't need index FASTQs",
         "conditions": {
-          "always": true
+          "all_of": [
+            {"field": "sample_type", "operator": "equals", "value": "control"}
+          ]
         },
         "action": "set_value",
         "value": "EXCLUDE"
