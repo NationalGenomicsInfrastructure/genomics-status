@@ -1,7 +1,7 @@
 const vDemuxSampleInfoEditor = {
     data() {
         const config = window.STATUS_CONFIG || {};
-        const defaultVisibleColumns = ['sample_id', 'last_modified', 'sample_type', 'index_1', 'index_2', 'umi_config', 'recipe', 'override_cycles'];
+        const defaultVisibleColumns = ['sample_name', 'last_modified', 'sample_type', 'index_1', 'index_2', 'umi_config', 'recipe', 'override_cycles'];
         return {
             limsUrl: config.lims_url || '',
             flowcell_id: '',
@@ -2444,6 +2444,7 @@ const vDemuxSampleInfoEditor = {
                                                                 <th v-for="columnKey in visibleColumns" :key="columnKey">
                                                                     {{ columnLabel[columnKey] }}
                                                                 </th>
+                                                                <th>Actions</th>
                                                             </tr>
                                                         </thead>
                                                         <tbody>
@@ -2451,26 +2452,25 @@ const vDemuxSampleInfoEditor = {
                                                                 <td v-for="columnKey in visibleColumns" :key="columnKey"
                                                                     :class="{ 'bg-info': isFieldEdited(lane, sample.uuid, columnKey) }"
                                                                     :title="getEditTooltip(lane, sample.uuid, columnKey)">
-                                                                    <!-- Sample ID column with edit button -->
-                                                                    <template v-if="columnKey === 'sample_id'">
-                                                                        <button
-                                                                            class="btn btn-sm btn-link p-0 text-decoration-none"
-                                                                            @click="openEditModal(lane, sample.uuid)"
-                                                                            :title="'Edit sample: ' + sample[columnKey]">
-                                                                            {{ formatCellValue(sample[columnKey], columnKey) }}<i class="fa fa-pencil ml-2"></i>
-                                                                        </button>
-                                                                    </template>
                                                                     <!-- Index columns with code formatting -->
-                                                                    <code v-else-if="columnKey === 'index_1' || columnKey === 'index_2'">{{ formatCellValue(sample[columnKey], columnKey) }}</code>
-                                                                    <!-- Sample type with config button -->
-                                                                    <button v-else-if="columnKey === 'sample_type' && Array.isArray(sample['config_sources']) && sample['config_sources'].length > 0"
-                                                                        class="btn btn-sm btn-outline-info"
-                                                                        @click="openConfigModal(calculatedLanes[lane].sample_rows[sample.uuid], lane)"
-                                                                        :title="'Click to view Stage 1 configuration details (stored settings)'">
-                                                                        <i class="fa fa-info-circle"></i> {{ formatCellValue(sample[columnKey], columnKey) }}
-                                                                    </button>
+                                                                    <code v-if="columnKey === 'index_1' || columnKey === 'index_2'">{{ formatCellValue(sample[columnKey], columnKey) }}</code>
                                                                     <!-- All other columns -->
                                                                     <span v-else>{{ formatCellValue(sample[columnKey], columnKey) }}</span>
+                                                                </td>
+                                                                <td>
+                                                                    <button
+                                                                        v-if="Array.isArray(sample['config_sources']) && sample['config_sources'].length > 0"
+                                                                        class="btn btn-sm btn-outline-info mr-2"
+                                                                        @click="openConfigModal(calculatedLanes[lane].sample_rows[sample.uuid], lane)"
+                                                                        :title="'View Stage 1 configuration details'">
+                                                                        <i class="fa fa-search"></i> Inspect
+                                                                    </button>
+                                                                    <button
+                                                                        class="btn btn-sm btn-outline-primary"
+                                                                        @click="openEditModal(lane, sample.uuid)"
+                                                                        :title="'Edit sample'">
+                                                                        <i class="fa fa-pencil"></i> Edit
+                                                                    </button>
                                                                 </td>
                                                             </tr>
                                                         </tbody>
@@ -2493,6 +2493,7 @@ const vDemuxSampleInfoEditor = {
                                                                         <th v-for="columnKey in visibleColumns" :key="columnKey">
                                                                             {{ columnLabel[columnKey] }}
                                                                         </th>
+                                                                        <th>Actions</th>
                                                                     </tr>
                                                                 </thead>
                                                                 <tbody>
@@ -2500,26 +2501,25 @@ const vDemuxSampleInfoEditor = {
                                                                         <td v-for="columnKey in visibleColumns" :key="columnKey"
                                                                             :class="{ 'bg-info': isFieldEdited(lane, sample.uuid, columnKey) }"
                                                                             :title="getEditTooltip(lane, sample.uuid, columnKey)">
-                                                                            <!-- Sample ID column with edit button -->
-                                                                            <template v-if="columnKey === 'sample_id'">
-                                                                                <button
-                                                                                    class="btn btn-sm btn-link p-0 text-decoration-none"
-                                                                                    @click="openEditModal(lane, sample.uuid)"
-                                                                                    :title="'Edit sample: ' + sample[columnKey]">
-                                                                                    <i class="fa fa-pencil me-1"></i>{{ formatCellValue(sample[columnKey], columnKey) }}
-                                                                                </button>
-                                                                            </template>
                                                                             <!-- Index columns with code formatting -->
-                                                                            <code v-else-if="columnKey === 'index_1' || columnKey === 'index_2'">{{ formatCellValue(sample[columnKey], columnKey) }}</code>
-                                                                            <!-- Sample type with config button -->
-                                                                            <button v-else-if="columnKey === 'sample_type' && Array.isArray(sample['config_sources']) && sample['config_sources'].length > 0"
-                                                                                class="btn btn-sm btn-outline-info"
-                                                                                @click="openConfigModal(calculatedLanes[lane].sample_rows[sample.uuid], lane)"
-                                                                                :title="'Click to view Stage 1 configuration details (stored settings)'">
-                                                                                <i class="fa fa-info-circle"></i> {{ formatCellValue(sample[columnKey], columnKey) }}
-                                                                            </button>
+                                                                            <code v-if="columnKey === 'index_1' || columnKey === 'index_2'">{{ formatCellValue(sample[columnKey], columnKey) }}</code>
                                                                             <!-- All other columns -->
                                                                             <span v-else>{{ formatCellValue(sample[columnKey], columnKey) }}</span>
+                                                                        </td>
+                                                                        <td>
+                                                                            <button
+                                                                                v-if="Array.isArray(sample['config_sources']) && sample['config_sources'].length > 0"
+                                                                                class="btn btn-sm btn-outline-info mr-2"
+                                                                                @click="openConfigModal(calculatedLanes[lane].sample_rows[sample.uuid], lane)"
+                                                                                :title="'View Stage 1 configuration details'">
+                                                                                <i class="fa fa-search"></i> Inspect
+                                                                            </button>
+                                                                            <button
+                                                                                class="btn btn-sm btn-outline-primary"
+                                                                                @click="openEditModal(lane, sample.uuid)"
+                                                                                :title="'Edit sample'">
+                                                                                <i class="fa fa-pencil"></i> Edit
+                                                                            </button>
                                                                         </td>
                                                                     </tr>
                                                                 </tbody>
@@ -2559,6 +2559,7 @@ const vDemuxSampleInfoEditor = {
                                                                     <th v-for="columnKey in visibleColumns" :key="columnKey">
                                                                         {{ columnLabel[columnKey] }}
                                                                     </th>
+                                                                    <th>Actions</th>
                                                                 </tr>
                                                             </thead>
                                                             <tbody>
@@ -2566,22 +2567,25 @@ const vDemuxSampleInfoEditor = {
                                                                     <td v-for="columnKey in visibleColumns" :key="columnKey"
                                                                         :class="{ 'bg-info': isFieldEdited(lane, sample.uuid, columnKey) }"
                                                                         :title="getEditTooltip(lane, sample.uuid, columnKey)">
-                                                                        <template v-if="columnKey === 'sample_id'">
-                                                                            <button
-                                                                                class="btn btn-sm btn-link p-0 text-decoration-none"
-                                                                                @click="openEditModal(lane, sample.uuid)"
-                                                                                :title="'Edit sample: ' + sample[columnKey]">
-                                                                                {{ formatCellValue(sample[columnKey], columnKey) }}<i class="fa fa-pencil ml-2"></i>
-                                                                            </button>
-                                                                        </template>
-                                                                        <code v-else-if="columnKey === 'index_1' || columnKey === 'index_2'">{{ formatCellValue(sample[columnKey], columnKey) }}</code>
-                                                                        <button v-else-if="columnKey === 'sample_type' && Array.isArray(sample['config_sources']) && sample['config_sources'].length > 0"
-                                                                            class="btn btn-sm btn-outline-info"
-                                                                            @click="openConfigModal(calculatedLanes[lane].sample_rows[sample.uuid], lane)"
-                                                                            :title="'Click to view Stage 1 configuration details (stored settings)'">
-                                                                            <i class="fa fa-info-circle"></i> {{ formatCellValue(sample[columnKey], columnKey) }}
-                                                                        </button>
+                                                                        <!-- Index columns with code formatting -->
+                                                                        <code v-if="columnKey === 'index_1' || columnKey === 'index_2'">{{ formatCellValue(sample[columnKey], columnKey) }}</code>
+                                                                        <!-- All other columns -->
                                                                         <span v-else>{{ formatCellValue(sample[columnKey], columnKey) }}</span>
+                                                                    </td>
+                                                                    <td>
+                                                                        <button
+                                                                            v-if="Array.isArray(sample['config_sources']) && sample['config_sources'].length > 0"
+                                                                            class="btn btn-sm btn-outline-info mr-2"
+                                                                            @click="openConfigModal(calculatedLanes[lane].sample_rows[sample.uuid], lane)"
+                                                                            :title="'View Stage 1 configuration details'">
+                                                                            <i class="fa fa-search"></i> Inspect
+                                                                        </button>
+                                                                        <button
+                                                                            class="btn btn-sm btn-outline-primary"
+                                                                            @click="openEditModal(lane, sample.uuid)"
+                                                                            :title="'Edit sample'">
+                                                                            <i class="fa fa-pencil"></i> Edit
+                                                                        </button>
                                                                     </td>
                                                                 </tr>
                                                             </tbody>
@@ -2604,6 +2608,7 @@ const vDemuxSampleInfoEditor = {
                                                                             <th v-for="columnKey in visibleColumns" :key="columnKey">
                                                                                 {{ columnLabel[columnKey] }}
                                                                             </th>
+                                                                            <th>Actions</th>
                                                                         </tr>
                                                                     </thead>
                                                                     <tbody>
@@ -2611,22 +2616,25 @@ const vDemuxSampleInfoEditor = {
                                                                             <td v-for="columnKey in visibleColumns" :key="columnKey"
                                                                                 :class="{ 'bg-info': isFieldEdited(lane, sample.uuid, columnKey) }"
                                                                                 :title="getEditTooltip(lane, sample.uuid, columnKey)">
-                                                                                <template v-if="columnKey === 'sample_id'">
-                                                                                    <button
-                                                                                        class="btn btn-sm btn-link p-0 text-decoration-none"
-                                                                                        @click="openEditModal(lane, sample.uuid)"
-                                                                                        :title="'Edit sample: ' + sample[columnKey]">
-                                                                                        <i class="fa fa-pencil me-1"></i>{{ formatCellValue(sample[columnKey], columnKey) }}
-                                                                                    </button>
-                                                                                </template>
-                                                                                <code v-else-if="columnKey === 'index_1' || columnKey === 'index_2'">{{ formatCellValue(sample[columnKey], columnKey) }}</code>
-                                                                                <button v-else-if="columnKey === 'sample_type' && Array.isArray(sample['config_sources']) && sample['config_sources'].length > 0"
-                                                                                    class="btn btn-sm btn-outline-info"
-                                                                                    @click="openConfigModal(calculatedLanes[lane].sample_rows[sample.uuid], lane)"
-                                                                                    :title="'Click to view Stage 1 configuration details (stored settings)'">
-                                                                                    <i class="fa fa-info-circle"></i> {{ formatCellValue(sample[columnKey], columnKey) }}
-                                                                                </button>
+                                                                                <!-- Index columns with code formatting -->
+                                                                                <code v-if="columnKey === 'index_1' || columnKey === 'index_2'">{{ formatCellValue(sample[columnKey], columnKey) }}</code>
+                                                                                <!-- All other columns -->
                                                                                 <span v-else>{{ formatCellValue(sample[columnKey], columnKey) }}</span>
+                                                                            </td>
+                                                                            <td>
+                                                                                <button
+                                                                                    v-if="Array.isArray(sample['config_sources']) && sample['config_sources'].length > 0"
+                                                                                    class="btn btn-sm btn-outline-info mr-2"
+                                                                                    @click="openConfigModal(calculatedLanes[lane].sample_rows[sample.uuid], lane)"
+                                                                                    :title="'View Stage 1 configuration details'">
+                                                                                    <i class="fa fa-search"></i> Inspect
+                                                                                </button>
+                                                                                <button
+                                                                                    class="btn btn-sm btn-outline-primary"
+                                                                                    @click="openEditModal(lane, sample.uuid)"
+                                                                                    :title="'Edit sample'">
+                                                                                    <i class="fa fa-pencil"></i> Edit
+                                                                                </button>
                                                                             </td>
                                                                         </tr>
                                                                     </tbody>
