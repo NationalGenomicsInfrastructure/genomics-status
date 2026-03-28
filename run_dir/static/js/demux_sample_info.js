@@ -77,14 +77,24 @@ const vDemuxSampleInfoEditor = {
                 // Stage 2: samplesheet_generation_rules
                 enable_stage2_rules: false,
                 stage2_trim_umi_action: 'keep',  // 'keep', 'exclude'
+                stage2_trim_umi_logic: 'AND',  // 'AND', 'OR'
                 stage2_trim_umi_conditions: {
                     sample_type: '',
-                    umi_config: ''
+                    umi_config: '',
+                    index_length: '',
+                    named_index: '',
+                    library_method: '',
+                    control: ''
                 },
                 stage2_create_fastq_action: 'keep',
+                stage2_create_fastq_logic: 'AND',  // 'AND', 'OR'
                 stage2_create_fastq_conditions: {
                     sample_type: '',
-                    umi_config: ''
+                    umi_config: '',
+                    index_length: '',
+                    named_index: '',
+                    library_method: '',
+                    control: ''
                 }
             },
             customConfigsCollapsed: true  // Track custom configs section collapse state
@@ -592,9 +602,11 @@ const vDemuxSampleInfoEditor = {
                     // Stage 2: Load existing rules if present
                     enable_stage2_rules: !!(configToEdit.samplesheet_generation_rules && Object.keys(configToEdit.samplesheet_generation_rules).length > 0),
                     stage2_trim_umi_action: 'keep',
-                    stage2_trim_umi_conditions: { sample_type: '', umi_config: '' },
+                    stage2_trim_umi_logic: 'AND',
+                    stage2_trim_umi_conditions: { sample_type: '', umi_config: '', index_length: '', named_index: '', library_method: '', control: '' },
                     stage2_create_fastq_action: 'keep',
-                    stage2_create_fastq_conditions: { sample_type: '', umi_config: '' }
+                    stage2_create_fastq_logic: 'AND',
+                    stage2_create_fastq_conditions: { sample_type: '', umi_config: '', index_length: '', named_index: '', library_method: '', control: '' }
                 };
                 
                 // Parse existing Stage 2 rules if they exist
@@ -603,20 +615,56 @@ const vDemuxSampleInfoEditor = {
                     if (rules.TrimUMI && rules.TrimUMI.length > 0) {
                         const rule = rules.TrimUMI[0];
                         this.customConfigFormData.stage2_trim_umi_action = rule.value === 'EXCLUDE' ? 'exclude' : 'keep';
-                        if (rule.conditions) {
+                        // Detect if this uses OR logic (multiple rules) or AND logic (single rule with multiple conditions)
+                        if (rules.TrimUMI.length > 1) {
+                            this.customConfigFormData.stage2_trim_umi_logic = 'OR';
+                            // Merge all rule conditions into the form
+                            rules.TrimUMI.forEach(r => {
+                                if (r.conditions) {
+                                    Object.keys(r.conditions).forEach(key => {
+                                        if (!this.customConfigFormData.stage2_trim_umi_conditions[key]) {
+                                            this.customConfigFormData.stage2_trim_umi_conditions[key] = r.conditions[key] || '';
+                                        }
+                                    });
+                                }
+                            });
+                        } else if (rule.conditions) {
+                            this.customConfigFormData.stage2_trim_umi_logic = 'AND';
                             this.customConfigFormData.stage2_trim_umi_conditions = {
                                 sample_type: rule.conditions.sample_type || '',
-                                umi_config: rule.conditions.umi_config || ''
+                                umi_config: rule.conditions.umi_config || '',
+                                index_length: rule.conditions.index_length || '',
+                                named_index: rule.conditions.named_index || '',
+                                library_method: rule.conditions.library_method || '',
+                                control: rule.conditions.control || ''
                             };
                         }
                     }
                     if (rules.CreateFastqForIndexReads && rules.CreateFastqForIndexReads.length > 0) {
                         const rule = rules.CreateFastqForIndexReads[0];
                         this.customConfigFormData.stage2_create_fastq_action = rule.value === 'EXCLUDE' ? 'exclude' : 'keep';
-                        if (rule.conditions) {
+                        // Detect if this uses OR logic (multiple rules) or AND logic (single rule with multiple conditions)
+                        if (rules.CreateFastqForIndexReads.length > 1) {
+                            this.customConfigFormData.stage2_create_fastq_logic = 'OR';
+                            // Merge all rule conditions into the form
+                            rules.CreateFastqForIndexReads.forEach(r => {
+                                if (r.conditions) {
+                                    Object.keys(r.conditions).forEach(key => {
+                                        if (!this.customConfigFormData.stage2_create_fastq_conditions[key]) {
+                                            this.customConfigFormData.stage2_create_fastq_conditions[key] = r.conditions[key] || '';
+                                        }
+                                    });
+                                }
+                            });
+                        } else if (rule.conditions) {
+                            this.customConfigFormData.stage2_create_fastq_logic = 'AND';
                             this.customConfigFormData.stage2_create_fastq_conditions = {
                                 sample_type: rule.conditions.sample_type || '',
-                                umi_config: rule.conditions.umi_config || ''
+                                umi_config: rule.conditions.umi_config || '',
+                                index_length: rule.conditions.index_length || '',
+                                named_index: rule.conditions.named_index || '',
+                                library_method: rule.conditions.library_method || '',
+                                control: rule.conditions.control || ''
                             };
                         }
                     }
@@ -657,7 +705,14 @@ const vDemuxSampleInfoEditor = {
                 trim_umi: null,
                 create_fastq_for_index_reads: null,
                 barcode_mismatches_index1: null,
-                barcode_mismatches_index2: null
+                barcode_mismatches_index2: null,
+                enable_stage2_rules: false,
+                stage2_trim_umi_action: 'keep',
+                stage2_trim_umi_logic: 'AND',
+                stage2_trim_umi_conditions: { sample_type: '', umi_config: '', index_length: '', named_index: '', library_method: '', control: '' },
+                stage2_create_fastq_action: 'keep',
+                stage2_create_fastq_logic: 'AND',
+                stage2_create_fastq_conditions: { sample_type: '', umi_config: '', index_length: '', named_index: '', library_method: '', control: '' }
             };
         },
         saveCustomConfig() {
@@ -732,38 +787,68 @@ const vDemuxSampleInfoEditor = {
                 
                 // TrimUMI rule
                 if (this.customConfigFormData.stage2_trim_umi_action === 'exclude') {
-                    const conditions = {};
-                    if (this.customConfigFormData.stage2_trim_umi_conditions.sample_type) {
-                        conditions.sample_type = this.customConfigFormData.stage2_trim_umi_conditions.sample_type;
-                    }
-                    if (this.customConfigFormData.stage2_trim_umi_conditions.umi_config) {
-                        conditions.umi_config = this.customConfigFormData.stage2_trim_umi_conditions.umi_config;
-                    }
+                    const conditionFields = ['sample_type', 'umi_config', 'index_length', 'named_index', 'library_method', 'control'];
+                    const filledConditions = conditionFields.filter(field => 
+                        this.customConfigFormData.stage2_trim_umi_conditions[field]
+                    );
                     
-                    customConfig.samplesheet_generation_rules.TrimUMI = [{
-                        name: "custom_exclude_trim_umi",
-                        conditions: conditions,
-                        action: "set_value",
-                        value: "EXCLUDE"
-                    }];
+                    if (this.customConfigFormData.stage2_trim_umi_logic === 'AND') {
+                        // AND logic: single rule with all conditions
+                        const conditions = {};
+                        filledConditions.forEach(field => {
+                            conditions[field] = this.customConfigFormData.stage2_trim_umi_conditions[field];
+                        });
+                        
+                        customConfig.samplesheet_generation_rules.TrimUMI = [{
+                            name: "custom_exclude_trim_umi",
+                            conditions: conditions,
+                            action: "set_value",
+                            value: "EXCLUDE"
+                        }];
+                    } else {
+                        // OR logic: multiple rules with one condition each
+                        customConfig.samplesheet_generation_rules.TrimUMI = filledConditions.map((field, index) => ({
+                            name: `custom_exclude_trim_umi_or_${index + 1}`,
+                            conditions: {
+                                [field]: this.customConfigFormData.stage2_trim_umi_conditions[field]
+                            },
+                            action: "set_value",
+                            value: "EXCLUDE"
+                        }));
+                    }
                 }
                 
                 // CreateFastqForIndexReads rule
                 if (this.customConfigFormData.stage2_create_fastq_action === 'exclude') {
-                    const conditions = {};
-                    if (this.customConfigFormData.stage2_create_fastq_conditions.sample_type) {
-                        conditions.sample_type = this.customConfigFormData.stage2_create_fastq_conditions.sample_type;
-                    }
-                    if (this.customConfigFormData.stage2_create_fastq_conditions.umi_config) {
-                        conditions.umi_config = this.customConfigFormData.stage2_create_fastq_conditions.umi_config;
-                    }
+                    const conditionFields = ['sample_type', 'umi_config', 'index_length', 'named_index', 'library_method', 'control'];
+                    const filledConditions = conditionFields.filter(field => 
+                        this.customConfigFormData.stage2_create_fastq_conditions[field]
+                    );
                     
-                    customConfig.samplesheet_generation_rules.CreateFastqForIndexReads = [{
-                        name: "custom_exclude_create_fastq",
-                        conditions: conditions,
-                        action: "set_value",
-                        value: "EXCLUDE"
-                    }];
+                    if (this.customConfigFormData.stage2_create_fastq_logic === 'AND') {
+                        // AND logic: single rule with all conditions
+                        const conditions = {};
+                        filledConditions.forEach(field => {
+                            conditions[field] = this.customConfigFormData.stage2_create_fastq_conditions[field];
+                        });
+                        
+                        customConfig.samplesheet_generation_rules.CreateFastqForIndexReads = [{
+                            name: "custom_exclude_create_fastq",
+                            conditions: conditions,
+                            action: "set_value",
+                            value: "EXCLUDE"
+                        }];
+                    } else {
+                        // OR logic: multiple rules with one condition each
+                        customConfig.samplesheet_generation_rules.CreateFastqForIndexReads = filledConditions.map((field, index) => ({
+                            name: `custom_exclude_create_fastq_or_${index + 1}`,
+                            conditions: {
+                                [field]: this.customConfigFormData.stage2_create_fastq_conditions[field]
+                            },
+                            action: "set_value",
+                            value: "EXCLUDE"
+                        }));
+                    }
                 }
             }
 
@@ -3413,7 +3498,8 @@ const vDemuxSampleInfoEditor = {
                                                     <li>Rules are evaluated for each sample based on conditions you specify</li>
                                                     <li>If conditions match, the setting is set to <code>EXCLUDE</code> and filtered out from the final samplesheet</li>
                                                     <li>Leave condition fields empty to match all samples</li>
-                                                    <li>Multiple conditions act as AND (all must match)</li>
+                                                    <li><strong>AND Logic:</strong> All filled conditions must match (stricter)</li>
+                                                    <li><strong>OR Logic:</strong> Any one filled condition matching is sufficient (broader)</li>
                                                 </ul>
                                             </div>
 
@@ -3424,7 +3510,7 @@ const vDemuxSampleInfoEditor = {
                                                 </div>
                                                 <div class="card-body">
                                                     <div class="row">
-                                                        <div class="col-md-6 mb-3">
+                                                        <div class="col-md-4 mb-3">
                                                             <label class="form-label">Action:</label>
                                                             <div class="form-check">
                                                                 <input type="radio" class="form-check-input" id="stage2_trim_umi_keep" v-model="customConfigFormData.stage2_trim_umi_action" value="keep">
@@ -3436,17 +3522,45 @@ const vDemuxSampleInfoEditor = {
                                                             </div>
                                                         </div>
                                                         
+                                                        <div v-if="customConfigFormData.stage2_trim_umi_action === 'exclude'" class="col-md-2 mb-3">
+                                                            <label class="form-label">Condition Logic:</label>
+                                                            <div class="form-check">
+                                                                <input type="radio" class="form-check-input" id="stage2_trim_umi_and" v-model="customConfigFormData.stage2_trim_umi_logic" value="AND">
+                                                                <label class="form-check-label" for="stage2_trim_umi_and">AND</label>
+                                                            </div>
+                                                            <div class="form-check">
+                                                                <input type="radio" class="form-check-input" id="stage2_trim_umi_or" v-model="customConfigFormData.stage2_trim_umi_logic" value="OR">
+                                                                <label class="form-check-label" for="stage2_trim_umi_or">OR</label>
+                                                            </div>
+                                                        </div>
+                                                        
                                                         <div v-if="customConfigFormData.stage2_trim_umi_action === 'exclude'" class="col-md-6">
-                                                            <label class="form-label">Conditions (all must match):</label>
+                                                            <label class="form-label">Conditions:</label>
                                                             <div class="mb-2">
                                                                 <label class="form-label small">Sample Type:</label>
-                                                                <input type="text" class="form-control form-control-sm" v-model="customConfigFormData.stage2_trim_umi_conditions.sample_type" placeholder="e.g., NOINDEX, STANDARD (leave empty for all)">
+                                                                <input type="text" class="form-control form-control-sm" v-model="customConfigFormData.stage2_trim_umi_conditions.sample_type" placeholder="e.g., NOINDEX, STANDARD">
                                                             </div>
                                                             <div class="mb-2">
                                                                 <label class="form-label small">UMI Config:</label>
-                                                                <input type="text" class="form-control form-control-sm" v-model="customConfigFormData.stage2_trim_umi_conditions.umi_config" placeholder="e.g., null, r1_start (leave empty for all)">
-                                                                <small class="text-muted">Enter "null" to match samples without UMI config</small>
+                                                                <input type="text" class="form-control form-control-sm" v-model="customConfigFormData.stage2_trim_umi_conditions.umi_config" placeholder='e.g., null, r1_start'>
                                                             </div>
+                                                            <div class="mb-2">
+                                                                <label class="form-label small">Index Length:</label>
+                                                                <input type="text" class="form-control form-control-sm" v-model="customConfigFormData.stage2_trim_umi_conditions.index_length" placeholder="e.g., 8, 10">
+                                                            </div>
+                                                            <div class="mb-2">
+                                                                <label class="form-label small">Named Index:</label>
+                                                                <input type="text" class="form-control form-control-sm" v-model="customConfigFormData.stage2_trim_umi_conditions.named_index" placeholder="e.g., A001, NOINDEX">
+                                                            </div>
+                                                            <div class="mb-2">
+                                                                <label class="form-label small">Library Method:</label>
+                                                                <input type="text" class="form-control form-control-sm" v-model="customConfigFormData.stage2_trim_umi_conditions.library_method" placeholder="e.g., WGS, RNA-seq">
+                                                            </div>
+                                                            <div class="mb-2">
+                                                                <label class="form-label small">Control:</label>
+                                                                <input type="text" class="form-control form-control-sm" v-model="customConfigFormData.stage2_trim_umi_conditions.control" placeholder="e.g., Y, N">
+                                                            </div>
+                                                            <small class="text-muted">Leave fields empty to ignore that condition. Use "null" to match null values.</small>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -3459,7 +3573,7 @@ const vDemuxSampleInfoEditor = {
                                                 </div>
                                                 <div class="card-body">
                                                     <div class="row">
-                                                        <div class="col-md-6 mb-3">
+                                                        <div class="col-md-4 mb-3">
                                                             <label class="form-label">Action:</label>
                                                             <div class="form-check">
                                                                 <input type="radio" class="form-check-input" id="stage2_create_fastq_keep" v-model="customConfigFormData.stage2_create_fastq_action" value="keep">
@@ -3471,17 +3585,45 @@ const vDemuxSampleInfoEditor = {
                                                             </div>
                                                         </div>
                                                         
+                                                        <div v-if="customConfigFormData.stage2_create_fastq_action === 'exclude'" class="col-md-2 mb-3">
+                                                            <label class="form-label">Condition Logic:</label>
+                                                            <div class="form-check">
+                                                                <input type="radio" class="form-check-input" id="stage2_create_fastq_and" v-model="customConfigFormData.stage2_create_fastq_logic" value="AND">
+                                                                <label class="form-check-label" for="stage2_create_fastq_and">AND</label>
+                                                            </div>
+                                                            <div class="form-check">
+                                                                <input type="radio" class="form-check-input" id="stage2_create_fastq_or" v-model="customConfigFormData.stage2_create_fastq_logic" value="OR">
+                                                                <label class="form-check-label" for="stage2_create_fastq_or">OR</label>
+                                                            </div>
+                                                        </div>
+                                                        
                                                         <div v-if="customConfigFormData.stage2_create_fastq_action === 'exclude'" class="col-md-6">
-                                                            <label class="form-label">Conditions (all must match):</label>
+                                                            <label class="form-label">Conditions:</label>
                                                             <div class="mb-2">
                                                                 <label class="form-label small">Sample Type:</label>
-                                                                <input type="text" class="form-control form-control-sm" v-model="customConfigFormData.stage2_create_fastq_conditions.sample_type" placeholder="e.g., NOINDEX, STANDARD (leave empty for all)">
+                                                                <input type="text" class="form-control form-control-sm" v-model="customConfigFormData.stage2_create_fastq_conditions.sample_type" placeholder="e.g., NOINDEX, STANDARD">
                                                             </div>
                                                             <div class="mb-2">
                                                                 <label class="form-label small">UMI Config:</label>
-                                                                <input type="text" class="form-control form-control-sm" v-model="customConfigFormData.stage2_create_fastq_conditions.umi_config" placeholder="e.g., null, r1_start (leave empty for all)">
-                                                                <small class="text-muted">Enter "null" to match samples without UMI config</small>
+                                                                <input type="text" class="form-control form-control-sm" v-model="customConfigFormData.stage2_create_fastq_conditions.umi_config" placeholder='e.g., null, r1_start'>
                                                             </div>
+                                                            <div class="mb-2">
+                                                                <label class="form-label small">Index Length:</label>
+                                                                <input type="text" class="form-control form-control-sm" v-model="customConfigFormData.stage2_create_fastq_conditions.index_length" placeholder="e.g., 8, 10">
+                                                            </div>
+                                                            <div class="mb-2">
+                                                                <label class="form-label small">Named Index:</label>
+                                                                <input type="text" class="form-control form-control-sm" v-model="customConfigFormData.stage2_create_fastq_conditions.named_index" placeholder="e.g., A001, NOINDEX">
+                                                            </div>
+                                                            <div class="mb-2">
+                                                                <label class="form-label small">Library Method:</label>
+                                                                <input type="text" class="form-control form-control-sm" v-model="customConfigFormData.stage2_create_fastq_conditions.library_method" placeholder="e.g., WGS, RNA-seq">
+                                                            </div>
+                                                            <div class="mb-2">
+                                                                <label class="form-label small">Control:</label>
+                                                                <input type="text" class="form-control form-control-sm" v-model="customConfigFormData.stage2_create_fastq_conditions.control" placeholder="e.g., Y, N">
+                                                            </div>
+                                                            <small class="text-muted">Leave fields empty to ignore that condition. Use "null" to match null values.</small>
                                                         </div>
                                                     </div>
                                                 </div>
