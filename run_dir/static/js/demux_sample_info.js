@@ -673,8 +673,8 @@ const vDemuxSampleInfoEditor = {
                 const firstSettings = firstSample.settings;
                 
                 // Map of field names to their values and consistency
+                // Note: sample_project is excluded because it's always set to the target project
                 const bulkFields = {
-                    'sample_project': { values: new Set(), displayName: 'Sample Project' },
                     'sample_ref': { values: new Set(), displayName: 'Sample Ref' },
                     'recipe': { values: new Set(), displayName: 'Recipe' },
                     'operator': { values: new Set(), displayName: 'Operator' },
@@ -691,7 +691,6 @@ const vDemuxSampleInfoEditor = {
 
                 // Collect values from all project samples
                 projectSamples.forEach(({ sample, settings }) => {
-                    bulkFields['sample_project'].values.add(settings.per_sample_fields?.Sample_Project || '');
                     bulkFields['sample_ref'].values.add(settings.other_details?.sample_ref || '');
                     bulkFields['recipe'].values.add(settings.other_details?.recipe || '');
                     bulkFields['operator'].values.add(settings.other_details?.operator || '');
@@ -3298,6 +3297,12 @@ const vDemuxSampleInfoEditor = {
                                             </ul>
                                         </div>
 
+                                        <!-- Info about manual sample addition -->
+                                        <div v-if="addSampleTargetLanes.length > 0" class="alert alert-info">
+                                            <strong><i class="fa fa-info-circle"></i> Note:</strong>
+                                            Manually added samples require you to fill in all fields. Unlike LIMS-uploaded samples, Stage 1 processing rules will not be applied.
+                                        </div>
+
                                         <div v-else-if="addSampleTargetLanes.length === 0" class="alert alert-warning">
                                             <i class="fa fa-exclamation-triangle"></i> Please select at least one lane above to continue
                                         </div>
@@ -3370,7 +3375,7 @@ const vDemuxSampleInfoEditor = {
                                             <div class="col-md-12 mb-3">
                                                 <label for="add_override_cycles" class="form-label">
                                                     Override Cycles:
-                                                    <span class="text-muted small">(auto-calculated from recipe and UMI config)</span>
+                                                    <span class="text-muted small">(leave empty - will be calculated after saving)</span>
                                                 </label>
                                                 <input type="text" class="form-control font-monospace bg-light" id="add_override_cycles" v-model="editFormData.override_cycles" readonly>
                                             </div>
