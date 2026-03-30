@@ -294,6 +294,575 @@ const UTILS = {
     }
 };
 /**
+ * ConfigInspectModal Component
+ *
+ * Modal for inspecting sample classification configuration details and sources.
+ * Shows Stage 1 (stored settings) and historical versions.
+ *
+ * @component
+ * @emits close - Emitted when modal should be closed
+ * @emits toggle-source - Emitted when config source expansion is toggled
+ */
+const ConfigInspectModal = {
+    name: 'ConfigInspectModal',
+    props: {
+        show: {
+            type: Boolean,
+            default: false
+        },
+        sample: {
+            type: Object,
+            default: null
+        },
+        sources: {
+            type: Array,
+            default: () => []
+        },
+        expandedSources: {
+            type: Array,
+            default: () => []
+        },
+        classificationConfig: {
+            type: Object,
+            default: null
+        },
+        sortedSettings: {
+            type: Array,
+            default: () => []
+        },
+        // Pass method functions as props
+        formatTimestamp: {
+            type: Function,
+            required: true
+        },
+        formatConfigValue: {
+            type: Function,
+            required: true
+        },
+        getConfigDetails: {
+            type: Function,
+            required: true
+        },
+        traceConfigValueSource: {
+            type: Function,
+            required: true
+        },
+        formatConfigSourceLabel: {
+            type: Function,
+            required: true
+        },
+        getAllBCLConvertSettings: {
+            type: Function,
+            required: true
+        },
+        wasBCLSettingManuallyEdited: {
+            type: Function,
+            required: true
+        }
+    },
+    methods: {
+        close() {
+            this.$emit('close');
+        },
+        toggleSource(index) {
+            this.$emit('toggle-source', index);
+        },
+        isSourceExpanded(index) {
+            return this.expandedSources.includes(index);
+        }
+    },
+    template: /*html*/`
+        <div v-if="show" class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5); overflow-y: auto;">
+            <div class="modal-dialog modal-xl">
+                <div class="modal-content">
+                    <div class="modal-header bg-info text-white">
+                        <h5 class="modal-title">
+                            <i class="fa fa-cog"></i> Sample Classification Configuration Details
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" @click="close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <!-- Two-Stream Architecture Info -->
+                        <div class="alert alert-info" role="alert">
+                            <h6 class="alert-heading"><i class="fa fa-info-circle"></i> Understanding the Two-Stream Architecture</h6>
+                            <p class="mb-2 small">
+                                The system uses a <strong>two-stream approach</strong> to manage sample configurations:
+                            </p>
+                            <ul class="small mb-2">
+                                <li><strong>Stage 1: Classification & Storage</strong> - Settings shown below are calculated and stored permanently in the database based on sample properties (6-tier classification system). These are your "gold standard" settings.</li>
+                                <li><strong>Stage 2: Samplesheet Generation</strong> - When creating samplesheets, additional rules are applied dynamically (e.g., excluding TrimUMI for NoIndex samples or samples without UMI config). These adjustments are <em>not</em> stored in the database.</li>
+                            </ul>
+                            <p class="mb-0 small">
+                                <i class="fa fa-lightbulb-o"></i> <strong>Note:</strong> The settings displayed here reflect Stage 1 (stored data). To see what will actually appear in generated samplesheets after Stage 2 rules are applied, download the samplesheets from the Samplesheets tab.
+                            </p>
+                        </div>
+                        <!-- Current Settings -->
+                        <div v-if="sample && sortedSettings.length > 0" class="mb-4">
+                            <h5 class="text-info">
+                                <i class="fa fa-check-circle"></i> Current Settings (Stage 1: Stored in Database)
+                            </h5>
+                            <p class="text-muted">These settings are permanently stored and represent the calculated configuration based on sample classification:</p>
+                            <div class="card">
+                                <div class="card-body">
+                                    <h6 class="text-muted">{{ formatTimestamp(sortedSettings[0][0]) }}</h6>
+                                    <!-- Show config sources for current version -->
+                                    <div v-if="sortedSettings[0][1].other_details?.config_sources && sortedSettings[0][1].other_details.config_sources.length > 0" class="alert alert-secondary small mb-3">
+                                        <strong><i class="fa fa-stream"></i> Stage 1: Configuration sources applied (stored in database):</strong>
+                                        <ol class="mb-0 mt-1">
+                                            <li v-for="(source, idx) in sortedSettings[0][1].other_details.config_sources" :key="idx" class="font-monospace">
+                                                {{ source }}
+                                            </li>
+                                        </ol>
+                                        <div class="mt-2 fst-italic">
+                                            <i class="fa fa-info-circle"></i> These sources show how Stage 1 calculated and stored your settings. Stage 2 samplesheet generation rules may dynamically adjust these for the final output.
+                                        </div>
+                                    </div>
+                                    <div class="table-responsive">
+                                        <table class="table table-sm table-hover">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th style="width: 30%">Setting Name</th>
+                                                    <th style="width: 45%">Value</th>
+                                                    <th style="width: 25%">Source</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td><strong>Sample Type</strong></td>
+                                                    <td><code>{{ sortedSettings[0][1].other_details?.sample_type || 'N/A' }}</code></td>
+                                                    <td>
+                                                        <span v-if="traceConfigValueSource('sample_type')" class="badge bg-info">
+                                                            {{ formatConfigSourceLabel(traceConfigValueSource('sample_type')) }}
+                                                        </span>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td><strong>Index Length</strong></td>
+                                                    <td><code>{{ formatConfigValue(sortedSettings[0][1].other_details?.index_length) }}</code></td>
+                                                    <td><span class="badge bg-secondary">actual indices</span></td>
+                                                </tr>
+                                                <tr>
+                                                    <td><strong>UMI Config</strong></td>
+                                                    <td><code>{{ formatConfigValue(sortedSettings[0][1].other_details?.umi_config) }}</code></td>
+                                                    <td>
+                                                        <span v-if="traceConfigValueSource('umi_config')" class="badge bg-info">
+                                                            {{ formatConfigSourceLabel(traceConfigValueSource('umi_config')) }}
+                                                        </span>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td><strong>Named Indices</strong></td>
+                                                    <td><code>{{ sortedSettings[0][1].other_details?.named_index || 'N/A' }}</code></td>
+                                                    <td>
+                                                        <span v-if="traceConfigValueSource('named_indices')" class="badge bg-info">
+                                                            {{ formatConfigSourceLabel(traceConfigValueSource('named_indices')) }}
+                                                        </span>
+                                                    </td>
+                                                </tr>
+                                                <tr v-if="getAllBCLConvertSettings(sortedSettings[0][1]) && Object.keys(getAllBCLConvertSettings(sortedSettings[0][1])).length > 0">
+                                                    <td colspan="3" class="table-secondary">
+                                                        <strong>BCLConvert Settings (Stage 1: Stored)</strong>
+                                                        <span class="badge bg-info ms-2 small" title="These are the calculated and stored settings. Stage 2 may dynamically exclude some settings during samplesheet generation.">Stage 1</span>
+                                                    </td>
+                                                </tr>
+                                                <tr v-for="(value, key) in getAllBCLConvertSettings(sortedSettings[0][1])" :key="key">
+                                                    <td class="ps-4">{{ key }}</td>
+                                                    <td>
+                                                        <code v-if="value === 'EXCLUDE'" class="text-danger" title="This value is set to EXCLUDE in stored settings (rare - typically EXCLUDE is used in Stage 2 samplesheet generation rules)">EXCLUDE</code>
+                                                        <code v-else>{{ value }}</code>
+                                                    </td>
+                                                    <td>
+                                                        <span v-if="wasBCLSettingManuallyEdited(sortedSettings[0][0], key, value)" class="badge bg-warning text-dark">
+                                                            Manual Edit
+                                                        </span>
+                                                        <span v-else-if="traceConfigValueSource('raw_samplesheet_settings', 'raw_samplesheet_settings.' + key)" class="badge bg-info">
+                                                            {{ formatConfigSourceLabel(traceConfigValueSource('raw_samplesheet_settings', 'raw_samplesheet_settings.' + key)) }}
+                                                        </span>
+                                                        <span v-else class="badge bg-secondary">default</span>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Configuration Source Details -->
+                        <div class="mt-4 mb-4">
+                            <h5 class="text-info">
+                                <i class="fa fa-list"></i> Stage 1: Configuration Source Details (Stored Settings)
+                            </h5>
+                            <p class="text-muted mb-3">
+                                Detailed information about each Stage 1 configuration source that determined the stored settings.
+                                Configurations are applied in order during classification (from least specific to most specific):
+                            </p>
+                            <div v-if="!classificationConfig" class="text-center">
+                                <div class="spinner-border text-info" role="status">
+                                    <span class="visually-hidden">Loading configuration...</span>
+                                </div>
+                                <p class="mt-2">Loading configuration details...</p>
+                            </div>
+                            <div v-else>
+                                <div v-for="(source, index) in sources" :key="index" class="card mb-2">
+                                    <div class="card-header">
+                                        <button class="btn btn-link text-start w-100 text-decoration-none d-flex align-items-center"
+                                            type="button"
+                                            @click="toggleSource(index)">
+                                            <span class="badge bg-primary me-2">{{ index + 1 }}</span>
+                                            <strong class="flex-grow-1">{{ source }}</strong>
+                                            <i class="fa" :class="isSourceExpanded(index) ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+                                        </button>
+                                    </div>
+                                    <div v-show="isSourceExpanded(index)" class="card-body">
+                                        <div v-if="getConfigDetails(source)">
+                                            <pre class="bg-light p-3 rounded mb-0"><code>{{ formatConfigValue(getConfigDetails(source)) }}</code></pre>
+                                        </div>
+                                        <div v-else class="alert alert-warning mb-0">
+                                            Configuration details not available for this source.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Stage 2 Information -->
+                            <div class="alert alert-warning mt-3" role="alert">
+                                <h6 class="alert-heading"><i class="fa fa-stream"></i> Stage 2: Samplesheet Generation Rules (Not Shown Here)</h6>
+                                <p class="mb-2 small">
+                                    In addition to the stored settings above, <strong>conditional rules are applied dynamically</strong> when generating samplesheets. These rules:
+                                </p>
+                                <ul class="small mb-2">
+                                    <li>May <strong>exclude settings</strong> from the samplesheet based on sample properties (e.g., excluding TrimUMI for samples without UMI configuration)</li>
+                                    <li>Are <strong>not stored</strong> in the database or tracked in config_sources</li>
+                                    <li>Apply to: NoIndex samples, standard samples without UMI, IDT UMI samples without UMI config, and control samples</li>
+                                </ul>
+                                <p class="mb-0 small">
+                                    <i class="fa fa-download"></i> <strong>To see the final samplesheet output:</strong> Download the generated samplesheets from the Samplesheets tab. They reflect both Stage 1 (stored settings) and Stage 2 (dynamic rules).
+                                </p>
+                            </div>
+                        </div>
+                        <!-- Historical Settings -->
+                        <div v-if="sample && sortedSettings.length > 1" class="mt-4">
+                            <h3 class="text-secondary">
+                                <i class="fa fa-history"></i> Historical Settings (Stage 1: Version History)
+                            </h3>
+                            <p class="text-muted">Previous versions of stored settings for this sample:</p>
+                            <div class="card">
+                                <div class="card-body">
+                                    <div v-for="[timestamp, settings] in sortedSettings.slice(1)" :key="timestamp" class="mb-4 pb-3 border-bottom">
+                                        <h6 class="text-muted">{{ formatTimestamp(timestamp) }}</h6>
+                                        <!-- Show config sources for this specific version -->
+                                        <div v-if="settings.other_details?.config_sources && settings.other_details.config_sources.length > 0" class="alert alert-secondary small mb-3">
+                                            <strong><i class="fa fa-stream"></i> Stage 1: Configuration sources applied:</strong>
+                                            <ol class="mb-0 mt-1">
+                                                <li v-for="(source, idx) in settings.other_details.config_sources" :key="idx" class="font-monospace">
+                                                    {{ source }}
+                                                </li>
+                                            </ol>
+                                        </div>
+                                        <div class="table-responsive">
+                                            <table class="table table-sm table-hover">
+                                                <thead class="table-light">
+                                                    <tr>
+                                                        <th style="width: 30%">Setting Name</th>
+                                                        <th style="width: 45%">Value</th>
+                                                        <th style="width: 25%">Source</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr>
+                                                        <td><strong>Sample Type</strong></td>
+                                                        <td><code>{{ settings.other_details?.sample_type || 'N/A' }}</code></td>
+                                                        <td>
+                                                            <span v-if="traceConfigValueSource('sample_type')" class="badge bg-info">
+                                                                {{ formatConfigSourceLabel(traceConfigValueSource('sample_type')) }}
+                                                            </span>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td><strong>Index Length</strong></td>
+                                                        <td><code>{{ formatConfigValue(settings.other_details?.index_length) }}</code></td>
+                                                        <td><span class="badge bg-secondary">actual indices</span></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td><strong>UMI Config</strong></td>
+                                                        <td><code>{{ formatConfigValue(settings.other_details?.umi_config) }}</code></td>
+                                                        <td>
+                                                            <span v-if="traceConfigValueSource('umi_config')" class="badge bg-info">
+                                                                {{ formatConfigSourceLabel(traceConfigValueSource('umi_config')) }}
+                                                            </span>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td><strong>Named Indices</strong></td>
+                                                        <td><code>{{ settings.other_details?.named_index || 'N/A' }}</code></td>
+                                                        <td>
+                                                            <span v-if="traceConfigValueSource('named_indices')" class="badge bg-info">
+                                                                {{ formatConfigSourceLabel(traceConfigValueSource('named_indices')) }}
+                                                            </span>
+                                                        </td>
+                                                    </tr>
+                                                    <tr v-if="getAllBCLConvertSettings(settings) && Object.keys(getAllBCLConvertSettings(settings)).length > 0">
+                                                        <td colspan="3" class="table-secondary">
+                                                            <strong>BCLConvert Settings (Stage 1: Stored)</strong>
+                                                        </td>
+                                                    </tr>
+                                                    <tr v-for="(value, key) in getAllBCLConvertSettings(settings)" :key="key">
+                                                        <td class="ps-4">{{ key }}</td>
+                                                        <td>
+                                                            <code v-if="value === 'EXCLUDE'" class="text-danger" title="This value is set to EXCLUDE in stored settings (rare - typically EXCLUDE is used in Stage 2 samplesheet generation rules)">EXCLUDE</code>
+                                                            <code v-else>{{ value }}</code>
+                                                        </td>
+                                                        <td>
+                                                            <span v-if="wasBCLSettingManuallyEdited(timestamp, key, value)" class="badge bg-warning text-dark">
+                                                                Manual Edit
+                                                            </span>
+                                                            <span v-else-if="traceConfigValueSource('raw_samplesheet_settings', 'raw_samplesheet_settings.' + key)" class="badge bg-info">
+                                                                {{ formatConfigSourceLabel(traceConfigValueSource('raw_samplesheet_settings', 'raw_samplesheet_settings.' + key)) }}
+                                                            </span>
+                                                            <span v-else class="badge bg-secondary">default</span>
+                                                        </td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" @click="close">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `
+};
+/**
+ * CustomConfigModal Component
+ * 
+ * Modal for creating or editing custom BCLConvert configurations.
+ * Allows targeting specific projects/lanes with custom settings.
+ * 
+ * @component
+ * @emits close - Emitted when modal should be closed
+ * @emits save - Emitted when configuration should be saved
+ * @emits update:formData - Emitted when form data changes
+ */
+const CustomConfigModal = {
+    name: 'CustomConfigModal',
+    props: {
+        show: {
+            type: Boolean,
+            default: false
+        },
+        editMode: {
+            type: Boolean,
+            default: false
+        },
+        formData: {
+            type: Object,
+            required: true
+        },
+        availableProjects: {
+            type: Array,
+            default: () => []
+        },
+        availableLanes: {
+            type: Array,
+            default: () => []
+        },
+        targetSamples: {
+            type: Array,
+            default: () => []
+        }
+    },
+    methods: {
+        close() {
+            this.$emit('close');
+        },
+        save() {
+            this.$emit('save');
+        },
+        updateFormField(field, value) {
+            this.$emit('update:formData', {
+                ...this.formData,
+                [field]: value
+            });
+        }
+    },
+    template: /*html*/`
+        <div v-if="show" class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5); overflow-y: auto;">
+            <div class="modal-dialog modal-xl">
+                <div class="modal-content">
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title">
+                            <i class="fa fa-magic"></i> {{ editMode ? 'Edit Custom Configuration' : 'Create Custom Configuration' }}
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" @click="close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <!-- Two-Stream Architecture Info -->
+                        <div class="alert alert-info mb-3" role="alert">
+                            <h6 class="alert-heading"><i class="fa fa-info-circle"></i> Custom Configuration: Stage 1 (Stored Settings)</h6>
+                            <p class="mb-1 small">
+                                Custom configurations override <strong>Stage 1</strong> settings, which are permanently stored in the database.
+                                These overrides will appear in the sample's config_sources and version history.
+                            </p>
+                            <p class="mb-0 small">
+                                <strong>Note:</strong> Stage 2 samplesheet generation rules may still dynamically adjust these settings when creating samplesheets 
+                                (e.g., excluding TrimUMI for samples without UMI configuration).
+                            </p>
+                        </div>
+                        <p class="text-muted">Define custom BCLConvert settings to override the calculated settings for specific samples.</p>
+                        <!-- Config Name and Target -->
+                        <div class="row mb-4">
+                            <div class="col-md-12 mb-3">
+                                <label for="custom_config_name" class="form-label"><strong>Configuration Name:</strong></label>
+                                <input type="text" class="form-control" id="custom_config_name" 
+                                    :value="formData.name" 
+                                    @input="updateFormField('name', $event.target.value)"
+                                    placeholder="e.g., NovaSeq X Special Settings" 
+                                    :readonly="editMode">
+                                <small class="form-text text-muted">
+                                    <span v-if="editMode">The name cannot be changed when editing an existing configuration.</span>
+                                    <span v-else>A descriptive name for this custom configuration</span>
+                                </small>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="custom_config_target_type" class="form-label"><strong>Target Type:</strong></label>
+                                <select class="form-select" id="custom_config_target_type" 
+                                    :value="formData.target_type" 
+                                    @input="updateFormField('target_type', $event.target.value)">
+                                    <option value="project">All lanes in project</option>
+                                    <option value="lane">All projects in lane</option>
+                                    <option value="project_lane">Specific project + lane</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4 mb-3" v-if="formData.target_type !== 'lane'">
+                                <label for="custom_config_target_project" class="form-label"><strong>Target Project:</strong></label>
+                                <select class="form-select" id="custom_config_target_project" 
+                                    :value="formData.target_project" 
+                                    @input="updateFormField('target_project', $event.target.value)"
+                                    required>
+                                    <option value="">-- Select Project --</option>
+                                    <option v-for="project in availableProjects" :key="project" :value="project">
+                                        {{ project }}
+                                    </option>
+                                </select>
+                            </div>
+                            <div class="col-md-4 mb-3" v-if="formData.target_type !== 'project'">
+                                <label for="custom_config_target_lane" class="form-label"><strong>Target Lane:</strong></label>
+                                <select class="form-select" id="custom_config_target_lane" 
+                                    :value="formData.target_lane" 
+                                    @input="updateFormField('target_lane', $event.target.value)">
+                                    <option value="">-- Select Lane --</option>
+                                    <option v-for="lane in availableLanes" :key="lane" :value="lane">
+                                        Lane {{ lane }}
+                                    </option>
+                                </select>
+                            </div>
+                        </div>
+                        <!-- BCLConvert Settings -->
+                        <div class="row mb-4">
+                            <div class="col-md-12 mb-3">
+                                <hr>
+                                <h6 class="mb-2">
+                                    <i class="fa fa-cog"></i> BCLConvert Settings (Stage 1: Stored Overrides)
+                                </h6>
+                                <p class="text-muted small mb-3">
+                                    Configure settings to override the calculated Stage 1 values. These will be permanently stored.
+                                    Leave settings at "Do not override" to keep the automatically calculated values.
+                                </p>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Trim UMI:</label>
+                                <div class="form-check">
+                                    <input type="radio" class="form-check-input" id="custom_trim_umi_yes" 
+                                        :checked="formData.trim_umi === true"
+                                        @change="updateFormField('trim_umi', true)">
+                                    <label class="form-check-label" for="custom_trim_umi_yes">Yes</label>
+                                </div>
+                                <div class="form-check">
+                                    <input type="radio" class="form-check-input" id="custom_trim_umi_no" 
+                                        :checked="formData.trim_umi === false"
+                                        @change="updateFormField('trim_umi', false)">
+                                    <label class="form-check-label" for="custom_trim_umi_no">No</label>
+                                </div>
+                                <div class="form-check">
+                                    <input type="radio" class="form-check-input" id="custom_trim_umi_default" 
+                                        :checked="formData.trim_umi === null"
+                                        @change="updateFormField('trim_umi', null)">
+                                    <label class="form-check-label" for="custom_trim_umi_default">Do not override</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Create FASTQ for Index Reads:</label>
+                                <div class="form-check">
+                                    <input type="radio" class="form-check-input" id="custom_create_fastq_yes" 
+                                        :checked="formData.create_fastq_for_index_reads === true"
+                                        @change="updateFormField('create_fastq_for_index_reads', true)">
+                                    <label class="form-check-label" for="custom_create_fastq_yes">Yes</label>
+                                </div>
+                                <div class="form-check">
+                                    <input type="radio" class="form-check-input" id="custom_create_fastq_no" 
+                                        :checked="formData.create_fastq_for_index_reads === false"
+                                        @change="updateFormField('create_fastq_for_index_reads', false)">
+                                    <label class="form-check-label" for="custom_create_fastq_no">No</label>
+                                </div>
+                                <div class="form-check">
+                                    <input type="radio" class="form-check-input" id="custom_create_fastq_default" 
+                                        :checked="formData.create_fastq_for_index_reads === null"
+                                        @change="updateFormField('create_fastq_for_index_reads', null)">
+                                    <label class="form-check-label" for="custom_create_fastq_default">Do not override</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="custom_barcode_mismatches_index1" class="form-label">Barcode Mismatches Index 1:</label>
+                                <input type="number" class="form-control" id="custom_barcode_mismatches_index1" 
+                                    :value="formData.barcode_mismatches_index1" 
+                                    @input="updateFormField('barcode_mismatches_index1', $event.target.value ? Number($event.target.value) : null)"
+                                    min="0" max="2" placeholder="Do not override">
+                                <small class="form-text text-muted">0-2 mismatches allowed (leave blank to not override)</small>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="custom_barcode_mismatches_index2" class="form-label">Barcode Mismatches Index 2:</label>
+                                <input type="number" class="form-control" id="custom_barcode_mismatches_index2" 
+                                    :value="formData.barcode_mismatches_index2" 
+                                    @input="updateFormField('barcode_mismatches_index2', $event.target.value ? Number($event.target.value) : null)"
+                                    min="0" max="2" placeholder="Do not override">
+                                <small class="form-text text-muted">0-2 mismatches allowed (leave blank to not override)</small>
+                            </div>
+                        </div>
+                        <!-- Preview of Affected Samples -->
+                        <div v-if="targetSamples.length > 0" class="alert alert-info">
+                            <h6><i class="fa fa-info-circle"></i> Affected Samples ({{ targetSamples.length }})</h6>
+                            <div class="mt-2" style="max-height: 200px; overflow-y: auto;">
+                                <ul class="mb-0">
+                                    <li v-for="target in targetSamples.slice(0, 20)" :key="target.lane + '_' + target.uuid">
+                                        Lane {{ target.lane }}: {{ target.sample_id }}
+                                    </li>
+                                    <li v-if="targetSamples.length > 20">
+                                        ... and {{ targetSamples.length - 20 }} more
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div v-else-if="formData.target_project || formData.target_type === 'lane'" class="alert alert-warning">
+                            <i class="fa fa-exclamation-triangle"></i> No samples match the selected criteria.
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" @click="close">Cancel</button>
+                        <button type="button" class="btn btn-primary" @click="save">
+                            <i class="fa fa-save"></i> {{ editMode ? 'Update Configuration' : 'Create Configuration' }}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `
+};
+/**
  * SampleFormFields Component
  * 
  * Shared form fields for editing or adding a sample.
@@ -618,6 +1187,8 @@ const SampleFormFields = {
 const vDemuxSampleInfoEditor = {
     // Register child components
     components: {
+        ConfigInspectModal,
+        CustomConfigModal,
         SampleFormFields
     },
     data() {
@@ -3434,411 +4005,34 @@ const vDemuxSampleInfoEditor = {
                             </div>
                         </div>
                     </div>
-                    <!-- Configuration Details Modal -->
-                    <div v-if="showConfigModal" class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5); overflow-y: auto;">
-                        <div class="modal-dialog modal-xl">
-                            <div class="modal-content">
-                                <div class="modal-header bg-info text-white">
-                                    <h5 class="modal-title">
-                                        <i class="fa fa-cog"></i> Sample Classification Configuration Details
-                                    </h5>
-                                    <button type="button" class="btn-close btn-close-white" @click="closeConfigModal"></button>
-                                </div>
-                                <div class="modal-body">
-                                    <!-- Two-Stream Architecture Info -->
-                                    <div class="alert alert-info" role="alert">
-                                        <h6 class="alert-heading"><i class="fa fa-info-circle"></i> Understanding the Two-Stream Architecture</h6>
-                                        <p class="mb-2 small">
-                                            The system uses a <strong>two-stream approach</strong> to manage sample configurations:
-                                        </p>
-                                        <ul class="small mb-2">
-                                            <li><strong>Stage 1: Classification & Storage</strong> - Settings shown below are calculated and stored permanently in the database based on sample properties (6-tier classification system). These are your "gold standard" settings.</li>
-                                            <li><strong>Stage 2: Samplesheet Generation</strong> - When creating samplesheets, additional rules are applied dynamically (e.g., excluding TrimUMI for NoIndex samples or samples without UMI config). These adjustments are <em>not</em> stored in the database.</li>
-                                        </ul>
-                                        <p class="mb-0 small">
-                                            <i class="fa fa-lightbulb-o"></i> <strong>Note:</strong> The settings displayed here reflect Stage 1 (stored data). To see what will actually appear in generated samplesheets after Stage 2 rules are applied, download the samplesheets from the Samplesheets tab.
-                                        </p>
-                                    </div>
-                                    <!-- Current Settings -->
-                                    <div v-if="configModalSample && sortedConfigModalSettings.length > 0" class="mb-4">
-                                        <h5 class="text-info">
-                                            <i class="fa fa-check-circle"></i> Current Settings (Stage 1: Stored in Database)
-                                        </h5>
-                                        <p class="text-muted">These settings are permanently stored and represent the calculated configuration based on sample classification:</p>
-                                        <div class="card">
-                                            <div class="card-body">
-                                                <h6 class="text-muted">{{ formatTimestamp(sortedConfigModalSettings[0][0]) }}</h6>
-                                                <!-- Show config sources for current version -->
-                                                <div v-if="sortedConfigModalSettings[0][1].other_details?.config_sources && sortedConfigModalSettings[0][1].other_details.config_sources.length > 0" class="alert alert-secondary small mb-3">
-                                                    <strong><i class="fa fa-stream"></i> Stage 1: Configuration sources applied (stored in database):</strong>
-                                                    <ol class="mb-0 mt-1">
-                                                        <li v-for="(source, idx) in sortedConfigModalSettings[0][1].other_details.config_sources" :key="idx" class="font-monospace">
-                                                            {{ source }}
-                                                        </li>
-                                                    </ol>
-                                                    <div class="mt-2 fst-italic">
-                                                        <i class="fa fa-info-circle"></i> These sources show how Stage 1 calculated and stored your settings. Stage 2 samplesheet generation rules may dynamically adjust these for the final output.
-                                                    </div>
-                                                </div>
-                                                <div class="table-responsive">
-                                                    <table class="table table-sm table-hover">
-                                                        <thead class="table-light">
-                                                            <tr>
-                                                                <th style="width: 30%">Setting Name</th>
-                                                                <th style="width: 45%">Value</th>
-                                                                <th style="width: 25%">Source</th>
-                                                            </tr>
-                                                        </thead>
-                                                        <tbody>
-                                                            <tr>
-                                                                <td><strong>Sample Type</strong></td>
-                                                                <td><code>{{ sortedConfigModalSettings[0][1].other_details?.sample_type || 'N/A' }}</code></td>
-                                                                <td>
-                                                                    <span v-if="traceConfigValueSource('sample_type')" class="badge bg-info">
-                                                                        {{ formatConfigSourceLabel(traceConfigValueSource('sample_type')) }}
-                                                                    </span>
-                                                                </td>
-                                                            </tr>
-                                                            <tr>
-                                                                <td><strong>Index Length</strong></td>
-                                                                <td><code>{{ formatConfigValue(sortedConfigModalSettings[0][1].other_details?.index_length) }}</code></td>
-                                                                <td><span class="badge bg-secondary">actual indices</span></td>
-                                                            </tr>
-                                                            <tr>
-                                                                <td><strong>UMI Config</strong></td>
-                                                                <td><code>{{ formatConfigValue(sortedConfigModalSettings[0][1].other_details?.umi_config) }}</code></td>
-                                                                <td>
-                                                                    <span v-if="traceConfigValueSource('umi_config')" class="badge bg-info">
-                                                                        {{ formatConfigSourceLabel(traceConfigValueSource('umi_config')) }}
-                                                                    </span>
-                                                                </td>
-                                                            </tr>
-                                                            <tr>
-                                                                <td><strong>Named Indices</strong></td>
-                                                                <td><code>{{ sortedConfigModalSettings[0][1].other_details?.named_index || 'N/A' }}</code></td>
-                                                                <td>
-                                                                    <span v-if="traceConfigValueSource('named_indices')" class="badge bg-info">
-                                                                        {{ formatConfigSourceLabel(traceConfigValueSource('named_indices')) }}
-                                                                    </span>
-                                                                </td>
-                                                            </tr>
-                                                            <tr v-if="getAllBCLConvertSettings(sortedConfigModalSettings[0][1]) && Object.keys(getAllBCLConvertSettings(sortedConfigModalSettings[0][1])).length > 0">
-                                                                <td colspan="3" class="table-secondary">
-                                                                    <strong>BCLConvert Settings (Stage 1: Stored)</strong>
-                                                                    <span class="badge bg-info ms-2 small" title="These are the calculated and stored settings. Stage 2 may dynamically exclude some settings during samplesheet generation.">Stage 1</span>
-                                                                </td>
-                                                            </tr>
-                                                            <tr v-for="(value, key) in getAllBCLConvertSettings(sortedConfigModalSettings[0][1])" :key="key">
-                                                                <td class="ps-4">{{ key }}</td>
-                                                                <td>
-                                                                    <code v-if="value === 'EXCLUDE'" class="text-danger" title="This value is set to EXCLUDE in stored settings (rare - typically EXCLUDE is used in Stage 2 samplesheet generation rules)">EXCLUDE</code>
-                                                                    <code v-else>{{ value }}</code>
-                                                                </td>
-                                                                <td>
-                                                                    <span v-if="wasBCLSettingManuallyEdited(sortedConfigModalSettings[0][0], key, value)" class="badge bg-warning text-dark">
-                                                                        Manual Edit
-                                                                    </span>
-                                                                    <span v-else-if="traceConfigValueSource('raw_samplesheet_settings', 'raw_samplesheet_settings.' + key)" class="badge bg-info">
-                                                                        {{ formatConfigSourceLabel(traceConfigValueSource('raw_samplesheet_settings', 'raw_samplesheet_settings.' + key)) }}
-                                                                    </span>
-                                                                    <span v-else class="badge bg-secondary">default</span>
-                                                                </td>
-                                                            </tr>
-                                                        </tbody>
-                                                    </table>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <!-- Configuration Source Details -->
-                                    <div class="mt-4 mb-4">
-                                        <h5 class="text-info">
-                                            <i class="fa fa-list"></i> Stage 1: Configuration Source Details (Stored Settings)
-                                        </h5>
-                                        <p class="text-muted mb-3">
-                                            Detailed information about each Stage 1 configuration source that determined the stored settings.
-                                            Configurations are applied in order during classification (from least specific to most specific):
-                                        </p>
-                                        <div v-if="!sampleClassificationConfig" class="text-center">
-                                            <div class="spinner-border text-info" role="status">
-                                                <span class="visually-hidden">Loading configuration...</span>
-                                            </div>
-                                            <p class="mt-2">Loading configuration details...</p>
-                                        </div>
-                                        <div v-else>
-                                            <div v-for="(source, index) in configModalSources" :key="index" class="card mb-2">
-                                                <div class="card-header">
-                                                    <button class="btn btn-link text-start w-100 text-decoration-none d-flex align-items-center"
-                                                        type="button"
-                                                        @click="toggleConfigSource(index)">
-                                                        <span class="badge bg-primary me-2">{{ index + 1 }}</span>
-                                                        <strong class="flex-grow-1">{{ source }}</strong>
-                                                        <i class="fa" :class="isConfigSourceExpanded(index) ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
-                                                    </button>
-                                                </div>
-                                                <div v-show="isConfigSourceExpanded(index)" class="card-body">
-                                                    <div v-if="getConfigDetails(source)">
-                                                        <pre class="bg-light p-3 rounded mb-0"><code>{{ formatConfigValue(getConfigDetails(source)) }}</code></pre>
-                                                    </div>
-                                                    <div v-else class="alert alert-warning mb-0">
-                                                        Configuration details not available for this source.
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <!-- Stage 2 Information -->
-                                        <div class="alert alert-warning mt-3" role="alert">
-                                            <h6 class="alert-heading"><i class="fa fa-stream"></i> Stage 2: Samplesheet Generation Rules (Not Shown Here)</h6>
-                                            <p class="mb-2 small">
-                                                In addition to the stored settings above, <strong>conditional rules are applied dynamically</strong> when generating samplesheets. These rules:
-                                            </p>
-                                            <ul class="small mb-2">
-                                                <li>May <strong>exclude settings</strong> from the samplesheet based on sample properties (e.g., excluding TrimUMI for samples without UMI configuration)</li>
-                                                <li>Are <strong>not stored</strong> in the database or tracked in config_sources</li>
-                                                <li>Apply to: NoIndex samples, standard samples without UMI, IDT UMI samples without UMI config, and control samples</li>
-                                            </ul>
-                                            <p class="mb-0 small">
-                                                <i class="fa fa-download"></i> <strong>To see the final samplesheet output:</strong> Download the generated samplesheets from the Samplesheets tab. They reflect both Stage 1 (stored settings) and Stage 2 (dynamic rules).
-                                            </p>
-                                        </div>
-                                    </div>
-                                    <!-- Historical Settings -->
-                                    <div v-if="configModalSample && sortedConfigModalSettings.length > 1" class="mt-4">
-                                        <h3 class="text-secondary">
-                                            <i class="fa fa-history"></i> Historical Settings (Stage 1: Version History)
-                                        </h3>
-                                        <p class="text-muted">Previous versions of stored settings for this sample:</p>
-                                        <div class="card">
-                                            <div class="card-body">
-                                                <div v-for="[timestamp, settings] in sortedConfigModalSettings.slice(1)" :key="timestamp" class="mb-4 pb-3 border-bottom">
-                                                    <h6 class="text-muted">{{ formatTimestamp(timestamp) }}</h6>
-                                                    <!-- Show config sources for this specific version -->
-                                                    <div v-if="settings.other_details?.config_sources && settings.other_details.config_sources.length > 0" class="alert alert-secondary small mb-3">
-                                                        <strong><i class="fa fa-stream"></i> Stage 1: Configuration sources applied:</strong>
-                                                        <ol class="mb-0 mt-1">
-                                                            <li v-for="(source, idx) in settings.other_details.config_sources" :key="idx" class="font-monospace">
-                                                                {{ source }}
-                                                            </li>
-                                                        </ol>
-                                                    </div>
-                                                    <div class="table-responsive">
-                                                        <table class="table table-sm table-hover">
-                                                            <thead class="table-light">
-                                                                <tr>
-                                                                    <th style="width: 30%">Setting Name</th>
-                                                                    <th style="width: 45%">Value</th>
-                                                                    <th style="width: 25%">Source</th>
-                                                                </tr>
-                                                            </thead>
-                                                            <tbody>
-                                                                <tr>
-                                                                    <td><strong>Sample Type</strong></td>
-                                                                    <td><code>{{ settings.other_details?.sample_type || 'N/A' }}</code></td>
-                                                                    <td>
-                                                                        <span v-if="traceConfigValueSource('sample_type')" class="badge bg-info">
-                                                                            {{ formatConfigSourceLabel(traceConfigValueSource('sample_type')) }}
-                                                                        </span>
-                                                                    </td>
-                                                                </tr>
-                                                                <tr>
-                                                                    <td><strong>Index Length</strong></td>
-                                                                    <td><code>{{ formatConfigValue(settings.other_details?.index_length) }}</code></td>
-                                                                    <td><span class="badge bg-secondary">actual indices</span></td>
-                                                                </tr>
-                                                                <tr>
-                                                                    <td><strong>UMI Config</strong></td>
-                                                                    <td><code>{{ formatConfigValue(settings.other_details?.umi_config) }}</code></td>
-                                                                    <td>
-                                                                        <span v-if="traceConfigValueSource('umi_config')" class="badge bg-info">
-                                                                            {{ formatConfigSourceLabel(traceConfigValueSource('umi_config')) }}
-                                                                        </span>
-                                                                    </td>
-                                                                </tr>
-                                                                <tr>
-                                                                    <td><strong>Named Indices</strong></td>
-                                                                    <td><code>{{ settings.other_details?.named_index || 'N/A' }}</code></td>
-                                                                    <td>
-                                                                        <span v-if="traceConfigValueSource('named_indices')" class="badge bg-info">
-                                                                            {{ formatConfigSourceLabel(traceConfigValueSource('named_indices')) }}
-                                                                        </span>
-                                                                    </td>
-                                                                </tr>
-                                                                <tr v-if="getAllBCLConvertSettings(settings) && Object.keys(getAllBCLConvertSettings(settings)).length > 0">
-                                                                    <td colspan="3" class="table-secondary">
-                                                                        <strong>BCLConvert Settings (Stage 1: Stored)</strong>
-                                                                    </td>
-                                                                </tr>
-                                                                <tr v-for="(value, key) in getAllBCLConvertSettings(settings)" :key="key">
-                                                                    <td class="ps-4">{{ key }}</td>
-                                                                    <td>
-                                                                        <code v-if="value === 'EXCLUDE'" class="text-danger" title="This value is set to EXCLUDE in stored settings (rare - typically EXCLUDE is used in Stage 2 samplesheet generation rules)">EXCLUDE</code>
-                                                                        <code v-else>{{ value }}</code>
-                                                                    </td>
-                                                                    <td>
-                                                                        <span v-if="wasBCLSettingManuallyEdited(timestamp, key, value)" class="badge bg-warning text-dark">
-                                                                            Manual Edit
-                                                                        </span>
-                                                                        <span v-else-if="traceConfigValueSource('raw_samplesheet_settings', 'raw_samplesheet_settings.' + key)" class="badge bg-info">
-                                                                            {{ formatConfigSourceLabel(traceConfigValueSource('raw_samplesheet_settings', 'raw_samplesheet_settings.' + key)) }}
-                                                                        </span>
-                                                                        <span v-else class="badge bg-secondary">default</span>
-                                                                    </td>
-                                                                </tr>
-                                                            </tbody>
-                                                        </table>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="modal-footer">
-                                    <button type="button" class="btn btn-secondary" @click="closeConfigModal">Close</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- Custom Config Modal -->
-                    <div v-if="showCustomConfigModal" class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5); overflow-y: auto;">
-                        <div class="modal-dialog modal-xl">
-                            <div class="modal-content">
-                                <div class="modal-header bg-primary text-white">
-                                    <h5 class="modal-title">
-                                        <i class="fa fa-magic"></i> {{ customConfigEditMode ? 'Edit Custom Configuration' : 'Create Custom Configuration' }}
-                                    </h5>
-                                    <button type="button" class="btn-close btn-close-white" @click="closeCustomConfigModal"></button>
-                                </div>
-                                <div class="modal-body">
-                                    <!-- Two-Stream Architecture Info -->
-                                    <div class="alert alert-info mb-3" role="alert">
-                                        <h6 class="alert-heading"><i class="fa fa-info-circle"></i> Custom Configuration: Stage 1 (Stored Settings)</h6>
-                                        <p class="mb-1 small">
-                                            Custom configurations override <strong>Stage 1</strong> settings, which are permanently stored in the database.
-                                            These overrides will appear in the sample's config_sources and version history.
-                                        </p>
-                                        <p class="mb-0 small">
-                                            <strong>Note:</strong> Stage 2 samplesheet generation rules may still dynamically adjust these settings when creating samplesheets 
-                                            (e.g., excluding TrimUMI for samples without UMI configuration).
-                                        </p>
-                                    </div>
-                                    <p class="text-muted">Define custom BCLConvert settings to override the calculated settings for specific samples.</p>
-                                    <!-- Config Name and Target -->
-                                    <div class="row mb-4">
-                                        <div class="col-md-12 mb-3">
-                                            <label for="custom_config_name" class="form-label"><strong>Configuration Name:</strong></label>
-                                            <input type="text" class="form-control" id="custom_config_name" v-model="customConfigFormData.name" placeholder="e.g., NovaSeq X Special Settings" :readonly="customConfigEditMode">
-                                            <small class="form-text text-muted">
-                                                <span v-if="customConfigEditMode">The name cannot be changed when editing an existing configuration.</span>
-                                                <span v-else>A descriptive name for this custom configuration</span>
-                                            </small>
-                                        </div>
-                                        <div class="col-md-4 mb-3">
-                                            <label for="custom_config_target_type" class="form-label"><strong>Target Type:</strong></label>
-                                            <select class="form-select" id="custom_config_target_type" v-model="customConfigFormData.target_type">
-                                                <option value="project">All lanes in project</option>
-                                                <option value="lane">All projects in lane</option>
-                                                <option value="project_lane">Specific project + lane</option>
-                                            </select>
-                                        </div>
-<div class="col-md-4 mb-3" v-if="customConfigFormData.target_type !== 'lane'">
-                                            <label for="custom_config_target_project" class="form-label"><strong>Target Project:</strong></label>
-                                            <select class="form-select" id="custom_config_target_project" v-model="customConfigFormData.target_project" required>
-                                                <option value="">-- Select Project --</option>
-                                                <option v-for="project in availableProjects" :key="project" :value="project">
-                                                    {{ project }}
-                                                </option>
-                                            </select>
-                                        </div>
-                                        <div class="col-md-4 mb-3" v-if="customConfigFormData.target_type !== 'project'">
-                                            <label for="custom_config_target_lane" class="form-label"><strong>Target Lane:</strong></label>
-                                            <select class="form-select" id="custom_config_target_lane" v-model="customConfigFormData.target_lane">
-                                                <option value="">-- Select Lane --</option>
-                                                <option v-for="lane in Object.keys(calculatedLanes)" :key="lane" :value="lane">
-                                                    Lane {{ lane }}
-                                                </option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <!-- BCLConvert Settings -->
-                                    <div class="row mb-4">
-                                        <div class="col-md-12 mb-3">
-                                            <hr>
-                                            <h6 class="mb-2">
-                                                <i class="fa fa-cog"></i> BCLConvert Settings (Stage 1: Stored Overrides)
-                                            </h6>
-                                            <p class="text-muted small mb-3">
-                                                Configure settings to override the calculated Stage 1 values. These will be permanently stored.
-                                                Leave settings at "Do not override" to keep the automatically calculated values.
-                                            </p>
-                                        </div>
-                                        <div class="col-md-6 mb-3">
-                                            <label class="form-label">Trim UMI:</label>
-                                            <div class="form-check">
-                                                <input type="radio" class="form-check-input" id="custom_trim_umi_yes" v-model="customConfigFormData.trim_umi" :value="true">
-                                                <label class="form-check-label" for="custom_trim_umi_yes">Yes</label>
-                                            </div>
-                                            <div class="form-check">
-                                                <input type="radio" class="form-check-input" id="custom_trim_umi_no" v-model="customConfigFormData.trim_umi" :value="false">
-                                                <label class="form-check-label" for="custom_trim_umi_no">No</label>
-                                            </div>
-                                            <div class="form-check">
-                                                <input type="radio" class="form-check-input" id="custom_trim_umi_default" v-model="customConfigFormData.trim_umi" :value="null">
-                                                <label class="form-check-label" for="custom_trim_umi_default">Do not override</label>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6 mb-3">
-                                            <label class="form-label">Create FASTQ for Index Reads:</label>
-                                            <div class="form-check">
-                                                <input type="radio" class="form-check-input" id="custom_create_fastq_yes" v-model="customConfigFormData.create_fastq_for_index_reads" :value="true">
-                                                <label class="form-check-label" for="custom_create_fastq_yes">Yes</label>
-                                            </div>
-                                            <div class="form-check">
-                                                <input type="radio" class="form-check-input" id="custom_create_fastq_no" v-model="customConfigFormData.create_fastq_for_index_reads" :value="false">
-                                                <label class="form-check-label" for="custom_create_fastq_no">No</label>
-                                            </div>
-                                            <div class="form-check">
-                                                <input type="radio" class="form-check-input" id="custom_create_fastq_default" v-model="customConfigFormData.create_fastq_for_index_reads" :value="null">
-                                                <label class="form-check-label" for="custom_create_fastq_default">Do not override</label>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6 mb-3">
-                                            <label for="custom_barcode_mismatches_index1" class="form-label">Barcode Mismatches Index 1:</label>
-                                            <input type="number" class="form-control" id="custom_barcode_mismatches_index1" v-model.number="customConfigFormData.barcode_mismatches_index1" min="0" max="2" placeholder="Do not override">
-                                            <small class="form-text text-muted">0-2 mismatches allowed (leave blank to not override)</small>
-                                        </div>
-                                        <div class="col-md-6 mb-3">
-                                            <label for="custom_barcode_mismatches_index2" class="form-label">Barcode Mismatches Index 2:</label>
-                                            <input type="number" class="form-control" id="custom_barcode_mismatches_index2" v-model.number="customConfigFormData.barcode_mismatches_index2" min="0" max="2" placeholder="Do not override">
-                                            <small class="form-text text-muted">0-2 mismatches allowed (leave blank to not override)</small>
-                                        </div>
-                                    </div>
-                                    <!-- Preview of Affected Samples -->
-                                    <div v-if="customConfigTargetSamples.length > 0" class="alert alert-info">
-                                        <h6><i class="fa fa-info-circle"></i> Affected Samples ({{ customConfigTargetSamples.length }})</h6>
-                                        <div class="mt-2" style="max-height: 200px; overflow-y: auto;">
-                                            <ul class="mb-0">
-                                                <li v-for="target in customConfigTargetSamples.slice(0, 20)" :key="target.lane + '_' + target.uuid">
-                                                    Lane {{ target.lane }}: {{ target.sample_id }}
-                                                </li>
-                                                <li v-if="customConfigTargetSamples.length > 20">
-                                                    ... and {{ customConfigTargetSamples.length - 20 }} more
-                                                </li>
-                                            </ul>
-                                        </div>
-                                    </div>
-                                    <div v-else-if="customConfigFormData.target_project || customConfigFormData.target_type === 'lane'" class="alert alert-warning">
-                                        <i class="fa fa-exclamation-triangle"></i> No samples match the selected criteria.
-                                    </div>
-                                </div>
-                                <div class="modal-footer">
-                                    <button type="button" class="btn btn-secondary" @click="closeCustomConfigModal">Cancel</button>
-                                    <button type="button" class="btn btn-primary" @click="saveCustomConfig">
-                                        <i class="fa fa-save"></i> {{ customConfigEditMode ? 'Update Configuration' : 'Create Configuration' }}
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    <!-- Configuration Details Modal Component -->
+                    <ConfigInspectModal
+                        :show="showConfigModal"
+                        :sample="configModalSample"
+                        :sources="configModalSources"
+                        :expanded-sources="expandedConfigSources"
+                        :classification-config="sampleClassificationConfig"
+                        :sorted-settings="sortedConfigModalSettings"
+                        :format-timestamp="formatTimestamp"
+                        :format-config-value="formatConfigValue"
+                        :get-config-details="getConfigDetails"
+                        :trace-config-value-source="traceConfigValueSource"
+                        :format-config-source-label="formatConfigSourceLabel"
+                        :get-all-bclconvert-settings="getAllBCLConvertSettings"
+                        :was-bclsetting-manually-edited="wasBCLSettingManuallyEdited"
+                        @close="closeConfigModal"
+                        @toggle-source="toggleConfigSource" />
+                    <!-- Custom Config Modal Component -->
+                    <CustomConfigModal
+                        :show="showCustomConfigModal"
+                        :edit-mode="customConfigEditMode"
+                        :form-data="customConfigFormData"
+                        :available-projects="availableProjects"
+                        :available-lanes="Object.keys(calculatedLanes)"
+                        :target-samples="customConfigTargetSamples"
+                        @close="closeCustomConfigModal"
+                        @save="saveCustomConfig"
+                        @update:formData="customConfigFormData = $event" />
                 </div>
             </div>
         </div>
