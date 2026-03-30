@@ -1184,12 +1184,248 @@ const SampleFormFields = {
         </div>
     `
 };
+/**
+ * SampleTable Component
+ * 
+ * Reusable table component for displaying samples with configurable columns.
+ * Used within ProjectLaneCard to render sample data in a consistent format.
+ * 
+ * @component
+ * @emits openConfigModal - Emitted when inspect button is clicked
+ * @emits openEditModal - Emitted when edit button is clicked
+ */
+const SampleTable = {
+    name: 'SampleTable',
+    props: {
+        samples: {
+            type: Array,
+            required: true
+        },
+        lane: {
+            type: String,
+            required: true
+        },
+        visibleColumns: {
+            type: Array,
+            required: true
+        },
+        columnLabel: {
+            type: Object,
+            required: true
+        },
+        calculatedLanes: {
+            type: Object,
+            required: true
+        },
+        // Methods passed from parent
+        getRowClasses: {
+            type: Function,
+            required: true
+        },
+        getCellClasses: {
+            type: Function,
+            required: true
+        },
+        getEditTooltip: {
+            type: Function,
+            required: true
+        },
+        isCodeFormattedColumn: {
+            type: Function,
+            required: true
+        },
+        formatCellValue: {
+            type: Function,
+            required: true
+        },
+        getActionButtonsConfig: {
+            type: Function,
+            required: true
+        }
+    },
+    template: `
+        <div class="table-responsive">
+            <table class="table table-sm mb-0">
+                <thead>
+                    <tr class="darkth">
+                        <th v-for="columnKey in visibleColumns" :key="columnKey">
+                            {{ columnLabel[columnKey] }}
+                        </th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-for="sample in samples" :key="sample.uuid" :class="getRowClasses(lane, sample.uuid)">
+                        <td v-for="columnKey in visibleColumns" :key="columnKey"
+                            :class="getCellClasses(lane, sample.uuid, columnKey)"
+                            :title="getEditTooltip(lane, sample.uuid, columnKey)">
+                            <code v-if="isCodeFormattedColumn(columnKey)">{{ formatCellValue(sample[columnKey], columnKey) }}</code>
+                            <span v-else>{{ formatCellValue(sample[columnKey], columnKey) }}</span>
+                        </td>
+                        <td>
+                            <button
+                                class="btn btn-sm btn-outline-info"
+                                @click="$emit('openConfigModal', calculatedLanes[lane].sample_rows[sample.uuid], lane)"
+                                :disabled="!getActionButtonsConfig(lane, sample).inspect.enabled"
+                                :title="getActionButtonsConfig(lane, sample).inspect.title">
+                                <i class="fa fa-info-circle"></i> Inspect
+                            </button>
+                            <button
+                                class="btn btn-sm btn-outline-primary ml-1"
+                                @click="$emit('openEditModal', lane, sample.uuid)"
+                                :title="getActionButtonsConfig(lane, sample).edit.title">
+                                <i class="fa fa-pencil"></i> Edit
+                            </button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    `
+};
+/**
+ * ProjectLaneCard Component
+ * 
+ * Card wrapper for displaying samples organized by project and lane.
+ * Supports optional grouping by named index with expandable sections.
+ * 
+ * @component
+ * @emits openConfigModal - Emitted when inspect button is clicked in child SampleTable
+ * @emits openEditModal - Emitted when edit button is clicked in child SampleTable
+ */
+const ProjectLaneCard = {
+    name: 'ProjectLaneCard',
+    components: {
+        SampleTable
+    },
+    props: {
+        title: {
+            type: String,
+            required: true
+        },
+        icon: {
+            type: String,
+            default: ''
+        },
+        indexGroups: {
+            type: Object,
+            required: true
+        },
+        lane: {
+            type: String,
+            required: true
+        },
+        groupByNamedIndex: {
+            type: Boolean,
+            required: true
+        },
+        visibleColumns: {
+            type: Array,
+            required: true
+        },
+        columnLabel: {
+            type: Object,
+            required: true
+        },
+        calculatedLanes: {
+            type: Object,
+            required: true
+        },
+        // Methods passed from parent
+        getRowClasses: {
+            type: Function,
+            required: true
+        },
+        getCellClasses: {
+            type: Function,
+            required: true
+        },
+        getEditTooltip: {
+            type: Function,
+            required: true
+        },
+        isCodeFormattedColumn: {
+            type: Function,
+            required: true
+        },
+        formatCellValue: {
+            type: Function,
+            required: true
+        },
+        getActionButtonsConfig: {
+            type: Function,
+            required: true
+        }
+    },
+    template: `
+        <div class="card">
+            <div class="card-header bg-light">
+                <h5 class="mb-0">
+                    <i v-if="icon" :class="icon"></i> {{ title }}
+                    <template v-if="groupByNamedIndex">
+                        <small class="text-muted">({{ Object.values(indexGroups).flat().length }} sample{{ Object.values(indexGroups).flat().length !== 1 ? 's' : '' }})</small>
+                    </template>
+                    <template v-else>
+                        <small class="text-muted">({{ indexGroups['_all_'].length }} sample{{ indexGroups['_all_'].length !== 1 ? 's' : '' }})</small>
+                    </template>
+                </h5>
+            </div>
+            <div class="card-body p-0">
+                <!-- When NOT grouped by named index -->
+                <sample-table
+                    v-if="!groupByNamedIndex"
+                    :samples="indexGroups['_all_']"
+                    :lane="lane"
+                    :visible-columns="visibleColumns"
+                    :column-label="columnLabel"
+                    :calculated-lanes="calculatedLanes"
+                    :get-row-classes="getRowClasses"
+                    :get-cell-classes="getCellClasses"
+                    :get-edit-tooltip="getEditTooltip"
+                    :is-code-formatted-column="isCodeFormattedColumn"
+                    :format-cell-value="formatCellValue"
+                    :get-action-buttons-config="getActionButtonsConfig"
+                    @openConfigModal="(sample, lane) => $emit('openConfigModal', sample, lane)"
+                    @openEditModal="(lane, uuid) => $emit('openEditModal', lane, uuid)">
+                </sample-table>
+                <!-- When grouped by named index -->
+                <div v-else>
+                    <div v-for="(samples, namedIndex) in indexGroups" :key="namedIndex" class="mb-3">
+                        <div class="px-3 py-2 bg-white border-bottom">
+                            <h6 class="mb-0">
+                                <i class="fa fa-tags"></i> Named Index: <strong>{{ namedIndex }}</strong>
+                                <small class="text-muted">({{ samples.length }} sample{{ samples.length !== 1 ? 's' : '' }})</small>
+                            </h6>
+                        </div>
+                        <sample-table
+                            :samples="samples"
+                            :lane="lane"
+                            :visible-columns="visibleColumns"
+                            :column-label="columnLabel"
+                            :calculated-lanes="calculatedLanes"
+                            :get-row-classes="getRowClasses"
+                            :get-cell-classes="getCellClasses"
+                            :get-edit-tooltip="getEditTooltip"
+                            :is-code-formatted-column="isCodeFormattedColumn"
+                            :format-cell-value="formatCellValue"
+                            :get-action-buttons-config="getActionButtonsConfig"
+                            @openConfigModal="(sample, lane) => $emit('openConfigModal', sample, lane)"
+                            @openEditModal="(lane, uuid) => $emit('openEditModal', lane, uuid)">
+                        </sample-table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `
+};
 const vDemuxSampleInfoEditor = {
     // Register child components
     components: {
         ConfigInspectModal,
         CustomConfigModal,
-        SampleFormFields
+        SampleFormFields,
+        SampleTable,
+        ProjectLaneCard
     },
     data() {
         const config = window.STATUS_CONFIG || {};
@@ -3497,218 +3733,53 @@ const vDemuxSampleInfoEditor = {
                                 <div v-if="!groupByProjectFirst">
                                     <div v-for="(projects, lane) in calculatedSamplesByLaneProjectAndNamedIndex" :key="lane" class="mt-4">
                                         <h4>Lane {{ lane }}</h4>
-                                        <div v-for="(indexGroups, projectName) in projects" :key="projectName" class="mb-4">
-                                        <div class="card">
-                                            <div class="card-header bg-light">
-                                                <h5 class="mb-0">
-                                                    <i class="fa fa-folder-open"></i> {{ projectName }}
-                                                    <template v-if="groupByNamedIndex">
-                                                        <small class="text-muted">({{ Object.values(indexGroups).flat().length }} sample{{ Object.values(indexGroups).flat().length !== 1 ? 's' : '' }})</small>
-                                                    </template>
-                                                    <template v-else>
-                                                        <small class="text-muted">({{ indexGroups['_all_'].length }} sample{{ indexGroups['_all_'].length !== 1 ? 's' : '' }})</small>
-                                                    </template>
-                                                </h5>
-                                            </div>
-                                            <div class="card-body p-0">
-                                                <!-- When NOT grouped by named index -->
-                                                <div v-if="!groupByNamedIndex" class="table-responsive">
-                                                    <table class="table table-sm mb-0">
-                                                        <thead>
-                                                            <tr class="darkth">
-                                                                <th v-for="columnKey in visibleColumns" :key="columnKey">
-                                                                    {{ columnLabel[columnKey] }}
-                                                                </th>
-                                                                <th>Actions</th>
-                                                            </tr>
-                                                        </thead>
-                                                        <tbody>
-                                                            <tr v-for="sample in indexGroups['_all_']" :key="sample.uuid" :class="getRowClasses(lane, sample.uuid)">
-                                                                <td v-for="columnKey in visibleColumns" :key="columnKey"
-                                                                    :class="getCellClasses(lane, sample.uuid, columnKey)"
-                                                                    :title="getEditTooltip(lane, sample.uuid, columnKey)">
-                                                                    <code v-if="isCodeFormattedColumn(columnKey)">{{ formatCellValue(sample[columnKey], columnKey) }}</code>
-                                                                    <span v-else>{{ formatCellValue(sample[columnKey], columnKey) }}</span>
-                                                                </td>
-                                                                <td>
-                                                                    <button
-                                                                        class="btn btn-sm btn-outline-info"
-                                                                        @click="openConfigModal(calculatedLanes[lane].sample_rows[sample.uuid], lane)"
-                                                                        :disabled="!getActionButtonsConfig(lane, sample).inspect.enabled"
-                                                                        :title="getActionButtonsConfig(lane, sample).inspect.title">
-                                                                        <i class="fa fa-info-circle"></i> Inspect
-                                                                    </button>
-                                                                    <button
-                                                                        class="btn btn-sm btn-outline-primary ml-1"
-                                                                        @click="openEditModal(lane, sample.uuid)"
-                                                                        :title="getActionButtonsConfig(lane, sample).edit.title">
-                                                                        <i class="fa fa-pencil"></i> Edit
-                                                                    </button>
-                                                                </td>
-                                                            </tr>
-                                                        </tbody>
-                                                    </table>
-                                                </div>
-                                                <!-- When grouped by named index -->
-                                                <div v-else>
-                                                    <div v-for="(samples, namedIndex) in indexGroups" :key="namedIndex" class="mb-3">
-                                                        <div class="px-3 py-2 bg-white border-bottom">
-                                                            <h6 class="mb-0">
-                                                                <i class="fa fa-tags"></i> Named Index: <strong>{{ namedIndex }}</strong>
-                                                                <small class="text-muted">({{ samples.length }} sample{{ samples.length !== 1 ? 's' : '' }})</small>
-                                                            </h6>
-                                                        </div>
-                                                        <div class="table-responsive">
-                                                            <table class="table table-sm mb-0">
-                                                                <thead>
-                                                                    <tr class="darkth">
-                                                                        <th v-for="columnKey in visibleColumns" :key="columnKey">
-                                                                            {{ columnLabel[columnKey] }}
-                                                                        </th>
-                                                                        <th>Actions</th>
-                                                                    </tr>
-                                                                </thead>
-                                                                <tbody>
-                                                                    <tr v-for="sample in samples" :key="sample.uuid" :class="getRowClasses(lane, sample.uuid)">
-                                                                        <td v-for="columnKey in visibleColumns" :key="columnKey"
-                                                                            :class="getCellClasses(lane, sample.uuid, columnKey)"
-                                                                            :title="getEditTooltip(lane, sample.uuid, columnKey)">
-                                                                            <code v-if="isCodeFormattedColumn(columnKey)">{{ formatCellValue(sample[columnKey], columnKey) }}</code>
-                                                                            <span v-else>{{ formatCellValue(sample[columnKey], columnKey) }}</span>
-                                                                        </td>
-                                                                        <td>
-                                                                            <button
-                                                                                class="btn btn-sm btn-outline-info"
-                                                                                @click="openConfigModal(calculatedLanes[lane].sample_rows[sample.uuid], lane)"
-                                                                                :disabled="!getActionButtonsConfig(lane, sample).inspect.enabled"
-                                                                                :title="getActionButtonsConfig(lane, sample).inspect.title">
-                                                                                <i class="fa fa-info-circle"></i> Inspect
-                                                                            </button>
-                                                                            <button
-                                                                                class="btn btn-sm btn-outline-primary ml-1"
-                                                                                @click="openEditModal(lane, sample.uuid)"
-                                                                                :title="getActionButtonsConfig(lane, sample).edit.title">
-                                                                                <i class="fa fa-pencil"></i> Edit
-                                                                            </button>
-                                                                        </td>
-                                                                    </tr>
-                                                                </tbody>
-                                                            </table>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
+                                        <project-lane-card
+                                            v-for="(indexGroups, projectName) in projects"
+                                            :key="projectName"
+                                            class="mb-4"
+                                            :title="projectName"
+                                            icon="fa fa-folder-open"
+                                            :index-groups="indexGroups"
+                                            :lane="lane"
+                                            :group-by-named-index="groupByNamedIndex"
+                                            :visible-columns="visibleColumns"
+                                            :column-label="columnLabel"
+                                            :calculated-lanes="calculatedLanes"
+                                            :get-row-classes="getRowClasses"
+                                            :get-cell-classes="getCellClasses"
+                                            :get-edit-tooltip="getEditTooltip"
+                                            :is-code-formatted-column="isCodeFormattedColumn"
+                                            :format-cell-value="formatCellValue"
+                                            :get-action-buttons-config="getActionButtonsConfig"
+                                            @openConfigModal="openConfigModal"
+                                            @openEditModal="openEditModal">
+                                        </project-lane-card>
                                     </div>
-                                </div>
                                 </div> <!-- end Lane → Project grouping -->
                                 <!-- Tables grouped by Project → Lane -->
                                 <div v-else>
                                     <div v-for="(lanes, projectName) in calculatedSamplesByProjectLaneAndNamedIndex" :key="projectName" class="mt-4">
                                         <h4><i class="fa fa-folder-open"></i> {{ projectName }}</h4>
-                                        <div v-for="(indexGroups, lane) in lanes" :key="lane" class="mb-4">
-                                            <div class="card">
-                                                <div class="card-header bg-light">
-                                                    <h5 class="mb-0">
-                                                        Lane {{ lane }}
-                                                        <template v-if="groupByNamedIndex">
-                                                            <small class="text-muted">({{ Object.values(indexGroups).flat().length }} sample{{ Object.values(indexGroups).flat().length !== 1 ? 's' : '' }})</small>
-                                                        </template>
-                                                        <template v-else>
-                                                            <small class="text-muted">({{ indexGroups['_all_'].length }} sample{{ indexGroups['_all_'].length !== 1 ? 's' : '' }})</small>
-                                                        </template>
-                                                    </h5>
-                                                </div>
-                                                <div class="card-body p-0">
-                                                    <!-- When NOT grouped by named index -->
-                                                    <div v-if="!groupByNamedIndex" class="table-responsive">
-                                                        <table class="table table-sm mb-0">
-                                                            <thead>
-                                                                <tr class="darkth">
-                                                                    <th v-for="columnKey in visibleColumns" :key="columnKey">
-                                                                        {{ columnLabel[columnKey] }}
-                                                                    </th>
-                                                                    <th>Actions</th>
-                                                                </tr>
-                                                            </thead>
-                                                            <tbody>
-                                                                <tr v-for="sample in indexGroups['_all_']" :key="sample.uuid" :class="getRowClasses(lane, sample.uuid)">
-                                                                    <td v-for="columnKey in visibleColumns" :key="columnKey"
-                                                                        :class="getCellClasses(lane, sample.uuid, columnKey)"
-                                                                        :title="getEditTooltip(lane, sample.uuid, columnKey)">
-                                                                        <code v-if="isCodeFormattedColumn(columnKey)">{{ formatCellValue(sample[columnKey], columnKey) }}</code>
-                                                                        <span v-else>{{ formatCellValue(sample[columnKey], columnKey) }}</span>
-                                                                    </td>
-                                                                    <td>
-                                                                        <button
-                                                                            class="btn btn-sm btn-outline-info"
-                                                                            @click="openConfigModal(calculatedLanes[lane].sample_rows[sample.uuid], lane)"
-                                                                            :disabled="!getActionButtonsConfig(lane, sample).inspect.enabled"
-                                                                            :title="getActionButtonsConfig(lane, sample).inspect.title">
-                                                                            <i class="fa fa-info-circle"></i> Inspect
-                                                                        </button>
-                                                                        <button
-                                                                            class="btn btn-sm btn-outline-primary ml-1"
-                                                                            @click="openEditModal(lane, sample.uuid)"
-                                                                            :title="getActionButtonsConfig(lane, sample).edit.title">
-                                                                            <i class="fa fa-pencil"></i> Edit
-                                                                        </button>
-                                                                    </td>
-                                                                </tr>
-                                                            </tbody>
-                                                        </table>
-                                                    </div>
-                                                    <!-- When grouped by named index -->
-                                                    <div v-else>
-                                                        <div v-for="(samples, namedIndex) in indexGroups" :key="namedIndex" class="mb-3">
-                                                            <div class="px-3 py-2 bg-white border-bottom">
-                                                                <h6 class="mb-0">
-                                                                    <i class="fa fa-tags"></i> Named Index: <strong>{{ namedIndex }}</strong>
-                                                                    <small class="text-muted">({{ samples.length }} sample{{ samples.length !== 1 ? 's' : '' }})</small>
-                                                                </h6>
-                                                            </div>
-                                                            <div class="table-responsive">
-                                                                <table class="table table-sm mb-0">
-                                                                    <thead>
-                                                                        <tr class="darkth">
-                                                                            <th v-for="columnKey in visibleColumns" :key="columnKey">
-                                                                                {{ columnLabel[columnKey] }}
-                                                                            </th>
-                                                                            <th>Actions</th>
-                                                                        </tr>
-                                                                    </thead>
-                                                                    <tbody>
-                                                                        <tr v-for="sample in samples" :key="sample.uuid" :class="getRowClasses(lane, sample.uuid)">
-                                                                            <td v-for="columnKey in visibleColumns" :key="columnKey"
-                                                                                :class="getCellClasses(lane, sample.uuid, columnKey)"
-                                                                                :title="getEditTooltip(lane, sample.uuid, columnKey)">
-                                                                                <code v-if="isCodeFormattedColumn(columnKey)">{{ formatCellValue(sample[columnKey], columnKey) }}</code>
-                                                                                <span v-else>{{ formatCellValue(sample[columnKey], columnKey) }}</span>
-                                                                            </td>
-                                                                            <td>
-                                                                                <button
-                                                                                    class="btn btn-sm btn-outline-info"
-                                                                                    @click="openConfigModal(calculatedLanes[lane].sample_rows[sample.uuid], lane)"
-                                                                                    :disabled="!getActionButtonsConfig(lane, sample).inspect.enabled"
-                                                                                    :title="getActionButtonsConfig(lane, sample).inspect.title">
-                                                                                    <i class="fa fa-info-circle"></i> Inspect
-                                                                                </button>
-                                                                                <button
-                                                                                    class="btn btn-sm btn-outline-primary ml-1"
-                                                                                    @click="openEditModal(lane, sample.uuid)"
-                                                                                    :title="getActionButtonsConfig(lane, sample).edit.title">
-                                                                                    <i class="fa fa-pencil"></i> Edit
-                                                                                </button>
-                                                                            </td>
-                                                                        </tr>
-                                                                    </tbody>
-                                                                </table>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
+                                        <project-lane-card
+                                            v-for="(indexGroups, lane) in lanes"
+                                            :key="lane"
+                                            class="mb-4"
+                                            :title="'Lane ' + lane"
+                                            :index-groups="indexGroups"
+                                            :lane="lane"
+                                            :group-by-named-index="groupByNamedIndex"
+                                            :visible-columns="visibleColumns"
+                                            :column-label="columnLabel"
+                                            :calculated-lanes="calculatedLanes"
+                                            :get-row-classes="getRowClasses"
+                                            :get-cell-classes="getCellClasses"
+                                            :get-edit-tooltip="getEditTooltip"
+                                            :is-code-formatted-column="isCodeFormattedColumn"
+                                            :format-cell-value="formatCellValue"
+                                            :get-action-buttons-config="getActionButtonsConfig"
+                                            @openConfigModal="openConfigModal"
+                                            @openEditModal="openEditModal">
+                                        </project-lane-card>
                                     </div>
                                 </div> <!-- end Project → Lane grouping -->
                             </div> <!-- end Calculated Samples tab-pane -->
