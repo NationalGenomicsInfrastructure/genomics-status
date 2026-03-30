@@ -1,7 +1,7 @@
 const vDemuxSampleInfoEditor = {
     data() {
         const config = window.STATUS_CONFIG || {};
-        const defaultVisibleColumns = ['sample_id', 'last_modified', 'sample_type', 'index_1', 'index_2', 'umi_config', 'recipe', 'override_cycles'];
+        const defaultVisibleColumns = ['sample_name', 'last_modified', 'sample_type', 'index_1', 'index_2', 'umi_config', 'recipe', 'override_cycles'];
         return {
             limsUrl: config.lims_url || '',
             flowcell_id: '',
@@ -397,18 +397,33 @@ const vDemuxSampleInfoEditor = {
         },
         availableProjects() {
             // Get unique list of projects from calculated sample_rows
-            const projects = new Set();
+            // Return objects with both project name and ID
+            const projectsMap = new Map();
             Object.values(this.calculatedLanes).forEach(laneData => {
                 Object.values(laneData.sample_rows).forEach(sample => {
                     const settingsVersions = Object.keys(sample.settings).sort().reverse();
                     const latestSettings = sample.settings[settingsVersions[0]];
                     const sampleProject = latestSettings.per_sample_fields?.Sample_Project;
-                    if (sampleProject) {
-                        projects.add(sampleProject);
+                    const projectName = sample.project_name || sampleProject;
+                    const projectId = sample.project_id;
+
+                    // Use project_id as key if available, otherwise use project name
+                    const key = projectId || projectName;
+                    if (key && !projectsMap.has(key)) {
+                        projectsMap.set(key, {
+                            id: projectId || '',
+                            name: projectName || '',
+                            displayName: projectId && projectName ? `${projectName} (${projectId})` : (projectName || projectId)
+                        });
                     }
                 });
             });
-            return Array.from(projects).sort();
+            return Array.from(projectsMap.values()).sort((a, b) => {
+                // Sort by project ID if available, otherwise by name
+                const aKey = a.id || a.name;
+                const bKey = b.id || b.name;
+                return aKey.localeCompare(bKey);
+            });
         },
         availableLanes() {
             // Get list of lanes
@@ -422,10 +437,15 @@ const vDemuxSampleInfoEditor = {
 
             const lanes = [];
             Object.entries(this.calculatedLanes).forEach(([lane, laneData]) => {
+                console.log(sample.id)
                 const hasProject = Object.values(laneData.sample_rows).some(sample => {
                     const settingsVersions = Object.keys(sample.settings).sort().reverse();
                     const latestSettings = sample.settings[settingsVersions[0]];
-                    return latestSettings.per_sample_fields?.Sample_Project === targetProject;
+                    const sampleProject = latestSettings.per_sample_fields?.Sample_Project;
+                    const projectId = sample.project_id;
+                    const projectName = sample.project_name;
+                    // Match against Sample_Project, project_id, or project_name
+                    return sampleProject === targetProject || projectId === targetProject || projectName === targetProject;
                 });
                 if (hasProject) {
                     lanes.push(lane);
@@ -437,56 +457,72 @@ const vDemuxSampleInfoEditor = {
             return this.projectLanes.length === 1;
         },
         nextSampleId() {
-            // Calculate the next sample ID for the selected project
-            if (!this.bulkEditProject) return '';
+            // Generate a sample ID template with project prefix and placeholder for manual entry
+            // Format: ProjectPrefix_XXXX (user must replace XXXX with 3-4 digit number)
+            const targetProject = this.bulkEditProject || this.addSampleTargetProject;
+            if (!targetProject) return '';
 
-            // Find all sample IDs for this project across all lanes
+            // Find all sample names for this project to extract the project prefix
+            // Match against Sample_Project, project_id, and project_name fields for robustness
+            // Use Sample_Name instead of Sample_ID to avoid "Sample_" prefix
             const sampleIds = [];
             Object.values(this.calculatedLanes).forEach(laneData => {
                 Object.values(laneData.sample_rows).forEach(sample => {
                     const settingsVersions = Object.keys(sample.settings).sort().reverse();
                     const latestSettings = sample.settings[settingsVersions[0]];
-                    if (latestSettings.per_sample_fields?.Sample_Project === this.bulkEditProject) {
-                        sampleIds.push(latestSettings.per_sample_fields?.Sample_ID);
+                    const sampleProject = latestSettings.per_sample_fields?.Sample_Project;
+                    const projectId = sample.project_id;
+                    const projectName = sample.project_name;
+
+                    // Match against Sample_Project, project_id, or project_name
+                    if (sampleProject === targetProject || projectId === targetProject || projectName === targetProject) {
+                        const sampleName = latestSettings.per_sample_fields?.Sample_Name;
+                        if (sampleName) {
+                            sampleIds.push(sampleName);
+                        }
                     }
                 });
             });
 
-            if (sampleIds.length === 0) return 'P000_001'; // Fallback if no samples found
-
-            // Extract the project prefix from existing sample IDs (part before first underscore)
+            // Extract project prefix (part before first underscore)
+            // Use Sample_Name instead of Sample_ID to avoid "Sample_" prefix issues
             let projectPrefix = '';
-            let maxNumber = 0;
-
-            sampleIds.forEach(sampleId => {
-                // Extract the prefix and number part
-                const underscoreIndex = sampleId.indexOf('_');
-                if (underscoreIndex > 0) {
-                    const prefix = sampleId.substring(0, underscoreIndex);
-                    const numPart = sampleId.substring(underscoreIndex + 1);
-                    const num = parseInt(numPart);
-
-                    // Use the first valid prefix we find
-                    if (!projectPrefix) {
-                        projectPrefix = prefix;
-                    }
-
-                    if (!isNaN(num) && num > maxNumber) {
-                        maxNumber = num;
+            if (sampleIds.length > 0) {
+                for (const sampleId of sampleIds) {
+                    const underscoreIndex = sampleId.indexOf('_');
+                    if (underscoreIndex > 0) {
+                        projectPrefix = sampleId.substring(0, underscoreIndex);
+                        break; // Use first valid prefix found
                     }
                 }
-            });
+            }
 
-            if (!projectPrefix) return 'P000_001'; // Fallback
-            if (maxNumber === 0) return projectPrefix + '_001';
+            // Fallback to project name if no prefix found
+            if (!projectPrefix) {
+                projectPrefix = targetProject;
+            }
 
-            // Calculate next number: increment leading digit, reset rest to 001
-            const maxStr = maxNumber.toString();
-            const leadingDigit = parseInt(maxStr[0]);
-            const nextLeadingDigit = leadingDigit + 1;
-            const nextNumber = nextLeadingDigit.toString() + '001';
+            return projectPrefix + '_XXXX';
+        },
+        selectedProjectDetails() {
+            // Get the project_id and project_name for the selected target project
+            const targetProject = this.addSampleTargetProject;
+            if (!targetProject) return { id: '', name: '' };
 
-            return projectPrefix + '_' + nextNumber;
+            // Find the project details from availableProjects
+            const projectDetails = this.availableProjects.find(p =>
+                p.id === targetProject || p.name === targetProject
+            );
+
+            if (projectDetails) {
+                return {
+                    id: projectDetails.id,
+                    name: projectDetails.name
+                };
+            }
+
+            // Fallback: if not found in availableProjects, use targetProject as name
+            return { id: '', name: targetProject };
         },
         samplesheets() {
             // Return pre-generated samplesheets from the server
@@ -546,6 +582,11 @@ const vDemuxSampleInfoEditor = {
             // Update editFormData.sample_project when target project changes
             if (this.unifiedModalTab === 'add' && this.editFormData) {
                 this.editFormData.sample_project = newProject || '';
+                // Update sample_id and sample_name to next ID for this project
+                const nextId = this.nextSampleId;
+                // Sample_ID should be prefixed with 'Sample_', Sample_Name should not
+                this.editFormData.sample_id = nextId ? 'Sample_' + nextId : '';
+                this.editFormData.sample_name = nextId;
                 // Pre-fill form with project-based defaults and show warnings if values differ
                 this.updateAddSampleFormWithProjectDefaults(newProject);
             }
@@ -588,6 +629,21 @@ const vDemuxSampleInfoEditor = {
             let bulkEditableDefaults = {};
             
             if (!targetProject || !this.editFormData) {
+                // Reset fields to defaults when no project is selected
+                if (this.editFormData) {
+                    this.editFormData.sample_ref = '';
+                    this.editFormData.recipe = '';
+                    this.editFormData.operator = '';
+                    this.editFormData.control = 'N';
+                    this.editFormData.description = '';
+                    this.editFormData.mask_short_reads = 0;
+                    this.editFormData.minimum_trimmed_read_length = 0;
+                    this.editFormData.umi_config = null;
+                    this.editFormData.trim_umi = null;
+                    this.editFormData.create_fastq_for_index_reads = null;
+                    this.editFormData.barcode_mismatches_index1 = null;
+                    this.editFormData.barcode_mismatches_index2 = null;
+                }
                 return bulkEditableDefaults;
             }
             
@@ -597,7 +653,12 @@ const vDemuxSampleInfoEditor = {
                 Object.values(laneData.sample_rows).forEach(sample => {
                     const settingsVersions = Object.keys(sample.settings).sort().reverse();
                     const latestSettings = sample.settings[settingsVersions[0]];
-                    if (latestSettings.per_sample_fields?.Sample_Project === targetProject) {
+                    const sampleProject = latestSettings.per_sample_fields?.Sample_Project;
+                    const projectId = sample.project_id;
+                    const projectName = sample.project_name;
+
+                    // Match against Sample_Project, project_id, or project_name
+                    if (sampleProject === targetProject || projectId === targetProject || projectName === targetProject) {
                         projectSamples.push({
                             sample: sample,
                             settings: latestSettings
@@ -1399,6 +1460,8 @@ const vDemuxSampleInfoEditor = {
                 'sample_id': ['per_sample_fields', 'Sample_ID'],
                 'sample_name': ['per_sample_fields', 'Sample_Name'],
                 'sample_project': ['per_sample_fields', 'Sample_Project'],
+                'project_id': ['sample_row', 'project_id'],
+                'project_name': ['sample_row', 'project_name'],
                 'index_1': ['per_sample_fields', 'index'],
                 'index_2': ['per_sample_fields', 'index2'],
                 'sample_ref': ['other_details', 'sample_ref'],
@@ -1491,6 +1554,8 @@ const vDemuxSampleInfoEditor = {
                 'sample_id': 'sample_id',
                 'sample_name': 'sample_name',
                 'sample_project': 'sample_project',
+                'project_id': 'project_id',
+                'project_name': 'project_name',
                 'index_1': 'index',
                 'index_2': 'index2',
                 'sample_ref': 'sample_ref',
@@ -1794,6 +1859,51 @@ const vDemuxSampleInfoEditor = {
                     alert('Please select at least one target lane.');
                     return;
                 }
+
+                // Validate Sample ID format: Sample_ProjectPrefix_XXXX where XXXX is 3-4 digits
+                const sampleId = this.editFormData.sample_id;
+                const sampleName = this.editFormData.sample_name;
+
+                // Sample ID should start with "Sample_"
+                if (!sampleId.startsWith('Sample_')) {
+                    alert('Sample ID must start with "Sample_" (e.g., Sample_P12345_1001)');
+                    return;
+                }
+
+                // Remove "Sample_" prefix to get the project part
+                const sampleIdWithoutPrefix = sampleId.substring(7); // Remove "Sample_"
+                const lastUnderscoreIndex = sampleIdWithoutPrefix.lastIndexOf('_');
+
+                if (lastUnderscoreIndex <= 0) {
+                    alert('Sample ID must have format: Sample_ProjectPrefix_XXXX (e.g., Sample_P12345_1001)');
+                    return;
+                }
+
+                const numPartId = sampleIdWithoutPrefix.substring(lastUnderscoreIndex + 1);
+                if (!/^\d{3,4}$/.test(numPartId)) {
+                    alert('Sample ID must have 3 or 4 digits after the last underscore (e.g., Sample_P12345_001 or Sample_P12345_1001).\nPlease replace XXXX with your sample number.');
+                    return;
+                }
+
+                // Validate Sample Name format: ProjectPrefix_XXXX (without "Sample_" prefix)
+                const lastUnderscoreIndexName = sampleName.lastIndexOf('_');
+
+                if (lastUnderscoreIndexName <= 0) {
+                    alert('Sample Name must have format: ProjectPrefix_XXXX (e.g., P12345_1001)');
+                    return;
+                }
+
+                const numPartName = sampleName.substring(lastUnderscoreIndexName + 1);
+                if (!/^\d{3,4}$/.test(numPartName)) {
+                    alert('Sample Name must have 3 or 4 digits after the last underscore (e.g., P12345_001 or P12345_1001).\nPlease replace XXXX with your sample number.');
+                    return;
+                }
+
+                // Check that Sample ID and Sample Name match (Sample ID = "Sample_" + Sample Name)
+                if (sampleId !== 'Sample_' + sampleName) {
+                    alert('Sample ID must be "Sample_" + Sample Name.\nSample ID: ' + sampleId + '\nShould be: Sample_' + sampleName);
+                    return;
+                }
             }
 
             // Save the edited sample data
@@ -1805,9 +1915,12 @@ const vDemuxSampleInfoEditor = {
                 const targetLanes = this.addSampleTargetLanes;
 
                 const timestamp = new Date().toISOString();
+                const projectDetails = this.selectedProjectDetails;
                 const newSettings = {
                     ...this.editFormData,
                     sample_project: this.addSampleTargetProject || undefined,
+                    project_id: projectDetails.id || undefined,
+                    project_name: projectDetails.name || undefined,
                     flowcell_id: this.flowcell_id,
                     mask_short_reads: 0,
                     minimum_trimmed_read_length: 0
@@ -1832,6 +1945,8 @@ const vDemuxSampleInfoEditor = {
                     }
                     this.demux_data.calculated.lanes[targetLane].sample_rows[uuid] = {
                         sample_id: laneSpecificSettings.sample_id,
+                        project_id: projectDetails.id,
+                        project_name: projectDetails.name,
                         last_modified: timestamp,
                         settings: {
                             [timestamp]: laneSpecificSettings
@@ -1845,10 +1960,13 @@ const vDemuxSampleInfoEditor = {
                     alert(`Added new sample ${newSettings.sample_id} to ${targetLanes.length} lanes: ${targetLanes.map(l => 'Lane ' + l).join(', ')}`);
                 }
             } else if (this.editModalIsNew) {
-                // Add new sample to the data structure
+                // Add new sample to the data structure (legacy path)
                 const timestamp = new Date().toISOString();
+                const projectDetails = this.selectedProjectDetails;
                 const newSettings = {
                     ...this.editFormData,
+                    project_id: projectDetails.id || undefined,
+                    project_name: projectDetails.name || undefined,
                     lane: lane,
                     flowcell_id: this.flowcell_id,
                     mask_short_reads: 0,
@@ -1867,6 +1985,8 @@ const vDemuxSampleInfoEditor = {
                 }
                 this.demux_data.calculated.lanes[lane].sample_rows[uuid] = {
                     sample_id: newSettings.sample_id,
+                    project_id: projectDetails.id,
+                    project_name: projectDetails.name,
                     last_modified: timestamp,
                     settings: {
                         [timestamp]: newSettings
@@ -1918,9 +2038,12 @@ const vDemuxSampleInfoEditor = {
                 Object.entries(laneData.sample_rows).forEach(([uuid, sample]) => {
                     const settingsVersions = Object.keys(sample.settings).sort().reverse();
                     const latestSettings = sample.settings[settingsVersions[0]];
+                    const sampleProject = latestSettings.per_sample_fields?.Sample_Project;
+                    const projectId = sample.project_id;
+                    const projectName = sample.project_name;
 
                     // Check if this sample matches the selected project
-                    if (latestSettings.per_sample_fields?.Sample_Project === this.bulkEditProject) {
+                    if (sampleProject === this.bulkEditProject || projectId === this.bulkEditProject || projectName === this.bulkEditProject) {
                         if (this.bulkEditAction === 'reverse_complement_index1') {
                             const currentIndex = this.editedData[lane]?.[uuid]?.index_1 || latestSettings.per_sample_fields?.index;
                             if (currentIndex) {
@@ -1959,7 +2082,11 @@ const vDemuxSampleInfoEditor = {
                 return Object.values(laneData.sample_rows).some(sample => {
                     const settingsVersions = Object.keys(sample.settings).sort().reverse();
                     const latestSettings = sample.settings[settingsVersions[0]];
-                    if (latestSettings.per_sample_fields?.Sample_Project === this.bulkEditProject) {
+                    const sampleProject = latestSettings.per_sample_fields?.Sample_Project;
+                    const projectId = sample.project_id;
+                    const projectName = sample.project_name;
+                    // Match against Sample_Project, project_id, or project_name
+                    if (sampleProject === this.bulkEditProject || projectId === this.bulkEditProject || projectName === this.bulkEditProject) {
                         templateSettings = { ...latestSettings };
                         return true;
                     }
@@ -2792,7 +2919,7 @@ const vDemuxSampleInfoEditor = {
                                     </div>
                                     <button type="button" class="btn-close" @click="closeUnifiedModal"></button>
                                 </div>
-                                
+
                                 <!-- Nav Tabs -->
                                 <ul class="nav nav-tabs px-3 pt-2" style="border-bottom: 1px solid #dee2e6;">
                                     <li class="nav-item">
@@ -2811,7 +2938,7 @@ const vDemuxSampleInfoEditor = {
                                         </a>
                                     </li>
                                 </ul>
-                                
+
                                 <div class="modal-body">
                                     <!-- Tab: Edit Sample -->
                                     <div v-if="unifiedModalTab === 'edit'" class="tab-pane-content">
@@ -3062,7 +3189,7 @@ const vDemuxSampleInfoEditor = {
                                         </div>
                                     </div>
                                     </div> <!-- End Edit Sample Tab -->
-                                    
+
                                     <!-- Tab: Add Sample -->
                                     <div v-if="unifiedModalTab === 'add'" class="tab-pane-content">
                                         <!-- Target Selection -->
@@ -3076,7 +3203,7 @@ const vDemuxSampleInfoEditor = {
                                                         <label class="form-label">Lane(s): <span class="text-danger">*</span></label>
                                                         <div class="border rounded p-2" style="max-height: 200px; overflow-y: auto;">
                                                             <div class="form-check">
-                                                                <input type="checkbox" class="form-check-input" id="addSample_allLanes" 
+                                                                <input type="checkbox" class="form-check-input" id="addSample_allLanes"
                                                                     :checked="addSampleTargetLanes.length === availableLanes.length"
                                                                     @change="addSampleTargetLanes = $event.target.checked ? availableLanes.slice() : []">
                                                                 <label class="form-check-label" for="addSample_allLanes">
@@ -3085,7 +3212,7 @@ const vDemuxSampleInfoEditor = {
                                                             </div>
                                                             <hr class="my-1">
                                                             <div v-for="lane in availableLanes" :key="lane" class="form-check">
-                                                                <input type="checkbox" class="form-check-input" :id="'addSample_lane_' + lane" 
+                                                                <input type="checkbox" class="form-check-input" :id="'addSample_lane_' + lane"
                                                                     :value="lane" v-model="addSampleTargetLanes">
                                                                 <label class="form-check-label" :for="'addSample_lane_' + lane">
                                                                     Lane {{ lane }}
@@ -3098,8 +3225,8 @@ const vDemuxSampleInfoEditor = {
                                                         <label for="addSample_project" class="form-label">Project:</label>
                                                         <select class="form-select" id="addSample_project" v-model="addSampleTargetProject">
                                                             <option value="">-- None --</option>
-                                                            <option v-for="project in availableProjects" :key="project" :value="project">
-                                                                {{ project }}
+                                                            <option v-for="project in availableProjects" :key="project.id || project.name" :value="project.id || project.name">
+                                                                {{ project.displayName }}
                                                             </option>
                                                         </select>
                                                         <small class="form-text text-muted">Optional: select if sample belongs to a project</small>
@@ -3153,14 +3280,15 @@ const vDemuxSampleInfoEditor = {
                                                 </div>
                                             </div>
                                         </div>
-                                        
+
                                         <!-- Sample form fields (same as edit, but for new sample) -->
                                         <div v-if="addSampleTargetLanes.length > 0" class="alert alert-success">
                                             <strong><i class="fa fa-check-circle"></i> Adding sample to Lane(s):</strong> {{ addSampleTargetLanes.map(l => 'Lane ' + l).join(', ') }}<br>
                                             <strong>Project:</strong> {{ addSampleTargetProject || 'None' }}<br>
-                                            <small class="d-block mt-1"><strong>Next Sample ID:</strong> {{ nextSampleId }}</small>
+                                            <small class="d-block mt-1"><strong>Sample ID Template:</strong> Sample_{{ nextSampleId || 'ProjectID_XXXX' }} <em class="text-muted">(replace XXXX with your sample number)</em></small>
+                                            <small class="d-block mt-1"><strong>Sample Name Template:</strong> {{ nextSampleId || 'ProjectID_XXXX' }} <em class="text-muted">(same as Sample ID but without the Sample_ prefix)</em></small>
                                         </div>
-                                        
+
                                         <!-- Warning for inconsistent project values -->
                                         <div v-if="addSampleTargetLanes.length > 0 && addSampleProjectWarnings.length > 0" class="alert alert-info">
                                             <strong><i class="fa fa-info-circle"></i> Inconsistent Field Values Detected:</strong>
@@ -3169,20 +3297,22 @@ const vDemuxSampleInfoEditor = {
                                                 <li v-for="(warning, idx) in addSampleProjectWarnings" :key="idx">{{ warning }}</li>
                                             </ul>
                                         </div>
-                                        
+
                                         <div v-else-if="addSampleTargetLanes.length === 0" class="alert alert-warning">
                                             <i class="fa fa-exclamation-triangle"></i> Please select at least one lane above to continue
                                         </div>
-                                        
+
                                         <div v-if="addSampleTargetLanes.length > 0">
                                         <div class="row">
                                             <div class="col-md-6 mb-3">
                                                 <label for="add_sample_id" class="form-label">Sample ID:</label>
                                                 <input type="text" class="form-control" id="add_sample_id" v-model="editFormData.sample_id">
+                                                <small class="form-text text-muted">Replace XXXX with a 3-4 digit number (e.g., 001 or 1001)</small>
                                             </div>
                                             <div class="col-md-6 mb-3">
                                                 <label for="add_sample_name" class="form-label">Sample Name:</label>
                                                 <input type="text" class="form-control" id="add_sample_name" v-model="editFormData.sample_name">
+                                                <small class="form-text text-muted">Replace XXXX with a 3-4 digit number (e.g., 001 or 1001)</small>
                                             </div>
                                             <div class="col-md-6 mb-3">
                                                 <label for="add_sample_project" class="form-label">Sample Project:</label>
