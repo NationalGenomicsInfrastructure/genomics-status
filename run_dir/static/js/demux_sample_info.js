@@ -252,6 +252,51 @@ const FIELD_CONFIG = {
     }
 };
 
+// Constants for magic strings and default values
+const CONSTANTS = {
+    VIEW_MODES: {
+        UPLOADED: 'uploaded',
+        CALCULATED: 'calculated',
+        GROUPED_NAMED_INDEX: 'grouped_named_index'
+    },
+    MODAL_TABS: {
+        EDIT: 'edit',
+        ADD: 'add',
+        BULK: 'bulk'
+    },
+    DEFAULTS: {
+        CONTROL: 'N',
+        MASK_SHORT_READS: 0,
+        MIN_TRIMMED_LENGTH: 0
+    }
+};
+
+// Utility functions for common operations
+const UTILS = {
+    /**
+     * Sort lanes numerically instead of alphabetically
+     * @param {Array<string>} lanes - Array of lane identifiers
+     * @returns {Array<string>} Sorted lanes
+     */
+    sortLanesNumerically(lanes) {
+        return lanes.sort((a, b) => parseInt(a) - parseInt(b));
+    },
+    
+    /**
+     * Sort object keys as lanes and return new object with sorted keys
+     * @param {Object} obj - Object with lane keys
+     * @returns {Object} New object with lanes sorted numerically
+     */
+    sortLaneObject(obj) {
+        return Object.keys(obj)
+            .sort((a, b) => parseInt(a) - parseInt(b))
+            .reduce((acc, lane) => {
+                acc[lane] = obj[lane];
+                return acc;
+            }, {});
+    }
+};
+
 const vDemuxSampleInfoEditor = {
     data() {
         const config = window.STATUS_CONFIG || {};
@@ -276,7 +321,7 @@ const vDemuxSampleInfoEditor = {
             error_messages: [],
             loading: false,
             saving: false,
-            viewMode: 'calculated',  // 'uploaded', 'calculated', 'grouped_named_index'
+            viewMode: CONSTANTS.VIEW_MODES.CALCULATED,
             selectedVersion: null,
             availableColumns: availableColumns,
             visibleColumns: defaultVisibleColumns,
@@ -284,7 +329,7 @@ const vDemuxSampleInfoEditor = {
             bulkEditExcludedFields: bulkEditExcludedFields,
             showBulkEditModal: false,
             showUnifiedModal: false,
-            unifiedModalTab: 'edit',  // 'edit', 'add', or 'bulk'
+            unifiedModalTab: CONSTANTS.MODAL_TABS.EDIT,
             columnConfigCollapsed: true,
             groupByNamedIndex: false,
             groupByProjectFirst: false,
@@ -343,12 +388,7 @@ const vDemuxSampleInfoEditor = {
             });
 
             // Sort lanes numerically
-            return Object.keys(grouped)
-                .sort((a, b) => parseInt(a) - parseInt(b))
-                .reduce((acc, lane) => {
-                    acc[lane] = grouped[lane];
-                    return acc;
-                }, {});
+            return UTILS.sortLaneObject(grouped);
         },
         versionTimestamps() {
             if (!this.demux_data || !this.demux_data.calculated || !this.demux_data.calculated.version_history) {
@@ -525,7 +565,7 @@ const vDemuxSampleInfoEditor = {
         },
         availableLanes() {
             // Get list of lanes
-            return Object.keys(this.calculatedLanes).sort((a, b) => parseInt(a) - parseInt(b));
+            return UTILS.sortLanesNumerically(Object.keys(this.calculatedLanes));
         },
         projectLanes() {
             // Get lanes that contain the selected project
@@ -538,7 +578,7 @@ const vDemuxSampleInfoEditor = {
                 lanes.add(lane);
             });
             
-            return Array.from(lanes).sort((a, b) => parseInt(a) - parseInt(b));
+            return UTILS.sortLanesNumerically(Array.from(lanes));
         },
         isSingleLaneProject() {
             return this.projectLanes.length === 1;
@@ -649,7 +689,7 @@ const vDemuxSampleInfoEditor = {
     watch: {
         addSampleTargetProject(newProject) {
             // Update editFormData.sample_project when target project changes
-            if (this.unifiedModalTab === 'add' && this.editFormData) {
+            if (this.unifiedModalTab === CONSTANTS.MODAL_TABS.ADD && this.editFormData) {
                 this.editFormData.sample_project = newProject || '';
                 // Update sample_id and sample_name to next ID for this project
                 const nextId = this.nextSampleId;
@@ -662,7 +702,7 @@ const vDemuxSampleInfoEditor = {
         },
         addSampleTargetLanes(newLanes) {
             // Update editModalLane when lanes change
-            if (this.unifiedModalTab === 'add' && newLanes.length > 0) {
+            if (this.unifiedModalTab === CONSTANTS.MODAL_TABS.ADD && newLanes.length > 0) {
                 this.editModalLane = newLanes[0];
             }
         }
@@ -1986,7 +2026,7 @@ const vDemuxSampleInfoEditor = {
         },
         openBulkEditModal() {
             this.showUnifiedModal = true;
-            this.unifiedModalTab = 'bulk';
+            this.unifiedModalTab = CONSTANTS.MODAL_TABS.BULK;
             this.bulkEditProject = '';
             this.bulkEditLane = '';
             this.bulkEditAction = 'reverse_complement_index1';
@@ -2015,7 +2055,7 @@ const vDemuxSampleInfoEditor = {
             if (!laneData || !laneData.sample_rows[uuid]) return;
 
             this.showUnifiedModal = true;
-            this.unifiedModalTab = 'edit';
+            this.unifiedModalTab = CONSTANTS.MODAL_TABS.EDIT;
 
             const sample = laneData.sample_rows[uuid];
             const settingsVersions = Object.keys(sample.settings).sort().reverse();
@@ -2099,10 +2139,10 @@ const vDemuxSampleInfoEditor = {
                 recipe: '',
                 operator: '',
                 description: '',
-                control: 'N',
+                control: CONSTANTS.DEFAULTS.CONTROL,
                 override_cycles: '',
-                mask_short_reads: 0,
-                minimum_trimmed_read_length: 0,
+                mask_short_reads: CONSTANTS.DEFAULTS.MASK_SHORT_READS,
+                minimum_trimmed_read_length: CONSTANTS.DEFAULTS.MIN_TRIMMED_LENGTH,
                 umi_config: null,
                 trim_umi: null,
                 create_fastq_for_index_reads: null,
@@ -2118,7 +2158,7 @@ const vDemuxSampleInfoEditor = {
             this.editModalSample = null;
             this.editModalIsNew = true;
             this.showUnifiedModal = true;
-            this.unifiedModalTab = 'add';
+            this.unifiedModalTab = CONSTANTS.MODAL_TABS.ADD;
         },
         closeEditModal() {
             this.showEditModal = false;
@@ -2133,7 +2173,7 @@ const vDemuxSampleInfoEditor = {
         },
         saveEditModal() {
             // Validation for Add Sample tab
-            if (this.unifiedModalTab === 'add') {
+            if (this.unifiedModalTab === CONSTANTS.MODAL_TABS.ADD) {
                 if (this.addSampleTargetLanes.length === 0) {
                     alert('Please select at least one target lane.');
                     return;
@@ -2189,7 +2229,7 @@ const vDemuxSampleInfoEditor = {
             const lane = this.editModalLane;
             const uuid = this.editModalUuid;
 
-            if (this.editModalIsNew && this.unifiedModalTab === 'add') {
+            if (this.editModalIsNew && this.unifiedModalTab === CONSTANTS.MODAL_TABS.ADD) {
                 // Use the selected lanes
                 const targetLanes = this.addSampleTargetLanes;
 
@@ -2607,8 +2647,8 @@ const vDemuxSampleInfoEditor = {
                             <li class="nav-item" role="presentation">
                                 <a
                                     class="nav-link"
-                                    :class="{ active: viewMode === 'calculated' }"
-                                    @click.prevent="viewMode = 'calculated'"
+                                    :class="{ active: viewMode === CONSTANTS.VIEW_MODES.CALCULATED }"
+                                    @click.prevent="viewMode = CONSTANTS.VIEW_MODES.CALCULATED"
                                     href="#">
                                     By Lane
                                 </a>
@@ -2616,8 +2656,8 @@ const vDemuxSampleInfoEditor = {
                             <li class="nav-item" role="presentation">
                                 <a
                                     class="nav-link"
-                                    :class="{ active: viewMode === 'uploaded' }"
-                                    @click.prevent="viewMode = 'uploaded'"
+                                    :class="{ active: viewMode === CONSTANTS.VIEW_MODES.UPLOADED }"
+                                    @click.prevent="viewMode = CONSTANTS.VIEW_MODES.UPLOADED"
                                     href="#">
                                     Uploaded Info
                                 </a>
@@ -2646,7 +2686,7 @@ const vDemuxSampleInfoEditor = {
                         <!-- Tab Content -->
                         <div class="tab-content mt-3">
                             <!-- Uploaded Info tab -->
-                            <div class="tab-pane fade" :class="{ 'show active': viewMode === 'uploaded' }">
+                            <div class="tab-pane fade" :class="{ 'show active': viewMode === CONSTANTS.VIEW_MODES.UPLOADED }">
                                 <h3>Uploaded Info from LIMS</h3>
                                 <div v-for="(sample_rows, lane) in uploadedSamplesByLane" :key="lane" class="mt-3">
                                     <h4>Lane {{ lane }}</h4>
@@ -2686,7 +2726,7 @@ const vDemuxSampleInfoEditor = {
                             </div>
 
                             <!-- Calculated Samples tab -->
-                            <div class="tab-pane fade" :class="{ 'show active': viewMode === 'calculated' }">
+                            <div class="tab-pane fade" :class="{ 'show active': viewMode === CONSTANTS.VIEW_MODES.CALCULATED }">
                                 <div class="d-flex justify-content-between align-items-center mb-3">
                                     <h3 class="mb-0">Calculated Samples (by Lane)</h3>
                                     <div>
@@ -3180,7 +3220,7 @@ const vDemuxSampleInfoEditor = {
                                     <h5 class="modal-title">Sample Management</h5>
                                     <div class="ms-auto me-2">
                                         <button
-                                            v-if="unifiedModalTab === 'edit' && !editModalIsNew && Object.keys(fieldHistory).length > 0"
+                                            v-if="unifiedModalTab === CONSTANTS.MODAL_TABS.EDIT && !editModalIsNew && Object.keys(fieldHistory).length > 0"
                                             type="button"
                                             class="btn btn-sm btn-outline-secondary"
                                             @click="showFieldHistory = !showFieldHistory">
@@ -3194,17 +3234,17 @@ const vDemuxSampleInfoEditor = {
                                 <!-- Nav Tabs -->
                                 <ul class="nav nav-tabs px-3 pt-2" style="border-bottom: 1px solid #dee2e6;">
                                     <li class="nav-item">
-                                        <a class="nav-link" :class="{ active: unifiedModalTab === 'edit' }" @click="unifiedModalTab = 'edit'" href="javascript:void(0)">
+                                        <a class="nav-link" :class="{ active: unifiedModalTab === CONSTANTS.MODAL_TABS.EDIT }" @click="unifiedModalTab = CONSTANTS.MODAL_TABS.EDIT" href="javascript:void(0)">
                                             <i class="fa fa-edit"></i> Edit Sample
                                         </a>
                                     </li>
                                     <li class="nav-item">
-                                        <a class="nav-link" :class="{ active: unifiedModalTab === 'add' }" @click="unifiedModalTab = 'add'" href="javascript:void(0)">
+                                        <a class="nav-link" :class="{ active: unifiedModalTab === CONSTANTS.MODAL_TABS.ADD }" @click="unifiedModalTab = CONSTANTS.MODAL_TABS.ADD" href="javascript:void(0)">
                                             <i class="fa fa-plus"></i> Add Sample
                                         </a>
                                     </li>
                                     <li class="nav-item">
-                                        <a class="nav-link" :class="{ active: unifiedModalTab === 'bulk' }" @click="unifiedModalTab = 'bulk'" href="javascript:void(0)">
+                                        <a class="nav-link" :class="{ active: unifiedModalTab === CONSTANTS.MODAL_TABS.BULK }" @click="unifiedModalTab = CONSTANTS.MODAL_TABS.BULK" href="javascript:void(0)">
                                             <i class="fa fa-cogs"></i> Bulk Operations
                                         </a>
                                     </li>
@@ -3212,7 +3252,7 @@ const vDemuxSampleInfoEditor = {
 
                                 <div class="modal-body">
                                     <!-- Tab: Edit Sample -->
-                                    <div v-if="unifiedModalTab === 'edit'" class="tab-pane-content">
+                                    <div v-if="unifiedModalTab === CONSTANTS.MODAL_TABS.EDIT" class="tab-pane-content">
                                     <!-- Config Sources Info (only for existing samples) -->
                                     <div v-if="!editModalIsNew && editModalSample" class="row mb-3">
                                         <div class="col-12">
@@ -3462,7 +3502,7 @@ const vDemuxSampleInfoEditor = {
                                     </div> <!-- End Edit Sample Tab -->
 
                                     <!-- Tab: Add Sample -->
-                                    <div v-if="unifiedModalTab === 'add'" class="tab-pane-content">
+                                    <div v-if="unifiedModalTab === CONSTANTS.MODAL_TABS.ADD" class="tab-pane-content">
                                         <!-- Target Selection -->
                                         <div class="card border-primary mb-3">
                                             <div class="card-header bg-primary text-white">
@@ -3705,7 +3745,7 @@ const vDemuxSampleInfoEditor = {
                                     </div> <!-- End Add Sample Tab -->
                                     
                                     <!-- Tab: Bulk Operations -->
-                                    <div v-if="unifiedModalTab === 'bulk'" class="tab-pane-content">
+                                    <div v-if="unifiedModalTab === CONSTANTS.MODAL_TABS.BULK" class="tab-pane-content">
                                         <div class="mb-3">
                                             <label for="bulkEditAction_unified" class="form-label">Action:</label>
                                             <select class="form-select" id="bulkEditAction_unified" v-model="bulkEditAction" @change="updateProjectLaneSelection">
@@ -3739,14 +3779,14 @@ const vDemuxSampleInfoEditor = {
                                 
                                 <div class="modal-footer">
                                     <button type="button" class="btn btn-secondary" @click="closeUnifiedModal">Cancel</button>
-                                    <button v-if="unifiedModalTab === 'edit'" type="button" class="btn btn-primary" @click="saveEditModal">
+                                    <button v-if="unifiedModalTab === CONSTANTS.MODAL_TABS.EDIT" type="button" class="btn btn-primary" @click="saveEditModal">
                                         {{ editModalIsNew ? 'Add Sample' : 'Save Changes' }}
                                     </button>
-                                    <button v-if="unifiedModalTab === 'add'" type="button" class="btn btn-success" @click="saveEditModal"
+                                    <button v-if="unifiedModalTab === CONSTANTS.MODAL_TABS.ADD" type="button" class="btn btn-success" @click="saveEditModal"
                                         :disabled="addSampleTargetLanes.length === 0">
                                         <i class="fa fa-plus"></i> Add Sample
                                     </button>
-                                    <button v-if="unifiedModalTab === 'bulk'" type="button" class="btn btn-primary" @click="applyBulkEdit">
+                                    <button v-if="unifiedModalTab === CONSTANTS.MODAL_TABS.BULK" type="button" class="btn btn-primary" @click="applyBulkEdit">
                                         Apply
                                     </button>
                                 </div>
