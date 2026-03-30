@@ -533,23 +533,12 @@ const vDemuxSampleInfoEditor = {
             const targetProject = this.bulkEditProject || this.addSampleTargetProject;
             if (!targetProject) return [];
 
-            const lanes = [];
-            Object.entries(this.calculatedLanes).forEach(([lane, laneData]) => {
-                console.log(sample.id)
-                const hasProject = Object.values(laneData.sample_rows).some(sample => {
-                    const settingsVersions = Object.keys(sample.settings).sort().reverse();
-                    const latestSettings = sample.settings[settingsVersions[0]];
-                    const sampleProject = latestSettings.per_sample_fields?.Sample_Project;
-                    const projectId = sample.project_id;
-                    const projectName = sample.project_name;
-                    // Match against Sample_Project, project_id, or project_name
-                    return sampleProject === targetProject || projectId === targetProject || projectName === targetProject;
-                });
-                if (hasProject) {
-                    lanes.push(lane);
-                }
+            const lanes = new Set();
+            this.getSamplesForProject(targetProject).forEach(({ lane }) => {
+                lanes.add(lane);
             });
-            return lanes.sort((a, b) => parseInt(a) - parseInt(b));
+            
+            return Array.from(lanes).sort((a, b) => parseInt(a) - parseInt(b));
         },
         isSingleLaneProject() {
             return this.projectLanes.length === 1;
@@ -561,35 +550,17 @@ const vDemuxSampleInfoEditor = {
             if (!targetProject) return '';
 
             // Find all sample names for this project to extract the project prefix
-            // Match against Sample_Project, project_id, and project_name fields for robustness
             // Use Sample_Name instead of Sample_ID to avoid "Sample_" prefix
-            const sampleIds = [];
-            Object.values(this.calculatedLanes).forEach(laneData => {
-                Object.values(laneData.sample_rows).forEach(sample => {
-                    const settingsVersions = Object.keys(sample.settings).sort().reverse();
-                    const latestSettings = sample.settings[settingsVersions[0]];
-                    const sampleProject = latestSettings.per_sample_fields?.Sample_Project;
-                    const projectId = sample.project_id;
-                    const projectName = sample.project_name;
-
-                    // Match against Sample_Project, project_id, or project_name
-                    if (sampleProject === targetProject || projectId === targetProject || projectName === targetProject) {
-                        const sampleName = latestSettings.per_sample_fields?.Sample_Name;
-                        if (sampleName) {
-                            sampleIds.push(sampleName);
-                        }
-                    }
-                });
-            });
-
+            const projectSamples = this.getSamplesForProject(targetProject);
+            
             // Extract project prefix (part before first underscore)
-            // Use Sample_Name instead of Sample_ID to avoid "Sample_" prefix issues
             let projectPrefix = '';
-            if (sampleIds.length > 0) {
-                for (const sampleId of sampleIds) {
-                    const underscoreIndex = sampleId.indexOf('_');
+            for (const { latestSettings } of projectSamples) {
+                const sampleName = latestSettings.per_sample_fields?.Sample_Name;
+                if (sampleName) {
+                    const underscoreIndex = sampleName.indexOf('_');
                     if (underscoreIndex > 0) {
-                        projectPrefix = sampleId.substring(0, underscoreIndex);
+                        projectPrefix = sampleName.substring(0, underscoreIndex);
                         break; // Use first valid prefix found
                     }
                 }
@@ -710,6 +681,124 @@ const vDemuxSampleInfoEditor = {
             return sample.settings[settingsVersions[0]] || {};
         },
         
+        // ===== Helper Methods for Project/Lane Matching (Refactoring #4) =====
+        
+        /**
+         * Check if a sample matches a target project
+         * @param {Object} sample - The sample object
+         * @param {Object} latestSettings - The latest settings for the sample
+         * @param {string} targetProject - The project identifier to match against
+         * @returns {boolean} True if the sample belongs to the target project
+         */
+        projectMatches(sample, latestSettings, targetProject) {
+            const sampleProject = latestSettings.per_sample_fields?.Sample_Project;
+            const projectId = sample.project_id;
+            const projectName = sample.project_name;
+            return sampleProject === targetProject || 
+                   projectId === targetProject || 
+                   projectName === targetProject;
+        },
+        
+        /**
+         * Get all samples that belong to a specific project
+         * @param {string} targetProject - The project identifier
+         * @param {string|null} filterLane - Optional lane filter
+         * @returns {Array} Array of objects with {lane, uuid, sample, latestSettings}
+         */
+        getSamplesForProject(targetProject, filterLane = null) {
+            const samples = [];
+            Object.entries(this.calculatedLanes).forEach(([lane, laneData]) => {
+                if (filterLane && lane !== filterLane) return;
+                
+                Object.entries(laneData.sample_rows).forEach(([uuid, sample]) => {
+                    const latestSettings = this.getLatestSettings(sample);
+                    if (this.projectMatches(sample, latestSettings, targetProject)) {
+                        samples.push({ lane, uuid, sample, latestSettings });
+                    }
+                });
+            });
+            return samples;
+        },
+        
+        // ===== Helper Methods for Bulk Field Handling (Refactoring #3) =====
+        
+        /**
+         * Get a field value from a sample's settings based on the field configuration
+         * @param {Object} sample - The sample object
+         * @param {Object} settings - The settings object
+         * @param {Array} settingsPath - Path to the field in settings
+         * @param {boolean} topLevel - Whether the field is at the top level of sample
+         * @returns {*} The field value
+         */
+        getFieldValueFromSettings(sample, settings, settingsPath, topLevel = false) {
+            if (topLevel) {
+                // Top-level field on sample object (e.g., description, control)
+                return sample[settingsPath[1]];
+            }
+            // Nested field in settings
+            let value = settings;
+            for (const key of settingsPath) {
+                value = value?.[key];
+            }
+            return value;
+        },
+        
+        /**
+         * Normalize a value for comparison (converts to string representation)
+         * @param {*} value - The value to normalize
+         * @param {string} type - The field type
+         * @returns {string} Normalized value as string
+         */
+        normalizeForComparison(value, type) {
+            if (value === undefined || value === null) return 'null';
+            if (type === 'boolean' || type === 'number') return String(value);
+            if (type === 'object') return JSON.stringify(value);
+            return value;
+        },
+        
+        /**
+         * Denormalize a value back from string representation
+         * @param {string} value - The normalized value
+         * @param {string} type - The field type
+         * @returns {*} The denormalized value
+         */
+        denormalizeValue(value, type) {
+            if (value === 'null') return null;
+            if (type === 'boolean') return value === 'true';
+            if (type === 'number') return parseInt(value);
+            if (type === 'object') {
+                try {
+                    return JSON.parse(value);
+                } catch (e) {
+                    return null;
+                }
+            }
+            return value;
+        },
+        
+        /**
+         * Get default value for a field
+         * @param {string} fieldKey - The field key
+         * @returns {*} Default value
+         */
+        getDefaultValue(fieldKey) {
+            const defaults = {
+                'sample_ref': '',
+                'recipe': '',
+                'operator': '',
+                'control': 'N',
+                'description': '',
+                'mask_short_reads': 0,
+                'minimum_trimmed_read_length': 0,
+                'umi_config': null,
+                'trim_umi': null,
+                'create_fastq_for_index_reads': null,
+                'barcode_mismatches_index1': null,
+                'barcode_mismatches_index2': null
+            };
+            return defaults[fieldKey];
+        },
+        
         /**
          * Build a complete sample object with all fields, merging original and edited data
          * @param {string} lane - The lane number
@@ -787,173 +876,81 @@ const vDemuxSampleInfoEditor = {
         updateAddSampleFormWithProjectDefaults(targetProject) {
             // Pre-fill bulk-editable fields from existing project samples and warn if values differ
             this.addSampleProjectWarnings = [];
-            let bulkEditableDefaults = {};
             
             if (!targetProject || !this.editFormData) {
                 // Reset fields to defaults when no project is selected
                 if (this.editFormData) {
-                    this.editFormData.sample_ref = '';
-                    this.editFormData.recipe = '';
-                    this.editFormData.operator = '';
-                    this.editFormData.control = 'N';
-                    this.editFormData.description = '';
-                    this.editFormData.mask_short_reads = 0;
-                    this.editFormData.minimum_trimmed_read_length = 0;
-                    this.editFormData.umi_config = null;
-                    this.editFormData.trim_umi = null;
-                    this.editFormData.create_fastq_for_index_reads = null;
-                    this.editFormData.barcode_mismatches_index1 = null;
-                    this.editFormData.barcode_mismatches_index2 = null;
+                    // Use FIELD_CONFIG to reset all bulk-editable fields
+                    Object.values(FIELD_CONFIG)
+                        .filter(f => f.bulkEditable)
+                        .forEach(fieldConfig => {
+                            this.editFormData[fieldConfig.key] = this.getDefaultValue(fieldConfig.key);
+                        });
                 }
-                return bulkEditableDefaults;
+                return {};
             }
             
-            // Collect all samples from this project
-            const projectSamples = [];
-            Object.values(this.calculatedLanes).forEach(laneData => {
-                Object.values(laneData.sample_rows).forEach(sample => {
-                    const settingsVersions = Object.keys(sample.settings).sort().reverse();
-                    const latestSettings = sample.settings[settingsVersions[0]];
-                    const sampleProject = latestSettings.per_sample_fields?.Sample_Project;
-                    const projectId = sample.project_id;
-                    const projectName = sample.project_name;
-
-                    // Match against Sample_Project, project_id, or project_name
-                    if (sampleProject === targetProject || projectId === targetProject || projectName === targetProject) {
-                        projectSamples.push({
-                            sample: sample,
-                            settings: latestSettings
-                        });
-                    }
-                });
-            });
+            // Collect all samples from this project using helper method
+            const projectSamplesData = this.getSamplesForProject(targetProject);
+            const projectSamples = projectSamplesData.map(({ sample, latestSettings }) => ({
+                sample,
+                settings: latestSettings
+            }));
 
             if (projectSamples.length > 0) {
-                // Get bulk-editable fields from the first sample
-                const firstSample = projectSamples[0];
-                const firstSettings = firstSample.settings;
+                // Get all bulk-editable fields from FIELD_CONFIG
+                const bulkEditableFields = Object.values(FIELD_CONFIG)
+                    .filter(f => f.bulkEditable && f.key !== 'sample_project'); // Exclude sample_project
                 
-                // Map of field names to their values and consistency
-                // Note: sample_project is excluded because it's always set to the target project
-                const bulkFields = {
-                    'sample_ref': { values: new Set(), displayName: 'Sample Ref' },
-                    'recipe': { values: new Set(), displayName: 'Recipe' },
-                    'operator': { values: new Set(), displayName: 'Operator' },
-                    'control': { values: new Set(), displayName: 'Control' },
-                    'description': { values: new Set(), displayName: 'Description' },
-                    'mask_short_reads': { values: new Set(), displayName: 'Mask Short Reads' },
-                    'minimum_trimmed_read_length': { values: new Set(), displayName: 'Minimum Trimmed Read Length' },
-                    'umi_config': { values: new Set(), displayName: 'UMI Config' },
-                    'trim_umi': { values: new Set(), displayName: 'Trim UMI' },
-                    'create_fastq_for_index_reads': { values: new Set(), displayName: 'Create FastQ for Index Reads' },
-                    'barcode_mismatches_index1': { values: new Set(), displayName: 'Barcode Mismatches Index 1' },
-                    'barcode_mismatches_index2': { values: new Set(), displayName: 'Barcode Mismatches Index 2' }
-                };
-
-                // Collect values from all project samples
-                projectSamples.forEach(({ sample, settings }) => {
-                    bulkFields['sample_ref'].values.add(settings.other_details?.sample_ref || '');
-                    bulkFields['recipe'].values.add(settings.other_details?.recipe || '');
-                    bulkFields['operator'].values.add(settings.other_details?.operator || '');
-                    bulkFields['control'].values.add(sample.control || 'N');
-                    bulkFields['description'].values.add(sample.description || '');
-                    bulkFields['mask_short_reads'].values.add(
-                        settings.per_sample_fields?.MaskShortReads !== undefined
-                        ? String(settings.per_sample_fields.MaskShortReads)
-                        : '0'
-                    );
-                    bulkFields['minimum_trimmed_read_length'].values.add(
-                        settings.per_sample_fields?.MinimumTrimmedReadLength !== undefined
-                        ? String(settings.per_sample_fields.MinimumTrimmedReadLength)
-                        : '0'
-                    );
-                    bulkFields['umi_config'].values.add(
-                        settings.other_details?.umi_config
-                        ? JSON.stringify(settings.other_details.umi_config)
-                        : 'null'
-                    );
-                    bulkFields['trim_umi'].values.add(
-                        settings.raw_samplesheet_settings?.TrimUMI !== undefined 
-                        ? String(settings.raw_samplesheet_settings.TrimUMI) 
-                        : 'null'
-                    );
-                    bulkFields['create_fastq_for_index_reads'].values.add(
-                        settings.raw_samplesheet_settings?.CreateFastqForIndexReads !== undefined 
-                        ? String(settings.raw_samplesheet_settings.CreateFastqForIndexReads) 
-                        : 'null'
-                    );
-                    bulkFields['barcode_mismatches_index1'].values.add(
-                        settings.raw_samplesheet_settings?.BarcodeMismatchesIndex1 !== undefined 
-                        ? String(settings.raw_samplesheet_settings.BarcodeMismatchesIndex1) 
-                        : 'null'
-                    );
-                    bulkFields['barcode_mismatches_index2'].values.add(
-                        settings.raw_samplesheet_settings?.BarcodeMismatchesIndex2 !== undefined 
-                        ? String(settings.raw_samplesheet_settings.BarcodeMismatchesIndex2) 
-                        : 'null'
-                    );
-                });
-
-                // Check consistency and prepare defaults
-                Object.entries(bulkFields).forEach(([fieldKey, fieldData]) => {
-                    const uniqueValues = Array.from(fieldData.values);
+                const fieldData = {};
+                
+                // For each bulk-editable field, collect values from all project samples
+                bulkEditableFields.forEach(fieldConfig => {
+                    const values = new Set();
                     
+                    projectSamples.forEach(({ sample, settings }) => {
+                        const value = this.getFieldValueFromSettings(
+                            sample,
+                            settings,
+                            fieldConfig.settingsPath,
+                            fieldConfig.topLevel
+                        );
+                        // Normalize value for comparison
+                        const normalizedValue = this.normalizeForComparison(
+                            value !== undefined ? value : this.getDefaultValue(fieldConfig.key),
+                            fieldConfig.type
+                        );
+                        values.add(normalizedValue);
+                    });
+                    
+                    const uniqueValues = Array.from(values);
+                    
+                    // Check for inconsistency
                     if (uniqueValues.length > 1) {
-                        // Inconsistent values - add warning
-                        const valuesDisplay = uniqueValues.map(v => v === '' ? '(empty)' : v).join(', ');
+                        const valuesDisplay = uniqueValues
+                            .map(v => v === '' || v === 'null' ? '(empty)' : v)
+                            .join(', ');
                         this.addSampleProjectWarnings.push(
-                            `${fieldData.displayName}: Inconsistent values in project (${valuesDisplay})`
+                            `${fieldConfig.label}: Inconsistent values (${valuesDisplay})`
                         );
                     }
                     
-                    // Use value from first sample for pre-fill
-                    const firstValue = uniqueValues[0];
-                    if (fieldKey === 'trim_umi' || fieldKey === 'create_fastq_for_index_reads' || 
-                        fieldKey === 'barcode_mismatches_index1' || fieldKey === 'barcode_mismatches_index2' ||
-                        fieldKey === 'mask_short_reads' || fieldKey === 'minimum_trimmed_read_length') {
-                        // Convert back from string representation to number/boolean/null
-                        if (firstValue === 'null') {
-                            bulkEditableDefaults[fieldKey] = null;
-                        } else if (firstValue === 'true') {
-                            bulkEditableDefaults[fieldKey] = true;
-                        } else if (firstValue === 'false') {
-                            bulkEditableDefaults[fieldKey] = false;
-                        } else {
-                            bulkEditableDefaults[fieldKey] = parseInt(firstValue);
-                        }
-                    } else if (fieldKey === 'umi_config') {
-                        // Parse UMI config from JSON string
-                        if (firstValue === 'null') {
-                            bulkEditableDefaults[fieldKey] = null;
-                        } else {
-                            try {
-                                bulkEditableDefaults[fieldKey] = JSON.parse(firstValue);
-                            } catch (e) {
-                                bulkEditableDefaults[fieldKey] = null;
-                            }
-                        }
-                    } else {
-                        bulkEditableDefaults[fieldKey] = firstValue;
-                    }
+                    // Store the first (or only) value, denormalized
+                    fieldData[fieldConfig.key] = this.denormalizeValue(
+                        uniqueValues[0],
+                        fieldConfig.type
+                    );
                 });
                 
                 // Update the edit form with these defaults
-                // Note: sample_project should already be set from addSampleTargetProject, but we won't override it
-                this.editFormData.sample_ref = bulkEditableDefaults.sample_ref || '';
-                this.editFormData.recipe = bulkEditableDefaults.recipe || '';
-                this.editFormData.operator = bulkEditableDefaults.operator || '';
-                this.editFormData.control = bulkEditableDefaults.control || 'N';
-                this.editFormData.description = bulkEditableDefaults.description || '';
-                this.editFormData.mask_short_reads = bulkEditableDefaults.mask_short_reads !== undefined ? bulkEditableDefaults.mask_short_reads : 0;
-                this.editFormData.minimum_trimmed_read_length = bulkEditableDefaults.minimum_trimmed_read_length !== undefined ? bulkEditableDefaults.minimum_trimmed_read_length : 0;
-                this.editFormData.umi_config = bulkEditableDefaults.umi_config !== undefined ? bulkEditableDefaults.umi_config : null;
-                this.editFormData.trim_umi = bulkEditableDefaults.trim_umi !== undefined ? bulkEditableDefaults.trim_umi : null;
-                this.editFormData.create_fastq_for_index_reads = bulkEditableDefaults.create_fastq_for_index_reads !== undefined ? bulkEditableDefaults.create_fastq_for_index_reads : null;
-                this.editFormData.barcode_mismatches_index1 = bulkEditableDefaults.barcode_mismatches_index1 !== undefined ? bulkEditableDefaults.barcode_mismatches_index1 : null;
-                this.editFormData.barcode_mismatches_index2 = bulkEditableDefaults.barcode_mismatches_index2 !== undefined ? bulkEditableDefaults.barcode_mismatches_index2 : null;
+                Object.entries(fieldData).forEach(([key, value]) => {
+                    this.editFormData[key] = value !== undefined && value !== null 
+                        ? value 
+                        : this.getDefaultValue(key);
+                });
             }
             
-            return bulkEditableDefaults;
+            return {};
         },
         openConfigModal(sample, lane) {
             // Open modal to show config sources and their details
