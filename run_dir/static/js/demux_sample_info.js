@@ -849,6 +849,78 @@ const vDemuxSampleInfoEditor = {
         
         // ===== End Helper Methods =====
         
+        // ===== Template Helper Methods (Refactoring #6) =====
+        
+        /**
+         * Check if a cell should show code formatting (for index columns)
+         * @param {string} columnKey - The column key
+         * @returns {boolean} True if cell should use code formatting
+         */
+        isCodeFormattedColumn(columnKey) {
+            return columnKey === 'index_1' || columnKey === 'index_2';
+        },
+        
+        /**
+         * Get CSS classes for a table cell
+         * @param {string} lane - The lane number
+         * @param {string} uuid - The sample UUID
+         * @param {string} columnKey - The column key
+         * @returns {Object} Object with class names as keys and boolean values
+         */
+        getCellClasses(lane, uuid, columnKey) {
+            return {
+                'bg-info': this.isFieldEdited(lane, uuid, columnKey)
+            };
+        },
+        
+        /**
+         * Get configuration for action buttons for a sample
+         * @param {string} lane - The lane number
+         * @param {Object} sample - The sample object
+         * @returns {Object} Configuration object for buttons
+         */
+        getActionButtonsConfig(lane, sample) {
+            const hasConfigSources = Array.isArray(sample.config_sources) && sample.config_sources.length > 0;
+            
+            return {
+                inspect: {
+                    enabled: hasConfigSources,
+                    title: hasConfigSources 
+                        ? 'View Stage 1 configuration details (stored settings)' 
+                        : 'No configuration sources available',
+                    onClick: () => this.openConfigModal(this.calculatedLanes[lane].sample_rows[sample.uuid], lane)
+                },
+                edit: {
+                    enabled: true,
+                    title: 'Edit sample',
+                    onClick: () => this.openEditModal(lane, sample.uuid)
+                }
+            };
+        },
+        
+        /**
+         * Get the sample count text with proper pluralization
+         * @param {number} count - Number of samples
+         * @returns {string} Formatted count text
+         */
+        getSampleCountText(count) {
+            return `${count} sample${count !== 1 ? 's' : ''}`;
+        },
+        
+        /**
+         * Check if a sample row should be highlighted
+         * @param {string} lane - The lane number
+         * @param {string} uuid - The sample UUID
+         * @returns {Object} Object with class names
+         */
+        getRowClasses(lane, uuid) {
+            return {
+                'table-info': this.isSampleEdited(lane, uuid)
+            };
+        },
+        
+        // ===== End Template Helper Methods =====
+        
         fetchSamplePresets() {
             // Fetch sample classification presets from the API
             if (this.samplePresets) return; // Already loaded
@@ -1114,114 +1186,187 @@ const vDemuxSampleInfoEditor = {
             return this.expandedConfigSources.includes(index);
         },
 
+        // ===== Config Source Parsing Helpers (Refactoring #5) =====
+        
+        /**
+         * Get conditional rules for a given category and tier path
+         * @param {string} category - The category (patterns, control_patterns, etc.)
+         * @param {Array} tierParts - The tier path parts
+         * @returns {Object|null} The conditional rules object
+         */
+        getConditionalRulesForCategory(category, tierParts) {
+            const config = this.sampleClassificationConfig;
+            
+            switch (category) {
+                case 'control_patterns':
+                    return config.control_conditional_rules;
+                    
+                case 'patterns':
+                    const patternKey = tierParts[1];
+                    return config.patterns?.[patternKey]?.conditional_rules;
+                    
+                case 'other_general_sample_types':
+                    const typeKey = tierParts[1];
+                    return config.other_general_sample_types?.[typeKey]?.conditional_rules;
+                    
+                case 'library_method_mapping':
+                    const methodKey = tierParts.slice(1).join('.');
+                    return config.library_method_mapping?.[methodKey]?.conditional_rules;
+                    
+                case 'instrument_type_mapping':
+                    return this.getInstrumentTypeConditionalRules(tierParts);
+                    
+                default:
+                    return null;
+            }
+        },
+        
+        /**
+         * Get conditional rules for instrument type mappings
+         * @param {Array} tierParts - The tier path parts
+         * @returns {Object|null} The conditional rules object
+         */
+        getInstrumentTypeConditionalRules(tierParts) {
+            const instrumentType = tierParts[1];
+            const config = this.sampleClassificationConfig.instrument_type_mapping?.[instrumentType];
+            
+            if (!config) return null;
+            
+            if (tierParts.length === 2) {
+                // Instrument type level
+                return config.conditional_rules;
+            } else if (tierParts.length === 4 && tierParts[2] === 'run_modes') {
+                // Run mode level
+                const runMode = tierParts[3];
+                return config.run_modes?.[runMode]?.conditional_rules;
+            }
+            
+            return null;
+        },
+        
+        /**
+         * Parse a conditional rule from a config source string
+         * @param {string} configSource - The config source string
+         * @returns {Object|null} Parsed conditional rule or null
+         */
+        parseConditionalRule(configSource) {
+            const parts = configSource.split('.conditional_rule.');
+            if (parts.length !== 2) return null;
+
+            const tierPath = parts[0];
+            const ruleSpec = parts[1];
+            const [settingName, ruleName] = ruleSpec.split(':');
+
+            const tierParts = tierPath.split('.');
+            const category = tierParts[0];
+
+            const conditionalRules = this.getConditionalRulesForCategory(category, tierParts);
+            
+            if (conditionalRules && conditionalRules[settingName]) {
+                const rule = conditionalRules[settingName].find(r => r.name === ruleName);
+                if (rule) {
+                    return {
+                        _type: 'conditional_rule',
+                        setting_name: settingName,
+                        rule_name: ruleName,
+                        rule: rule,
+                        tier_path: tierPath
+                    };
+                }
+            }
+
+            return null;
+        },
+        
+        /**
+         * Parse instrument type configuration
+         * @param {Array} restParts - The remaining path parts after 'instrument_type_mapping'
+         * @returns {Object|null} The instrument type config or null
+         */
+        parseInstrumentTypeConfig(restParts) {
+            const instrumentType = restParts[0];
+            const config = this.sampleClassificationConfig.instrument_type_mapping?.[instrumentType];
+            
+            if (!config) return null;
+            
+            if (restParts.length === 1) {
+                return config;
+            } else if (restParts.length === 3 && restParts[1] === 'run_modes') {
+                const runMode = restParts[2];
+                return config.run_modes?.[runMode];
+            }
+            
+            return null;
+        },
+        
+        /**
+         * Parse custom configuration
+         * @param {string} configName - The custom config name
+         * @returns {Object|null} The custom config or null
+         */
+        parseCustomConfig(configName) {
+            if (!this.demux_data?.custom_configs) return null;
+            return this.demux_data.custom_configs.find(c => c.name === configName) || null;
+        },
+        
+        /**
+         * Parse standard configuration (non-conditional, non-instrument, non-custom)
+         * @param {string} category - The config category
+         * @param {string} key - The config key
+         * @returns {*} The configuration value
+         */
+        parseStandardConfig(category, key) {
+            const config = this.sampleClassificationConfig;
+            
+            switch (category) {
+                case 'bcl_convert_settings':
+                    return config.bcl_convert_settings?.[key];
+                    
+                case 'patterns':
+                    return config.patterns?.[key];
+                    
+                case 'other_general_sample_types':
+                    return config.other_general_sample_types?.[key];
+                    
+                case 'library_method_mapping':
+                    return config.library_method_mapping?.[key];
+                    
+                case 'control_patterns':
+                    return { control_patterns: config.control_patterns };
+                    
+                default:
+                    return null;
+            }
+        },
+        
+        // ===== End Config Source Parsing Helpers =====
+        
         getConfigDetails(configSource) {
             // Parse config source and return the configuration details
             if (!this.sampleClassificationConfig) return null;
 
             // Handle conditional rules specially
-            // Format: "patterns.idt_umi.conditional_rule.TrimUMI:exclude_if_no_umi_detected"
-            // Format: "control_patterns.conditional_rule.TrimUMI:exclude_for_controls"
             if (configSource.includes('.conditional_rule.')) {
-                const parts = configSource.split('.conditional_rule.');
-                if (parts.length !== 2) return null;
-
-                const tierPath = parts[0]; // e.g., "patterns.idt_umi" or "control_patterns"
-                const ruleSpec = parts[1]; // e.g., "TrimUMI:exclude_if_no_umi_detected"
-                const [settingName, ruleName] = ruleSpec.split(':');
-
-                // Parse the tier path
-                const tierParts = tierPath.split('.');
-                const category = tierParts[0]; // e.g., "patterns", "other_general_sample_types", "control_patterns"
-
-                let conditionalRules = null;
-
-                if (category === 'control_patterns') {
-                    // Control patterns have rules at top level
-                    conditionalRules = this.sampleClassificationConfig.control_conditional_rules;
-                } else if (category === 'patterns') {
-                    const patternKey = tierParts[1];
-                    conditionalRules = this.sampleClassificationConfig.patterns?.[patternKey]?.conditional_rules;
-                } else if (category === 'other_general_sample_types') {
-                    const typeKey = tierParts[1];
-                    conditionalRules = this.sampleClassificationConfig.other_general_sample_types?.[typeKey]?.conditional_rules;
-                } else if (category === 'library_method_mapping') {
-                    const methodKey = tierParts.slice(1).join('.');
-                    conditionalRules = this.sampleClassificationConfig.library_method_mapping?.[methodKey]?.conditional_rules;
-                } else if (category === 'instrument_type_mapping') {
-                    // Handle: "instrument_type_mapping.NovaSeqXPlus.conditional_rule.X"
-                    // or "instrument_type_mapping.NovaSeqXPlus.run_modes.10B.conditional_rule.X"
-                    const instrumentType = tierParts[1];
-
-                    if (tierParts.length === 2) {
-                        // Instrument type level
-                        conditionalRules = this.sampleClassificationConfig.instrument_type_mapping?.[instrumentType]?.conditional_rules;
-                    } else if (tierParts.length === 4 && tierParts[2] === 'run_modes') {
-                        // Run mode level
-                        const runMode = tierParts[3];
-                        conditionalRules = this.sampleClassificationConfig.instrument_type_mapping?.[instrumentType]?.run_modes?.[runMode]?.conditional_rules;
-                    }
-                }
-
-                if (conditionalRules && conditionalRules[settingName]) {
-                    // Find the specific rule by name
-                    const rule = conditionalRules[settingName].find(r => r.name === ruleName);
-                    if (rule) {
-                        return {
-                            _type: 'conditional_rule',
-                            setting_name: settingName,
-                            rule_name: ruleName,
-                            rule: rule,
-                            tier_path: tierPath
-                        };
-                    }
-                }
-
-                return null;
+                return this.parseConditionalRule(configSource);
             }
 
             const parts = configSource.split('.');
             if (parts.length < 2) return null;
 
-            const category = parts[0];  // e.g., "patterns", "library_method_mapping", "bcl_convert_settings", "instrument_type_mapping", "custom_config"
-            const key = parts.slice(1).join('.');  // e.g., "tenx_single", "raw_samplesheet_settings"
+            const category = parts[0];
+            const key = parts.slice(1).join('.');
 
-            if (category === 'bcl_convert_settings') {
-                return this.sampleClassificationConfig.bcl_convert_settings?.[key];
-            } else if (category === 'patterns') {
-                return this.sampleClassificationConfig.patterns?.[key];
-            } else if (category === 'other_general_sample_types') {
-                return this.sampleClassificationConfig.other_general_sample_types?.[key];
-            } else if (category === 'library_method_mapping') {
-                return this.sampleClassificationConfig.library_method_mapping?.[key];
-            } else if (category === 'control_patterns') {
-                return { control_patterns: this.sampleClassificationConfig.control_patterns };
-            } else if (category === 'instrument_type_mapping') {
-                // Handle instrument type configs: "instrument_type_mapping.NovaSeqXPlus" or "instrument_type_mapping.NovaSeqXPlus.run_modes.10B"
-                const restParts = parts.slice(1);  // e.g., ["NovaSeqXPlus"] or ["NovaSeqXPlus", "run_modes", "10B"]
-                const instrumentType = restParts[0];
-
-                if (!this.sampleClassificationConfig.instrument_type_mapping?.[instrumentType]) {
-                    return null;
-                }
-
-                if (restParts.length === 1) {
-                    // Just the instrument type
-                    return this.sampleClassificationConfig.instrument_type_mapping[instrumentType];
-                } else if (restParts.length === 3 && restParts[1] === 'run_modes') {
-                    // Instrument type with run mode: instrument_type_mapping.NovaSeqXPlus.run_modes.10B
-                    const runMode = restParts[2];
-                    return this.sampleClassificationConfig.instrument_type_mapping[instrumentType].run_modes?.[runMode];
-                }
-            } else if (category === 'custom_config') {
-                // Handle custom configs: "custom_config.MyCustomConfig"
-                const configName = key;
-                if (this.demux_data?.custom_configs) {
-                    const customConfig = this.demux_data.custom_configs.find(c => c.name === configName);
-                    return customConfig || null;
-                }
+            // Handle special categories
+            if (category === 'instrument_type_mapping') {
+                return this.parseInstrumentTypeConfig(parts.slice(1));
             }
-
-            return null;
+            
+            if (category === 'custom_config') {
+                return this.parseCustomConfig(key);
+            }
+            
+            // Handle standard configurations
+            return this.parseStandardConfig(category, key);
         },
         formatConfigValue(value) {
             // Format configuration value for display
@@ -2768,27 +2913,25 @@ const vDemuxSampleInfoEditor = {
                                                             </tr>
                                                         </thead>
                                                         <tbody>
-                                                            <tr v-for="sample in indexGroups['_all_']" :key="sample.uuid" :class="{ 'table-info': isSampleEdited(lane, sample.uuid) }">
+                                                            <tr v-for="sample in indexGroups['_all_']" :key="sample.uuid" :class="getRowClasses(lane, sample.uuid)">
                                                                 <td v-for="columnKey in visibleColumns" :key="columnKey"
-                                                                    :class="{ 'bg-info': isFieldEdited(lane, sample.uuid, columnKey) }"
+                                                                    :class="getCellClasses(lane, sample.uuid, columnKey)"
                                                                     :title="getEditTooltip(lane, sample.uuid, columnKey)">
-                                                                    <!-- Index columns with code formatting -->
-                                                                    <code v-if="columnKey === 'index_1' || columnKey === 'index_2'">{{ formatCellValue(sample[columnKey], columnKey) }}</code>
-                                                                    <!-- All other columns -->
+                                                                    <code v-if="isCodeFormattedColumn(columnKey)">{{ formatCellValue(sample[columnKey], columnKey) }}</code>
                                                                     <span v-else>{{ formatCellValue(sample[columnKey], columnKey) }}</span>
                                                                 </td>
                                                                 <td>
                                                                     <button
                                                                         class="btn btn-sm btn-outline-info"
                                                                         @click="openConfigModal(calculatedLanes[lane].sample_rows[sample.uuid], lane)"
-                                                                        :disabled="!Array.isArray(sample['config_sources']) || sample['config_sources'].length === 0"
-                                                                        :title="Array.isArray(sample['config_sources']) && sample['config_sources'].length > 0 ? 'View Stage 1 configuration details (stored settings)' : 'No configuration sources available'">
+                                                                        :disabled="!getActionButtonsConfig(lane, sample).inspect.enabled"
+                                                                        :title="getActionButtonsConfig(lane, sample).inspect.title">
                                                                         <i class="fa fa-info-circle"></i> Inspect
                                                                     </button>
                                                                     <button
                                                                         class="btn btn-sm btn-outline-primary ml-1"
                                                                         @click="openEditModal(lane, sample.uuid)"
-                                                                        :title="'Edit sample'">
+                                                                        :title="getActionButtonsConfig(lane, sample).edit.title">
                                                                         <i class="fa fa-pencil"></i> Edit
                                                                     </button>
                                                                 </td>
@@ -2817,27 +2960,25 @@ const vDemuxSampleInfoEditor = {
                                                                     </tr>
                                                                 </thead>
                                                                 <tbody>
-                                                                    <tr v-for="sample in samples" :key="sample.uuid" :class="{ 'table-info': isSampleEdited(lane, sample.uuid) }">
+                                                                    <tr v-for="sample in samples" :key="sample.uuid" :class="getRowClasses(lane, sample.uuid)">
                                                                         <td v-for="columnKey in visibleColumns" :key="columnKey"
-                                                                            :class="{ 'bg-info': isFieldEdited(lane, sample.uuid, columnKey) }"
+                                                                            :class="getCellClasses(lane, sample.uuid, columnKey)"
                                                                             :title="getEditTooltip(lane, sample.uuid, columnKey)">
-                                                                            <!-- Index columns with code formatting -->
-                                                                            <code v-if="columnKey === 'index_1' || columnKey === 'index_2'">{{ formatCellValue(sample[columnKey], columnKey) }}</code>
-                                                                            <!-- All other columns -->
+                                                                            <code v-if="isCodeFormattedColumn(columnKey)">{{ formatCellValue(sample[columnKey], columnKey) }}</code>
                                                                             <span v-else>{{ formatCellValue(sample[columnKey], columnKey) }}</span>
                                                                         </td>
                                                                         <td>
                                                                             <button
                                                                                 class="btn btn-sm btn-outline-info"
                                                                                 @click="openConfigModal(calculatedLanes[lane].sample_rows[sample.uuid], lane)"
-                                                                                :disabled="!Array.isArray(sample['config_sources']) || sample['config_sources'].length === 0"
-                                                                                :title="Array.isArray(sample['config_sources']) && sample['config_sources'].length > 0 ? 'View Stage 1 configuration details (stored settings)' : 'No configuration sources available'">
+                                                                                :disabled="!getActionButtonsConfig(lane, sample).inspect.enabled"
+                                                                                :title="getActionButtonsConfig(lane, sample).inspect.title">
                                                                                 <i class="fa fa-info-circle"></i> Inspect
                                                                             </button>
                                                                             <button
                                                                                 class="btn btn-sm btn-outline-primary ml-1"
                                                                                 @click="openEditModal(lane, sample.uuid)"
-                                                                                :title="'Edit sample'">
+                                                                                :title="getActionButtonsConfig(lane, sample).edit.title">
                                                                                 <i class="fa fa-pencil"></i> Edit
                                                                             </button>
                                                                         </td>
@@ -2883,27 +3024,25 @@ const vDemuxSampleInfoEditor = {
                                                                 </tr>
                                                             </thead>
                                                             <tbody>
-                                                                <tr v-for="sample in indexGroups['_all_']" :key="sample.uuid" :class="{ 'table-info': isSampleEdited(lane, sample.uuid) }">
+                                                                <tr v-for="sample in indexGroups['_all_']" :key="sample.uuid" :class="getRowClasses(lane, sample.uuid)">
                                                                     <td v-for="columnKey in visibleColumns" :key="columnKey"
-                                                                        :class="{ 'bg-info': isFieldEdited(lane, sample.uuid, columnKey) }"
+                                                                        :class="getCellClasses(lane, sample.uuid, columnKey)"
                                                                         :title="getEditTooltip(lane, sample.uuid, columnKey)">
-                                                                        <!-- Index columns with code formatting -->
-                                                                        <code v-if="columnKey === 'index_1' || columnKey === 'index_2'">{{ formatCellValue(sample[columnKey], columnKey) }}</code>
-                                                                        <!-- All other columns -->
+                                                                        <code v-if="isCodeFormattedColumn(columnKey)">{{ formatCellValue(sample[columnKey], columnKey) }}</code>
                                                                         <span v-else>{{ formatCellValue(sample[columnKey], columnKey) }}</span>
                                                                     </td>
                                                                     <td>
                                                                         <button
                                                                             class="btn btn-sm btn-outline-info"
                                                                             @click="openConfigModal(calculatedLanes[lane].sample_rows[sample.uuid], lane)"
-                                                                            :disabled="!Array.isArray(sample['config_sources']) || sample['config_sources'].length === 0"
-                                                                            :title="Array.isArray(sample['config_sources']) && sample['config_sources'].length > 0 ? 'View Stage 1 configuration details (stored settings)' : 'No configuration sources available'">
+                                                                            :disabled="!getActionButtonsConfig(lane, sample).inspect.enabled"
+                                                                            :title="getActionButtonsConfig(lane, sample).inspect.title">
                                                                             <i class="fa fa-info-circle"></i> Inspect
                                                                         </button>
                                                                         <button
                                                                             class="btn btn-sm btn-outline-primary ml-1"
                                                                             @click="openEditModal(lane, sample.uuid)"
-                                                                            :title="'Edit sample'">
+                                                                            :title="getActionButtonsConfig(lane, sample).edit.title">
                                                                             <i class="fa fa-pencil"></i> Edit
                                                                         </button>
                                                                     </td>
@@ -2932,27 +3071,25 @@ const vDemuxSampleInfoEditor = {
                                                                         </tr>
                                                                     </thead>
                                                                     <tbody>
-                                                                        <tr v-for="sample in samples" :key="sample.uuid" :class="{ 'table-info': isSampleEdited(lane, sample.uuid) }">
+                                                                        <tr v-for="sample in samples" :key="sample.uuid" :class="getRowClasses(lane, sample.uuid)">
                                                                             <td v-for="columnKey in visibleColumns" :key="columnKey"
-                                                                                :class="{ 'bg-info': isFieldEdited(lane, sample.uuid, columnKey) }"
+                                                                                :class="getCellClasses(lane, sample.uuid, columnKey)"
                                                                                 :title="getEditTooltip(lane, sample.uuid, columnKey)">
-                                                                                <!-- Index columns with code formatting -->
-                                                                                <code v-if="columnKey === 'index_1' || columnKey === 'index_2'">{{ formatCellValue(sample[columnKey], columnKey) }}</code>
-                                                                                <!-- All other columns -->
+                                                                                <code v-if="isCodeFormattedColumn(columnKey)">{{ formatCellValue(sample[columnKey], columnKey) }}</code>
                                                                                 <span v-else>{{ formatCellValue(sample[columnKey], columnKey) }}</span>
                                                                             </td>
                                                                             <td>
                                                                                 <button
                                                                                     class="btn btn-sm btn-outline-info"
                                                                                     @click="openConfigModal(calculatedLanes[lane].sample_rows[sample.uuid], lane)"
-                                                                                    :disabled="!Array.isArray(sample['config_sources']) || sample['config_sources'].length === 0"
-                                                                                    :title="Array.isArray(sample['config_sources']) && sample['config_sources'].length > 0 ? 'View Stage 1 configuration details (stored settings)' : 'No configuration sources available'">
+                                                                                    :disabled="!getActionButtonsConfig(lane, sample).inspect.enabled"
+                                                                                    :title="getActionButtonsConfig(lane, sample).inspect.title">
                                                                                     <i class="fa fa-info-circle"></i> Inspect
                                                                                 </button>
                                                                                 <button
                                                                                     class="btn btn-sm btn-outline-primary ml-1"
                                                                                     @click="openEditModal(lane, sample.uuid)"
-                                                                                    :title="'Edit sample'">
+                                                                                    :title="getActionButtonsConfig(lane, sample).edit.title">
                                                                                     <i class="fa fa-pencil"></i> Edit
                                                                                 </button>
                                                                             </td>
