@@ -52,6 +52,20 @@ const vDemuxSampleInfoEditor = {
             // Add Sample specific variables
             addSampleTargetProject: '',
             addSampleTargetLanes: [],  // Multiple lanes (at least one required)
+            addSampleProjectWarnings: [],  // Warnings about inconsistent values in project
+            // Fields excluded from bulk editing (sample-specific fields)
+            // All other fields can be bulk-edited / pre-filled from project samples
+            bulkEditExcludedFields: [
+                'sample_id',
+                'sample_name',
+                'index_1',
+                'index_2',
+                'named_index',
+                'override_cycles',  // Auto-calculated
+                'index_length',  // Auto-calculated
+                'sample_type',  // Auto-calculated from Stage 1
+                'config_sources'  // Auto-calculated from Stage 1
+            ],
             showEditModal: false,
             editModalSample: null,
             editModalLane: null,
@@ -532,6 +546,8 @@ const vDemuxSampleInfoEditor = {
             // Update editFormData.sample_project when target project changes
             if (this.unifiedModalTab === 'add' && this.editFormData) {
                 this.editFormData.sample_project = newProject || '';
+                // Pre-fill form with project-based defaults and show warnings if values differ
+                this.updateAddSampleFormWithProjectDefaults(newProject);
             }
         },
         addSampleTargetLanes(newLanes) {
@@ -565,6 +581,158 @@ const vDemuxSampleInfoEditor = {
                 .catch(error => {
                     console.error('Failed to load sample classification config:', error);
                 });
+        },
+        updateAddSampleFormWithProjectDefaults(targetProject) {
+            // Pre-fill bulk-editable fields from existing project samples and warn if values differ
+            this.addSampleProjectWarnings = [];
+            let bulkEditableDefaults = {};
+            
+            if (!targetProject || !this.editFormData) {
+                return bulkEditableDefaults;
+            }
+            
+            // Collect all samples from this project
+            const projectSamples = [];
+            Object.values(this.calculatedLanes).forEach(laneData => {
+                Object.values(laneData.sample_rows).forEach(sample => {
+                    const settingsVersions = Object.keys(sample.settings).sort().reverse();
+                    const latestSettings = sample.settings[settingsVersions[0]];
+                    if (latestSettings.per_sample_fields?.Sample_Project === targetProject) {
+                        projectSamples.push({
+                            sample: sample,
+                            settings: latestSettings
+                        });
+                    }
+                });
+            });
+
+            if (projectSamples.length > 0) {
+                // Get bulk-editable fields from the first sample
+                const firstSample = projectSamples[0];
+                const firstSettings = firstSample.settings;
+                
+                // Map of field names to their values and consistency
+                const bulkFields = {
+                    'sample_project': { values: new Set(), displayName: 'Sample Project' },
+                    'sample_ref': { values: new Set(), displayName: 'Sample Ref' },
+                    'recipe': { values: new Set(), displayName: 'Recipe' },
+                    'operator': { values: new Set(), displayName: 'Operator' },
+                    'control': { values: new Set(), displayName: 'Control' },
+                    'description': { values: new Set(), displayName: 'Description' },
+                    'mask_short_reads': { values: new Set(), displayName: 'Mask Short Reads' },
+                    'minimum_trimmed_read_length': { values: new Set(), displayName: 'Minimum Trimmed Read Length' },
+                    'umi_config': { values: new Set(), displayName: 'UMI Config' },
+                    'trim_umi': { values: new Set(), displayName: 'Trim UMI' },
+                    'create_fastq_for_index_reads': { values: new Set(), displayName: 'Create FastQ for Index Reads' },
+                    'barcode_mismatches_index1': { values: new Set(), displayName: 'Barcode Mismatches Index 1' },
+                    'barcode_mismatches_index2': { values: new Set(), displayName: 'Barcode Mismatches Index 2' }
+                };
+
+                // Collect values from all project samples
+                projectSamples.forEach(({ sample, settings }) => {
+                    bulkFields['sample_project'].values.add(settings.per_sample_fields?.Sample_Project || '');
+                    bulkFields['sample_ref'].values.add(settings.other_details?.sample_ref || '');
+                    bulkFields['recipe'].values.add(settings.other_details?.recipe || '');
+                    bulkFields['operator'].values.add(settings.other_details?.operator || '');
+                    bulkFields['control'].values.add(sample.control || 'N');
+                    bulkFields['description'].values.add(sample.description || '');
+                    bulkFields['mask_short_reads'].values.add(
+                        settings.per_sample_fields?.MaskShortReads !== undefined
+                        ? String(settings.per_sample_fields.MaskShortReads)
+                        : '0'
+                    );
+                    bulkFields['minimum_trimmed_read_length'].values.add(
+                        settings.per_sample_fields?.MinimumTrimmedReadLength !== undefined
+                        ? String(settings.per_sample_fields.MinimumTrimmedReadLength)
+                        : '0'
+                    );
+                    bulkFields['umi_config'].values.add(
+                        settings.other_details?.umi_config
+                        ? JSON.stringify(settings.other_details.umi_config)
+                        : 'null'
+                    );
+                    bulkFields['trim_umi'].values.add(
+                        settings.raw_samplesheet_settings?.TrimUMI !== undefined 
+                        ? String(settings.raw_samplesheet_settings.TrimUMI) 
+                        : 'null'
+                    );
+                    bulkFields['create_fastq_for_index_reads'].values.add(
+                        settings.raw_samplesheet_settings?.CreateFastqForIndexReads !== undefined 
+                        ? String(settings.raw_samplesheet_settings.CreateFastqForIndexReads) 
+                        : 'null'
+                    );
+                    bulkFields['barcode_mismatches_index1'].values.add(
+                        settings.raw_samplesheet_settings?.BarcodeMismatchesIndex1 !== undefined 
+                        ? String(settings.raw_samplesheet_settings.BarcodeMismatchesIndex1) 
+                        : 'null'
+                    );
+                    bulkFields['barcode_mismatches_index2'].values.add(
+                        settings.raw_samplesheet_settings?.BarcodeMismatchesIndex2 !== undefined 
+                        ? String(settings.raw_samplesheet_settings.BarcodeMismatchesIndex2) 
+                        : 'null'
+                    );
+                });
+
+                // Check consistency and prepare defaults
+                Object.entries(bulkFields).forEach(([fieldKey, fieldData]) => {
+                    const uniqueValues = Array.from(fieldData.values);
+                    
+                    if (uniqueValues.length > 1) {
+                        // Inconsistent values - add warning
+                        const valuesDisplay = uniqueValues.map(v => v === '' ? '(empty)' : v).join(', ');
+                        this.addSampleProjectWarnings.push(
+                            `${fieldData.displayName}: Inconsistent values in project (${valuesDisplay})`
+                        );
+                    }
+                    
+                    // Use value from first sample for pre-fill
+                    const firstValue = uniqueValues[0];
+                    if (fieldKey === 'trim_umi' || fieldKey === 'create_fastq_for_index_reads' || 
+                        fieldKey === 'barcode_mismatches_index1' || fieldKey === 'barcode_mismatches_index2' ||
+                        fieldKey === 'mask_short_reads' || fieldKey === 'minimum_trimmed_read_length') {
+                        // Convert back from string representation to number/boolean/null
+                        if (firstValue === 'null') {
+                            bulkEditableDefaults[fieldKey] = null;
+                        } else if (firstValue === 'true') {
+                            bulkEditableDefaults[fieldKey] = true;
+                        } else if (firstValue === 'false') {
+                            bulkEditableDefaults[fieldKey] = false;
+                        } else {
+                            bulkEditableDefaults[fieldKey] = parseInt(firstValue);
+                        }
+                    } else if (fieldKey === 'umi_config') {
+                        // Parse UMI config from JSON string
+                        if (firstValue === 'null') {
+                            bulkEditableDefaults[fieldKey] = null;
+                        } else {
+                            try {
+                                bulkEditableDefaults[fieldKey] = JSON.parse(firstValue);
+                            } catch (e) {
+                                bulkEditableDefaults[fieldKey] = null;
+                            }
+                        }
+                    } else {
+                        bulkEditableDefaults[fieldKey] = firstValue;
+                    }
+                });
+                
+                // Update the edit form with these defaults
+                // Note: sample_project should already be set from addSampleTargetProject, but we won't override it
+                this.editFormData.sample_ref = bulkEditableDefaults.sample_ref || '';
+                this.editFormData.recipe = bulkEditableDefaults.recipe || '';
+                this.editFormData.operator = bulkEditableDefaults.operator || '';
+                this.editFormData.control = bulkEditableDefaults.control || 'N';
+                this.editFormData.description = bulkEditableDefaults.description || '';
+                this.editFormData.mask_short_reads = bulkEditableDefaults.mask_short_reads !== undefined ? bulkEditableDefaults.mask_short_reads : 0;
+                this.editFormData.minimum_trimmed_read_length = bulkEditableDefaults.minimum_trimmed_read_length !== undefined ? bulkEditableDefaults.minimum_trimmed_read_length : 0;
+                this.editFormData.umi_config = bulkEditableDefaults.umi_config !== undefined ? bulkEditableDefaults.umi_config : null;
+                this.editFormData.trim_umi = bulkEditableDefaults.trim_umi !== undefined ? bulkEditableDefaults.trim_umi : null;
+                this.editFormData.create_fastq_for_index_reads = bulkEditableDefaults.create_fastq_for_index_reads !== undefined ? bulkEditableDefaults.create_fastq_for_index_reads : null;
+                this.editFormData.barcode_mismatches_index1 = bulkEditableDefaults.barcode_mismatches_index1 !== undefined ? bulkEditableDefaults.barcode_mismatches_index1 : null;
+                this.editFormData.barcode_mismatches_index2 = bulkEditableDefaults.barcode_mismatches_index2 !== undefined ? bulkEditableDefaults.barcode_mismatches_index2 : null;
+            }
+            
+            return bulkEditableDefaults;
         },
         openConfigModal(sample, lane) {
             // Open modal to show config sources and their details
@@ -1575,41 +1743,8 @@ const vDemuxSampleInfoEditor = {
                 return v.toString(16);
             });
 
-            // Get template settings from an existing sample in the same project (if project is set)
-            let templateSettings = null;
-            const targetProject = this.addSampleTargetProject;
-            if (targetProject) {
-                Object.values(this.calculatedLanes).some(laneData => {
-                    return Object.values(laneData.sample_rows).some(sample => {
-                        const settingsVersions = Object.keys(sample.settings).sort().reverse();
-                        const latestSettings = sample.settings[settingsVersions[0]];
-                        if (latestSettings.per_sample_fields?.Sample_Project === targetProject) {
-                            templateSettings = { ...latestSettings };
-                            return true;
-                        }
-                    });
-                });
-            }
-
-            // Populate form data with template or defaults
-            this.editFormData = templateSettings ? {
-                sample_id: newSampleId,
-                sample_name: newSampleId,
-                sample_project: this.addSampleTargetProject,
-                sample_ref: templateSettings.other_details?.sample_ref || '',
-                index_1: '',
-                index_2: '',
-                named_index: templateSettings.other_details?.named_index || '',
-                recipe: templateSettings.other_details?.recipe || '',
-                operator: templateSettings.other_details?.operator || '',
-                description: '',
-                control: templateSettings.control || 'N',
-                override_cycles: templateSettings.per_sample_fields?.OverrideCycles || '',
-                trim_umi: templateSettings.raw_samplesheet_settings?.TrimUMI !== undefined ? templateSettings.raw_samplesheet_settings.TrimUMI : null,
-                create_fastq_for_index_reads: templateSettings.raw_samplesheet_settings?.CreateFastqForIndexReads !== undefined ? templateSettings.raw_samplesheet_settings.CreateFastqForIndexReads : null,
-                barcode_mismatches_index1: templateSettings.raw_samplesheet_settings?.BarcodeMismatchesIndex1 !== undefined ? templateSettings.raw_samplesheet_settings.BarcodeMismatchesIndex1 : null,
-                barcode_mismatches_index2: templateSettings.raw_samplesheet_settings?.BarcodeMismatchesIndex2 !== undefined ? templateSettings.raw_samplesheet_settings.BarcodeMismatchesIndex2 : null
-            } : {
+            // Populate form data with empty defaults initially
+            this.editFormData = {
                 sample_id: newSampleId,
                 sample_name: newSampleId,
                 sample_project: this.addSampleTargetProject,
@@ -1621,12 +1756,18 @@ const vDemuxSampleInfoEditor = {
                 operator: '',
                 description: '',
                 control: 'N',
-                    override_cycles: '',
-                    trim_umi: null,
-                    create_fastq_for_index_reads: null,
-                    barcode_mismatches_index1: null,
-                    barcode_mismatches_index2: null
+                override_cycles: '',
+                mask_short_reads: 0,
+                minimum_trimmed_read_length: 0,
+                umi_config: null,
+                trim_umi: null,
+                create_fastq_for_index_reads: null,
+                barcode_mismatches_index1: null,
+                barcode_mismatches_index2: null
             };
+            
+            // Pre-fill bulk-editable fields from project samples (if project is set)
+            this.updateAddSampleFormWithProjectDefaults(this.addSampleTargetProject);
 
             this.editModalLane = this.addSampleTargetLanes[0] || null;
             this.editModalUuid = uuid;
@@ -3019,7 +3160,17 @@ const vDemuxSampleInfoEditor = {
                                             <strong>Project:</strong> {{ addSampleTargetProject || 'None' }}<br>
                                             <small class="d-block mt-1"><strong>Next Sample ID:</strong> {{ nextSampleId }}</small>
                                         </div>
-                                        <div v-else class="alert alert-warning">
+                                        
+                                        <!-- Warning for inconsistent project values -->
+                                        <div v-if="addSampleTargetLanes.length > 0 && addSampleProjectWarnings.length > 0" class="alert alert-info">
+                                            <strong><i class="fa fa-info-circle"></i> Inconsistent Field Values Detected:</strong>
+                                            <p class="mb-1 mt-2">The following fields have different values across samples in this project. The form has been pre-filled with values from the first sample, but you may want to review these fields:</p>
+                                            <ul class="mb-0 mt-2">
+                                                <li v-for="(warning, idx) in addSampleProjectWarnings" :key="idx">{{ warning }}</li>
+                                            </ul>
+                                        </div>
+                                        
+                                        <div v-else-if="addSampleTargetLanes.length === 0" class="alert alert-warning">
                                             <i class="fa fa-exclamation-triangle"></i> Please select at least one lane above to continue
                                         </div>
                                         

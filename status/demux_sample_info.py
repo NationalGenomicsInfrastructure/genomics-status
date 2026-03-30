@@ -1700,6 +1700,7 @@ class DemuxSampleInfoDataHandler(SafeHandler):
 
             # Track which samples were changed
             modified_samples = set()
+            added_samples = set()
 
             # Validation function for raw_samplesheet_settings
             def validate_bcl_setting(field_key, value):
@@ -1740,30 +1741,71 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                 lane_key = str(lane)
 
                 if lane_key not in document["calculated"]["lanes"]:
-                    raise ValueError(f"Lane {lane_key} does not exist in the document")
+                    # Create the lane if it doesn't exist yet
+                    document["calculated"]["lanes"][lane_key] = {"sample_rows": {}}
 
                 for sample_uuid, edited_fields in samples.items():
-                    if (
+                    # Check if this is a new sample (UUID doesn't exist yet)
+                    is_new_sample = (
                         sample_uuid
                         not in document["calculated"]["lanes"][lane_key]["sample_rows"]
-                    ):
-                        raise ValueError(
-                            f"Sample UUID {sample_uuid} does not exist in lane {lane_key}"
-                        )
-
-                    sample_row = document["calculated"]["lanes"][lane_key][
-                        "sample_rows"
-                    ][sample_uuid]
-
-                    # Get the latest settings version
-                    settings_versions = sorted(
-                        sample_row["settings"].keys(), reverse=True
                     )
-                    latest_version = settings_versions[0]
-                    latest_settings = sample_row["settings"][latest_version]
 
-                    # Create a deep copy of the latest settings for the new version
-                    new_settings = copy.deepcopy(latest_settings)
+                    if is_new_sample:
+                        # Create a new sample row with initial structure and default values
+                        sample_row = {
+                            "sample_id": sample_uuid,  # Will be overwritten by edits
+                            "last_modified": timestamp,
+                            "control": "N",  # Default, can be overwritten
+                            "description": "",  # Default, can be overwritten
+                            "settings": {}
+                        }
+                        
+                        # Create initial settings structure with defaults
+                        # These will be overwritten by edited_fields below
+                        new_settings = {
+                            "per_sample_fields": {
+                                "Lane": int(lane_key),
+                                "Sample_ID": sample_uuid,
+                                "Sample_Name": sample_uuid,
+                                "Sample_Project": "",
+                                "index": "",
+                                "index2": "",
+                                "MaskShortReads": 0,
+                                "MinimumTrimmedReadLength": 0,
+                                "OverrideCycles": ""
+                            },
+                            "other_details": {
+                                "sample_ref": "",
+                                "sample_type": "",  # No Stage 1 classification
+                                "named_index": "",
+                                "recipe": "",
+                                "operator": "",
+                                "index_length": 0,
+                                "umi_config": None,
+                                "library_method": ""
+                            },
+                            "raw_samplesheet_settings": {},
+                            "config_sources": []  # Empty - no Stage 1 rules applied
+                        }
+                        
+                        # Add the sample row to the lane
+                        document["calculated"]["lanes"][lane_key]["sample_rows"][sample_uuid] = sample_row
+                    else:
+                        # Existing sample - get the current sample row
+                        sample_row = document["calculated"]["lanes"][lane_key][
+                            "sample_rows"
+                        ][sample_uuid]
+
+                        # Get the latest settings version
+                        settings_versions = sorted(
+                            sample_row["settings"].keys(), reverse=True
+                        )
+                        latest_version = settings_versions[0]
+                        latest_settings = sample_row["settings"][latest_version]
+
+                        # Create a deep copy of the latest settings for the new version
+                        new_settings = copy.deepcopy(latest_settings)
 
                     # Apply edits to the appropriate sections
                     for field_key, new_value in edited_fields.items():
@@ -1779,23 +1821,20 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                         # Handle sample_row level fields (not in settings)
                         if section == "sample_row":
                             sample_row[actual_key] = new_value
-
-                            # Track the sample ID
-                            sample_id = new_settings["per_sample_fields"].get(
-                                "Sample_ID", sample_uuid
-                            )
-                            modified_samples.add(sample_id)
                         # Handle settings level fields
                         elif section in new_settings:
                             new_settings[section][actual_key] = new_value
+                    
+                    # Track the sample ID in appropriate set
+                    sample_id = new_settings["per_sample_fields"].get(
+                        "Sample_ID", sample_uuid
+                    )
+                    if is_new_sample:
+                        added_samples.add(sample_id)
+                    else:
+                        modified_samples.add(sample_id)
 
-                            # Track the sample ID
-                            sample_id = new_settings["per_sample_fields"].get(
-                                "Sample_ID", sample_uuid
-                            )
-                            modified_samples.add(sample_id)
-
-                    # Recalculate OverrideCycles if recipe or indices were changed
+                    # Recalculate OverrideCycles and index_length if recipe or indices were changed
                     # Check if any relevant fields were edited
                     relevant_fields = {"recipe", "index", "index2", "umi_config"}
                     if relevant_fields.intersection(edited_fields.keys()):
@@ -1807,6 +1846,9 @@ class DemuxSampleInfoDataHandler(SafeHandler):
 
                         # Calculate index lengths from actual index sequences
                         index_lengths = [len(index_1), len(index_2)]
+                        
+                        # Update index_length in other_details
+                        new_settings["other_details"]["index_length"] = len(index_1)
 
                         # Generate new OverrideCycles
                         override_cycles = self._generate_override_cycles(
@@ -1832,12 +1874,22 @@ class DemuxSampleInfoDataHandler(SafeHandler):
             if user_comment:
                 comment = user_comment
             else:
-                # Generate automatic comment listing modified samples
-                sample_list = ", ".join(sorted(modified_samples)[:10])
-                if len(modified_samples) > 10:
-                    comment = f"Manual edit: Modified {len(modified_samples)} samples: {sample_list}..."
-                else:
-                    comment = f"Manual edit: Modified samples: {sample_list}"
+                # Generate automatic comment listing added and modified samples
+                parts = []
+                if added_samples:
+                    added_list = ", ".join(sorted(added_samples)[:10])
+                    if len(added_samples) > 10:
+                        parts.append(f"Added {len(added_samples)} samples: {added_list}...")
+                    else:
+                        parts.append(f"Added samples: {added_list}")
+                if modified_samples:
+                    modified_list = ", ".join(sorted(modified_samples)[:10])
+                    if len(modified_samples) > 10:
+                        parts.append(f"Modified {len(modified_samples)} samples: {modified_list}...")
+                    else:
+                        parts.append(f"Modified samples: {modified_list}")
+                
+                comment = "Manual edit: " + "; ".join(parts) if parts else "Manual edit"
 
             document["calculated"]["version_history"][timestamp] = {
                 "generated_by": self.get_current_user().email
