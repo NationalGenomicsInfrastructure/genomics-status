@@ -251,7 +251,6 @@ const FIELD_CONFIG = {
         type: 'number'
     }
 };
-
 // Constants for magic strings and default values
 const CONSTANTS = {
     VIEW_MODES: {
@@ -270,7 +269,6 @@ const CONSTANTS = {
         MIN_TRIMMED_LENGTH: 0
     }
 };
-
 // Utility functions for common operations
 const UTILS = {
     /**
@@ -281,7 +279,6 @@ const UTILS = {
     sortLanesNumerically(lanes) {
         return lanes.sort((a, b) => parseInt(a) - parseInt(b));
     },
-    
     /**
      * Sort object keys as lanes and return new object with sorted keys
      * @param {Object} obj - Object with lane keys
@@ -296,22 +293,465 @@ const UTILS = {
             }, {});
     }
 };
-
+/**
+ * PresetSelector Component
+ * 
+ * Displays a dropdown selector for sample classification presets with an apply button.
+ * Used in both Edit Sample and Add Sample tabs.
+ * 
+ * @component
+ * @emits update:selectedPreset - Emitted when preset selection changes
+ * @emits apply - Emitted when Apply Preset button is clicked
+ */
+const PresetSelector = {
+    name: 'PresetSelector',
+    props: {
+        samplePresets: {
+            type: Object,
+            required: true,
+            validator: (value) => {
+                return value && typeof value === 'object';
+            }
+        },
+        selectedPreset: {
+            type: String,
+            default: ''
+        },
+        mode: {
+            type: String,
+            default: 'edit',
+            validator: (value) => ['edit', 'add'].includes(value)
+        }
+    },
+    computed: {
+        selectId() {
+            return `preset_select_${this.mode}`;
+        },
+        hasLibraryMethods() {
+            return this.samplePresets.library_methods && 
+                   Object.keys(this.samplePresets.library_methods).length > 0;
+        },
+        hasInstrumentTypes() {
+            return this.samplePresets.instrument_types && 
+                   Object.keys(this.samplePresets.instrument_types).length > 0;
+        }
+    },
+    methods: {
+        updatePreset(value) {
+            this.$emit('update:selectedPreset', value);
+        },
+        applyPreset() {
+            this.$emit('apply');
+        }
+    },
+    template: /*html*/`
+        <div class="card bg-light">
+            <div class="card-body">
+                <h6 class="card-title">Apply Sample Type Preset</h6>
+                <div class="row align-items-end">
+                    <div class="col-md-8">
+                        <label :for="selectId" class="form-label">
+                            Select a preset to auto-fill recipe and named index fields:
+                        </label>
+                        <select 
+                            class="form-select" 
+                            :id="selectId" 
+                            :value="selectedPreset"
+                            @input="updatePreset($event.target.value)">
+                            <option value="">-- Select Preset --</option>
+                            <optgroup label="Sample Patterns">
+                                <option 
+                                    v-for="(preset, key) in samplePresets.patterns" 
+                                    :key="key" 
+                                    :value="key">
+                                    {{ preset.description }} ({{ preset.sample_type }})
+                                </option>
+                            </optgroup>
+                            <optgroup 
+                                v-if="hasLibraryMethods" 
+                                label="Library Methods">
+                                <option 
+                                    v-for="(preset, key) in samplePresets.library_methods" 
+                                    :key="key" 
+                                    :value="key">
+                                    {{ preset.description }} ({{ preset.sample_type }})
+                                </option>
+                            </optgroup>
+                            <optgroup 
+                                v-if="hasInstrumentTypes" 
+                                label="Instrument Types">
+                                <template 
+                                    v-for="(instrument, instKey) in samplePresets.instrument_types" 
+                                    :key="instKey">
+                                    <option :value="'instrument:' + instKey">
+                                        {{ instrument.description }} - {{ instKey }}
+                                    </option>
+                                    <template v-if="instrument.run_modes">
+                                        <option 
+                                            v-for="(mode, modeKey) in instrument.run_modes" 
+                                            :key="instKey + ':' + modeKey" 
+                                            :value="'instrument:' + instKey + ':' + modeKey" 
+                                            class="ms-3">
+                                            &nbsp;&nbsp;↳ {{ modeKey }} - {{ mode.description }}
+                                        </option>
+                                    </template>
+                                </template>
+                            </optgroup>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <button 
+                            type="button" 
+                            class="btn btn-primary" 
+                            @click="applyPreset" 
+                            :disabled="!selectedPreset">
+                            Apply Preset
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `
+};
+/**
+ * SampleFormFields Component
+ * 
+ * Shared form fields for editing or adding a sample.
+ * Handles all common sample fields and BCLConvert settings.
+ * 
+ * @component
+ * @emits update:modelValue - Emitted when any form field changes
+ */
+const SampleFormFields = {
+    name: 'SampleFormFields',
+    props: {
+        modelValue: {
+            type: Object,
+            required: true
+        },
+        mode: {
+            type: String,
+            default: 'edit',
+            validator: (value) => ['edit', 'add'].includes(value)
+        },
+        isNewSample: {
+            type: Boolean,
+            default: false
+        }
+    },
+    computed: {
+        formData: {
+            get() {
+                return this.modelValue;
+            },
+            set(value) {
+                this.$emit('update:modelValue', value);
+            }
+        },
+        sampleIdReadonly() {
+            return this.mode === 'edit' && !this.isNewSample;
+        },
+        overrideCyclesHelp() {
+            return this.mode === 'edit' 
+                ? '(auto-calculated from recipe and UMI config)'
+                : '(leave empty - will be calculated after saving)';
+        }
+    },
+    methods: {
+        updateField(fieldName, value) {
+            this.$emit('update:modelValue', {
+                ...this.modelValue,
+                [fieldName]: value
+            });
+        },
+        sanitizeIndex(value) {
+            return value.toUpperCase().replace(/[^ACGT]/g, '');
+        },
+        onIndexInput(fieldName, event) {
+            const sanitized = this.sanitizeIndex(event.target.value);
+            this.updateField(fieldName, sanitized);
+        }
+    },
+    template: /*html*/`
+        <div class="row">
+            <!-- Sample ID -->
+            <div class="col-md-6 mb-3">
+                <label :for="mode + '_sample_id'" class="form-label">Sample ID:</label>
+                <input 
+                    type="text" 
+                    class="form-control" 
+                    :id="mode + '_sample_id'" 
+                    :value="formData.sample_id"
+                    @input="updateField('sample_id', $event.target.value)"
+                    :readonly="sampleIdReadonly">
+                <small v-if="mode === 'add'" class="form-text text-muted">
+                    Replace XXXX with a 3-4 digit number (e.g., 001 or 1001)
+                </small>
+            </div>
+            <!-- Sample Name -->
+            <div class="col-md-6 mb-3">
+                <label :for="mode + '_sample_name'" class="form-label">Sample Name:</label>
+                <input 
+                    type="text" 
+                    class="form-control" 
+                    :id="mode + '_sample_name'" 
+                    :value="formData.sample_name"
+                    @input="updateField('sample_name', $event.target.value)">
+                <small v-if="mode === 'add'" class="form-text text-muted">
+                    Replace XXXX with a 3-4 digit number (e.g., 001 or 1001)
+                </small>
+            </div>
+            <!-- Sample Project -->
+            <div class="col-md-6 mb-3">
+                <label :for="mode + '_sample_project'" class="form-label">Sample Project:</label>
+                <input 
+                    type="text" 
+                    class="form-control" 
+                    :id="mode + '_sample_project'" 
+                    :value="formData.sample_project"
+                    @input="updateField('sample_project', $event.target.value)"
+                    readonly>
+            </div>
+            <!-- Sample Ref -->
+            <div class="col-md-6 mb-3">
+                <label :for="mode + '_sample_ref'" class="form-label">Sample Ref:</label>
+                <input 
+                    type="text" 
+                    class="form-control" 
+                    :id="mode + '_sample_ref'" 
+                    :value="formData.sample_ref"
+                    @input="updateField('sample_ref', $event.target.value)">
+            </div>
+            <!-- Index 1 -->
+            <div class="col-md-6 mb-3">
+                <label :for="mode + '_index_1'" class="form-label">Index 1:</label>
+                <input
+                    type="text"
+                    class="form-control font-monospace"
+                    :id="mode + '_index_1'"
+                    :value="formData.index_1"
+                    @input="onIndexInput('index_1', $event)"
+                    pattern="[ACGT]*"
+                    title="Only ACGT characters are allowed">
+            </div>
+            <!-- Index 2 -->
+            <div class="col-md-6 mb-3">
+                <label :for="mode + '_index_2'" class="form-label">Index 2:</label>
+                <input
+                    type="text"
+                    class="form-control font-monospace"
+                    :id="mode + '_index_2'"
+                    :value="formData.index_2"
+                    @input="onIndexInput('index_2', $event)"
+                    pattern="[ACGT]*"
+                    title="Only ACGT characters are allowed">
+            </div>
+            <!-- Named Index -->
+            <div class="col-md-6 mb-3">
+                <label :for="mode + '_named_index'" class="form-label">Named Index:</label>
+                <input 
+                    type="text" 
+                    class="form-control" 
+                    :id="mode + '_named_index'" 
+                    :value="formData.named_index"
+                    @input="updateField('named_index', $event.target.value)">
+            </div>
+            <!-- Recipe -->
+            <div class="col-md-6 mb-3">
+                <label :for="mode + '_recipe'" class="form-label">Recipe:</label>
+                <input 
+                    type="text" 
+                    class="form-control" 
+                    :id="mode + '_recipe'" 
+                    :value="formData.recipe"
+                    @input="updateField('recipe', $event.target.value)">
+            </div>
+            <!-- Operator -->
+            <div class="col-md-6 mb-3">
+                <label :for="mode + '_operator'" class="form-label">Operator:</label>
+                <input 
+                    type="text" 
+                    class="form-control" 
+                    :id="mode + '_operator'" 
+                    :value="formData.operator"
+                    @input="updateField('operator', $event.target.value)">
+            </div>
+            <!-- Control -->
+            <div class="col-md-6 mb-3">
+                <label :for="mode + '_control'" class="form-label">Control:</label>
+                <select 
+                    class="form-select" 
+                    :id="mode + '_control'" 
+                    :value="formData.control"
+                    @input="updateField('control', $event.target.value)">
+                    <option value="N">N</option>
+                    <option value="Y">Y</option>
+                </select>
+            </div>
+            <!-- Description -->
+            <div class="col-md-12 mb-3">
+                <label :for="mode + '_description'" class="form-label">Description:</label>
+                <textarea 
+                    class="form-control" 
+                    :id="mode + '_description'" 
+                    :value="formData.description"
+                    @input="updateField('description', $event.target.value)"
+                    rows="2"></textarea>
+            </div>
+            <!-- Override Cycles -->
+            <div class="col-md-12 mb-3">
+                <label :for="mode + '_override_cycles'" class="form-label">
+                    Override Cycles:
+                    <span class="text-muted small">{{ overrideCyclesHelp }}</span>
+                </label>
+                <input 
+                    type="text" 
+                    class="form-control font-monospace bg-light" 
+                    :id="mode + '_override_cycles'" 
+                    :value="formData.override_cycles"
+                    @input="updateField('override_cycles', $event.target.value)"
+                    readonly>
+            </div>
+            <!-- BCLConvert Settings Section -->
+            <div class="col-md-12 mb-3">
+                <hr>
+                <h6 class="mb-3">
+                    <i class="fa fa-cog"></i> BCLConvert Settings
+                    <span class="text-muted small">(Values not included use BCLConvert defaults)</span>
+                </h6>
+            </div>
+            <!-- Trim UMI -->
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Trim UMI:</label>
+                <div class="form-check">
+                    <input 
+                        type="radio" 
+                        class="form-check-input" 
+                        :id="mode + '_trim_umi_yes'" 
+                        :name="mode + '_trim_umi'"
+                        :checked="formData.trim_umi === true"
+                        @change="updateField('trim_umi', true)">
+                    <label class="form-check-label" :for="mode + '_trim_umi_yes'">
+                        Yes
+                    </label>
+                </div>
+                <div class="form-check">
+                    <input 
+                        type="radio" 
+                        class="form-check-input" 
+                        :id="mode + '_trim_umi_no'" 
+                        :name="mode + '_trim_umi'"
+                        :checked="formData.trim_umi === false"
+                        @change="updateField('trim_umi', false)">
+                    <label class="form-check-label" :for="mode + '_trim_umi_no'">
+                        No
+                    </label>
+                </div>
+                <div class="form-check">
+                    <input 
+                        type="radio" 
+                        class="form-check-input" 
+                        :id="mode + '_trim_umi_default'" 
+                        :name="mode + '_trim_umi'"
+                        :checked="formData.trim_umi === null"
+                        @change="updateField('trim_umi', null)">
+                    <label class="form-check-label" :for="mode + '_trim_umi_default'">
+                        Do not override
+                    </label>
+                </div>
+            </div>
+            <!-- Create FASTQ for Index Reads -->
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Create FASTQ for Index Reads:</label>
+                <div class="form-check">
+                    <input 
+                        type="radio" 
+                        class="form-check-input" 
+                        :id="mode + '_create_fastq_yes'" 
+                        :name="mode + '_create_fastq'"
+                        :checked="formData.create_fastq_for_index_reads === true"
+                        @change="updateField('create_fastq_for_index_reads', true)">
+                    <label class="form-check-label" :for="mode + '_create_fastq_yes'">
+                        Yes
+                    </label>
+                </div>
+                <div class="form-check">
+                    <input 
+                        type="radio" 
+                        class="form-check-input" 
+                        :id="mode + '_create_fastq_no'" 
+                        :name="mode + '_create_fastq'"
+                        :checked="formData.create_fastq_for_index_reads === false"
+                        @change="updateField('create_fastq_for_index_reads', false)">
+                    <label class="form-check-label" :for="mode + '_create_fastq_no'">
+                        No
+                    </label>
+                </div>
+                <div class="form-check">
+                    <input 
+                        type="radio" 
+                        class="form-check-input" 
+                        :id="mode + '_create_fastq_default'" 
+                        :name="mode + '_create_fastq'"
+                        :checked="formData.create_fastq_for_index_reads === null"
+                        @change="updateField('create_fastq_for_index_reads', null)">
+                    <label class="form-check-label" :for="mode + '_create_fastq_default'">
+                        Do not override
+                    </label>
+                </div>
+            </div>
+            <!-- Barcode Mismatches Index 1 -->
+            <div class="col-md-6 mb-3">
+                <label :for="mode + '_barcode_mismatches_index1'" class="form-label">
+                    Barcode Mismatches Index 1:
+                </label>
+                <input 
+                    type="number" 
+                    class="form-control" 
+                    :id="mode + '_barcode_mismatches_index1'" 
+                    :value="formData.barcode_mismatches_index1"
+                    @input="updateField('barcode_mismatches_index1', $event.target.value ? Number($event.target.value) : null)"
+                    min="0" 
+                    max="2" 
+                    placeholder="Default">
+                <small class="form-text text-muted">0-2 mismatches allowed (leave blank for default)</small>
+            </div>
+            <!-- Barcode Mismatches Index 2 -->
+            <div class="col-md-6 mb-3">
+                <label :for="mode + '_barcode_mismatches_index2'" class="form-label">
+                    Barcode Mismatches Index 2:
+                </label>
+                <input 
+                    type="number" 
+                    class="form-control" 
+                    :id="mode + '_barcode_mismatches_index2'" 
+                    :value="formData.barcode_mismatches_index2"
+                    @input="updateField('barcode_mismatches_index2', $event.target.value ? Number($event.target.value) : null)"
+                    min="0" 
+                    max="2" 
+                    placeholder="Default">
+                <small class="form-text text-muted">0-2 mismatches allowed (leave blank for default)</small>
+            </div>
+        </div>
+    `
+};
 const vDemuxSampleInfoEditor = {
+    // Register child components
+    components: {
+        PresetSelector,
+        SampleFormFields
+    },
     data() {
         const config = window.STATUS_CONFIG || {};
         const defaultVisibleColumns = ['sample_name', 'last_modified', 'sample_type', 'index_1', 'index_2', 'umi_config', 'recipe', 'override_cycles'];
-        
         // Derive availableColumns from FIELD_CONFIG
         const availableColumns = Object.values(FIELD_CONFIG)
             .filter(f => !f.key.includes('trim_umi') && !f.key.includes('create_fastq') && !f.key.includes('barcode_mismatches'))
             .map(f => ({ key: f.key, label: f.label }));
-        
         // Derive bulkEditExcludedFields from FIELD_CONFIG
         const bulkEditExcludedFields = Object.values(FIELD_CONFIG)
             .filter(f => !f.bulkEditable)
             .map(f => f.key);
-        
         return {
             fieldConfig: FIELD_CONFIG,
             limsUrl: config.lims_url || '',
@@ -377,7 +817,6 @@ const vDemuxSampleInfoEditor = {
             if (!this.demux_data || !this.demux_data.uploaded_lims_info) {
                 return {};
             }
-
             const grouped = {};
             this.demux_data.uploaded_lims_info.forEach(sample => {
                 const lane = sample.lane;
@@ -386,7 +825,6 @@ const vDemuxSampleInfoEditor = {
                 }
                 grouped[lane].push(sample);
             });
-
             // Sort lanes numerically
             return UTILS.sortLaneObject(grouped);
         },
@@ -423,101 +861,77 @@ const vDemuxSampleInfoEditor = {
             // Flatten calculated sample_rows with their latest settings for table display
             // If there are edits, merge them with original data
             const result = {};
-
             Object.entries(this.calculatedLanes).forEach(([lane, laneData]) => {
                 result[lane] = [];
-
                 Object.entries(laneData.sample_rows).forEach(([uuid, sample]) => {
                     const latestSettings = this.getLatestSettings(sample);
                     result[lane].push(this.buildSampleObject(lane, uuid, sample, latestSettings));
                 });
             });
-
             return result;
         },
         calculatedSamplesByLaneAndProject() {
             // Group samples by lane and then by project
             const result = {};
-
             Object.entries(this.calculatedLanes).forEach(([lane, laneData]) => {
                 result[lane] = {};
-
                 Object.entries(laneData.sample_rows).forEach(([uuid, sample]) => {
                     const latestSettings = this.getLatestSettings(sample);
                     const projectName = sample.project_name || 'Unknown Project';
-
                     if (!result[lane][projectName]) {
                         result[lane][projectName] = [];
                     }
-
                     result[lane][projectName].push(this.buildSampleObject(lane, uuid, sample, latestSettings));
                 });
             });
-
             return result;
         },
         calculatedSamplesByLaneProjectAndNamedIndex() {
         // Group samples by lane, then by project, then optionally by named index
             const result = {};
-
             Object.entries(this.calculatedLanes).forEach(([lane, laneData]) => {
                 result[lane] = {};
-
                 Object.entries(laneData.sample_rows).forEach(([uuid, sample]) => {
                     const latestSettings = this.getLatestSettings(sample);
                     const sampleObj = this.buildSampleObject(lane, uuid, sample, latestSettings);
-                    
                     const projectName = sample.project_name || 'Unknown Project';
                     const namedIndex = sampleObj.named_index || 'No Named Index';
-
                     if (!result[lane][projectName]) {
                         result[lane][projectName] = {};
                     }
-
                     // Group by named index if enabled, otherwise use a default key
                     const groupKey = this.groupByNamedIndex ? namedIndex : '_all_';
-
                     if (!result[lane][projectName][groupKey]) {
                         result[lane][projectName][groupKey] = [];
                     }
-
                     result[lane][projectName][groupKey].push(sampleObj);
                 });
             });
-
             return result;
         },
         calculatedSamplesByProjectLaneAndNamedIndex() {
             // Group samples by project first, then by lane, then optionally by named index
             const result = {};
-
             Object.entries(this.calculatedLanes).forEach(([lane, laneData]) => {
                 Object.entries(laneData.sample_rows).forEach(([uuid, sample]) => {
                     const latestSettings = this.getLatestSettings(sample);
                     const sampleObj = this.buildSampleObject(lane, uuid, sample, latestSettings);
-                    
                     const projectName = sample.project_name || 'Unknown Project';
                     const namedIndex = sampleObj.named_index || 'No Named Index';
-
                     if (!result[projectName]) {
                         result[projectName] = {};
                     }
-
                     if (!result[projectName][lane]) {
                         result[projectName][lane] = {};
                     }
-
                     // Group by named index if enabled, otherwise use a default key
                     const groupKey = this.groupByNamedIndex ? namedIndex : '_all_';
-
                     if (!result[projectName][lane][groupKey]) {
                         result[projectName][lane][groupKey] = [];
                     }
-
                     result[projectName][lane][groupKey].push(sampleObj);
                 });
             });
-
             return result;
         },
         columnLabel() {
@@ -544,7 +958,6 @@ const vDemuxSampleInfoEditor = {
                     const sampleProject = latestSettings.per_sample_fields?.Sample_Project;
                     const projectName = sample.project_name || sampleProject;
                     const projectId = sample.project_id;
-
                     // Use project_id as key if available, otherwise use project name
                     const key = projectId || projectName;
                     if (key && !projectsMap.has(key)) {
@@ -572,12 +985,10 @@ const vDemuxSampleInfoEditor = {
             // Check both bulkEditProject (for bulk operations) and addSampleTargetProject (for add sample)
             const targetProject = this.bulkEditProject || this.addSampleTargetProject;
             if (!targetProject) return [];
-
             const lanes = new Set();
             this.getSamplesForProject(targetProject).forEach(({ lane }) => {
                 lanes.add(lane);
             });
-            
             return UTILS.sortLanesNumerically(Array.from(lanes));
         },
         isSingleLaneProject() {
@@ -588,11 +999,9 @@ const vDemuxSampleInfoEditor = {
             // Format: ProjectPrefix_XXXX (user must replace XXXX with 3-4 digit number)
             const targetProject = this.bulkEditProject || this.addSampleTargetProject;
             if (!targetProject) return '';
-
             // Find all sample names for this project to extract the project prefix
             // Use Sample_Name instead of Sample_ID to avoid "Sample_" prefix
             const projectSamples = this.getSamplesForProject(targetProject);
-            
             // Extract project prefix (part before first underscore)
             let projectPrefix = '';
             for (const { latestSettings } of projectSamples) {
@@ -605,31 +1014,26 @@ const vDemuxSampleInfoEditor = {
                     }
                 }
             }
-
             // Fallback to project name if no prefix found
             if (!projectPrefix) {
                 projectPrefix = targetProject;
             }
-
             return projectPrefix + '_XXXX';
         },
         selectedProjectDetails() {
             // Get the project_id and project_name for the selected target project
             const targetProject = this.addSampleTargetProject;
             if (!targetProject) return { id: '', name: '' };
-
             // Find the project details from availableProjects
             const projectDetails = this.availableProjects.find(p =>
                 p.id === targetProject || p.name === targetProject
             );
-
             if (projectDetails) {
                 return {
                     id: projectDetails.id,
                     name: projectDetails.name
                 };
             }
-
             // Fallback: if not found in availableProjects, use targetProject as name
             return { id: '', name: targetProject };
         },
@@ -641,28 +1045,22 @@ const vDemuxSampleInfoEditor = {
         customConfigTargetSamples() {
             // Get samples that match the custom config target criteria
             if (!this.demux_data) return [];
-
             // For "lane" type, we don't need target_project
             const needsProject = this.customConfigFormData.target_type !== 'lane';
             if (needsProject && !this.customConfigFormData.target_project) return [];
-
             const matchingSamples = [];
             Object.entries(this.calculatedLanes).forEach(([lane, laneData]) => {
                 // Check if lane matches (if target_type includes lane filtering)
                 const laneMatches = this.customConfigFormData.target_type === 'project' ||
                     this.customConfigFormData.target_lane === lane;
-
                 if (!laneMatches) return;
-
                 Object.entries(laneData.sample_rows).forEach(([uuid, sample]) => {
                     const settingsVersions = Object.keys(sample.settings).sort().reverse();
                     const latestSettings = sample.settings[settingsVersions[0]];
                     const sampleProject = latestSettings.per_sample_fields?.Sample_Project;
-
                     // For "lane" type, include all projects; otherwise check for matching project
                     const projectMatches = this.customConfigFormData.target_type === 'lane' ||
                         sampleProject === this.customConfigFormData.target_project;
-
                     if (projectMatches) {
                         matchingSamples.push({
                             lane,
@@ -674,7 +1072,6 @@ const vDemuxSampleInfoEditor = {
                     }
                 });
             });
-
             return matchingSamples;
         },
         sortedConfigModalSettings() {
@@ -709,7 +1106,6 @@ const vDemuxSampleInfoEditor = {
     },
     methods: {
         // ===== Helper Methods for Sample Object Building (Refactoring #1) =====
-        
         /**
          * Get the latest settings for a sample
          * @param {Object} sample - The sample object
@@ -720,9 +1116,7 @@ const vDemuxSampleInfoEditor = {
             const settingsVersions = Object.keys(sample.settings).sort().reverse();
             return sample.settings[settingsVersions[0]] || {};
         },
-        
         // ===== Helper Methods for Project/Lane Matching (Refactoring #4) =====
-        
         /**
          * Check if a sample matches a target project
          * @param {Object} sample - The sample object
@@ -738,7 +1132,6 @@ const vDemuxSampleInfoEditor = {
                    projectId === targetProject || 
                    projectName === targetProject;
         },
-        
         /**
          * Get all samples that belong to a specific project
          * @param {string} targetProject - The project identifier
@@ -749,7 +1142,6 @@ const vDemuxSampleInfoEditor = {
             const samples = [];
             Object.entries(this.calculatedLanes).forEach(([lane, laneData]) => {
                 if (filterLane && lane !== filterLane) return;
-                
                 Object.entries(laneData.sample_rows).forEach(([uuid, sample]) => {
                     const latestSettings = this.getLatestSettings(sample);
                     if (this.projectMatches(sample, latestSettings, targetProject)) {
@@ -759,9 +1151,7 @@ const vDemuxSampleInfoEditor = {
             });
             return samples;
         },
-        
         // ===== Helper Methods for Bulk Field Handling (Refactoring #3) =====
-        
         /**
          * Get a field value from a sample's settings based on the field configuration
          * @param {Object} sample - The sample object
@@ -782,7 +1172,6 @@ const vDemuxSampleInfoEditor = {
             }
             return value;
         },
-        
         /**
          * Normalize a value for comparison (converts to string representation)
          * @param {*} value - The value to normalize
@@ -795,7 +1184,6 @@ const vDemuxSampleInfoEditor = {
             if (type === 'object') return JSON.stringify(value);
             return value;
         },
-        
         /**
          * Denormalize a value back from string representation
          * @param {string} value - The normalized value
@@ -815,7 +1203,6 @@ const vDemuxSampleInfoEditor = {
             }
             return value;
         },
-        
         /**
          * Get default value for a field
          * @param {string} fieldKey - The field key
@@ -838,7 +1225,6 @@ const vDemuxSampleInfoEditor = {
             };
             return defaults[fieldKey];
         },
-        
         /**
          * Build a complete sample object with all fields, merging original and edited data
          * @param {string} lane - The lane number
@@ -851,14 +1237,12 @@ const vDemuxSampleInfoEditor = {
             const editedSettings = this.editedData[lane]?.[uuid] || {};
             const per_sample_fields = latestSettings.per_sample_fields || {};
             const other_details = latestSettings.other_details || {};
-            
             // Helper to get value from either edited or original
             const getValue = (editedKey, originalValue) => {
                 return editedSettings[editedKey] !== undefined 
                     ? editedSettings[editedKey] 
                     : originalValue;
             };
-            
             // Build the complete sample object
             return {
                 uuid: uuid,
@@ -886,11 +1270,8 @@ const vDemuxSampleInfoEditor = {
                 override_cycles: getValue('override_cycles', per_sample_fields.OverrideCycles)
             };
         },
-        
         // ===== End Helper Methods =====
-        
         // ===== Template Helper Methods (Refactoring #6) =====
-        
         /**
          * Check if a cell should show code formatting (for index columns)
          * @param {string} columnKey - The column key
@@ -899,7 +1280,6 @@ const vDemuxSampleInfoEditor = {
         isCodeFormattedColumn(columnKey) {
             return columnKey === 'index_1' || columnKey === 'index_2';
         },
-        
         /**
          * Get CSS classes for a table cell
          * @param {string} lane - The lane number
@@ -912,7 +1292,6 @@ const vDemuxSampleInfoEditor = {
                 'bg-info': this.isFieldEdited(lane, uuid, columnKey)
             };
         },
-        
         /**
          * Get configuration for action buttons for a sample
          * @param {string} lane - The lane number
@@ -921,7 +1300,6 @@ const vDemuxSampleInfoEditor = {
          */
         getActionButtonsConfig(lane, sample) {
             const hasConfigSources = Array.isArray(sample.config_sources) && sample.config_sources.length > 0;
-            
             return {
                 inspect: {
                     enabled: hasConfigSources,
@@ -937,7 +1315,6 @@ const vDemuxSampleInfoEditor = {
                 }
             };
         },
-        
         /**
          * Get the sample count text with proper pluralization
          * @param {number} count - Number of samples
@@ -946,7 +1323,6 @@ const vDemuxSampleInfoEditor = {
         getSampleCountText(count) {
             return `${count} sample${count !== 1 ? 's' : ''}`;
         },
-        
         /**
          * Check if a sample row should be highlighted
          * @param {string} lane - The lane number
@@ -958,13 +1334,10 @@ const vDemuxSampleInfoEditor = {
                 'table-info': this.isSampleEdited(lane, uuid)
             };
         },
-        
         // ===== End Template Helper Methods =====
-        
         fetchSamplePresets() {
             // Fetch sample classification presets from the API
             if (this.samplePresets) return; // Already loaded
-
             axios.get('/api/v1/sample_classification_presets')
                 .then(response => {
                     this.samplePresets = response.data;
@@ -976,7 +1349,6 @@ const vDemuxSampleInfoEditor = {
         fetchSampleClassificationConfig() {
             // Fetch full sample classification configuration from the API
             if (this.sampleClassificationConfig) return; // Already loaded
-
             axios.get('/api/v1/sample_classification_config')
                 .then(response => {
                     this.sampleClassificationConfig = response.data;
@@ -988,7 +1360,6 @@ const vDemuxSampleInfoEditor = {
         updateAddSampleFormWithProjectDefaults(targetProject) {
             // Pre-fill bulk-editable fields from existing project samples and warn if values differ
             this.addSampleProjectWarnings = [];
-            
             if (!targetProject || !this.editFormData) {
                 // Reset fields to defaults when no project is selected
                 if (this.editFormData) {
@@ -1001,25 +1372,20 @@ const vDemuxSampleInfoEditor = {
                 }
                 return {};
             }
-            
             // Collect all samples from this project using helper method
             const projectSamplesData = this.getSamplesForProject(targetProject);
             const projectSamples = projectSamplesData.map(({ sample, latestSettings }) => ({
                 sample,
                 settings: latestSettings
             }));
-
             if (projectSamples.length > 0) {
                 // Get all bulk-editable fields from FIELD_CONFIG
                 const bulkEditableFields = Object.values(FIELD_CONFIG)
                     .filter(f => f.bulkEditable && f.key !== 'sample_project'); // Exclude sample_project
-                
                 const fieldData = {};
-                
                 // For each bulk-editable field, collect values from all project samples
                 bulkEditableFields.forEach(fieldConfig => {
                     const values = new Set();
-                    
                     projectSamples.forEach(({ sample, settings }) => {
                         const value = this.getFieldValueFromSettings(
                             sample,
@@ -1034,9 +1400,7 @@ const vDemuxSampleInfoEditor = {
                         );
                         values.add(normalizedValue);
                     });
-                    
                     const uniqueValues = Array.from(values);
-                    
                     // Check for inconsistency
                     if (uniqueValues.length > 1) {
                         const valuesDisplay = uniqueValues
@@ -1046,14 +1410,12 @@ const vDemuxSampleInfoEditor = {
                             `${fieldConfig.label}: Inconsistent values (${valuesDisplay})`
                         );
                     }
-                    
                     // Store the first (or only) value, denormalized
                     fieldData[fieldConfig.key] = this.denormalizeValue(
                         uniqueValues[0],
                         fieldConfig.type
                     );
                 });
-                
                 // Update the edit form with these defaults
                 Object.entries(fieldData).forEach(([key, value]) => {
                     this.editFormData[key] = value !== undefined && value !== null 
@@ -1061,7 +1423,6 @@ const vDemuxSampleInfoEditor = {
                         : this.getDefaultValue(key);
                 });
             }
-            
             return {};
         },
         openConfigModal(sample, lane) {
@@ -1071,7 +1432,6 @@ const vDemuxSampleInfoEditor = {
             this.configModalSample = sample;
             this.expandedConfigSources = [];  // All cards collapsed by default
             this.showConfigModal = true;
-
             // Fetch config if not already loaded
             this.fetchSampleClassificationConfig();
         },
@@ -1147,18 +1507,15 @@ const vDemuxSampleInfoEditor = {
                 alert('Please select a target lane.');
                 return;
             }
-
             // Check if at least one BCLConvert setting is configured
             const hasSettings = this.customConfigFormData.trim_umi !== null ||
                 this.customConfigFormData.create_fastq_for_index_reads !== null ||
                 this.customConfigFormData.barcode_mismatches_index1 !== null ||
                 this.customConfigFormData.barcode_mismatches_index2 !== null;
-
             if (!hasSettings) {
                 alert('Please configure at least one BCLConvert setting.');
                 return;
             }
-
             // Build the custom config object
             const customConfig = {
                 name: this.customConfigFormData.name,
@@ -1167,16 +1524,13 @@ const vDemuxSampleInfoEditor = {
                 edit_mode: this.customConfigEditMode,
                 edit_index: this.customConfigEditIndex
             };
-
             // Add target_project only if it's provided (not needed for "lane" type)
             if (this.customConfigFormData.target_project) {
                 customConfig.target_project = this.customConfigFormData.target_project;
             }
-
             if (this.customConfigFormData.target_type !== 'project') {
                 customConfig.target_lane = this.customConfigFormData.target_lane;
             }
-
             // Add only non-null BCLConvert settings
             if (this.customConfigFormData.trim_umi !== null) {
                 customConfig.raw_samplesheet_settings.TrimUMI = this.customConfigFormData.trim_umi;
@@ -1190,15 +1544,12 @@ const vDemuxSampleInfoEditor = {
             if (this.customConfigFormData.barcode_mismatches_index2 !== null) {
                 customConfig.raw_samplesheet_settings.BarcodeMismatchesIndex2 = this.customConfigFormData.barcode_mismatches_index2;
             }
-
             // Send to backend
             this.error_messages = [];
-
             const payload = {
                 flowcell_id: this.flowcell_id,
                 custom_config: customConfig
             };
-
             axios.post(`/api/v1/demux_sample_info/${this.flowcell_id}/custom_config`, payload)
                 .then(response => {
                     // Refresh the data after successful save
@@ -1225,9 +1576,7 @@ const vDemuxSampleInfoEditor = {
             // Check if a config source is expanded
             return this.expandedConfigSources.includes(index);
         },
-
         // ===== Config Source Parsing Helpers (Refactoring #5) =====
-        
         /**
          * Get conditional rules for a given category and tier path
          * @param {string} category - The category (patterns, control_patterns, etc.)
@@ -1236,31 +1585,24 @@ const vDemuxSampleInfoEditor = {
          */
         getConditionalRulesForCategory(category, tierParts) {
             const config = this.sampleClassificationConfig;
-            
             switch (category) {
                 case 'control_patterns':
                     return config.control_conditional_rules;
-                    
                 case 'patterns':
                     const patternKey = tierParts[1];
                     return config.patterns?.[patternKey]?.conditional_rules;
-                    
                 case 'other_general_sample_types':
                     const typeKey = tierParts[1];
                     return config.other_general_sample_types?.[typeKey]?.conditional_rules;
-                    
                 case 'library_method_mapping':
                     const methodKey = tierParts.slice(1).join('.');
                     return config.library_method_mapping?.[methodKey]?.conditional_rules;
-                    
                 case 'instrument_type_mapping':
                     return this.getInstrumentTypeConditionalRules(tierParts);
-                    
                 default:
                     return null;
             }
         },
-        
         /**
          * Get conditional rules for instrument type mappings
          * @param {Array} tierParts - The tier path parts
@@ -1269,9 +1611,7 @@ const vDemuxSampleInfoEditor = {
         getInstrumentTypeConditionalRules(tierParts) {
             const instrumentType = tierParts[1];
             const config = this.sampleClassificationConfig.instrument_type_mapping?.[instrumentType];
-            
             if (!config) return null;
-            
             if (tierParts.length === 2) {
                 // Instrument type level
                 return config.conditional_rules;
@@ -1280,10 +1620,8 @@ const vDemuxSampleInfoEditor = {
                 const runMode = tierParts[3];
                 return config.run_modes?.[runMode]?.conditional_rules;
             }
-            
             return null;
         },
-        
         /**
          * Parse a conditional rule from a config source string
          * @param {string} configSource - The config source string
@@ -1292,16 +1630,12 @@ const vDemuxSampleInfoEditor = {
         parseConditionalRule(configSource) {
             const parts = configSource.split('.conditional_rule.');
             if (parts.length !== 2) return null;
-
             const tierPath = parts[0];
             const ruleSpec = parts[1];
             const [settingName, ruleName] = ruleSpec.split(':');
-
             const tierParts = tierPath.split('.');
             const category = tierParts[0];
-
             const conditionalRules = this.getConditionalRulesForCategory(category, tierParts);
-            
             if (conditionalRules && conditionalRules[settingName]) {
                 const rule = conditionalRules[settingName].find(r => r.name === ruleName);
                 if (rule) {
@@ -1314,10 +1648,8 @@ const vDemuxSampleInfoEditor = {
                     };
                 }
             }
-
             return null;
         },
-        
         /**
          * Parse instrument type configuration
          * @param {Array} restParts - The remaining path parts after 'instrument_type_mapping'
@@ -1326,19 +1658,15 @@ const vDemuxSampleInfoEditor = {
         parseInstrumentTypeConfig(restParts) {
             const instrumentType = restParts[0];
             const config = this.sampleClassificationConfig.instrument_type_mapping?.[instrumentType];
-            
             if (!config) return null;
-            
             if (restParts.length === 1) {
                 return config;
             } else if (restParts.length === 3 && restParts[1] === 'run_modes') {
                 const runMode = restParts[2];
                 return config.run_modes?.[runMode];
             }
-            
             return null;
         },
-        
         /**
          * Parse custom configuration
          * @param {string} configName - The custom config name
@@ -1348,7 +1676,6 @@ const vDemuxSampleInfoEditor = {
             if (!this.demux_data?.custom_configs) return null;
             return this.demux_data.custom_configs.find(c => c.name === configName) || null;
         },
-        
         /**
          * Parse standard configuration (non-conditional, non-instrument, non-custom)
          * @param {string} category - The config category
@@ -1357,54 +1684,40 @@ const vDemuxSampleInfoEditor = {
          */
         parseStandardConfig(category, key) {
             const config = this.sampleClassificationConfig;
-            
             switch (category) {
                 case 'bcl_convert_settings':
                     return config.bcl_convert_settings?.[key];
-                    
                 case 'patterns':
                     return config.patterns?.[key];
-                    
                 case 'other_general_sample_types':
                     return config.other_general_sample_types?.[key];
-                    
                 case 'library_method_mapping':
                     return config.library_method_mapping?.[key];
-                    
                 case 'control_patterns':
                     return { control_patterns: config.control_patterns };
-                    
                 default:
                     return null;
             }
         },
-        
         // ===== End Config Source Parsing Helpers =====
-        
         getConfigDetails(configSource) {
             // Parse config source and return the configuration details
             if (!this.sampleClassificationConfig) return null;
-
             // Handle conditional rules specially
             if (configSource.includes('.conditional_rule.')) {
                 return this.parseConditionalRule(configSource);
             }
-
             const parts = configSource.split('.');
             if (parts.length < 2) return null;
-
             const category = parts[0];
             const key = parts.slice(1).join('.');
-
             // Handle special categories
             if (category === 'instrument_type_mapping') {
                 return this.parseInstrumentTypeConfig(parts.slice(1));
             }
-            
             if (category === 'custom_config') {
                 return this.parseCustomConfig(key);
             }
-            
             // Handle standard configurations
             return this.parseStandardConfig(category, key);
         },
@@ -1413,12 +1726,10 @@ const vDemuxSampleInfoEditor = {
             if (value === null || value === undefined) {
                 return 'null';
             }
-
             // Special handling for conditional rule objects
             if (typeof value === 'object' && value._type === 'conditional_rule') {
                 const rule = value.rule;
                 const parts = [];
-
                 parts.push(`Setting: ${value.setting_name}`);
                 parts.push(`Rule: ${value.rule_name}`);
                 if (rule.description) {
@@ -1427,10 +1738,8 @@ const vDemuxSampleInfoEditor = {
                 parts.push(`Action: ${rule.action}`);
                 parts.push(`Value: ${JSON.stringify(rule.value)}`);
                 parts.push(`Conditions: ${JSON.stringify(rule.conditions, null, 2)}`);
-
                 return parts.join('\n');
             }
-
             if (typeof value === 'object') {
                 return JSON.stringify(value, null, 2);
             }
@@ -1440,11 +1749,8 @@ const vDemuxSampleInfoEditor = {
             // Trace which config source set a specific value
             // configKey can be 'sample_type', 'umi_config', 'named_indices', or 'raw_samplesheet_settings'
             // path is for nested values like 'raw_samplesheet_settings.BarcodeMismatchesIndex1'
-
             if (!this.configModalSources || !this.sampleClassificationConfig) return null;
-
             let lastSource = null;
-
             // Go through config sources in order
             for (const source of this.configModalSources) {
                 // Special handling for conditional rules
@@ -1455,7 +1761,6 @@ const vDemuxSampleInfoEditor = {
                     if (conditionalRuleParts.length === 2) {
                         const ruleSpec = conditionalRuleParts[1]; // e.g., "TrimUMI:exclude_if_no_umi_detected"
                         const [settingName] = ruleSpec.split(':');
-
                         // Check if this conditional rule sets the setting we're looking for
                         if (path) {
                             // For raw_samplesheet_settings.TrimUMI, check if settingName matches
@@ -1467,10 +1772,8 @@ const vDemuxSampleInfoEditor = {
                     }
                     continue; // Skip the rest of processing for conditional rules
                 }
-
                 const config = this.getConfigDetails(source);
                 if (!config) continue;
-
                 if (path) {
                     // For nested paths like raw_samplesheet_settings.BarcodeMismatchesIndex1
                     const [topKey, ...restPath] = path.split('.');
@@ -1493,14 +1796,12 @@ const vDemuxSampleInfoEditor = {
                     }
                 }
             }
-
             return lastSource;
         },
         getValueWithSource(configKey, value, path = null) {
             // Get a formatted display of value with its source
             const source = this.traceConfigValueSource(configKey, path);
             const sourceIndex = source ? this.configModalSources.indexOf(source) + 1 : null;
-
             return {
                 value: value,
                 source: source,
@@ -1510,7 +1811,6 @@ const vDemuxSampleInfoEditor = {
         getAllBCLConvertSettings(sampleSettings) {
             // Get all BCLConvert settings including defaults from schema
             const allSettings = {};
-
             // If config is loaded, start with defaults
             if (this.sampleClassificationConfig) {
                 const bclConvertDefaults = this.sampleClassificationConfig.bcl_convert_settings?.raw_samplesheet_settings || {};
@@ -1520,40 +1820,32 @@ const vDemuxSampleInfoEditor = {
                     }
                 }
             }
-
             // Override with actual settings from the sample (including EXCLUDE values)
             if (sampleSettings?.raw_samplesheet_settings) {
                 Object.assign(allSettings, sampleSettings.raw_samplesheet_settings);
             }
-
             return allSettings;
         },
         isSettingsManuallyEdited(timestamp) {
             // Check if the settings at the given timestamp were manually edited
             if (!this.demux_data?.calculated?.version_history) return false;
-
             const versionInfo = this.demux_data.calculated.version_history[timestamp];
             if (!versionInfo) return false;
-
             // Manual edits have autogenerated: false
             return versionInfo.autogenerated === false;
         },
         wasBCLSettingManuallyEdited(timestamp, settingKey, currentValue) {
             // Check if a specific BCLConvert_Setting was manually changed from its original value
             if (!this.isSettingsManuallyEdited(timestamp)) return false;
-
             // Get the sample that has this timestamp
             const sample = this.configModalSample;
             if (!sample || !sample.settings) return false;
-
             // Get all timestamps sorted (oldest first)
             const timestamps = Object.keys(sample.settings).sort();
             if (timestamps.length < 2) return false; // No edits if only one version
-
             // Get the original (first) raw_samplesheet_settings
             const originalSettings = sample.settings[timestamps[0]].raw_samplesheet_settings || {};
             const originalValue = originalSettings[settingKey];
-
             // If current value differs from original, it was manually edited
             return currentValue !== originalValue;
         },
@@ -1564,7 +1856,6 @@ const vDemuxSampleInfoEditor = {
         formatConfigSourceLabel(source) {
             // Format config source string into readable label
             if (!source) return null;
-
             // Handle conditional rules specially
             if (source.includes('.conditional_rule.')) {
                 const conditionalRuleParts = source.split('.conditional_rule.');
@@ -1574,10 +1865,8 @@ const vDemuxSampleInfoEditor = {
                     return `Conditional rule: ${settingName} (${ruleName})`;
                 }
             }
-
             const parts = source.split('.');
             const category = parts[0];
-
             if (category === 'patterns') {
                 return `Pattern: ${parts[1]}`;
             } else if (category === 'library_method_mapping') {
@@ -1598,21 +1887,17 @@ const vDemuxSampleInfoEditor = {
             } else if (category === 'bcl_convert_settings') {
                 return `Default: ${parts.slice(1).join('.')}`;
             }
-
             return source;
         },
         applyPreset() {
             // Apply selected preset to the form
             if (!this.selectedPreset || !this.samplePresets) return;
-
             let preset = null;
-
             // Check if it's an instrument type preset (format: "instrument:Type" or "instrument:Type:Mode")
             if (this.selectedPreset.startsWith('instrument:')) {
                 const parts = this.selectedPreset.split(':');
                 const instrumentKey = parts[1];
                 const runModeKey = parts[2]; // May be undefined
-
                 const instrument = this.samplePresets.instrument_types[instrumentKey];
                 if (instrument) {
                     if (runModeKey && instrument.run_modes && instrument.run_modes[runModeKey]) {
@@ -1628,7 +1913,6 @@ const vDemuxSampleInfoEditor = {
                 preset = this.samplePresets.patterns[this.selectedPreset] ||
                     this.samplePresets.library_methods[this.selectedPreset];
             }
-
             if (preset) {
                 // Update recipe based on index_length if available
                 if (preset.index_length && Array.isArray(preset.index_length)) {
@@ -1639,12 +1923,10 @@ const vDemuxSampleInfoEditor = {
                         this.editFormData.recipe = `${i7}`;
                     }
                 }
-
                 // Update named_indices if available
                 if (preset.named_indices) {
                     this.editFormData.named_index = preset.named_indices;
                 }
-
                 // Note: We don't set index_1/index_2 as those are specific to each sample
                 // Note: UMI config and BCLConvert settings are applied by the backend based on classification
             }
@@ -1652,14 +1934,11 @@ const vDemuxSampleInfoEditor = {
         fetchDemuxInfo(updateHistory = true) {
             // Clear previous errors
             this.error_messages = [];
-
             if (!this.flowcell_id.trim()) {
                 this.error_messages.push('Please enter a flowcell ID.');
                 return;
             }
-
             this.loading = true;
-
             axios.get(`/api/v1/demux_sample_info/${this.flowcell_id}`)
                 .then(response => {
                     this.demux_data = response.data;
@@ -1667,7 +1946,6 @@ const vDemuxSampleInfoEditor = {
                     this.editedData = {};
                     this.selectedVersion = null; // Reset to latest
                     this.loading = false;
-
                     // Update URL in browser history
                     if (updateHistory) {
                         const newUrl = `${window.location.pathname}?flowcell=${encodeURIComponent(this.flowcell_id)}`;
@@ -1704,7 +1982,6 @@ const vDemuxSampleInfoEditor = {
         toggleColumn(columnKey) {
             // Prevent toggling off mandatory columns
             if (columnKey === 'sample_id') return;
-
             const index = this.visibleColumns.indexOf(columnKey);
             if (index > -1) {
                 this.visibleColumns.splice(index, 1);
@@ -1773,7 +2050,6 @@ const vDemuxSampleInfoEditor = {
             // Get the original value before any edits
             const laneData = this.calculatedLanes[lane];
             if (!laneData || !laneData.sample_rows[uuid]) return null;
-
             const sample = laneData.sample_rows[uuid];
             const settingsVersions = Object.keys(sample.settings).sort().reverse();
             const latestSettings = sample.settings[settingsVersions[0]];
@@ -1782,7 +2058,6 @@ const vDemuxSampleInfoEditor = {
         getEditTooltip(lane, uuid, field) {
             // Generate tooltip text showing before and after values
             if (!this.isFieldEdited(lane, uuid, field)) return '';
-
             const originalValue = this.getOriginalValue(lane, uuid, field) || 'N/A';
             const newValue = this.editedData[lane][uuid][field] || 'N/A';
             return `Before: ${originalValue}\nAfter: ${newValue}`;
@@ -1796,7 +2071,6 @@ const vDemuxSampleInfoEditor = {
             if (!this.editedData[lane][uuid]) {
                 this.editedData[lane][uuid] = {};
             }
-
             // Map frontend field names to backend storage locations
             const fieldMapping = {
                 'sample_id': ['per_sample_fields', 'Sample_ID'],
@@ -1818,15 +2092,12 @@ const vDemuxSampleInfoEditor = {
                 'control': ['sample_row', 'control'],
                 'description': ['sample_row', 'description']
             };
-
             // Get original value to compare
             const originalSample = this.calculatedLanes[lane]?.sample_rows[uuid];
             if (originalSample) {
                 const settingsVersions = Object.keys(originalSample.settings).sort().reverse();
                 const latestSettings = originalSample.settings[settingsVersions[0]];
-
                 let originalValue;
-
                 // Get the original value from the correct location
                 if (fieldMapping[field]) {
                     const [section, key] = fieldMapping[field];
@@ -1841,12 +2112,10 @@ const vDemuxSampleInfoEditor = {
                     // Fallback for unmapped fields
                     originalValue = latestSettings[field];
                 }
-
                 // Normalize null/undefined/empty string for comparison
                 // For raw_samplesheet_settings numeric fields, null, undefined, and empty string all mean "not set"
                 let normalizedOriginal = originalValue === undefined ? null : originalValue;
                 let normalizedNew = newValue === undefined ? null : newValue;
-
                 // Also normalize empty strings and NaN to null for numeric fields
                 if (field === 'barcode_mismatches_index1' || field === 'barcode_mismatches_index2') {
                     if (normalizedNew === '' || Number.isNaN(normalizedNew)) {
@@ -1856,7 +2125,6 @@ const vDemuxSampleInfoEditor = {
                         normalizedOriginal = null;
                     }
                 }
-
                 // If value matches original, remove from edited data
                 if (normalizedNew === normalizedOriginal) {
                     delete this.editedData[lane][uuid][field];
@@ -1887,16 +2155,13 @@ const vDemuxSampleInfoEditor = {
                 this.error_messages.push('No changes to save.');
                 return;
             }
-
             this.error_messages = [];
             this.saving = true;
-
             // Map frontend field names to backend field names using FIELD_CONFIG
             const frontendToBackendFieldMap = Object.values(FIELD_CONFIG).reduce((map, fieldConfig) => {
                 map[fieldConfig.key] = fieldConfig.backendKey;
                 return map;
             }, {});
-
             // Transform editedData to use backend field names
             const transformedEditedData = {};
             Object.entries(this.editedData).forEach(([lane, samples]) => {
@@ -1909,14 +2174,12 @@ const vDemuxSampleInfoEditor = {
                     });
                 });
             });
-
             // Prepare the data to send to the API
             const payload = {
                 flowcell_id: this.flowcell_id,
                 edited_settings: transformedEditedData,  // { lane: { uuid: settings_object } }
                 comment: this.saveComment || ''  // Optional user comment
             };
-
             axios.put(`/api/v1/demux_sample_info/${this.flowcell_id}`, payload)
                 .then(response => {
                     // Refresh the data after successful save
@@ -1943,20 +2206,16 @@ const vDemuxSampleInfoEditor = {
         getConfigSources(sample) {
             // Extract config_sources from the sample's latest settings
             if (!sample || !sample.settings) return [];
-
             const settingsVersions = Object.keys(sample.settings).sort().reverse();
             const latestSettings = sample.settings[settingsVersions[0]];
             const other_details = latestSettings.other_details || {};
-
             return other_details.config_sources || [];
         },
         computeFieldHistory(sample) {
             // Compute the history of changes for each field
             if (!sample || !sample.settings) return {};
-
             const history = {};
             const settingsVersions = Object.keys(sample.settings).sort(); // oldest first
-
             // Build field paths from FIELD_CONFIG
             const fieldPaths = Object.values(FIELD_CONFIG)
                 .filter(f => f.historyDisplayName) // Only fields with history display
@@ -1970,16 +2229,13 @@ const vDemuxSampleInfoEditor = {
                     map[fieldConfig.historyDisplayName] = path;
                     return map;
                 }, {});
-
             // Track the history for each field
             Object.entries(fieldPaths).forEach(([displayName, path]) => {
                 const changes = [];
                 let previousValue = undefined;
-
                 settingsVersions.forEach(timestamp => {
                     const settings = sample.settings[timestamp];
                     let currentValue;
-
                     if (path[0] === '_sample') {
                         // Top-level field on sample
                         currentValue = sample[path[1]];
@@ -1988,7 +2244,6 @@ const vDemuxSampleInfoEditor = {
                         const section = settings[path[0]];
                         currentValue = section?.[path[1]];
                     }
-
                     // Only track if value changed
                     if (currentValue !== previousValue) {
                         changes.push({
@@ -1999,13 +2254,11 @@ const vDemuxSampleInfoEditor = {
                         previousValue = currentValue;
                     }
                 });
-
                 // Only include fields that actually changed (more than 1 value)
                 if (changes.length > 1) {
                     history[displayName] = changes;
                 }
             });
-
             return history;
         },
         formatTimestamp(timestamp) {
@@ -2053,17 +2306,13 @@ const vDemuxSampleInfoEditor = {
             // Open edit modal for an existing sample
             const laneData = this.calculatedLanes[lane];
             if (!laneData || !laneData.sample_rows[uuid]) return;
-
             this.showUnifiedModal = true;
             this.unifiedModalTab = CONSTANTS.MODAL_TABS.EDIT;
-
             const sample = laneData.sample_rows[uuid];
             const settingsVersions = Object.keys(sample.settings).sort().reverse();
             const latestSettings = sample.settings[settingsVersions[0]];
-
             // Check if there are already edits for this sample
             const currentSettings = this.editedData[lane]?.[uuid] || {};
-
             // Populate form data with current values (edited or original)
             this.editFormData = {
                 sample_id: currentSettings.sample_id || latestSettings.per_sample_fields?.Sample_ID,
@@ -2083,13 +2332,11 @@ const vDemuxSampleInfoEditor = {
                 barcode_mismatches_index1: currentSettings.barcode_mismatches_index1 !== undefined ? currentSettings.barcode_mismatches_index1 : (latestSettings.raw_samplesheet_settings?.BarcodeMismatchesIndex1 !== undefined ? latestSettings.raw_samplesheet_settings.BarcodeMismatchesIndex1 : null),
                 barcode_mismatches_index2: currentSettings.barcode_mismatches_index2 !== undefined ? currentSettings.barcode_mismatches_index2 : (latestSettings.raw_samplesheet_settings?.BarcodeMismatchesIndex2 !== undefined ? latestSettings.raw_samplesheet_settings.BarcodeMismatchesIndex2 : null)
             };
-
             this.editModalLane = lane;
             this.editModalUuid = uuid;
             this.editModalSample = sample;
             this.editModalIsNew = false;
             this.showFieldHistory = false;
-
             // Compute field history
             this.fieldHistory = this.computeFieldHistory(sample);
         },
@@ -2098,7 +2345,6 @@ const vDemuxSampleInfoEditor = {
             // Fetch presets when opening the modal for a new sample
             this.fetchSamplePresets();
             this.selectedPreset = '';  // Reset preset selection
-
             // Initialize add sample selections based on what was provided
             if (lane && project) {
                 // Both provided (from specific context)
@@ -2118,15 +2364,12 @@ const vDemuxSampleInfoEditor = {
                 this.addSampleTargetProject = '';
                 this.addSampleTargetLanes = [];
             }
-
             const newSampleId = this.nextSampleId;
-
             // Generate a new UUID for the sample
             const uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
                 const r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
                 return v.toString(16);
             });
-
             // Populate form data with empty defaults initially
             this.editFormData = {
                 sample_id: newSampleId,
@@ -2149,10 +2392,8 @@ const vDemuxSampleInfoEditor = {
                 barcode_mismatches_index1: null,
                 barcode_mismatches_index2: null
             };
-            
             // Pre-fill bulk-editable fields from project samples (if project is set)
             this.updateAddSampleFormWithProjectDefaults(this.addSampleTargetProject);
-
             this.editModalLane = this.addSampleTargetLanes[0] || null;
             this.editModalUuid = uuid;
             this.editModalSample = null;
@@ -2178,61 +2419,49 @@ const vDemuxSampleInfoEditor = {
                     alert('Please select at least one target lane.');
                     return;
                 }
-
                 // Validate Sample ID format: Sample_ProjectPrefix_XXXX where XXXX is 3-4 digits
                 const sampleId = this.editFormData.sample_id;
                 const sampleName = this.editFormData.sample_name;
-
                 // Sample ID should start with "Sample_"
                 if (!sampleId.startsWith('Sample_')) {
                     alert('Sample ID must start with "Sample_" (e.g., Sample_P12345_1001)');
                     return;
                 }
-
                 // Remove "Sample_" prefix to get the project part
                 const sampleIdWithoutPrefix = sampleId.substring(7); // Remove "Sample_"
                 const lastUnderscoreIndex = sampleIdWithoutPrefix.lastIndexOf('_');
-
                 if (lastUnderscoreIndex <= 0) {
                     alert('Sample ID must have format: Sample_ProjectPrefix_XXXX (e.g., Sample_P12345_1001)');
                     return;
                 }
-
                 const numPartId = sampleIdWithoutPrefix.substring(lastUnderscoreIndex + 1);
                 if (!/^\d{3,4}$/.test(numPartId)) {
                     alert('Sample ID must have 3 or 4 digits after the last underscore (e.g., Sample_P12345_001 or Sample_P12345_1001).\nPlease replace XXXX with your sample number.');
                     return;
                 }
-
                 // Validate Sample Name format: ProjectPrefix_XXXX (without "Sample_" prefix)
                 const lastUnderscoreIndexName = sampleName.lastIndexOf('_');
-
                 if (lastUnderscoreIndexName <= 0) {
                     alert('Sample Name must have format: ProjectPrefix_XXXX (e.g., P12345_1001)');
                     return;
                 }
-
                 const numPartName = sampleName.substring(lastUnderscoreIndexName + 1);
                 if (!/^\d{3,4}$/.test(numPartName)) {
                     alert('Sample Name must have 3 or 4 digits after the last underscore (e.g., P12345_001 or P12345_1001).\nPlease replace XXXX with your sample number.');
                     return;
                 }
-
                 // Check that Sample ID and Sample Name match (Sample ID = "Sample_" + Sample Name)
                 if (sampleId !== 'Sample_' + sampleName) {
                     alert('Sample ID must be "Sample_" + Sample Name.\nSample ID: ' + sampleId + '\nShould be: Sample_' + sampleName);
                     return;
                 }
             }
-
             // Save the edited sample data
             const lane = this.editModalLane;
             const uuid = this.editModalUuid;
-
             if (this.editModalIsNew && this.unifiedModalTab === CONSTANTS.MODAL_TABS.ADD) {
                 // Use the selected lanes
                 const targetLanes = this.addSampleTargetLanes;
-
                 const timestamp = new Date().toISOString();
                 const projectDetails = this.selectedProjectDetails;
                 const newSettings = {
@@ -2244,20 +2473,17 @@ const vDemuxSampleInfoEditor = {
                     mask_short_reads: 0,
                     minimum_trimmed_read_length: 0
                 };
-
                 // Add sample to all target lanes
                 targetLanes.forEach(targetLane => {
                     const laneSpecificSettings = {
                         ...newSettings,
                         lane: targetLane
                     };
-
                     // Add to editedData
                     if (!this.editedData[targetLane]) {
                         this.editedData[targetLane] = {};
                     }
                     this.editedData[targetLane][uuid] = laneSpecificSettings;
-
                     // Add to the actual data structure for immediate display
                     if (!this.demux_data.calculated.lanes[targetLane]) {
                         this.demux_data.calculated.lanes[targetLane] = { sample_rows: {} };
@@ -2272,7 +2498,6 @@ const vDemuxSampleInfoEditor = {
                         }
                     };
                 });
-
                 if (targetLanes.length === 1) {
                     alert(`Added new sample ${newSettings.sample_id} to lane ${targetLanes[0]}`);
                 } else {
@@ -2291,13 +2516,11 @@ const vDemuxSampleInfoEditor = {
                     mask_short_reads: 0,
                     minimum_trimmed_read_length: 0
                 };
-
                 // Add to editedData
                 if (!this.editedData[lane]) {
                     this.editedData[lane] = {};
                 }
                 this.editedData[lane][uuid] = newSettings;
-
                 // Add to the actual data structure for immediate display
                 if (!this.demux_data.calculated.lanes[lane]) {
                     this.demux_data.calculated.lanes[lane] = { sample_rows: {} };
@@ -2311,25 +2534,21 @@ const vDemuxSampleInfoEditor = {
                         [timestamp]: newSettings
                     }
                 };
-
                 alert(`Added new sample ${newSettings.sample_id} to lane ${lane}`);
             } else {
                 // Update existing sample - only save changed fields
                 Object.keys(this.editFormData).forEach(field => {
                     let newValue = this.editFormData[field];
-
                     // Sanitize raw_samplesheet_settings number fields: convert NaN or empty string to null
                     if (field === 'barcode_mismatches_index1' || field === 'barcode_mismatches_index2') {
                         if (newValue === '' || Number.isNaN(newValue)) {
                             newValue = null;
                         }
                     }
-
                     this.updateValue(lane, uuid, field, newValue);
                 });
                 alert(`Updated sample in lane ${lane}`);
             }
-
             this.closeEditModal();
         },
         reverseComplement(sequence) {
@@ -2346,21 +2565,17 @@ const vDemuxSampleInfoEditor = {
                 alert('Please select a project.');
                 return;
             }
-
             let editCount = 0;
             const lanesToEdit = this.bulkEditLane === 'all' ? this.projectLanes : [this.bulkEditLane];
-
             lanesToEdit.forEach(lane => {
                 const laneData = this.calculatedLanes[lane];
                 if (!laneData) return;
-
                 Object.entries(laneData.sample_rows).forEach(([uuid, sample]) => {
                     const settingsVersions = Object.keys(sample.settings).sort().reverse();
                     const latestSettings = sample.settings[settingsVersions[0]];
                     const sampleProject = latestSettings.per_sample_fields?.Sample_Project;
                     const projectId = sample.project_id;
                     const projectName = sample.project_name;
-
                     // Check if this sample matches the selected project
                     if (sampleProject === this.bulkEditProject || projectId === this.bulkEditProject || projectName === this.bulkEditProject) {
                         if (this.bulkEditAction === 'reverse_complement_index1') {
@@ -2381,20 +2596,17 @@ const vDemuxSampleInfoEditor = {
                     }
                 });
             });
-
             alert(`Applied ${this.bulkEditAction} to ${editCount} sample(s) in project ${this.bulkEditProject}`);
             this.closeBulkEditModal();
         },
         addNewSample() {
             const newSampleId = this.nextSampleId;
             const lane = this.bulkEditLane;
-
             // Generate a new UUID for the sample
             const uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
                 const r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
                 return v.toString(16);
             });
-
             // Get template settings from an existing sample in the same project
             let templateSettings = null;
             Object.values(this.calculatedLanes).some(laneData => {
@@ -2411,7 +2623,6 @@ const vDemuxSampleInfoEditor = {
                     }
                 });
             });
-
             // Create new sample settings
             const timestamp = new Date().toISOString();
             const newSettings = templateSettings ? {
@@ -2437,13 +2648,11 @@ const vDemuxSampleInfoEditor = {
                 lane: lane,
                 flowcell_id: this.flowcell_id
             };
-
             // Add to editedData (which will be sent to backend on save)
             if (!this.editedData[lane]) {
                 this.editedData[lane] = {};
             }
             this.editedData[lane][uuid] = newSettings;
-
             // Also add to the actual data structure for immediate display
             if (!this.demux_data.calculated.lanes[lane]) {
                 this.demux_data.calculated.lanes[lane] = { sample_rows: {} };
@@ -2455,24 +2664,20 @@ const vDemuxSampleInfoEditor = {
                     [timestamp]: newSettings
                 }
             };
-
             alert(`Added new sample ${newSampleId} to lane ${lane}`);
             this.closeBulkEditModal();
         },
         generateSamplesheetContent(samplesheet) {
             // Convert JSON samplesheet to Illumina v2 CSV format
             const lines = [];
-
             // [Header] section
             lines.push('[Header]');
             for (const [key, value] of Object.entries(samplesheet.Header)) {
                 lines.push(`${key},${value}`);
             }
             lines.push('');
-
             // [BCLConvert_Settings] section
             lines.push('[BCLConvert_Settings]');
-
             // Add BCLConvert settings in standard order
             const settingsOrder = ['SoftwareVersion', 'MinimumTrimmedReadLength', 'MaskShortReads'];
             for (const key of settingsOrder) {
@@ -2480,25 +2685,20 @@ const vDemuxSampleInfoEditor = {
                     lines.push(`${key},${samplesheet.raw_samplesheet_settings[key]}`);
                 }
             }
-
             // Add remaining settings
             for (const [key, value] of Object.entries(samplesheet.raw_samplesheet_settings)) {
                 if (!settingsOrder.includes(key)) {
                     lines.push(`${key},${value}`);
                 }
             }
-
             lines.push('');
-
             // [BCLConvert_Data] section
             lines.push('[BCLConvert_Data]');
             lines.push('Lane,Sample_ID,Sample_Name,index,index2,Sample_Project,OverrideCycles');
-
             // Add sample rows
             for (const sample of samplesheet.BCLConvert_Data) {
                 lines.push(`${sample.Lane},${sample.Sample_ID},${sample.Sample_Name},${sample.index},${sample.index2},${sample.Sample_Project},${sample.OverrideCycles}`);
             }
-
             return lines.join('\n');
         },
         downloadSamplesheet(samplesheet) {
@@ -2507,7 +2707,6 @@ const vDemuxSampleInfoEditor = {
             const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });
             const link = document.createElement('a');
             const url = URL.createObjectURL(blob);
-
             link.setAttribute('href', url);
             link.setAttribute('download', samplesheet.filename);
             link.style.visibility = 'hidden';
@@ -2519,7 +2718,6 @@ const vDemuxSampleInfoEditor = {
             // Handle browser back/forward buttons
             const urlParams = new URLSearchParams(window.location.search);
             const flowcellId = urlParams.get('flowcell');
-
             if (flowcellId) {
                 this.flowcell_id = flowcellId;
                 this.fetchDemuxInfo(false); // false = don't push to history again
@@ -2535,12 +2733,10 @@ const vDemuxSampleInfoEditor = {
         // Check if flowcell ID is in the URL
         const urlParams = new URLSearchParams(window.location.search);
         const flowcellId = urlParams.get('flowcell');
-
         if (flowcellId) {
             this.flowcell_id = flowcellId;
             this.fetchDemuxInfo(false); // false = don't push to history on initial load
         }
-
         // Listen for browser back/forward navigation
         window.addEventListener('popstate', this.handlePopState);
     },
@@ -2554,7 +2750,6 @@ const vDemuxSampleInfoEditor = {
             <div class="row">
                 <div class="col-12">
                     <h1>Y Flowcells</h1>
-
                     <!-- Input form (shown when no flowcell loaded) -->
                     <div v-if="!demux_data" class="card mt-4 mb-4">
                         <div class="card-body">
@@ -2586,14 +2781,12 @@ const vDemuxSampleInfoEditor = {
                             </div>
                         </div>
                     </div>
-
                     <!-- Error messages -->
                     <template v-if="error_messages.length > 0">
                         <div class="alert alert-danger" role="alert">
                             <h3 v-for="error in error_messages">{{ error }}</h3>
                         </div>
                     </template>
-
                     <!-- Loading state -->
                     <template v-if="loading && !demux_data">
                         <div class="text-center">
@@ -2603,7 +2796,6 @@ const vDemuxSampleInfoEditor = {
                             <p>Loading demux sample info...</p>
                         </div>
                     </template>
-
                     <!-- Demux data -->
                     <template v-if="demux_data">
                         <!-- Back button -->
@@ -2612,9 +2804,7 @@ const vDemuxSampleInfoEditor = {
                                 <i class="fa fa-arrow-left mr-2"></i>Back to Flowcell List
                             </button>
                         </div>
-
                         <h2>Flowcell: {{ demux_data.flowcell_id }}</h2>
-
                         <!-- Metadata Card -->
                         <div class="card mt-4" v-if="demux_data.metadata">
                             <div class="card-header">
@@ -2624,10 +2814,8 @@ const vDemuxSampleInfoEditor = {
                                 <dl class="row">
                                     <dt class="col-sm-3">Number of Lanes:</dt>
                                     <dd class="col-sm-9">{{ demux_data.metadata.num_lanes }}</dd>
-
                                     <dt class="col-sm-3">Run Setup:</dt>
                                     <dd class="col-sm-9">{{ demux_data.metadata.run_setup || 'N/A' }}</dd>
-
                                     <dt class="col-sm-3">Setup LIMS Step ID:</dt>
                                     <dd class="col-sm-9">
                                         <a v-if="demux_data.metadata.setup_lims_step_id && limsUrl"
@@ -2641,7 +2829,6 @@ const vDemuxSampleInfoEditor = {
                                 </dl>
                             </div>
                         </div>
-
                         <!-- Tabs Navigation -->
                         <ul class="nav nav-tabs mt-4" role="tablist">
                             <li class="nav-item" role="presentation">
@@ -2682,7 +2869,6 @@ const vDemuxSampleInfoEditor = {
                                 </a>
                             </li>
                         </ul>
-
                         <!-- Tab Content -->
                         <div class="tab-content mt-3">
                             <!-- Uploaded Info tab -->
@@ -2724,7 +2910,6 @@ const vDemuxSampleInfoEditor = {
                                     </table>
                                 </div>
                             </div>
-
                             <!-- Calculated Samples tab -->
                             <div class="tab-pane fade" :class="{ 'show active': viewMode === CONSTANTS.VIEW_MODES.CALCULATED }">
                                 <div class="d-flex justify-content-between align-items-center mb-3">
@@ -2762,7 +2947,6 @@ const vDemuxSampleInfoEditor = {
                                         </span>
                                     </div>
                                 </div>
-
                                 <!-- Save Comment Field (shown when there are changes) -->
                                 <div v-if="hasChanges" class="card mt-3 mb-3 border-info">
                                     <div class="card-body">
@@ -2779,7 +2963,6 @@ const vDemuxSampleInfoEditor = {
                                         <small class="text-muted">This comment will be saved in the version history.</small>
                                     </div>
                                 </div>
-
                                 <!-- Column Configuration Menu -->
                                 <div class="card mt-3 mb-4">
                                     <div class="card-header" @click="columnConfigCollapsed = !columnConfigCollapsed" style="cursor: pointer;">
@@ -2796,7 +2979,6 @@ const vDemuxSampleInfoEditor = {
                                                     <div class="btn-group" role="group">
                                                         <input type="radio" class="btn-check" name="columnPreset" id="presetDefault" value="default" @change="applyColumnPreset('default')" autocomplete="off" checked>
                                                         <label class="btn btn-outline-primary" for="presetDefault">Default</label>
-
                                                         <input type="radio" class="btn-check" name="columnPreset" id="presetAll" value="all" @change="applyColumnPreset('all')" autocomplete="off">
                                                         <label class="btn btn-outline-primary" for="presetAll">All</label>
                                                     </div>
@@ -2822,7 +3004,6 @@ const vDemuxSampleInfoEditor = {
                                         </div>
                                     </div>
                                 </div>
-
                                 <!-- Custom Configurations -->
                                 <div v-if="demux_data && demux_data.custom_configs && demux_data.custom_configs.length > 0" class="card mt-3 mb-4">
                                     <div class="card-header" @click="customConfigsCollapsed = !customConfigsCollapsed" style="cursor: pointer;">
@@ -2885,7 +3066,6 @@ const vDemuxSampleInfoEditor = {
                                         </div>
                                     </div>
                                 </div>
-
                                 <!-- Grouping Order Toggle -->
                                 <div class="card mt-3 mb-3">
                                     <div class="card-body">
@@ -2905,7 +3085,6 @@ const vDemuxSampleInfoEditor = {
                                         </div>
                                     </div>
                                 </div>
-
                                 <!-- Named Index Grouping Toggle -->
                                 <div class="card mt-3 mb-3">
                                     <div class="card-body">
@@ -2922,7 +3101,6 @@ const vDemuxSampleInfoEditor = {
                                         </div>
                                     </div>
                                 </div>
-
                                 <!-- Tables grouped by Lane → Project -->
                                 <div v-if="!groupByProjectFirst">
                                     <div v-for="(projects, lane) in calculatedSamplesByLaneProjectAndNamedIndex" :key="lane" class="mt-4">
@@ -2979,7 +3157,6 @@ const vDemuxSampleInfoEditor = {
                                                         </tbody>
                                                     </table>
                                                 </div>
-
                                                 <!-- When grouped by named index -->
                                                 <div v-else>
                                                     <div v-for="(samples, namedIndex) in indexGroups" :key="namedIndex" class="mb-3">
@@ -3033,7 +3210,6 @@ const vDemuxSampleInfoEditor = {
                                     </div>
                                 </div>
                                 </div> <!-- end Lane → Project grouping -->
-
                                 <!-- Tables grouped by Project → Lane -->
                                 <div v-else>
                                     <div v-for="(lanes, projectName) in calculatedSamplesByProjectLaneAndNamedIndex" :key="projectName" class="mt-4">
@@ -3090,7 +3266,6 @@ const vDemuxSampleInfoEditor = {
                                                             </tbody>
                                                         </table>
                                                     </div>
-
                                                     <!-- When grouped by named index -->
                                                     <div v-else>
                                                         <div v-for="(samples, namedIndex) in indexGroups" :key="namedIndex" class="mb-3">
@@ -3145,7 +3320,6 @@ const vDemuxSampleInfoEditor = {
                                     </div>
                                 </div> <!-- end Project → Lane grouping -->
                             </div> <!-- end Calculated Samples tab-pane -->
-
                             <!-- Version History tab -->
                             <div class="tab-pane fade" :class="{ 'show active': viewMode === 'history' }">
                                 <h3>Version History {{viewMode}}</h3>
@@ -3162,13 +3336,10 @@ const vDemuxSampleInfoEditor = {
                                             <dl class="row mb-0">
                                                 <dt class="col-sm-3">Generated By:</dt>
                                                 <dd class="col-sm-9">{{ demux_data.calculated.version_history[timestamp].generated_by || 'N/A' }}</dd>
-
                                                 <dt class="col-sm-3">Autogenerated:</dt>
                                                 <dd class="col-sm-9">{{ demux_data.calculated.version_history[timestamp].autogenerated ? 'Yes' : 'No' }}</dd>
-
                                                 <dt class="col-sm-3">Auto Run:</dt>
                                                 <dd class="col-sm-9">{{ demux_data.calculated.version_history[timestamp].auto_run ? 'Yes' : 'No' }}</dd>
-
                                                 <dt class="col-sm-3">Comment:</dt>
                                                 <dd class="col-sm-9">{{ demux_data.calculated.version_history[timestamp].comment || 'None' }}</dd>
                                             </dl>
@@ -3176,16 +3347,13 @@ const vDemuxSampleInfoEditor = {
                                     </div>
                                 </div>
                             </div>
-
                             <!-- Samplesheets tab -->
                             <div class="tab-pane fade" :class="{ 'show active': viewMode === 'samplesheets' }">
                                 <h3>Illumina v2 Samplesheets</h3>
                                 <p class="text-muted">Generated samplesheets grouped by lane and BCLConvert settings. Projects with different settings are split into separate samplesheets.</p>
-
                                 <div v-if="samplesheets.length === 0" class="alert alert-info">
                                     No samplesheets available. Please ensure data is loaded.
                                 </div>
-
                                 <div v-else>
                                     <div v-for="(samplesheet, index) in samplesheets" :key="index" class="card mb-4">
                                         <div class="card-header bg-light d-flex justify-content-between align-items-center">
@@ -3211,7 +3379,6 @@ const vDemuxSampleInfoEditor = {
                             </div>
                         </div> <!-- end tab-content -->
                     </template>
-
                 <!-- Unified Sample Management Modal with Tabs -->
                     <div v-if="showUnifiedModal" class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5); overflow-y: auto;">
                         <div class="modal-dialog modal-lg">
@@ -3230,7 +3397,6 @@ const vDemuxSampleInfoEditor = {
                                     </div>
                                     <button type="button" class="btn-close" @click="closeUnifiedModal"></button>
                                 </div>
-
                                 <!-- Nav Tabs -->
                                 <ul class="nav nav-tabs px-3 pt-2" style="border-bottom: 1px solid #dee2e6;">
                                     <li class="nav-item">
@@ -3249,7 +3415,6 @@ const vDemuxSampleInfoEditor = {
                                         </a>
                                     </li>
                                 </ul>
-
                                 <div class="modal-body">
                                     <!-- Tab: Edit Sample -->
                                     <div v-if="unifiedModalTab === CONSTANTS.MODAL_TABS.EDIT" class="tab-pane-content">
@@ -3271,7 +3436,6 @@ const vDemuxSampleInfoEditor = {
                                             </div>
                                         </div>
                                     </div>
-
                                     <!-- Field History (only for existing samples when toggled) -->
                                     <div v-if="!editModalIsNew && showFieldHistory && Object.keys(fieldHistory).length > 0" class="row mb-3">
                                         <div class="col-12">
@@ -3281,7 +3445,6 @@ const vDemuxSampleInfoEditor = {
                                                         <i class="fa fa-history"></i> Field History
                                                     </h6>
                                                     <p class="mb-3 small text-muted">Historical changes to individual fields for this sample:</p>
-
                                                     <!-- Iterate through each field that has history -->
                                                     <div v-for="(changes, fieldName) in fieldHistory" :key="fieldName" class="mb-3">
                                                         <div class="d-flex align-items-center mb-2">
@@ -3313,7 +3476,6 @@ const vDemuxSampleInfoEditor = {
                                                             </div>
                                                         </div>
                                                     </div>
-
                                                     <!-- Empty state (shouldn't happen if we check Object.keys length) -->
                                                     <div v-if="Object.keys(fieldHistory).length === 0" class="text-muted fst-italic">
                                                         No field history available for this sample.
@@ -3322,185 +3484,23 @@ const vDemuxSampleInfoEditor = {
                                             </div>
                                         </div>
                                     </div>
-
                                     <!-- Preset Selector (only for new samples) -->
                                     <div v-if="editModalIsNew && samplePresets" class="row mb-3">
                                         <div class="col-12">
-                                            <div class="card bg-light">
-                                                <div class="card-body">
-                                                    <h6 class="card-title">Apply Sample Type Preset</h6>
-                                                    <div class="row align-items-end">
-                                                        <div class="col-md-8">
-                                                            <label for="preset_select" class="form-label">Select a preset to auto-fill recipe and named index fields:</label>
-                                                            <select class="form-select" id="preset_select" v-model="selectedPreset">
-                                                                <option value="">-- Select Preset --</option>
-                                                                <optgroup label="Sample Patterns">
-                                                                    <option v-for="(preset, key) in samplePresets.patterns" :key="key" :value="key">
-                                                                        {{ preset.description }} ({{ preset.sample_type }})
-                                                                    </option>
-                                                                </optgroup>
-                                                                <optgroup label="Library Methods" v-if="samplePresets.library_methods && Object.keys(samplePresets.library_methods).length > 0">
-                                                                    <option v-for="(preset, key) in samplePresets.library_methods" :key="key" :value="key">
-                                                                        {{ preset.description }} ({{ preset.sample_type }})
-                                                                    </option>
-                                                                </optgroup>
-                                                                <optgroup label="Instrument Types" v-if="samplePresets.instrument_types && Object.keys(samplePresets.instrument_types).length > 0">
-                                                                    <template v-for="(instrument, instKey) in samplePresets.instrument_types" :key="instKey">
-                                                                        <option :value="'instrument:' + instKey">
-                                                                            {{ instrument.description }} - {{ instKey }}
-                                                                        </option>
-                                                                        <template v-if="instrument.run_modes">
-                                                                            <option v-for="(mode, modeKey) in instrument.run_modes" :key="instKey + ':' + modeKey" :value="'instrument:' + instKey + ':' + modeKey" class="ms-3">
-                                                                                &nbsp;&nbsp;↳ {{ modeKey }} - {{ mode.description }}
-                                                                            </option>
-                                                                        </template>
-                                                                    </template>
-                                                                </optgroup>
-                                                            </select>
-                                                        </div>
-                                                        <div class="col-md-4">
-                                                            <button type="button" class="btn btn-primary" @click="applyPreset" :disabled="!selectedPreset">
-                                                                Apply Preset
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
+                                            <PresetSelector
+                                                :sample-presets="samplePresets"
+                                                :selected-preset="selectedPreset"
+                                                @update:selectedPreset="selectedPreset = $event"
+                                                @apply="applyPreset"
+                                                mode="edit" />
                                         </div>
                                     </div>
-                                    <div class="row">
-                                        <div class="col-md-6 mb-3">
-                                            <label for="edit_sample_id" class="form-label">Sample ID:</label>
-                                            <input type="text" class="form-control" id="edit_sample_id" v-model="editFormData.sample_id" :readonly="!editModalIsNew">
-                                        </div>
-                                        <div class="col-md-6 mb-3">
-                                            <label for="edit_sample_name" class="form-label">Sample Name:</label>
-                                            <input type="text" class="form-control" id="edit_sample_name" v-model="editFormData.sample_name">
-                                        </div>
-                                        <div class="col-md-6 mb-3">
-                                            <label for="edit_sample_project" class="form-label">Sample Project:</label>
-                                            <input type="text" class="form-control" id="edit_sample_project" v-model="editFormData.sample_project" readonly>
-                                        </div>
-                                        <div class="col-md-6 mb-3">
-                                            <label for="edit_sample_ref" class="form-label">Sample Ref:</label>
-                                            <input type="text" class="form-control" id="edit_sample_ref" v-model="editFormData.sample_ref">
-                                        </div>
-                                        <div class="col-md-6 mb-3">
-                                            <label for="edit_index_1" class="form-label">Index 1:</label>
-                                            <input
-                                                type="text"
-                                                class="form-control font-monospace"
-                                                id="edit_index_1"
-                                                v-model="editFormData.index_1"
-                                                @input="editFormData.index_1 = editFormData.index_1.toUpperCase().replace(/[^ACGT]/g, '')"
-                                                pattern="[ACGT]*"
-                                                title="Only ACGT characters are allowed">
-                                        </div>
-                                        <div class="col-md-6 mb-3">
-                                            <label for="edit_index_2" class="form-label">Index 2:</label>
-                                            <input
-                                                type="text"
-                                                class="form-control font-monospace"
-                                                id="edit_index_2"
-                                                v-model="editFormData.index_2"
-                                                @input="editFormData.index_2 = editFormData.index_2.toUpperCase().replace(/[^ACGT]/g, '')"
-                                                pattern="[ACGT]*"
-                                                title="Only ACGT characters are allowed">
-                                        </div>
-                                        <div class="col-md-6 mb-3">
-                                            <label for="edit_named_index" class="form-label">Named Index:</label>
-                                            <input type="text" class="form-control" id="edit_named_index" v-model="editFormData.named_index">
-                                        </div>
-                                        <div class="col-md-6 mb-3">
-                                            <label for="edit_recipe" class="form-label">Recipe:</label>
-                                            <input type="text" class="form-control" id="edit_recipe" v-model="editFormData.recipe">
-                                        </div>
-                                        <div class="col-md-6 mb-3">
-                                            <label for="edit_operator" class="form-label">Operator:</label>
-                                            <input type="text" class="form-control" id="edit_operator" v-model="editFormData.operator">
-                                        </div>
-                                        <div class="col-md-6 mb-3">
-                                            <label for="edit_control" class="form-label">Control:</label>
-                                            <select class="form-select" id="edit_control" v-model="editFormData.control">
-                                                <option value="N">N</option>
-                                                <option value="Y">Y</option>
-                                            </select>
-                                        </div>
-                                        <div class="col-md-12 mb-3">
-                                            <label for="edit_description" class="form-label">Description:</label>
-                                            <textarea class="form-control" id="edit_description" v-model="editFormData.description" rows="2"></textarea>
-                                        </div>
-                                        <div class="col-md-12 mb-3">
-                                            <label for="edit_override_cycles" class="form-label">
-                                                Override Cycles:
-                                                <span class="text-muted small">(auto-calculated from recipe and UMI config)</span>
-                                            </label>
-                                            <input type="text" class="form-control font-monospace bg-light" id="edit_override_cycles" v-model="editFormData.override_cycles" readonly>
-                                        </div>
-
-                                        <!-- BCLConvert Settings Section -->
-                                        <div class="col-md-12 mb-3">
-                                            <hr>
-                                            <h6 class="mb-3">
-                                                <i class="fa fa-cog"></i> BCLConvert Settings
-                                                <span class="text-muted small">(Values not included use BCLConvert defaults)</span>
-                                            </h6>
-                                        </div>
-                                        <div class="col-md-6 mb-3">
-                                            <label class="form-label">Trim UMI:</label>
-                                            <div class="form-check">
-                                                <input type="radio" class="form-check-input" id="edit_trim_umi_yes" v-model="editFormData.trim_umi" :value="true">
-                                                <label class="form-check-label" for="edit_trim_umi_yes">
-                                                    Yes
-                                                </label>
-                                            </div>
-                                            <div class="form-check">
-                                                <input type="radio" class="form-check-input" id="edit_trim_umi_no" v-model="editFormData.trim_umi" :value="false">
-                                                <label class="form-check-label" for="edit_trim_umi_no">
-                                                    No
-                                                </label>
-                                            </div>
-                                            <div class="form-check">
-                                                <input type="radio" class="form-check-input" id="edit_trim_umi_default" v-model="editFormData.trim_umi" :value="null">
-                                                <label class="form-check-label" for="edit_trim_umi_default">
-                                                    Do not override
-                                                </label>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6 mb-3">
-                                            <label class="form-label">Create FASTQ for Index Reads:</label>
-                                            <div class="form-check">
-                                                <input type="radio" class="form-check-input" id="edit_create_fastq_yes" v-model="editFormData.create_fastq_for_index_reads" :value="true">
-                                                <label class="form-check-label" for="edit_create_fastq_yes">
-                                                    Yes
-                                                </label>
-                                            </div>
-                                            <div class="form-check">
-                                                <input type="radio" class="form-check-input" id="edit_create_fastq_no" v-model="editFormData.create_fastq_for_index_reads" :value="false">
-                                                <label class="form-check-label" for="edit_create_fastq_no">
-                                                    No
-                                                </label>
-                                            </div>
-                                            <div class="form-check">
-                                                <input type="radio" class="form-check-input" id="edit_create_fastq_default" v-model="editFormData.create_fastq_for_index_reads" :value="null">
-                                                <label class="form-check-label" for="edit_create_fastq_default">
-                                                    Do not override
-                                                </label>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6 mb-3">
-                                            <label for="edit_barcode_mismatches_index1" class="form-label">Barcode Mismatches Index 1:</label>
-                                            <input type="number" class="form-control" id="edit_barcode_mismatches_index1" v-model.number="editFormData.barcode_mismatches_index1" min="0" max="2" placeholder="Default">
-                                            <small class="form-text text-muted">0-2 mismatches allowed (leave blank for default)</small>
-                                        </div>
-                                        <div class="col-md-6 mb-3">
-                                            <label for="edit_barcode_mismatches_index2" class="form-label">Barcode Mismatches Index 2:</label>
-                                            <input type="number" class="form-control" id="edit_barcode_mismatches_index2" v-model.number="editFormData.barcode_mismatches_index2" min="0" max="2" placeholder="Default">
-                                            <small class="form-text text-muted">0-2 mismatches allowed (leave blank for default)</small>
-                                        </div>
-                                    </div>
+                                    <!-- Sample Form Fields -->
+                                    <SampleFormFields
+                                        v-model="editFormData"
+                                        :is-new-sample="editModalIsNew"
+                                        mode="edit" />
                                     </div> <!-- End Edit Sample Tab -->
-
                                     <!-- Tab: Add Sample -->
                                     <div v-if="unifiedModalTab === CONSTANTS.MODAL_TABS.ADD" class="tab-pane-content">
                                         <!-- Target Selection -->
@@ -3545,53 +3545,17 @@ const vDemuxSampleInfoEditor = {
                                                 </div>
                                             </div>
                                         </div>
-
                                         <!-- Preset Selector (only for new samples) -->
                                         <div v-if="editModalIsNew && samplePresets" class="row mb-3">
                                             <div class="col-12">
-                                                <div class="card bg-light">
-                                                    <div class="card-body">
-                                                        <h6 class="card-title">Apply Sample Type Preset</h6>
-                                                        <div class="row align-items-end">
-                                                            <div class="col-md-8">
-                                                                <label for="preset_select_add" class="form-label">Select a preset to auto-fill recipe and named index fields:</label>
-                                                                <select class="form-select" id="preset_select_add" v-model="selectedPreset">
-                                                                    <option value="">-- Select Preset --</option>
-                                                                    <optgroup label="Sample Patterns">
-                                                                        <option v-for="(preset, key) in samplePresets.patterns" :key="key" :value="key">
-                                                                            {{ preset.description }} ({{ preset.sample_type }})
-                                                                        </option>
-                                                                    </optgroup>
-                                                                    <optgroup label="Library Methods" v-if="samplePresets.library_methods && Object.keys(samplePresets.library_methods).length > 0">
-                                                                        <option v-for="(preset, key) in samplePresets.library_methods" :key="key" :value="key">
-                                                                            {{ preset.description }} ({{ preset.sample_type }})
-                                                                        </option>
-                                                                    </optgroup>
-                                                                    <optgroup label="Instrument Types" v-if="samplePresets.instrument_types && Object.keys(samplePresets.instrument_types).length > 0">
-                                                                        <template v-for="(instrument, instKey) in samplePresets.instrument_types" :key="instKey">
-                                                                            <option :value="'instrument:' + instKey">
-                                                                                {{ instrument.description }} - {{ instKey }}
-                                                                            </option>
-                                                                            <template v-if="instrument.run_modes">
-                                                                                <option v-for="(mode, modeKey) in instrument.run_modes" :key="instKey + ':' + modeKey" :value="'instrument:' + instKey + ':' + modeKey" class="ms-3">
-                                                                                    &nbsp;&nbsp;↳ {{ modeKey }} - {{ mode.description }}
-                                                                                </option>
-                                                                            </template>
-                                                                        </template>
-                                                                    </optgroup>
-                                                                </select>
-                                                            </div>
-                                                            <div class="col-md-4">
-                                                                <button type="button" class="btn btn-primary" @click="applyPreset" :disabled="!selectedPreset">
-                                                                    Apply Preset
-                                                                </button>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
+                                                <PresetSelector
+                                                    :sample-presets="samplePresets"
+                                                    :selected-preset="selectedPreset"
+                                                    @update:selectedPreset="selectedPreset = $event"
+                                                    @apply="applyPreset"
+                                                    mode="add" />
                                             </div>
                                         </div>
-
                                         <!-- Sample form fields (same as edit, but for new sample) -->
                                         <div v-if="addSampleTargetLanes.length > 0" class="alert alert-success">
                                             <strong><i class="fa fa-check-circle"></i> Adding sample to Lane(s):</strong> {{ addSampleTargetLanes.map(l => 'Lane ' + l).join(', ') }}<br>
@@ -3599,7 +3563,6 @@ const vDemuxSampleInfoEditor = {
                                             <small class="d-block mt-1"><strong>Sample ID Template:</strong> Sample_{{ nextSampleId || 'ProjectID_XXXX' }} <em class="text-muted">(replace XXXX with your sample number)</em></small>
                                             <small class="d-block mt-1"><strong>Sample Name Template:</strong> {{ nextSampleId || 'ProjectID_XXXX' }} <em class="text-muted">(same as Sample ID but without the Sample_ prefix)</em></small>
                                         </div>
-
                                         <!-- Warning for inconsistent project values -->
                                         <div v-if="addSampleTargetLanes.length > 0 && addSampleProjectWarnings.length > 0" class="alert alert-info">
                                             <strong><i class="fa fa-info-circle"></i> Inconsistent Field Values Detected:</strong>
@@ -3608,142 +3571,22 @@ const vDemuxSampleInfoEditor = {
                                                 <li v-for="(warning, idx) in addSampleProjectWarnings" :key="idx">{{ warning }}</li>
                                             </ul>
                                         </div>
-
                                         <!-- Info about manual sample addition -->
                                         <div v-if="addSampleTargetLanes.length > 0" class="alert alert-info">
                                             <strong><i class="fa fa-info-circle"></i> Note:</strong>
                                             Manually added samples require you to fill in all fields. Unlike LIMS-uploaded samples, Stage 1 processing rules will not be applied.
                                         </div>
-
                                         <div v-else-if="addSampleTargetLanes.length === 0" class="alert alert-warning">
                                             <i class="fa fa-exclamation-triangle"></i> Please select at least one lane above to continue
                                         </div>
-
                                         <div v-if="addSampleTargetLanes.length > 0">
-                                        <div class="row">
-                                            <div class="col-md-6 mb-3">
-                                                <label for="add_sample_id" class="form-label">Sample ID:</label>
-                                                <input type="text" class="form-control" id="add_sample_id" v-model="editFormData.sample_id">
-                                                <small class="form-text text-muted">Replace XXXX with a 3-4 digit number (e.g., 001 or 1001)</small>
-                                            </div>
-                                            <div class="col-md-6 mb-3">
-                                                <label for="add_sample_name" class="form-label">Sample Name:</label>
-                                                <input type="text" class="form-control" id="add_sample_name" v-model="editFormData.sample_name">
-                                                <small class="form-text text-muted">Replace XXXX with a 3-4 digit number (e.g., 001 or 1001)</small>
-                                            </div>
-                                            <div class="col-md-6 mb-3">
-                                                <label for="add_sample_project" class="form-label">Sample Project:</label>
-                                                <input type="text" class="form-control" id="add_sample_project" v-model="editFormData.sample_project" readonly>
-                                            </div>
-                                            <div class="col-md-6 mb-3">
-                                                <label for="add_sample_ref" class="form-label">Sample Ref:</label>
-                                                <input type="text" class="form-control" id="add_sample_ref" v-model="editFormData.sample_ref">
-                                            </div>
-                                            <div class="col-md-6 mb-3">
-                                                <label for="add_index_1" class="form-label">Index 1:</label>
-                                                <input
-                                                    type="text"
-                                                    class="form-control font-monospace"
-                                                    id="add_index_1"
-                                                    v-model="editFormData.index_1"
-                                                    @input="editFormData.index_1 = editFormData.index_1.toUpperCase().replace(/[^ACGT]/g, '')"
-                                                    pattern="[ACGT]*"
-                                                    title="Only ACGT characters are allowed">
-                                            </div>
-                                            <div class="col-md-6 mb-3">
-                                                <label for="add_index_2" class="form-label">Index 2:</label>
-                                                <input
-                                                    type="text"
-                                                    class="form-control font-monospace"
-                                                    id="add_index_2"
-                                                    v-model="editFormData.index_2"
-                                                    @input="editFormData.index_2 = editFormData.index_2.toUpperCase().replace(/[^ACGT]/g, '')"
-                                                    pattern="[ACGT]*"
-                                                    title="Only ACGT characters are allowed">
-                                            </div>
-                                            <div class="col-md-6 mb-3">
-                                                <label for="add_named_index" class="form-label">Named Index:</label>
-                                                <input type="text" class="form-control" id="add_named_index" v-model="editFormData.named_index">
-                                            </div>
-                                            <div class="col-md-6 mb-3">
-                                                <label for="add_recipe" class="form-label">Recipe:</label>
-                                                <input type="text" class="form-control" id="add_recipe" v-model="editFormData.recipe">
-                                            </div>
-                                            <div class="col-md-6 mb-3">
-                                                <label for="add_operator" class="form-label">Operator:</label>
-                                                <input type="text" class="form-control" id="add_operator" v-model="editFormData.operator">
-                                            </div>
-                                            <div class="col-md-6 mb-3">
-                                                <label for="add_control" class="form-label">Control:</label>
-                                                <select class="form-select" id="add_control" v-model="editFormData.control">
-                                                    <option value="N">N</option>
-                                                    <option value="Y">Y</option>
-                                                </select>
-                                            </div>
-                                            <div class="col-md-12 mb-3">
-                                                <label for="add_description" class="form-label">Description:</label>
-                                                <textarea class="form-control" id="add_description" v-model="editFormData.description" rows="2"></textarea>
-                                            </div>
-                                            <div class="col-md-12 mb-3">
-                                                <label for="add_override_cycles" class="form-label">
-                                                    Override Cycles:
-                                                    <span class="text-muted small">(leave empty - will be calculated after saving)</span>
-                                                </label>
-                                                <input type="text" class="form-control font-monospace bg-light" id="add_override_cycles" v-model="editFormData.override_cycles" readonly>
-                                            </div>
-
-                                            <!-- BCLConvert Settings Section -->
-                                            <div class="col-md-12 mb-3">
-                                                <hr>
-                                                <h6 class="mb-3">
-                                                    <i class="fa fa-cog"></i> BCLConvert Settings
-                                                    <span class="text-muted small">(Values not included use BCLConvert defaults)</span>
-                                                </h6>
-                                            </div>
-                                            <div class="col-md-6 mb-3">
-                                                <label class="form-label">Trim UMI:</label>
-                                                <div class="form-check">
-                                                    <input type="radio" class="form-check-input" id="add_trim_umi_yes" v-model="editFormData.trim_umi" :value="true">
-                                                    <label class="form-check-label" for="add_trim_umi_yes">Yes</label>
-                                                </div>
-                                                <div class="form-check">
-                                                    <input type="radio" class="form-check-input" id="add_trim_umi_no" v-model="editFormData.trim_umi" :value="false">
-                                                    <label class="form-check-label" for="add_trim_umi_no">No</label>
-                                                </div>
-                                                <div class="form-check">
-                                                    <input type="radio" class="form-check-input" id="add_trim_umi_default" v-model="editFormData.trim_umi" :value="null">
-                                                    <label class="form-check-label" for="add_trim_umi_default">Do not override</label>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-6 mb-3">
-                                                <label class="form-label">Create FASTQ for Index Reads:</label>
-                                                <div class="form-check">
-                                                    <input type="radio" class="form-check-input" id="add_create_fastq_yes" v-model="editFormData.create_fastq_for_index_reads" :value="true">
-                                                    <label class="form-check-label" for="add_create_fastq_yes">Yes</label>
-                                                </div>
-                                                <div class="form-check">
-                                                    <input type="radio" class="form-check-input" id="add_create_fastq_no" v-model="editFormData.create_fastq_for_index_reads" :value="false">
-                                                    <label class="form-check-label" for="add_create_fastq_no">No</label>
-                                                </div>
-                                                <div class="form-check">
-                                                    <input type="radio" class="form-check-input" id="add_create_fastq_default" v-model="editFormData.create_fastq_for_index_reads" :value="null">
-                                                    <label class="form-check-label" for="add_create_fastq_default">Do not override</label>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-6 mb-3">
-                                                <label for="add_barcode_mismatches_index1" class="form-label">Barcode Mismatches Index 1:</label>
-                                                <input type="number" class="form-control" id="add_barcode_mismatches_index1" v-model.number="editFormData.barcode_mismatches_index1" min="0" max="2" placeholder="Default">
-                                                <small class="form-text text-muted">0-2 mismatches allowed (leave blank for default)</small>
-                                            </div>
-                                            <div class="col-md-6 mb-3">
-                                                <label for="add_barcode_mismatches_index2" class="form-label">Barcode Mismatches Index 2:</label>
-                                                <input type="number" class="form-control" id="add_barcode_mismatches_index2" v-model.number="editFormData.barcode_mismatches_index2" min="0" max="2" placeholder="Default">
-                                                <small class="form-text text-muted">0-2 mismatches allowed (leave blank for default)</small>
-                                            </div>
-                                        </div>
+                                            <!-- Sample Form Fields Component -->
+                                            <SampleFormFields
+                                                v-model="editFormData"
+                                                :is-new-sample="true"
+                                                mode="add" />
                                         </div> <!-- End conditional form fields -->
                                     </div> <!-- End Add Sample Tab -->
-                                    
                                     <!-- Tab: Bulk Operations -->
                                     <div v-if="unifiedModalTab === CONSTANTS.MODAL_TABS.BULK" class="tab-pane-content">
                                         <div class="mb-3">
@@ -3776,7 +3619,6 @@ const vDemuxSampleInfoEditor = {
                                         </div>
                                     </div> <!-- End Bulk Operations Tab -->
                                 </div>
-                                
                                 <div class="modal-footer">
                                     <button type="button" class="btn btn-secondary" @click="closeUnifiedModal">Cancel</button>
                                     <button v-if="unifiedModalTab === CONSTANTS.MODAL_TABS.EDIT" type="button" class="btn btn-primary" @click="saveEditModal">
@@ -3793,8 +3635,6 @@ const vDemuxSampleInfoEditor = {
                             </div>
                         </div>
                     </div>
-
-                    <!-- Configuration Details Modal -->
                     <!-- Configuration Details Modal -->
                     <div v-if="showConfigModal" class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5); overflow-y: auto;">
                         <div class="modal-dialog modal-xl">
@@ -3829,7 +3669,6 @@ const vDemuxSampleInfoEditor = {
                                         <div class="card">
                                             <div class="card-body">
                                                 <h6 class="text-muted">{{ formatTimestamp(sortedConfigModalSettings[0][0]) }}</h6>
-
                                                 <!-- Show config sources for current version -->
                                                 <div v-if="sortedConfigModalSettings[0][1].other_details?.config_sources && sortedConfigModalSettings[0][1].other_details.config_sources.length > 0" class="alert alert-secondary small mb-3">
                                                     <strong><i class="fa fa-stream"></i> Stage 1: Configuration sources applied (stored in database):</strong>
@@ -3842,7 +3681,6 @@ const vDemuxSampleInfoEditor = {
                                                         <i class="fa fa-info-circle"></i> These sources show how Stage 1 calculated and stored your settings. Stage 2 samplesheet generation rules may dynamically adjust these for the final output.
                                                     </div>
                                                 </div>
-
                                                 <div class="table-responsive">
                                                     <table class="table table-sm table-hover">
                                                         <thead class="table-light">
@@ -3913,7 +3751,6 @@ const vDemuxSampleInfoEditor = {
                                             </div>
                                         </div>
                                     </div>
-
                                     <!-- Configuration Source Details -->
                                     <div class="mt-4 mb-4">
                                         <h5 class="text-info">
@@ -3923,14 +3760,12 @@ const vDemuxSampleInfoEditor = {
                                             Detailed information about each Stage 1 configuration source that determined the stored settings.
                                             Configurations are applied in order during classification (from least specific to most specific):
                                         </p>
-
                                         <div v-if="!sampleClassificationConfig" class="text-center">
                                             <div class="spinner-border text-info" role="status">
                                                 <span class="visually-hidden">Loading configuration...</span>
                                             </div>
                                             <p class="mt-2">Loading configuration details...</p>
                                         </div>
-
                                         <div v-else>
                                             <div v-for="(source, index) in configModalSources" :key="index" class="card mb-2">
                                                 <div class="card-header">
@@ -3952,7 +3787,6 @@ const vDemuxSampleInfoEditor = {
                                                 </div>
                                             </div>
                                         </div>
-
                                         <!-- Stage 2 Information -->
                                         <div class="alert alert-warning mt-3" role="alert">
                                             <h6 class="alert-heading"><i class="fa fa-stream"></i> Stage 2: Samplesheet Generation Rules (Not Shown Here)</h6>
@@ -3969,7 +3803,6 @@ const vDemuxSampleInfoEditor = {
                                             </p>
                                         </div>
                                     </div>
-
                                     <!-- Historical Settings -->
                                     <div v-if="configModalSample && sortedConfigModalSettings.length > 1" class="mt-4">
                                         <h3 class="text-secondary">
@@ -3980,7 +3813,6 @@ const vDemuxSampleInfoEditor = {
                                             <div class="card-body">
                                                 <div v-for="[timestamp, settings] in sortedConfigModalSettings.slice(1)" :key="timestamp" class="mb-4 pb-3 border-bottom">
                                                     <h6 class="text-muted">{{ formatTimestamp(timestamp) }}</h6>
-
                                                     <!-- Show config sources for this specific version -->
                                                     <div v-if="settings.other_details?.config_sources && settings.other_details.config_sources.length > 0" class="alert alert-secondary small mb-3">
                                                         <strong><i class="fa fa-stream"></i> Stage 1: Configuration sources applied:</strong>
@@ -3990,7 +3822,6 @@ const vDemuxSampleInfoEditor = {
                                                             </li>
                                                         </ol>
                                                     </div>
-
                                                     <div class="table-responsive">
                                                         <table class="table table-sm table-hover">
                                                             <thead class="table-light">
@@ -4068,7 +3899,6 @@ const vDemuxSampleInfoEditor = {
                             </div>
                         </div>
                     </div>
-
                     <!-- Custom Config Modal -->
                     <div v-if="showCustomConfigModal" class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5); overflow-y: auto;">
                         <div class="modal-dialog modal-xl">
@@ -4092,9 +3922,7 @@ const vDemuxSampleInfoEditor = {
                                             (e.g., excluding TrimUMI for samples without UMI configuration).
                                         </p>
                                     </div>
-
                                     <p class="text-muted">Define custom BCLConvert settings to override the calculated settings for specific samples.</p>
-
                                     <!-- Config Name and Target -->
                                     <div class="row mb-4">
                                         <div class="col-md-12 mb-3">
@@ -4105,7 +3933,6 @@ const vDemuxSampleInfoEditor = {
                                                 <span v-else>A descriptive name for this custom configuration</span>
                                             </small>
                                         </div>
-
                                         <div class="col-md-4 mb-3">
                                             <label for="custom_config_target_type" class="form-label"><strong>Target Type:</strong></label>
                                             <select class="form-select" id="custom_config_target_type" v-model="customConfigFormData.target_type">
@@ -4114,7 +3941,6 @@ const vDemuxSampleInfoEditor = {
                                                 <option value="project_lane">Specific project + lane</option>
                                             </select>
                                         </div>
-
 <div class="col-md-4 mb-3" v-if="customConfigFormData.target_type !== 'lane'">
                                             <label for="custom_config_target_project" class="form-label"><strong>Target Project:</strong></label>
                                             <select class="form-select" id="custom_config_target_project" v-model="customConfigFormData.target_project" required>
@@ -4124,7 +3950,6 @@ const vDemuxSampleInfoEditor = {
                                                 </option>
                                             </select>
                                         </div>
-
                                         <div class="col-md-4 mb-3" v-if="customConfigFormData.target_type !== 'project'">
                                             <label for="custom_config_target_lane" class="form-label"><strong>Target Lane:</strong></label>
                                             <select class="form-select" id="custom_config_target_lane" v-model="customConfigFormData.target_lane">
@@ -4135,7 +3960,6 @@ const vDemuxSampleInfoEditor = {
                                             </select>
                                         </div>
                                     </div>
-
                                     <!-- BCLConvert Settings -->
                                     <div class="row mb-4">
                                         <div class="col-md-12 mb-3">
@@ -4148,7 +3972,6 @@ const vDemuxSampleInfoEditor = {
                                                 Leave settings at "Do not override" to keep the automatically calculated values.
                                             </p>
                                         </div>
-
                                         <div class="col-md-6 mb-3">
                                             <label class="form-label">Trim UMI:</label>
                                             <div class="form-check">
@@ -4164,7 +3987,6 @@ const vDemuxSampleInfoEditor = {
                                                 <label class="form-check-label" for="custom_trim_umi_default">Do not override</label>
                                             </div>
                                         </div>
-
                                         <div class="col-md-6 mb-3">
                                             <label class="form-label">Create FASTQ for Index Reads:</label>
                                             <div class="form-check">
@@ -4180,20 +4002,17 @@ const vDemuxSampleInfoEditor = {
                                                 <label class="form-check-label" for="custom_create_fastq_default">Do not override</label>
                                             </div>
                                         </div>
-
                                         <div class="col-md-6 mb-3">
                                             <label for="custom_barcode_mismatches_index1" class="form-label">Barcode Mismatches Index 1:</label>
                                             <input type="number" class="form-control" id="custom_barcode_mismatches_index1" v-model.number="customConfigFormData.barcode_mismatches_index1" min="0" max="2" placeholder="Do not override">
                                             <small class="form-text text-muted">0-2 mismatches allowed (leave blank to not override)</small>
                                         </div>
-
                                         <div class="col-md-6 mb-3">
                                             <label for="custom_barcode_mismatches_index2" class="form-label">Barcode Mismatches Index 2:</label>
                                             <input type="number" class="form-control" id="custom_barcode_mismatches_index2" v-model.number="customConfigFormData.barcode_mismatches_index2" min="0" max="2" placeholder="Do not override">
                                             <small class="form-text text-muted">0-2 mismatches allowed (leave blank to not override)</small>
                                         </div>
                                     </div>
-
                                     <!-- Preview of Affected Samples -->
                                     <div v-if="customConfigTargetSamples.length > 0" class="alert alert-info">
                                         <h6><i class="fa fa-info-circle"></i> Affected Samples ({{ customConfigTargetSamples.length }})</h6>
@@ -4226,6 +4045,5 @@ const vDemuxSampleInfoEditor = {
         </div>
         `
 };
-
 const app = Vue.createApp(vDemuxSampleInfoEditor);
 app.mount('#demux_sample_info_editor_main');
