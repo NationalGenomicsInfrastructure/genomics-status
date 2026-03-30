@@ -1,8 +1,274 @@
+// Centralized field configuration - single source of truth for all field metadata
+const FIELD_CONFIG = {
+    lane: {
+        key: 'lane',
+        label: 'Lane',
+        backendKey: 'lane',
+        settingsPath: ['per_sample_fields', 'Lane'],
+        bulkEditable: false,
+        historyDisplayName: 'Lane',
+        topLevel: false
+    },
+    sample_id: {
+        key: 'sample_id',
+        label: 'Sample ID',
+        backendKey: 'sample_id',
+        settingsPath: ['per_sample_fields', 'Sample_ID'],
+        bulkEditable: false,
+        historyDisplayName: 'Sample ID',
+        topLevel: false
+    },
+    sample_name: {
+        key: 'sample_name',
+        label: 'Sample Name',
+        backendKey: 'sample_name',
+        settingsPath: ['per_sample_fields', 'Sample_Name'],
+        bulkEditable: false,
+        historyDisplayName: 'Sample Name',
+        topLevel: false
+    },
+    sample_project: {
+        key: 'sample_project',
+        label: 'Sample Project',
+        backendKey: 'sample_project',
+        settingsPath: ['per_sample_fields', 'Sample_Project'],
+        bulkEditable: true,
+        historyDisplayName: 'Sample Project',
+        topLevel: false
+    },
+    project_name: {
+        key: 'project_name',
+        label: 'Project Name',
+        backendKey: 'project_name',
+        settingsPath: ['_sample', 'project_name'],
+        bulkEditable: false,
+        historyDisplayName: 'Project Name',
+        topLevel: true
+    },
+    project_id: {
+        key: 'project_id',
+        label: 'Project ID',
+        backendKey: 'project_id',
+        settingsPath: ['_sample', 'project_id'],
+        bulkEditable: false,
+        historyDisplayName: 'Project ID',
+        topLevel: true
+    },
+    sample_ref: {
+        key: 'sample_ref',
+        label: 'Sample Ref',
+        backendKey: 'sample_ref',
+        settingsPath: ['other_details', 'sample_ref'],
+        bulkEditable: true,
+        historyDisplayName: 'Sample Ref',
+        topLevel: false
+    },
+    sample_type: {
+        key: 'sample_type',
+        label: 'Sample Type',
+        backendKey: 'sample_type',
+        settingsPath: ['other_details', 'sample_type'],
+        bulkEditable: false,
+        historyDisplayName: 'Sample Type',
+        topLevel: false
+    },
+    config_sources: {
+        key: 'config_sources',
+        label: 'Config Sources (Stage 1)',
+        backendKey: 'config_sources',
+        settingsPath: ['other_details', 'config_sources'],
+        bulkEditable: false,
+        historyDisplayName: 'Config Sources',
+        topLevel: false
+    },
+    index_1: {
+        key: 'index_1',
+        label: 'Index 1',
+        backendKey: 'index',
+        settingsPath: ['per_sample_fields', 'index'],
+        bulkEditable: false,
+        historyDisplayName: 'Index 1',
+        topLevel: false
+    },
+    index_2: {
+        key: 'index_2',
+        label: 'Index 2',
+        backendKey: 'index2',
+        settingsPath: ['per_sample_fields', 'index2'],
+        bulkEditable: false,
+        historyDisplayName: 'Index 2',
+        topLevel: false
+    },
+    index_length: {
+        key: 'index_length',
+        label: 'Index Length',
+        backendKey: 'index_length',
+        settingsPath: ['other_details', 'index_length'],
+        bulkEditable: false,
+        historyDisplayName: 'Index Length',
+        topLevel: false
+    },
+    umi_length: {
+        key: 'umi_length',
+        label: 'UMI Length',
+        backendKey: 'umi_length',
+        settingsPath: ['other_details', 'umi_length'],
+        bulkEditable: false,
+        historyDisplayName: 'UMI Length',
+        topLevel: false
+    },
+    umi_config: {
+        key: 'umi_config',
+        label: 'UMI Config',
+        backendKey: 'umi_config',
+        settingsPath: ['other_details', 'umi_config'],
+        bulkEditable: true,
+        historyDisplayName: 'UMI Config',
+        topLevel: false,
+        type: 'object'
+    },
+    named_index: {
+        key: 'named_index',
+        label: 'Named Index',
+        backendKey: 'named_index',
+        settingsPath: ['other_details', 'named_index'],
+        bulkEditable: false,
+        historyDisplayName: 'Named Index',
+        topLevel: false
+    },
+    recipe: {
+        key: 'recipe',
+        label: 'Recipe',
+        backendKey: 'recipe',
+        settingsPath: ['other_details', 'recipe'],
+        bulkEditable: true,
+        historyDisplayName: 'Recipe',
+        topLevel: false
+    },
+    operator: {
+        key: 'operator',
+        label: 'Operator',
+        backendKey: 'operator',
+        settingsPath: ['other_details', 'operator'],
+        bulkEditable: true,
+        historyDisplayName: 'Operator',
+        topLevel: false
+    },
+    description: {
+        key: 'description',
+        label: 'Description',
+        backendKey: 'description',
+        settingsPath: ['_sample', 'description'],
+        bulkEditable: true,
+        historyDisplayName: 'Description',
+        topLevel: true
+    },
+    control: {
+        key: 'control',
+        label: 'Control',
+        backendKey: 'control',
+        settingsPath: ['_sample', 'control'],
+        bulkEditable: true,
+        historyDisplayName: 'Control',
+        topLevel: true
+    },
+    mask_short_reads: {
+        key: 'mask_short_reads',
+        label: 'Mask Short Reads',
+        backendKey: 'mask_short_reads',
+        settingsPath: ['per_sample_fields', 'MaskShortReads'],
+        bulkEditable: true,
+        historyDisplayName: 'Mask Short Reads',
+        topLevel: false,
+        type: 'number'
+    },
+    minimum_trimmed_read_length: {
+        key: 'minimum_trimmed_read_length',
+        label: 'Min Trimmed Length',
+        backendKey: 'minimum_trimmed_read_length',
+        settingsPath: ['per_sample_fields', 'MinimumTrimmedReadLength'],
+        bulkEditable: true,
+        historyDisplayName: 'Minimum Trimmed Read Length',
+        topLevel: false,
+        type: 'number'
+    },
+    override_cycles: {
+        key: 'override_cycles',
+        label: 'Override Cycles',
+        backendKey: 'override_cycles',
+        settingsPath: ['per_sample_fields', 'OverrideCycles'],
+        bulkEditable: false,
+        historyDisplayName: 'Override Cycles',
+        topLevel: false
+    },
+    last_modified: {
+        key: 'last_modified',
+        label: 'Last Modified',
+        backendKey: 'last_modified',
+        settingsPath: ['_sample', 'last_modified'],
+        bulkEditable: false,
+        historyDisplayName: 'Last Modified',
+        topLevel: true
+    },
+    trim_umi: {
+        key: 'trim_umi',
+        label: 'Trim UMI',
+        backendKey: 'trim_umi',
+        settingsPath: ['raw_samplesheet_settings', 'TrimUMI'],
+        bulkEditable: true,
+        historyDisplayName: 'Trim UMI',
+        topLevel: false,
+        type: 'boolean'
+    },
+    create_fastq_for_index_reads: {
+        key: 'create_fastq_for_index_reads',
+        label: 'Create FASTQ for Index Reads',
+        backendKey: 'create_fastq_for_index_reads',
+        settingsPath: ['raw_samplesheet_settings', 'CreateFastqForIndexReads'],
+        bulkEditable: true,
+        historyDisplayName: 'Create FASTQ for Index Reads',
+        topLevel: false,
+        type: 'boolean'
+    },
+    barcode_mismatches_index1: {
+        key: 'barcode_mismatches_index1',
+        label: 'Barcode Mismatches Index 1',
+        backendKey: 'barcode_mismatches_index1',
+        settingsPath: ['raw_samplesheet_settings', 'BarcodeMismatchesIndex1'],
+        bulkEditable: true,
+        historyDisplayName: 'Barcode Mismatches Index 1',
+        topLevel: false,
+        type: 'number'
+    },
+    barcode_mismatches_index2: {
+        key: 'barcode_mismatches_index2',
+        label: 'Barcode Mismatches Index 2',
+        backendKey: 'barcode_mismatches_index2',
+        settingsPath: ['raw_samplesheet_settings', 'BarcodeMismatchesIndex2'],
+        bulkEditable: true,
+        historyDisplayName: 'Barcode Mismatches Index 2',
+        topLevel: false,
+        type: 'number'
+    }
+};
+
 const vDemuxSampleInfoEditor = {
     data() {
         const config = window.STATUS_CONFIG || {};
         const defaultVisibleColumns = ['sample_name', 'last_modified', 'sample_type', 'index_1', 'index_2', 'umi_config', 'recipe', 'override_cycles'];
+        
+        // Derive availableColumns from FIELD_CONFIG
+        const availableColumns = Object.values(FIELD_CONFIG)
+            .filter(f => !f.key.includes('trim_umi') && !f.key.includes('create_fastq') && !f.key.includes('barcode_mismatches'))
+            .map(f => ({ key: f.key, label: f.label }));
+        
+        // Derive bulkEditExcludedFields from FIELD_CONFIG
+        const bulkEditExcludedFields = Object.values(FIELD_CONFIG)
+            .filter(f => !f.bulkEditable)
+            .map(f => f.key);
+        
         return {
+            fieldConfig: FIELD_CONFIG,
             limsUrl: config.lims_url || '',
             flowcell_id: '',
             demux_data: null,
@@ -12,33 +278,10 @@ const vDemuxSampleInfoEditor = {
             saving: false,
             viewMode: 'calculated',  // 'uploaded', 'calculated', 'grouped_named_index'
             selectedVersion: null,
-            availableColumns: [
-                { key: 'lane', label: 'Lane' },
-                { key: 'sample_id', label: 'Sample ID' },
-                { key: 'sample_name', label: 'Sample Name' },
-                { key: 'sample_project', label: 'Sample Project' },
-                { key: 'project_name', label: 'Project Name' },
-                { key: 'project_id', label: 'Project ID' },
-                { key: 'sample_ref', label: 'Sample Ref' },
-                { key: 'sample_type', label: 'Sample Type' },
-                { key: 'config_sources', label: 'Config Sources (Stage 1)' },
-                { key: 'index_1', label: 'Index 1' },
-                { key: 'index_2', label: 'Index 2' },
-                { key: 'index_length', label: 'Index Length' },
-                { key: 'umi_length', label: 'UMI Length' },
-                { key: 'umi_config', label: 'UMI Config' },
-                { key: 'named_index', label: 'Named Index' },
-                { key: 'recipe', label: 'Recipe' },
-                { key: 'operator', label: 'Operator' },
-                { key: 'description', label: 'Description' },
-                { key: 'control', label: 'Control' },
-                { key: 'mask_short_reads', label: 'Mask Short Reads' },
-                { key: 'minimum_trimmed_read_length', label: 'Min Trimmed Length' },
-                { key: 'override_cycles', label: 'Override Cycles' },
-                { key: 'last_modified', label: 'Last Modified' }
-            ],
+            availableColumns: availableColumns,
             visibleColumns: defaultVisibleColumns,
             defaultVisibleColumns: defaultVisibleColumns,
+            bulkEditExcludedFields: bulkEditExcludedFields,
             showBulkEditModal: false,
             showUnifiedModal: false,
             unifiedModalTab: 'edit',  // 'edit', 'add', or 'bulk'
@@ -53,19 +296,6 @@ const vDemuxSampleInfoEditor = {
             addSampleTargetProject: '',
             addSampleTargetLanes: [],  // Multiple lanes (at least one required)
             addSampleProjectWarnings: [],  // Warnings about inconsistent values in project
-            // Fields excluded from bulk editing (sample-specific fields)
-            // All other fields can be bulk-edited / pre-filled from project samples
-            bulkEditExcludedFields: [
-                'sample_id',
-                'sample_name',
-                'index_1',
-                'index_2',
-                'named_index',
-                'override_cycles',  // Auto-calculated
-                'index_length',  // Auto-calculated
-                'sample_type',  // Auto-calculated from Stage 1
-                'config_sources'  // Auto-calculated from Stage 1
-            ],
             showEditModal: false,
             editModalSample: null,
             editModalLane: null,
@@ -158,42 +388,8 @@ const vDemuxSampleInfoEditor = {
                 result[lane] = [];
 
                 Object.entries(laneData.sample_rows).forEach(([uuid, sample]) => {
-                    // Get the latest settings version
-                    const settingsVersions = Object.keys(sample.settings).sort().reverse();
-                    const latestSettings = sample.settings[settingsVersions[0]];
-
-                    // Check if there's an edited version for this sample
-                    const editedSettings = this.editedData[lane]?.[uuid] || {};
-
-                    // Extract per_sample_fields and other_details from original settings
-                    const per_sample_fields = latestSettings.per_sample_fields || {};
-                    const other_details = latestSettings.other_details || {};
-
-                    result[lane].push({
-                        uuid: uuid,
-                        lane: per_sample_fields.Lane,
-                        sample_id: editedSettings.sample_id !== undefined ? editedSettings.sample_id : per_sample_fields.Sample_ID,
-                        sample_name: editedSettings.sample_name !== undefined ? editedSettings.sample_name : per_sample_fields.Sample_Name,
-                        sample_project: editedSettings.sample_project !== undefined ? editedSettings.sample_project : per_sample_fields.Sample_Project,
-                        project_name: sample.project_name,
-                        project_id: sample.project_id,
-                        last_modified: sample.last_modified,
-                        sample_ref: editedSettings.sample_ref !== undefined ? editedSettings.sample_ref : other_details.sample_ref,
-                        sample_type: other_details.sample_type,
-                        config_sources: other_details.config_sources,
-                        index_1: editedSettings.index_1 !== undefined ? editedSettings.index_1 : per_sample_fields.index,
-                        index_2: editedSettings.index_2 !== undefined ? editedSettings.index_2 : per_sample_fields.index2,
-                        index_length: other_details.index_length,
-                        umi_config: other_details.umi_config,
-                        named_index: editedSettings.named_index !== undefined ? editedSettings.named_index : other_details.named_index,
-                        recipe: editedSettings.recipe !== undefined ? editedSettings.recipe : other_details.recipe,
-                        operator: editedSettings.operator !== undefined ? editedSettings.operator : other_details.operator,
-                        description: editedSettings.description !== undefined ? editedSettings.description : sample.description,
-                        control: editedSettings.control !== undefined ? editedSettings.control : sample.control,
-                        mask_short_reads: per_sample_fields.MaskShortReads,
-                        minimum_trimmed_read_length: per_sample_fields.MinimumTrimmedReadLength,
-                        override_cycles: editedSettings.override_cycles !== undefined ? editedSettings.override_cycles : per_sample_fields.OverrideCycles
-                    });
+                    const latestSettings = this.getLatestSettings(sample);
+                    result[lane].push(this.buildSampleObject(lane, uuid, sample, latestSettings));
                 });
             });
 
@@ -207,48 +403,14 @@ const vDemuxSampleInfoEditor = {
                 result[lane] = {};
 
                 Object.entries(laneData.sample_rows).forEach(([uuid, sample]) => {
-                    // Get the latest settings version
-                    const settingsVersions = Object.keys(sample.settings).sort().reverse();
-                    const latestSettings = sample.settings[settingsVersions[0]];
-
-                    // Check if there's an edited version for this sample
-                    const editedSettings = this.editedData[lane]?.[uuid] || {};
-
-                    // Extract per_sample_fields and other_details from original settings
-                    const per_sample_fields = latestSettings.per_sample_fields || {};
-                    const other_details = latestSettings.other_details || {};
-
+                    const latestSettings = this.getLatestSettings(sample);
                     const projectName = sample.project_name || 'Unknown Project';
 
                     if (!result[lane][projectName]) {
                         result[lane][projectName] = [];
                     }
 
-                    result[lane][projectName].push({
-                        uuid: uuid,
-                        lane: per_sample_fields.Lane,
-                        sample_id: editedSettings.sample_id !== undefined ? editedSettings.sample_id : per_sample_fields.Sample_ID,
-                        sample_name: editedSettings.sample_name !== undefined ? editedSettings.sample_name : per_sample_fields.Sample_Name,
-                        sample_project: editedSettings.sample_project !== undefined ? editedSettings.sample_project : per_sample_fields.Sample_Project,
-                        project_name: sample.project_name,
-                        project_id: sample.project_id,
-                        last_modified: sample.last_modified,
-                        sample_ref: editedSettings.sample_ref !== undefined ? editedSettings.sample_ref : other_details.sample_ref,
-                        sample_type: other_details.sample_type,
-                        config_sources: other_details.config_sources,
-                        index_1: editedSettings.index_1 !== undefined ? editedSettings.index_1 : per_sample_fields.index,
-                        index_2: editedSettings.index_2 !== undefined ? editedSettings.index_2 : per_sample_fields.index2,
-                        index_length: other_details.index_length,
-                        umi_config: other_details.umi_config,
-                        named_index: editedSettings.named_index !== undefined ? editedSettings.named_index : other_details.named_index,
-                        recipe: editedSettings.recipe !== undefined ? editedSettings.recipe : other_details.recipe,
-                        operator: editedSettings.operator !== undefined ? editedSettings.operator : other_details.operator,
-                        description: editedSettings.description !== undefined ? editedSettings.description : sample.description,
-                        control: editedSettings.control !== undefined ? editedSettings.control : sample.control,
-                        mask_short_reads: per_sample_fields.MaskShortReads,
-                        minimum_trimmed_read_length: per_sample_fields.MinimumTrimmedReadLength,
-                        override_cycles: editedSettings.override_cycles !== undefined ? editedSettings.override_cycles : per_sample_fields.OverrideCycles
-                    });
+                    result[lane][projectName].push(this.buildSampleObject(lane, uuid, sample, latestSettings));
                 });
             });
 
@@ -262,19 +424,11 @@ const vDemuxSampleInfoEditor = {
                 result[lane] = {};
 
                 Object.entries(laneData.sample_rows).forEach(([uuid, sample]) => {
-                    // Get the latest settings version
-                    const settingsVersions = Object.keys(sample.settings).sort().reverse();
-                    const latestSettings = sample.settings[settingsVersions[0]];
-
-                    // Check if there's an edited version for this sample
-                    const editedSettings = this.editedData[lane]?.[uuid] || {};
-
-                    // Extract per_sample_fields and other_details from original settings
-                    const per_sample_fields = latestSettings.per_sample_fields || {};
-                    const other_details = latestSettings.other_details || {};
-
+                    const latestSettings = this.getLatestSettings(sample);
+                    const sampleObj = this.buildSampleObject(lane, uuid, sample, latestSettings);
+                    
                     const projectName = sample.project_name || 'Unknown Project';
-                    const namedIndex = (editedSettings.named_index !== undefined ? editedSettings.named_index : other_details.named_index) || 'No Named Index';
+                    const namedIndex = sampleObj.named_index || 'No Named Index';
 
                     if (!result[lane][projectName]) {
                         result[lane][projectName] = {};
@@ -287,31 +441,7 @@ const vDemuxSampleInfoEditor = {
                         result[lane][projectName][groupKey] = [];
                     }
 
-                    result[lane][projectName][groupKey].push({
-                        uuid: uuid,
-                        lane: per_sample_fields.Lane,
-                        sample_id: editedSettings.sample_id !== undefined ? editedSettings.sample_id : per_sample_fields.Sample_ID,
-                        sample_name: editedSettings.sample_name !== undefined ? editedSettings.sample_name : per_sample_fields.Sample_Name,
-                        sample_project: editedSettings.sample_project !== undefined ? editedSettings.sample_project : per_sample_fields.Sample_Project,
-                        project_name: sample.project_name,
-                        project_id: sample.project_id,
-                        last_modified: sample.last_modified,
-                        sample_ref: editedSettings.sample_ref !== undefined ? editedSettings.sample_ref : other_details.sample_ref,
-                        sample_type: other_details.sample_type,
-                        config_sources: other_details.config_sources,
-                        index_1: editedSettings.index_1 !== undefined ? editedSettings.index_1 : per_sample_fields.index,
-                        index_2: editedSettings.index_2 !== undefined ? editedSettings.index_2 : per_sample_fields.index2,
-                        index_length: other_details.index_length,
-                        umi_config: other_details.umi_config,
-                        named_index: editedSettings.named_index !== undefined ? editedSettings.named_index : other_details.named_index,
-                        recipe: editedSettings.recipe !== undefined ? editedSettings.recipe : other_details.recipe,
-                        operator: editedSettings.operator !== undefined ? editedSettings.operator : other_details.operator,
-                        description: editedSettings.description !== undefined ? editedSettings.description : sample.description,
-                        control: editedSettings.control !== undefined ? editedSettings.control : sample.control,
-                        mask_short_reads: per_sample_fields.MaskShortReads,
-                        minimum_trimmed_read_length: per_sample_fields.MinimumTrimmedReadLength,
-                        override_cycles: editedSettings.override_cycles !== undefined ? editedSettings.override_cycles : per_sample_fields.OverrideCycles
-                    });
+                    result[lane][projectName][groupKey].push(sampleObj);
                 });
             });
 
@@ -323,19 +453,11 @@ const vDemuxSampleInfoEditor = {
 
             Object.entries(this.calculatedLanes).forEach(([lane, laneData]) => {
                 Object.entries(laneData.sample_rows).forEach(([uuid, sample]) => {
-                    // Get the latest settings version
-                    const settingsVersions = Object.keys(sample.settings).sort().reverse();
-                    const latestSettings = sample.settings[settingsVersions[0]];
-
-                    // Check if there's an edited version for this sample
-                    const editedSettings = this.editedData[lane]?.[uuid] || {};
-
-                    // Extract per_sample_fields and other_details from original settings
-                    const per_sample_fields = latestSettings.per_sample_fields || {};
-                    const other_details = latestSettings.other_details || {};
-
+                    const latestSettings = this.getLatestSettings(sample);
+                    const sampleObj = this.buildSampleObject(lane, uuid, sample, latestSettings);
+                    
                     const projectName = sample.project_name || 'Unknown Project';
-                    const namedIndex = (editedSettings.named_index !== undefined ? editedSettings.named_index : other_details.named_index) || 'No Named Index';
+                    const namedIndex = sampleObj.named_index || 'No Named Index';
 
                     if (!result[projectName]) {
                         result[projectName] = {};
@@ -352,31 +474,7 @@ const vDemuxSampleInfoEditor = {
                         result[projectName][lane][groupKey] = [];
                     }
 
-                    result[projectName][lane][groupKey].push({
-                        uuid: uuid,
-                        lane: per_sample_fields.Lane,
-                        sample_id: editedSettings.sample_id !== undefined ? editedSettings.sample_id : per_sample_fields.Sample_ID,
-                        sample_name: editedSettings.sample_name !== undefined ? editedSettings.sample_name : per_sample_fields.Sample_Name,
-                        sample_project: editedSettings.sample_project !== undefined ? editedSettings.sample_project : per_sample_fields.Sample_Project,
-                        project_name: sample.project_name,
-                        project_id: sample.project_id,
-                        last_modified: sample.last_modified,
-                        sample_ref: editedSettings.sample_ref !== undefined ? editedSettings.sample_ref : other_details.sample_ref,
-                        sample_type: other_details.sample_type,
-                        config_sources: other_details.config_sources,
-                        index_1: editedSettings.index_1 !== undefined ? editedSettings.index_1 : per_sample_fields.index,
-                        index_2: editedSettings.index_2 !== undefined ? editedSettings.index_2 : per_sample_fields.index2,
-                        index_length: other_details.index_length,
-                        umi_config: other_details.umi_config,
-                        named_index: editedSettings.named_index !== undefined ? editedSettings.named_index : other_details.named_index,
-                        recipe: editedSettings.recipe !== undefined ? editedSettings.recipe : other_details.recipe,
-                        operator: editedSettings.operator !== undefined ? editedSettings.operator : other_details.operator,
-                        description: editedSettings.description !== undefined ? editedSettings.description : sample.description,
-                        control: editedSettings.control !== undefined ? editedSettings.control : sample.control,
-                        mask_short_reads: per_sample_fields.MaskShortReads,
-                        minimum_trimmed_read_length: per_sample_fields.MinimumTrimmedReadLength,
-                        override_cycles: editedSettings.override_cycles !== undefined ? editedSettings.override_cycles : per_sample_fields.OverrideCycles
-                    });
+                    result[projectName][lane][groupKey].push(sampleObj);
                 });
             });
 
@@ -599,6 +697,69 @@ const vDemuxSampleInfoEditor = {
         }
     },
     methods: {
+        // ===== Helper Methods for Sample Object Building (Refactoring #1) =====
+        
+        /**
+         * Get the latest settings for a sample
+         * @param {Object} sample - The sample object
+         * @returns {Object} The latest settings object
+         */
+        getLatestSettings(sample) {
+            if (!sample || !sample.settings) return {};
+            const settingsVersions = Object.keys(sample.settings).sort().reverse();
+            return sample.settings[settingsVersions[0]] || {};
+        },
+        
+        /**
+         * Build a complete sample object with all fields, merging original and edited data
+         * @param {string} lane - The lane number
+         * @param {string} uuid - The sample UUID
+         * @param {Object} sample - The raw sample object
+         * @param {Object} latestSettings - The latest settings for the sample
+         * @returns {Object} Complete sample object ready for display
+         */
+        buildSampleObject(lane, uuid, sample, latestSettings) {
+            const editedSettings = this.editedData[lane]?.[uuid] || {};
+            const per_sample_fields = latestSettings.per_sample_fields || {};
+            const other_details = latestSettings.other_details || {};
+            
+            // Helper to get value from either edited or original
+            const getValue = (editedKey, originalValue) => {
+                return editedSettings[editedKey] !== undefined 
+                    ? editedSettings[editedKey] 
+                    : originalValue;
+            };
+            
+            // Build the complete sample object
+            return {
+                uuid: uuid,
+                lane: per_sample_fields.Lane,
+                sample_id: getValue('sample_id', per_sample_fields.Sample_ID),
+                sample_name: getValue('sample_name', per_sample_fields.Sample_Name),
+                sample_project: getValue('sample_project', per_sample_fields.Sample_Project),
+                project_name: sample.project_name,
+                project_id: sample.project_id,
+                last_modified: sample.last_modified,
+                sample_ref: getValue('sample_ref', other_details.sample_ref),
+                sample_type: other_details.sample_type,
+                config_sources: other_details.config_sources,
+                index_1: getValue('index_1', per_sample_fields.index),
+                index_2: getValue('index_2', per_sample_fields.index2),
+                index_length: other_details.index_length,
+                umi_config: other_details.umi_config,
+                named_index: getValue('named_index', other_details.named_index),
+                recipe: getValue('recipe', other_details.recipe),
+                operator: getValue('operator', other_details.operator),
+                description: getValue('description', sample.description),
+                control: getValue('control', sample.control),
+                mask_short_reads: per_sample_fields.MaskShortReads,
+                minimum_trimmed_read_length: per_sample_fields.MinimumTrimmedReadLength,
+                override_cycles: getValue('override_cycles', per_sample_fields.OverrideCycles)
+            };
+        },
+        
+        // ===== End Helper Methods =====
+        
         fetchSamplePresets() {
             // Fetch sample classification presets from the API
             if (this.samplePresets) return; // Already loaded
@@ -1548,27 +1709,11 @@ const vDemuxSampleInfoEditor = {
             this.error_messages = [];
             this.saving = true;
 
-            // Map frontend field names to backend field names
-            const frontendToBackendFieldMap = {
-                'sample_id': 'sample_id',
-                'sample_name': 'sample_name',
-                'sample_project': 'sample_project',
-                'project_id': 'project_id',
-                'project_name': 'project_name',
-                'index_1': 'index',
-                'index_2': 'index2',
-                'sample_ref': 'sample_ref',
-                'named_index': 'named_index',
-                'recipe': 'recipe',
-                'operator': 'operator',
-                'override_cycles': 'override_cycles',
-                'trim_umi': 'trim_umi',
-                'create_fastq_for_index_reads': 'create_fastq_for_index_reads',
-                'barcode_mismatches_index1': 'barcode_mismatches_index1',
-                'barcode_mismatches_index2': 'barcode_mismatches_index2',
-                'control': 'control',
-                'description': 'description'
-            };
+            // Map frontend field names to backend field names using FIELD_CONFIG
+            const frontendToBackendFieldMap = Object.values(FIELD_CONFIG).reduce((map, fieldConfig) => {
+                map[fieldConfig.key] = fieldConfig.backendKey;
+                return map;
+            }, {});
 
             // Transform editedData to use backend field names
             const transformedEditedData = {};
@@ -1630,26 +1775,19 @@ const vDemuxSampleInfoEditor = {
             const history = {};
             const settingsVersions = Object.keys(sample.settings).sort(); // oldest first
 
-            // Field mappings: display name -> path in settings
-            const fieldPaths = {
-                'Sample ID': ['per_sample_fields', 'Sample_ID'],
-                'Sample Name': ['per_sample_fields', 'Sample_Name'],
-                'Sample Project': ['per_sample_fields', 'Sample_Project'],
-                'Index 1': ['per_sample_fields', 'index'],
-                'Index 2': ['per_sample_fields', 'index2'],
-                'Sample Ref': ['other_details', 'sample_ref'],
-                'Sample Type': ['other_details', 'sample_type'],
-                'Named Index': ['other_details', 'named_index'],
-                'Recipe': ['other_details', 'recipe'],
-                'Operator': ['other_details', 'operator'],
-                'Override Cycles': ['per_sample_fields', 'OverrideCycles'],
-                'Trim UMI': ['raw_samplesheet_settings', 'TrimUMI'],
-                'Create FASTQ for Index Reads': ['raw_samplesheet_settings', 'CreateFastqForIndexReads'],
-                'Barcode Mismatches Index 1': ['raw_samplesheet_settings', 'BarcodeMismatchesIndex1'],
-                'Barcode Mismatches Index 2': ['raw_samplesheet_settings', 'BarcodeMismatchesIndex2'],
-                'Control': ['_top', 'control'],
-                'Description': ['_top', 'description']
-            };
+            // Build field paths from FIELD_CONFIG
+            const fieldPaths = Object.values(FIELD_CONFIG)
+                .filter(f => f.historyDisplayName) // Only fields with history display
+                .reduce((map, fieldConfig) => {
+                    // Convert settingsPath to the format used by history tracking
+                    let path = [...fieldConfig.settingsPath];
+                    if (fieldConfig.topLevel) {
+                        // Top-level fields on sample object
+                        path = ['_sample', fieldConfig.settingsPath[1]];
+                    }
+                    map[fieldConfig.historyDisplayName] = path;
+                    return map;
+                }, {});
 
             // Track the history for each field
             Object.entries(fieldPaths).forEach(([displayName, path]) => {
@@ -1660,7 +1798,7 @@ const vDemuxSampleInfoEditor = {
                     const settings = sample.settings[timestamp];
                     let currentValue;
 
-                    if (path[0] === '_top') {
+                    if (path[0] === '_sample') {
                         // Top-level field on sample
                         currentValue = sample[path[1]];
                     } else {
