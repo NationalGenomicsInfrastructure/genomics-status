@@ -294,126 +294,6 @@ const UTILS = {
     }
 };
 /**
- * PresetSelector Component
- * 
- * Displays a dropdown selector for sample classification presets with an apply button.
- * Used in both Edit Sample and Add Sample tabs.
- * 
- * @component
- * @emits update:selectedPreset - Emitted when preset selection changes
- * @emits apply - Emitted when Apply Preset button is clicked
- */
-const PresetSelector = {
-    name: 'PresetSelector',
-    props: {
-        samplePresets: {
-            type: Object,
-            required: true,
-            validator: (value) => {
-                return value && typeof value === 'object';
-            }
-        },
-        selectedPreset: {
-            type: String,
-            default: ''
-        },
-        mode: {
-            type: String,
-            default: 'edit',
-            validator: (value) => ['edit', 'add'].includes(value)
-        }
-    },
-    computed: {
-        selectId() {
-            return `preset_select_${this.mode}`;
-        },
-        hasLibraryMethods() {
-            return this.samplePresets.library_methods && 
-                   Object.keys(this.samplePresets.library_methods).length > 0;
-        },
-        hasInstrumentTypes() {
-            return this.samplePresets.instrument_types && 
-                   Object.keys(this.samplePresets.instrument_types).length > 0;
-        }
-    },
-    methods: {
-        updatePreset(value) {
-            this.$emit('update:selectedPreset', value);
-        },
-        applyPreset() {
-            this.$emit('apply');
-        }
-    },
-    template: /*html*/`
-        <div class="card bg-light">
-            <div class="card-body">
-                <h6 class="card-title">Apply Sample Type Preset</h6>
-                <div class="row align-items-end">
-                    <div class="col-md-8">
-                        <label :for="selectId" class="form-label">
-                            Select a preset to auto-fill recipe and named index fields:
-                        </label>
-                        <select 
-                            class="form-select" 
-                            :id="selectId" 
-                            :value="selectedPreset"
-                            @input="updatePreset($event.target.value)">
-                            <option value="">-- Select Preset --</option>
-                            <optgroup label="Sample Patterns">
-                                <option 
-                                    v-for="(preset, key) in samplePresets.patterns" 
-                                    :key="key" 
-                                    :value="key">
-                                    {{ preset.description }} ({{ preset.sample_type }})
-                                </option>
-                            </optgroup>
-                            <optgroup 
-                                v-if="hasLibraryMethods" 
-                                label="Library Methods">
-                                <option 
-                                    v-for="(preset, key) in samplePresets.library_methods" 
-                                    :key="key" 
-                                    :value="key">
-                                    {{ preset.description }} ({{ preset.sample_type }})
-                                </option>
-                            </optgroup>
-                            <optgroup 
-                                v-if="hasInstrumentTypes" 
-                                label="Instrument Types">
-                                <template 
-                                    v-for="(instrument, instKey) in samplePresets.instrument_types" 
-                                    :key="instKey">
-                                    <option :value="'instrument:' + instKey">
-                                        {{ instrument.description }} - {{ instKey }}
-                                    </option>
-                                    <template v-if="instrument.run_modes">
-                                        <option 
-                                            v-for="(mode, modeKey) in instrument.run_modes" 
-                                            :key="instKey + ':' + modeKey" 
-                                            :value="'instrument:' + instKey + ':' + modeKey" 
-                                            class="ms-3">
-                                            &nbsp;&nbsp;↳ {{ modeKey }} - {{ mode.description }}
-                                        </option>
-                                    </template>
-                                </template>
-                            </optgroup>
-                        </select>
-                    </div>
-                    <div class="col-md-4">
-                        <button 
-                            type="button" 
-                            class="btn btn-primary" 
-                            @click="applyPreset" 
-                            :disabled="!selectedPreset">
-                            Apply Preset
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    `
-};
-/**
  * SampleFormFields Component
  * 
  * Shared form fields for editing or adding a sample.
@@ -738,7 +618,6 @@ const SampleFormFields = {
 const vDemuxSampleInfoEditor = {
     // Register child components
     components: {
-        PresetSelector,
         SampleFormFields
     },
     data() {
@@ -789,8 +668,6 @@ const vDemuxSampleInfoEditor = {
             editFormData: {},
             fieldHistory: {},
             showFieldHistory: false,
-            samplePresets: null,  // Sample classification presets
-            selectedPreset: '',  // Currently selected preset
             sampleClassificationConfig: null,  // Full sample classification configuration
             showConfigModal: false,
             configModalSources: [],
@@ -1335,17 +1212,6 @@ const vDemuxSampleInfoEditor = {
             };
         },
         // ===== End Template Helper Methods =====
-        fetchSamplePresets() {
-            // Fetch sample classification presets from the API
-            if (this.samplePresets) return; // Already loaded
-            axios.get('/api/v1/sample_classification_presets')
-                .then(response => {
-                    this.samplePresets = response.data;
-                })
-                .catch(error => {
-                    console.error('Failed to load sample presets:', error);
-                });
-        },
         fetchSampleClassificationConfig() {
             // Fetch full sample classification configuration from the API
             if (this.sampleClassificationConfig) return; // Already loaded
@@ -1889,48 +1755,6 @@ const vDemuxSampleInfoEditor = {
             }
             return source;
         },
-        applyPreset() {
-            // Apply selected preset to the form
-            if (!this.selectedPreset || !this.samplePresets) return;
-            let preset = null;
-            // Check if it's an instrument type preset (format: "instrument:Type" or "instrument:Type:Mode")
-            if (this.selectedPreset.startsWith('instrument:')) {
-                const parts = this.selectedPreset.split(':');
-                const instrumentKey = parts[1];
-                const runModeKey = parts[2]; // May be undefined
-                const instrument = this.samplePresets.instrument_types[instrumentKey];
-                if (instrument) {
-                    if (runModeKey && instrument.run_modes && instrument.run_modes[runModeKey]) {
-                        // Use run mode preset
-                        preset = instrument.run_modes[runModeKey];
-                    } else {
-                        // Use instrument type preset
-                        preset = instrument;
-                    }
-                }
-            } else {
-                // Look for preset in patterns first, then library methods
-                preset = this.samplePresets.patterns[this.selectedPreset] ||
-                    this.samplePresets.library_methods[this.selectedPreset];
-            }
-            if (preset) {
-                // Update recipe based on index_length if available
-                if (preset.index_length && Array.isArray(preset.index_length)) {
-                    const [i7, i5] = preset.index_length;
-                    if (i7 > 0 && i5 > 0) {
-                        this.editFormData.recipe = `${i7}-${i5}`;
-                    } else if (i7 > 0) {
-                        this.editFormData.recipe = `${i7}`;
-                    }
-                }
-                // Update named_indices if available
-                if (preset.named_indices) {
-                    this.editFormData.named_index = preset.named_indices;
-                }
-                // Note: We don't set index_1/index_2 as those are specific to each sample
-                // Note: UMI config and BCLConvert settings are applied by the backend based on classification
-            }
-        },
         fetchDemuxInfo(updateHistory = true) {
             // Clear previous errors
             this.error_messages = [];
@@ -2342,9 +2166,6 @@ const vDemuxSampleInfoEditor = {
         },
         openEditModalForNewSample(lane = null, project = null) {
             // Open edit modal for a new sample
-            // Fetch presets when opening the modal for a new sample
-            this.fetchSamplePresets();
-            this.selectedPreset = '';  // Reset preset selection
             // Initialize add sample selections based on what was provided
             if (lane && project) {
                 // Both provided (from specific context)
@@ -3484,17 +3305,6 @@ const vDemuxSampleInfoEditor = {
                                             </div>
                                         </div>
                                     </div>
-                                    <!-- Preset Selector (only for new samples) -->
-                                    <div v-if="editModalIsNew && samplePresets" class="row mb-3">
-                                        <div class="col-12">
-                                            <PresetSelector
-                                                :sample-presets="samplePresets"
-                                                :selected-preset="selectedPreset"
-                                                @update:selectedPreset="selectedPreset = $event"
-                                                @apply="applyPreset"
-                                                mode="edit" />
-                                        </div>
-                                    </div>
                                     <!-- Sample Form Fields -->
                                     <SampleFormFields
                                         v-model="editFormData"
@@ -3543,17 +3353,6 @@ const vDemuxSampleInfoEditor = {
                                                         <small class="form-text text-muted">Optional: select if sample belongs to a project</small>
                                                     </div>
                                                 </div>
-                                            </div>
-                                        </div>
-                                        <!-- Preset Selector (only for new samples) -->
-                                        <div v-if="editModalIsNew && samplePresets" class="row mb-3">
-                                            <div class="col-12">
-                                                <PresetSelector
-                                                    :sample-presets="samplePresets"
-                                                    :selected-preset="selectedPreset"
-                                                    @update:selectedPreset="selectedPreset = $event"
-                                                    @apply="applyPreset"
-                                                    mode="add" />
                                             </div>
                                         </div>
                                         <!-- Sample form fields (same as edit, but for new sample) -->
