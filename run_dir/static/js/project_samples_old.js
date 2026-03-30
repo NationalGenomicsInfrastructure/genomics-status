@@ -544,6 +544,14 @@ function load_all_udfs(){
           safeobj(key).html(auto_format(value));
         }
       }
+      else if (prettify(key) == 'nda' || prettify(key) == 'mta') {
+        if (value && value.toLowerCase().includes('yes')) {
+          safeobj(key).html('<span class="badge bg-danger sentenceCase">'+value+'</span> ');
+        }
+        else {
+          safeobj(key).html('<span class="badge bg-success sentenceCase">'+value+'</span> ');
+        }
+      }
       // Everything else
       else {
 			  if(prettyobj(key).length > 0){
