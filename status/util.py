@@ -221,7 +221,7 @@ class BaseHandler(tornado.web.RequestHandler):
     def get_user_details(app, user_email):
         user_details = {}
         if user_email == "Testing User!":
-            user_email = app.settings.get("username", None) + "@scilifelab.se"
+            user_email = app.settings.get("couch_username", None) + "@scilifelab.se"
             user_details = {
                 "userpreset": {"Hardcoded One": {}}
             }  # Just to show something locally
