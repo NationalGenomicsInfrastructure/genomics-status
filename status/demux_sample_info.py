@@ -1177,7 +1177,7 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                         },
                     }
 
-                    # Calculate and store Stage 2 samplesheet settings (without custom configs initially)
+                    # Calculate and store Stage 2 samplesheet settings
                     settings_entry = calculated_lanes[lane]["sample_rows"][sample_uuid][
                         "settings"
                     ][timestamp]
@@ -1185,8 +1185,6 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                         bcl_convert_settings,
                         settings_entry["other_details"],
                         settings_entry["per_sample_fields"],
-                        custom_configs=None,
-                        lane=lane,
                     )
                     settings_entry["samplesheet_settings"] = samplesheet_settings
 
@@ -1197,8 +1195,6 @@ class DemuxSampleInfoDataHandler(SafeHandler):
         bcl_settings,
         other_details,
         per_sample_fields,
-        custom_configs=None,
-        lane=None,
     ):
         """Calculate the final samplesheet settings for a sample by applying Stage 2 rules.
 
@@ -1209,8 +1205,6 @@ class DemuxSampleInfoDataHandler(SafeHandler):
             bcl_settings: Dict with raw_samplesheet_settings from Stage 1
             other_details: Dict with other_details (sample_type, umi_config, etc.)
             per_sample_fields: Dict with per-sample fields (Sample_Project, etc.)
-            custom_configs: Optional list of custom config dicts
-            lane: Lane number (str) for custom config lane targeting
 
         Returns:
             dict: Final BCLConvert settings after Stage 2 rules (filtered, no EXCLUDE/None)
@@ -1240,33 +1234,6 @@ class DemuxSampleInfoDataHandler(SafeHandler):
             )
             bcl_settings = rule_settings["raw_samplesheet_settings"]
 
-        # STAGE 2: Apply custom config samplesheet_generation_rules
-        if custom_configs:
-            sample_project = per_sample_fields.get("Sample_Project")
-            for cc in custom_configs:
-                if not cc.get("samplesheet_generation_rules"):
-                    continue
-                cc_target_type = cc.get("target_type", "project")
-                if cc_target_type == "project":
-                    should_apply = sample_project == cc.get("target_project")
-                elif cc_target_type == "lane":
-                    should_apply = lane == cc.get("target_lane")
-                elif cc_target_type == "project_lane":
-                    should_apply = sample_project == cc.get(
-                        "target_project"
-                    ) and lane == cc.get("target_lane")
-                else:
-                    should_apply = False
-
-                if should_apply:
-                    rule_settings = {"raw_samplesheet_settings": bcl_settings}
-                    self._apply_conditional_rules(
-                        rule_settings,
-                        cc["samplesheet_generation_rules"],
-                        samplesheet_sample_data,
-                    )
-                    bcl_settings = rule_settings["raw_samplesheet_settings"]
-
         # Filter out None and EXCLUDE values — they must not appear in samplesheets
         bcl_settings_filtered = {
             k: v for k, v in bcl_settings.items() if v is not None and v != "EXCLUDE"
@@ -1275,16 +1242,15 @@ class DemuxSampleInfoDataHandler(SafeHandler):
         return bcl_settings_filtered
 
     def _recalculate_all_samplesheet_settings(
-        self, calculated_lanes, custom_configs=None
+        self, calculated_lanes
     ):
         """Recalculate samplesheet_settings for all samples in all lanes.
 
-        This should be called whenever custom configs change or when the document is updated,
+        This should be called when the document is updated,
         to ensure the stored samplesheet_settings reflect the current Stage 2 rules.
 
         Args:
             calculated_lanes: Dictionary of calculated lanes with sample data
-            custom_configs: Optional list of custom config dicts
 
         Returns:
             None (modifies calculated_lanes in place)
@@ -1299,33 +1265,29 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                 latest_settings_key = settings_versions[0]
                 latest_settings = sample["settings"][latest_settings_key]
 
-                # Recalculate samplesheet_settings with current custom configs
+                # Recalculate samplesheet_settings
                 samplesheet_settings = self._calculate_samplesheet_settings(
                     latest_settings.get("raw_samplesheet_settings", {}),
                     latest_settings.get("other_details", {}),
                     latest_settings.get("per_sample_fields", {}),
-                    custom_configs=custom_configs,
-                    lane=lane,
                 )
 
                 # Update the stored samplesheet_settings
                 latest_settings["samplesheet_settings"] = samplesheet_settings
 
     def _generate_samplesheets(
-        self, flowcell_id, calculated_lanes, metadata, custom_configs=None
+        self, flowcell_id, calculated_lanes, metadata
     ):
         """Generate Illumina v2 samplesheets grouped by lane and BCLConvert settings.
 
         Stage 3: Samplesheet Assembly - Groups samples by their samplesheet_settings
-        and creates final samplesheet structures. The samplesheet_settings (Stage 2 output)
+        and creates final samplesheet structures. The samplesheet_settings (Stage 2 output
         are used as input but never mutated.
 
         Args:
             flowcell_id: Flowcell identifier
             calculated_lanes: Dictionary of calculated lanes with sample data
             metadata: Metadata dictionary with run information
-            custom_configs: Optional list of custom config dicts that may contain
-                samplesheet_generation_rules for Stage 2 overrides
 
         Returns:
             list: List of samplesheet dictionaries as structured JSON
@@ -1338,6 +1300,10 @@ class DemuxSampleInfoDataHandler(SafeHandler):
             settings_groups = {}
 
             for sample_uuid, sample in lane_data["sample_rows"].items():
+                # Skip deleted samples - they should not appear in samplesheets
+                if sample.get("deleted", False):
+                    continue
+
                 # Get the latest settings version
                 settings_versions = sorted(sample["settings"].keys(), reverse=True)
                 if not settings_versions:
@@ -1350,8 +1316,6 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                     latest_settings.get("raw_samplesheet_settings", {}),
                     latest_settings.get("other_details", {}),
                     latest_settings.get("per_sample_fields", {}),
-                    custom_configs=custom_configs,
-                    lane=lane,
                 )
 
                 settings_key = json.dumps(bcl_settings_filtered, sort_keys=True)
@@ -1903,13 +1867,12 @@ class DemuxSampleInfoDataHandler(SafeHandler):
             # Regenerate samplesheets after updates, applying Stage 2 rules then Stage 3 assembly
             calculated_lanes = document.get("calculated", {}).get("lanes", {})
             metadata = document.get("metadata", {})
-            custom_configs = document.get("custom_configs", [])
 
-            # Recalculate samplesheet_settings for all samples with current custom configs
-            self._recalculate_all_samplesheet_settings(calculated_lanes, custom_configs)
+            # Recalculate samplesheet_settings for all samples
+            self._recalculate_all_samplesheet_settings(calculated_lanes)
 
             samplesheets = self._generate_samplesheets(
-                flowcell_id, calculated_lanes, metadata, custom_configs
+                flowcell_id, calculated_lanes, metadata
             )
             document["samplesheets"] = samplesheets
 
@@ -1956,6 +1919,178 @@ class DemuxSampleInfoDataHandler(SafeHandler):
             # Validation errors (e.g., invalid raw_samplesheet_settings values)
             self.set_status(400)
             self.write(json.dumps({"error": f"Validation error: {str(e)}"}))
+        except Exception as e:
+            self.set_status(500)
+            self.write(json.dumps({"error": f"Internal server error: {str(e)}"}))
+
+
+class SampleDeleteHandler(DemuxSampleInfoDataHandler):
+    """Handles sample deletion with traceability."""
+
+    def delete(self, flowcell_id, lane, sample_uuid):
+        """Mark a sample as deleted while maintaining version history.
+        
+        The sample is not actually removed from the database, but marked as deleted
+        and will not appear in generated samplesheets.
+        
+        Args:
+            flowcell_id: The flowcell identifier
+            lane: The lane number
+            sample_uuid: The UUID of the sample to delete
+        """
+        try:
+            # Fetch the existing document
+            try:
+                view_result = self.application.cloudant.post_view(
+                    db="demux_sample_info",
+                    ddoc="info",
+                    view="flowcell_id",
+                    key=flowcell_id,
+                ).get_result()
+
+                existing_rows = view_result.get("rows", [])
+
+                if not existing_rows:
+                    self.set_status(404)
+                    self.write(
+                        json.dumps(
+                            {
+                                "error": f"No demux sample info found for flowcell {flowcell_id}"
+                            }
+                        )
+                    )
+                    return
+
+                # Get the document
+                doc_id = existing_rows[0]["id"]
+                document = self.application.cloudant.get_document(
+                    db="demux_sample_info", doc_id=doc_id
+                ).get_result()
+
+            except Exception as db_error:
+                self.set_status(500)
+                self.write(
+                    json.dumps(
+                        {"error": f"Database error fetching document: {str(db_error)}"}
+                    )
+                )
+                return
+
+            # Verify the lane and sample exist
+            lane_key = str(lane)
+            if lane_key not in document.get("calculated", {}).get("lanes", {}):
+                self.set_status(404)
+                self.write(
+                    json.dumps({"error": f"Lane {lane} not found in flowcell {flowcell_id}"})
+                )
+                return
+
+            lane_data = document["calculated"]["lanes"][lane_key]
+            if sample_uuid not in lane_data.get("sample_rows", {}):
+                self.set_status(404)
+                self.write(
+                    json.dumps(
+                        {"error": f"Sample {sample_uuid} not found in lane {lane}"}
+                    )
+                )
+                return
+
+            sample_row = lane_data["sample_rows"][sample_uuid]
+
+            # Check if sample is already deleted
+            if sample_row.get("deleted", False):
+                self.set_status(400)
+                self.write(
+                    json.dumps(
+                        {"error": "Sample is already deleted"}
+                    )
+                )
+                return
+
+            # Get sample ID for logging
+            settings_versions = sorted(sample_row.get("settings", {}).keys(), reverse=True)
+            sample_id = "Unknown"
+            if settings_versions:
+                latest_settings = sample_row["settings"][settings_versions[0]]
+                sample_id = latest_settings.get("per_sample_fields", {}).get("Sample_ID", "Unknown")
+
+            # Create timestamp for this deletion
+            timestamp = datetime.datetime.now(datetime.timezone.utc).isoformat(
+                timespec="milliseconds"
+            )
+
+            # Mark the sample as deleted
+            sample_row["deleted"] = True
+            sample_row["deleted_at"] = timestamp
+            sample_row["deleted_by"] = (
+                self.get_current_user().email if self.get_current_user() else None
+            )
+            sample_row["last_modified"] = timestamp
+
+            # Update version_history
+            if "version_history" not in document["calculated"]:
+                document["calculated"]["version_history"] = {}
+
+            document["calculated"]["version_history"][timestamp] = {
+                "generated_by": self.get_current_user().email
+                if self.get_current_user()
+                else None,
+                "autogenerated": False,
+                "comment": f"Deleted sample: {sample_id} (Lane {lane}, UUID: {sample_uuid})",
+                "auto_run": False,
+            }
+
+            # Regenerate samplesheets without the deleted sample
+            calculated_lanes = document.get("calculated", {}).get("lanes", {})
+            metadata = document.get("metadata", {})
+
+            samplesheets = self._generate_samplesheets(
+                flowcell_id, calculated_lanes, metadata
+            )
+            document["samplesheets"] = samplesheets
+
+            # Save the updated document back to the database
+            try:
+                response = self.application.cloudant.post_document(
+                    db="demux_sample_info", document=document
+                ).get_result()
+
+                if not response.get("ok"):
+                    self.set_status(500)
+                    self.write(
+                        json.dumps(
+                            {
+                                "error": "Failed to update document in database",
+                                "response": response,
+                            }
+                        )
+                    )
+                    return
+
+                # Fetch the updated document to return to the client
+                updated_doc = self.application.cloudant.get_document(
+                    db="demux_sample_info", doc_id=doc_id
+                ).get_result()
+
+                # Remove CouchDB-specific fields
+                if "_id" in updated_doc:
+                    del updated_doc["_id"]
+                if "_rev" in updated_doc:
+                    del updated_doc["_rev"]
+
+                self.set_status(200)
+                self.set_header("Content-type", "application/json")
+                self.write(json.dumps(updated_doc))
+
+            except Exception as db_error:
+                self.set_status(500)
+                self.write(
+                    json.dumps(
+                        {"error": f"Database error saving document: {str(db_error)}"}
+                    )
+                )
+                return
+
         except Exception as e:
             self.set_status(500)
             self.write(json.dumps({"error": f"Internal server error: {str(e)}"}))
@@ -2076,279 +2211,3 @@ class SampleClassificationConfigHandler(SafeHandler):
         except Exception as e:
             self.set_status(500)
             self.write(json.dumps({"error": f"Failed to load configuration: {str(e)}"}))
-
-
-class CustomConfigHandler(DemuxSampleInfoDataHandler):
-    """Handles custom configurations for specific samples."""
-
-    def post(self, flowcell_id, config_index=None):
-        """Add or update a custom configuration for a flowcell."""
-        # Parse request body
-        try:
-            body = json.loads(self.request.body)
-        except json.JSONDecodeError as e:
-            self.set_status(400)
-            self.write(json.dumps({"error": f"Invalid JSON in request body: {str(e)}"}))
-            return
-
-        custom_config = body.get("custom_config")
-
-        if not custom_config:
-            self.set_status(400)
-            self.write(json.dumps({"error": "Missing custom_config in request body"}))
-            return
-
-        # Validate required fields
-        if not custom_config.get("name"):
-            self.set_status(400)
-            self.write(json.dumps({"error": "Custom config must have a name"}))
-            return
-
-        # target_project is only required for 'project' and 'project_lane' types
-        # For 'lane' type, target_project is optional (applies to all projects in that lane)
-        target_type = custom_config.get("target_type", "project")
-        if target_type in ["project", "project_lane"] and not custom_config.get(
-            "target_project"
-        ):
-            self.set_status(400)
-            self.write(
-                json.dumps(
-                    {
-                        "error": f"Custom config with target_type '{target_type}' must have a target_project"
-                    }
-                )
-            )
-            return
-
-        if not custom_config.get("raw_samplesheet_settings") and not custom_config.get(
-            "samplesheet_generation_rules"
-        ):
-            self.set_status(400)
-            self.write(
-                json.dumps(
-                    {
-                        "error": "Custom config must have raw_samplesheet_settings or samplesheet_generation_rules"
-                    }
-                )
-            )
-            return
-
-        # Stage 1 (raw_samplesheet_settings) must not use EXCLUDE — that belongs to Stage 2
-        for key, value in (custom_config.get("raw_samplesheet_settings") or {}).items():
-            if value == "EXCLUDE":
-                self.set_status(400)
-                self.write(
-                    json.dumps(
-                        {
-                            "error": (
-                                f"raw_samplesheet_settings cannot use 'EXCLUDE' values (found on '{key}'). "
-                                "To exclude a setting from samplesheets, use samplesheet_generation_rules instead."
-                            )
-                        }
-                    )
-                )
-                return
-
-        # Fetch the existing document
-        view_result = self.application.cloudant.post_view(
-            db="demux_sample_info",
-            ddoc="info",
-            view="flowcell_id",
-            key=flowcell_id,
-        ).get_result()
-
-        existing_rows = view_result.get("rows", [])
-
-        if not existing_rows:
-            self.set_status(404)
-            self.write(
-                json.dumps(
-                    {"error": f"No demux sample info found for flowcell {flowcell_id}"}
-                )
-            )
-            return
-
-        # Get the document
-        doc_id = existing_rows[0]["id"]
-        document = self.application.cloudant.get_document(
-            db="demux_sample_info", doc_id=doc_id
-        ).get_result()
-
-        # Initialize custom_configs if it doesn't exist
-        if "custom_configs" not in document:
-            document["custom_configs"] = []
-
-        # Check if we're editing an existing config or creating a new one
-        edit_mode = custom_config.get("edit_mode", False)
-        edit_index = custom_config.get("edit_index")
-
-        # Remove edit_mode and edit_index from the config before saving
-        custom_config.pop("edit_mode", None)
-        custom_config.pop("edit_index", None)
-
-        # Always set auto_run to False for custom configs
-        custom_config["auto_run"] = False
-
-        if edit_mode and edit_index is not None:
-            # Edit mode - update existing config
-            if 0 <= edit_index < len(document["custom_configs"]):
-                # Preserve original created_at and created_by
-                original_config = document["custom_configs"][edit_index]
-                custom_config["created_at"] = original_config.get("created_at")
-                custom_config["created_by"] = original_config.get("created_by")
-                # Add updated timestamp
-                custom_config["updated_at"] = datetime.datetime.now(
-                    datetime.timezone.utc
-                ).isoformat(timespec="milliseconds")
-                custom_config["updated_by"] = (
-                    self.get_current_user().email if self.get_current_user() else None
-                )
-                # Replace the config at the specified index
-                document["custom_configs"][edit_index] = custom_config
-            else:
-                self.set_status(400)
-                self.write(json.dumps({"error": "Invalid config index"}))
-                return
-        else:
-            # Create mode - add new config
-            custom_config["created_at"] = datetime.datetime.now(
-                datetime.timezone.utc
-            ).isoformat(timespec="milliseconds")
-            custom_config["created_by"] = (
-                self.get_current_user().email if self.get_current_user() else None
-            )
-            # Append the custom config
-            document["custom_configs"].append(custom_config)
-
-        # Create timestamp for the new version (same for all affected samples)
-        timestamp = datetime.datetime.now(datetime.timezone.utc).isoformat(
-            timespec="milliseconds"
-        )
-
-        # Re-apply custom configs to all matching samples
-        calculated_lanes = document.get("calculated", {}).get("lanes", {})
-
-        for lane, lane_data in calculated_lanes.items():
-            for sample_uuid, sample_row in lane_data["sample_rows"].items():
-                # Get the latest settings
-                settings_versions = sorted(sample_row["settings"].keys(), reverse=True)
-                if not settings_versions:
-                    continue
-
-                latest_settings = sample_row["settings"][settings_versions[0]]
-
-                # Check if this sample matches the custom config target
-                sample_project = latest_settings.get("per_sample_fields", {}).get(
-                    "Sample_Project"
-                )
-                should_apply = False
-
-                if custom_config.get("target_type") == "project":
-                    # Apply to all lanes in project
-                    should_apply = sample_project == custom_config.get("target_project")
-                elif custom_config.get("target_type") == "lane":
-                    # Apply to all projects in lane (target_project is optional)
-                    should_apply = lane == custom_config.get("target_lane")
-                elif custom_config.get("target_type") == "project_lane":
-                    # Apply to specific project + lane
-                    should_apply = sample_project == custom_config.get(
-                        "target_project"
-                    ) and lane == custom_config.get("target_lane")
-
-                if should_apply and custom_config.get("raw_samplesheet_settings"):
-                    # Stage 1: apply raw_samplesheet_settings overrides to the calculated data.
-                    # Create a deep copy of the latest settings for the new version.
-                    new_settings = copy.deepcopy(latest_settings)
-
-                    bcl_settings = new_settings.get("raw_samplesheet_settings", {})
-                    for key, value in custom_config["raw_samplesheet_settings"].items():
-                        bcl_settings[key] = value
-                    new_settings["raw_samplesheet_settings"] = bcl_settings
-
-                    # Add custom config to config_sources
-                    config_sources = (
-                        new_settings.get("other_details", {})
-                        .get("config_sources", [])
-                        .copy()
-                    )  # Copy list to avoid mutation
-                    custom_config_source = f"custom_config.{custom_config['name']}"
-                    if custom_config_source not in config_sources:
-                        config_sources.append(custom_config_source)
-                        if "other_details" not in new_settings:
-                            new_settings["other_details"] = {}
-                        new_settings["other_details"]["config_sources"] = config_sources
-
-                    # Add the new settings version with the timestamp
-                    sample_row["settings"][timestamp] = new_settings
-
-                    # Update last_modified
-                    sample_row["last_modified"] = timestamp
-                # samplesheet_generation_rules are stored in the custom_configs array
-                # and applied at samplesheet generation time (Stage 2) — no stored version needed.
-
-        # Update version_history
-        if "version_history" not in document["calculated"]:
-            document["calculated"]["version_history"] = {}
-
-        document["calculated"]["version_history"][timestamp] = {
-            "generated_by": self.get_current_user().email
-            if self.get_current_user()
-            else None,
-            "autogenerated": False,
-            "comment": f"Applied custom config: {custom_config['name']}",
-            "auto_run": False,
-        }
-
-        # Regenerate samplesheets — pass the full custom_configs list so that
-        # samplesheet_generation_rules from any config are applied (Stage 2 then Stage 3).
-        metadata = document.get("metadata", {})
-        all_custom_configs = document.get("custom_configs", [])
-
-        # Recalculate samplesheet_settings for all samples with current custom configs
-        self._recalculate_all_samplesheet_settings(calculated_lanes, all_custom_configs)
-
-        samplesheets = self._generate_samplesheets(
-            flowcell_id, calculated_lanes, metadata, all_custom_configs
-        )
-        document["samplesheets"] = samplesheets
-
-        # Save the updated document
-        response = self.application.cloudant.post_document(
-            db="demux_sample_info", document=document
-        ).get_result()
-
-        if not response.get("ok"):
-            self.set_status(500)
-            self.write(
-                json.dumps(
-                    {
-                        "error": "Failed to update document in database",
-                        "response": response,
-                    }
-                )
-            )
-            return
-
-        # Fetch the updated document to return to the client
-        updated_doc = self.application.cloudant.get_document(
-            db="demux_sample_info", doc_id=doc_id
-        ).get_result()
-
-        self.set_status(200)
-        self.set_header("Content-type", "application/json")
-        self.write(json.dumps(updated_doc))
-
-    def delete(self, flowcell_id, config_index_str):
-        """Deletion of custom configurations is not allowed to maintain traceability."""
-        self.set_status(405)  # Method Not Allowed
-        self.set_header("Content-type", "application/json")
-        self.write(
-            json.dumps(
-                {
-                    "error": "Deletion of custom configurations is not allowed",
-                    "reason": "To maintain complete traceability of all configuration changes, "
-                    "custom configurations cannot be deleted. They remain in the version history. "
-                    "If you need to change a configuration, please edit it instead.",
-                }
-            )
-        )

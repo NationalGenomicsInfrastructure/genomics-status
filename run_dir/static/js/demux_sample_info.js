@@ -16,7 +16,17 @@ const FIELD_CONFIG = {
         settingsPath: ['per_sample_fields', 'Sample_ID'],
         bulkEditable: false,
         historyDisplayName: 'Sample ID',
-        topLevel: false
+        topLevel: false,
+        formField: {
+            inputType: 'text',
+            showInForm: true,
+            order: 1,
+            columnWidth: 6,
+            helpText: {
+                add: 'Replace XXXX with a 3-4 digit number (e.g., 001 or 1001)',
+                edit: null
+            }
+        }
     },
     sample_name: {
         key: 'sample_name',
@@ -25,7 +35,17 @@ const FIELD_CONFIG = {
         settingsPath: ['per_sample_fields', 'Sample_Name'],
         bulkEditable: false,
         historyDisplayName: 'Sample Name',
-        topLevel: false
+        topLevel: false,
+        formField: {
+            inputType: 'text',
+            showInForm: true,
+            order: 2,
+            columnWidth: 6,
+            helpText: {
+                add: 'Replace XXXX with a 3-4 digit number (e.g., 001 or 1001)',
+                edit: null
+            }
+        }
     },
     sample_project: {
         key: 'sample_project',
@@ -34,25 +54,44 @@ const FIELD_CONFIG = {
         settingsPath: ['per_sample_fields', 'Sample_Project'],
         bulkEditable: true,
         historyDisplayName: 'Sample Project',
-        topLevel: false
+        topLevel: false,
+        formField: {
+            inputType: 'text',
+            showInForm: true,
+            order: 3,
+            columnWidth: 6,
+            readonly: true
+        }
     },
     project_name: {
         key: 'project_name',
         label: 'Project Name',
         backendKey: 'project_name',
         settingsPath: ['_sample', 'project_name'],
-        bulkEditable: false,
+        bulkEditable: true,
         historyDisplayName: 'Project Name',
-        topLevel: true
+        topLevel: true,
+        formField: {
+            inputType: 'text',
+            showInForm: true,
+            order: 3.1,
+            columnWidth: 6
+        }
     },
     project_id: {
         key: 'project_id',
         label: 'Project ID',
         backendKey: 'project_id',
         settingsPath: ['_sample', 'project_id'],
-        bulkEditable: false,
+        bulkEditable: true,
         historyDisplayName: 'Project ID',
-        topLevel: true
+        topLevel: true,
+        formField: {
+            inputType: 'text',
+            showInForm: true,
+            order: 3.2,
+            columnWidth: 6
+        }
     },
     sample_ref: {
         key: 'sample_ref',
@@ -61,14 +100,20 @@ const FIELD_CONFIG = {
         settingsPath: ['other_details', 'sample_ref'],
         bulkEditable: true,
         historyDisplayName: 'Sample Ref',
-        topLevel: false
+        topLevel: false,
+        formField: {
+            inputType: 'text',
+            showInForm: true,
+            order: 4,
+            columnWidth: 6
+        }
     },
     sample_type: {
         key: 'sample_type',
         label: 'Sample Type',
         backendKey: 'sample_type',
         settingsPath: ['other_details', 'sample_type'],
-        bulkEditable: false,
+        bulkEditable: true,
         historyDisplayName: 'Sample Type',
         topLevel: false
     },
@@ -77,7 +122,7 @@ const FIELD_CONFIG = {
         label: 'Config Sources (Stage 1)',
         backendKey: 'config_sources',
         settingsPath: ['other_details', 'config_sources'],
-        bulkEditable: false,
+        bulkEditable: true,
         historyDisplayName: 'Config Sources',
         topLevel: false
     },
@@ -88,7 +133,15 @@ const FIELD_CONFIG = {
         settingsPath: ['per_sample_fields', 'index'],
         bulkEditable: false,
         historyDisplayName: 'Index 1',
-        topLevel: false
+        topLevel: false,
+        formField: {
+            inputType: 'index',
+            showInForm: true,
+            order: 5,
+            columnWidth: 6,
+            pattern: '[ACGT]*',
+            title: 'Only ACGT characters are allowed'
+        }
     },
     index_2: {
         key: 'index_2',
@@ -97,7 +150,15 @@ const FIELD_CONFIG = {
         settingsPath: ['per_sample_fields', 'index2'],
         bulkEditable: false,
         historyDisplayName: 'Index 2',
-        topLevel: false
+        topLevel: false,
+        formField: {
+            inputType: 'index',
+            showInForm: true,
+            order: 6,
+            columnWidth: 6,
+            pattern: '[ACGT]*',
+            title: 'Only ACGT characters are allowed'
+        }
     },
     index_length: {
         key: 'index_length',
@@ -113,7 +174,7 @@ const FIELD_CONFIG = {
         label: 'UMI Length',
         backendKey: 'umi_length',
         settingsPath: ['other_details', 'umi_length'],
-        bulkEditable: false,
+        bulkEditable: true,
         historyDisplayName: 'UMI Length',
         topLevel: false
     },
@@ -134,7 +195,13 @@ const FIELD_CONFIG = {
         settingsPath: ['other_details', 'named_index'],
         bulkEditable: false,
         historyDisplayName: 'Named Index',
-        topLevel: false
+        topLevel: false,
+        formField: {
+            inputType: 'text',
+            showInForm: true,
+            order: 7,
+            columnWidth: 6
+        }
     },
     recipe: {
         key: 'recipe',
@@ -143,7 +210,13 @@ const FIELD_CONFIG = {
         settingsPath: ['other_details', 'recipe'],
         bulkEditable: true,
         historyDisplayName: 'Recipe',
-        topLevel: false
+        topLevel: false,
+        formField: {
+            inputType: 'text',
+            showInForm: true,
+            order: 8,
+            columnWidth: 6
+        }
     },
     operator: {
         key: 'operator',
@@ -152,7 +225,13 @@ const FIELD_CONFIG = {
         settingsPath: ['other_details', 'operator'],
         bulkEditable: true,
         historyDisplayName: 'Operator',
-        topLevel: false
+        topLevel: false,
+        formField: {
+            inputType: 'text',
+            showInForm: true,
+            order: 9,
+            columnWidth: 6
+        }
     },
     description: {
         key: 'description',
@@ -161,7 +240,14 @@ const FIELD_CONFIG = {
         settingsPath: ['_sample', 'description'],
         bulkEditable: true,
         historyDisplayName: 'Description',
-        topLevel: true
+        topLevel: true,
+        formField: {
+            inputType: 'textarea',
+            showInForm: true,
+            order: 11,
+            columnWidth: 12,
+            rows: 2
+        }
     },
     control: {
         key: 'control',
@@ -170,7 +256,17 @@ const FIELD_CONFIG = {
         settingsPath: ['_sample', 'control'],
         bulkEditable: true,
         historyDisplayName: 'Control',
-        topLevel: true
+        topLevel: true,
+        formField: {
+            inputType: 'select',
+            showInForm: true,
+            order: 10,
+            columnWidth: 6,
+            options: [
+                { value: 'N', label: 'N' },
+                { value: 'Y', label: 'Y' }
+            ]
+        }
     },
     mask_short_reads: {
         key: 'mask_short_reads',
@@ -199,7 +295,15 @@ const FIELD_CONFIG = {
         settingsPath: ['per_sample_fields', 'OverrideCycles'],
         bulkEditable: false,
         historyDisplayName: 'Override Cycles',
-        topLevel: false
+        topLevel: false,
+        formField: {
+            inputType: 'text',
+            showInForm: true,
+            order: 12,
+            columnWidth: 12,
+            readonly: true,
+            cssClass: 'font-monospace bg-light'
+        }
     },
     last_modified: {
         key: 'last_modified',
@@ -218,7 +322,14 @@ const FIELD_CONFIG = {
         bulkEditable: true,
         historyDisplayName: 'Trim UMI',
         topLevel: false,
-        type: 'boolean'
+        type: 'boolean',
+        formField: {
+            inputType: 'radio-boolean-nullable',
+            showInForm: true,
+            order: 14,
+            columnWidth: 6,
+            section: 'bclconvert'
+        }
     },
     create_fastq_for_index_reads: {
         key: 'create_fastq_for_index_reads',
@@ -228,7 +339,14 @@ const FIELD_CONFIG = {
         bulkEditable: true,
         historyDisplayName: 'Create FASTQ for Index Reads',
         topLevel: false,
-        type: 'boolean'
+        type: 'boolean',
+        formField: {
+            inputType: 'radio-boolean-nullable',
+            showInForm: true,
+            order: 15,
+            columnWidth: 6,
+            section: 'bclconvert'
+        }
     },
     barcode_mismatches_index1: {
         key: 'barcode_mismatches_index1',
@@ -238,7 +356,21 @@ const FIELD_CONFIG = {
         bulkEditable: true,
         historyDisplayName: 'Barcode Mismatches Index 1',
         topLevel: false,
-        type: 'number'
+        type: 'number',
+        formField: {
+            inputType: 'number',
+            showInForm: true,
+            order: 16,
+            columnWidth: 6,
+            section: 'bclconvert',
+            min: 0,
+            max: 2,
+            placeholder: 'Default',
+            helpText: {
+                add: '0-2 mismatches allowed (leave blank for default)',
+                edit: '0-2 mismatches allowed (leave blank for default)'
+            }
+        }
     },
     barcode_mismatches_index2: {
         key: 'barcode_mismatches_index2',
@@ -248,9 +380,24 @@ const FIELD_CONFIG = {
         bulkEditable: true,
         historyDisplayName: 'Barcode Mismatches Index 2',
         topLevel: false,
-        type: 'number'
+        type: 'number',
+        formField: {
+            inputType: 'number',
+            showInForm: true,
+            order: 17,
+            columnWidth: 6,
+            section: 'bclconvert',
+            min: 0,
+            max: 2,
+            placeholder: 'Default',
+            helpText: {
+                add: '0-2 mismatches allowed (leave blank for default)',
+                edit: '0-2 mismatches allowed (leave blank for default)'
+            }
+        }
     }
 };
+
 // Constants for magic strings and default values
 const CONSTANTS = {
     VIEW_MODES: {
@@ -262,13 +409,9 @@ const CONSTANTS = {
         EDIT: 'edit',
         ADD: 'add',
         BULK: 'bulk'
-    },
-    DEFAULTS: {
-        CONTROL: 'N',
-        MASK_SHORT_READS: 0,
-        MIN_TRIMMED_LENGTH: 0
     }
 };
+
 // Utility functions for common operations
 const UTILS = {
     /**
@@ -293,6 +436,7 @@ const UTILS = {
             }, {});
     }
 };
+
 /**
  * ConfigInspectModal Component
  *
@@ -638,234 +782,9 @@ const ConfigInspectModal = {
     `
 };
 /**
- * CustomConfigModal Component
- * 
- * Modal for creating or editing custom BCLConvert configurations.
- * Allows targeting specific projects/lanes with custom settings.
- * 
- * @component
- * @emits close - Emitted when modal should be closed
- * @emits save - Emitted when configuration should be saved
- * @emits update:formData - Emitted when form data changes
- */
-const CustomConfigModal = {
-    name: 'CustomConfigModal',
-    props: {
-        show: {
-            type: Boolean,
-            default: false
-        },
-        editMode: {
-            type: Boolean,
-            default: false
-        },
-        formData: {
-            type: Object,
-            required: true
-        },
-        availableProjects: {
-            type: Array,
-            default: () => []
-        },
-        availableLanes: {
-            type: Array,
-            default: () => []
-        },
-        targetSamples: {
-            type: Array,
-            default: () => []
-        }
-    },
-    methods: {
-        close() {
-            this.$emit('close');
-        },
-        save() {
-            this.$emit('save');
-        },
-        updateFormField(field, value) {
-            this.$emit('update:formData', {
-                ...this.formData,
-                [field]: value
-            });
-        }
-    },
-    template: /*html*/`
-        <div v-if="show" class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5); overflow-y: auto;">
-            <div class="modal-dialog modal-xl">
-                <div class="modal-content">
-                    <div class="modal-header bg-primary text-white">
-                        <h5 class="modal-title">
-                            <i class="fa fa-magic"></i> {{ editMode ? 'Edit Custom Configuration' : 'Create Custom Configuration' }}
-                        </h5>
-                        <button type="button" class="btn-close btn-close-white" @click="close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <!-- Two-Stream Architecture Info -->
-                        <div class="alert alert-info mb-3" role="alert">
-                            <h6 class="alert-heading"><i class="fa fa-info-circle"></i> Custom Configuration: Stage 1 (Stored Settings)</h6>
-                            <p class="mb-1 small">
-                                Custom configurations override <strong>Stage 1</strong> settings, which are permanently stored in the database.
-                                These overrides will appear in the sample's config_sources and version history.
-                            </p>
-                            <p class="mb-0 small">
-                                <strong>Note:</strong> Stage 2 samplesheet generation rules may still dynamically adjust these settings when creating samplesheets 
-                                (e.g., excluding TrimUMI for samples without UMI configuration).
-                            </p>
-                        </div>
-                        <p class="text-muted">Define custom BCLConvert settings to override the calculated settings for specific samples.</p>
-                        <!-- Config Name and Target -->
-                        <div class="row mb-4">
-                            <div class="col-md-12 mb-3">
-                                <label for="custom_config_name" class="form-label"><strong>Configuration Name:</strong></label>
-                                <input type="text" class="form-control" id="custom_config_name" 
-                                    :value="formData.name" 
-                                    @input="updateFormField('name', $event.target.value)"
-                                    placeholder="e.g., NovaSeq X Special Settings" 
-                                    :readonly="editMode">
-                                <small class="form-text text-muted">
-                                    <span v-if="editMode">The name cannot be changed when editing an existing configuration.</span>
-                                    <span v-else>A descriptive name for this custom configuration</span>
-                                </small>
-                            </div>
-                            <div class="col-md-4 mb-3">
-                                <label for="custom_config_target_type" class="form-label"><strong>Target Type:</strong></label>
-                                <select class="form-select" id="custom_config_target_type" 
-                                    :value="formData.target_type" 
-                                    @input="updateFormField('target_type', $event.target.value)">
-                                    <option value="project">All lanes in project</option>
-                                    <option value="lane">All projects in lane</option>
-                                    <option value="project_lane">Specific project + lane</option>
-                                </select>
-                            </div>
-                            <div class="col-md-4 mb-3" v-if="formData.target_type !== 'lane'">
-                                <label for="custom_config_target_project" class="form-label"><strong>Target Project:</strong></label>
-                                <select class="form-select" id="custom_config_target_project" 
-                                    :value="formData.target_project" 
-                                    @input="updateFormField('target_project', $event.target.value)"
-                                    required>
-                                    <option value="">-- Select Project --</option>
-                                    <option v-for="project in availableProjects" :key="project" :value="project">
-                                        {{ project }}
-                                    </option>
-                                </select>
-                            </div>
-                            <div class="col-md-4 mb-3" v-if="formData.target_type !== 'project'">
-                                <label for="custom_config_target_lane" class="form-label"><strong>Target Lane:</strong></label>
-                                <select class="form-select" id="custom_config_target_lane" 
-                                    :value="formData.target_lane" 
-                                    @input="updateFormField('target_lane', $event.target.value)">
-                                    <option value="">-- Select Lane --</option>
-                                    <option v-for="lane in availableLanes" :key="lane" :value="lane">
-                                        Lane {{ lane }}
-                                    </option>
-                                </select>
-                            </div>
-                        </div>
-                        <!-- BCLConvert Settings -->
-                        <div class="row mb-4">
-                            <div class="col-md-12 mb-3">
-                                <hr>
-                                <h6 class="mb-2">
-                                    <i class="fa fa-cog"></i> BCLConvert Settings (Stage 1: Stored Overrides)
-                                </h6>
-                                <p class="text-muted small mb-3">
-                                    Configure settings to override the calculated Stage 1 values. These will be permanently stored.
-                                    Leave settings at "Do not override" to keep the automatically calculated values.
-                                </p>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Trim UMI:</label>
-                                <div class="form-check">
-                                    <input type="radio" class="form-check-input" id="custom_trim_umi_yes" 
-                                        :checked="formData.trim_umi === true"
-                                        @change="updateFormField('trim_umi', true)">
-                                    <label class="form-check-label" for="custom_trim_umi_yes">Yes</label>
-                                </div>
-                                <div class="form-check">
-                                    <input type="radio" class="form-check-input" id="custom_trim_umi_no" 
-                                        :checked="formData.trim_umi === false"
-                                        @change="updateFormField('trim_umi', false)">
-                                    <label class="form-check-label" for="custom_trim_umi_no">No</label>
-                                </div>
-                                <div class="form-check">
-                                    <input type="radio" class="form-check-input" id="custom_trim_umi_default" 
-                                        :checked="formData.trim_umi === null"
-                                        @change="updateFormField('trim_umi', null)">
-                                    <label class="form-check-label" for="custom_trim_umi_default">Do not override</label>
-                                </div>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Create FASTQ for Index Reads:</label>
-                                <div class="form-check">
-                                    <input type="radio" class="form-check-input" id="custom_create_fastq_yes" 
-                                        :checked="formData.create_fastq_for_index_reads === true"
-                                        @change="updateFormField('create_fastq_for_index_reads', true)">
-                                    <label class="form-check-label" for="custom_create_fastq_yes">Yes</label>
-                                </div>
-                                <div class="form-check">
-                                    <input type="radio" class="form-check-input" id="custom_create_fastq_no" 
-                                        :checked="formData.create_fastq_for_index_reads === false"
-                                        @change="updateFormField('create_fastq_for_index_reads', false)">
-                                    <label class="form-check-label" for="custom_create_fastq_no">No</label>
-                                </div>
-                                <div class="form-check">
-                                    <input type="radio" class="form-check-input" id="custom_create_fastq_default" 
-                                        :checked="formData.create_fastq_for_index_reads === null"
-                                        @change="updateFormField('create_fastq_for_index_reads', null)">
-                                    <label class="form-check-label" for="custom_create_fastq_default">Do not override</label>
-                                </div>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label for="custom_barcode_mismatches_index1" class="form-label">Barcode Mismatches Index 1:</label>
-                                <input type="number" class="form-control" id="custom_barcode_mismatches_index1" 
-                                    :value="formData.barcode_mismatches_index1" 
-                                    @input="updateFormField('barcode_mismatches_index1', $event.target.value ? Number($event.target.value) : null)"
-                                    min="0" max="2" placeholder="Do not override">
-                                <small class="form-text text-muted">0-2 mismatches allowed (leave blank to not override)</small>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label for="custom_barcode_mismatches_index2" class="form-label">Barcode Mismatches Index 2:</label>
-                                <input type="number" class="form-control" id="custom_barcode_mismatches_index2" 
-                                    :value="formData.barcode_mismatches_index2" 
-                                    @input="updateFormField('barcode_mismatches_index2', $event.target.value ? Number($event.target.value) : null)"
-                                    min="0" max="2" placeholder="Do not override">
-                                <small class="form-text text-muted">0-2 mismatches allowed (leave blank to not override)</small>
-                            </div>
-                        </div>
-                        <!-- Preview of Affected Samples -->
-                        <div v-if="targetSamples.length > 0" class="alert alert-info">
-                            <h6><i class="fa fa-info-circle"></i> Affected Samples ({{ targetSamples.length }})</h6>
-                            <div class="mt-2" style="max-height: 200px; overflow-y: auto;">
-                                <ul class="mb-0">
-                                    <li v-for="target in targetSamples.slice(0, 20)" :key="target.lane + '_' + target.uuid">
-                                        Lane {{ target.lane }}: {{ target.sample_id }}
-                                    </li>
-                                    <li v-if="targetSamples.length > 20">
-                                        ... and {{ targetSamples.length - 20 }} more
-                                    </li>
-                                </ul>
-                            </div>
-                        </div>
-                        <div v-else-if="formData.target_project || formData.target_type === 'lane'" class="alert alert-warning">
-                            <i class="fa fa-exclamation-triangle"></i> No samples match the selected criteria.
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" @click="close">Cancel</button>
-                        <button type="button" class="btn btn-primary" @click="save">
-                            <i class="fa fa-save"></i> {{ editMode ? 'Update Configuration' : 'Create Configuration' }}
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    `
-};
-/**
  * SampleFormFields Component
  * 
- * Shared form fields for editing or adding a sample.
+ * Dynamically generates form fields based on FIELD_CONFIG.
  * Handles all common sample fields and BCLConvert settings.
  * 
  * @component
@@ -897,13 +816,18 @@ const SampleFormFields = {
                 this.$emit('update:modelValue', value);
             }
         },
-        sampleIdReadonly() {
-            return this.mode === 'edit' && !this.isNewSample;
+        // Get all fields with formField config, sorted by order
+        orderedFormFields() {
+            return Object.values(FIELD_CONFIG)
+                .filter(field => field.formField?.showInForm)
+                .sort((a, b) => a.formField.order - b.formField.order);
         },
-        overrideCyclesHelp() {
-            return this.mode === 'edit' 
-                ? '(auto-calculated from recipe and UMI config)'
-                : '(leave empty - will be calculated after saving)';
+        // Separate BCLConvert fields for section rendering
+        regularFields() {
+            return this.orderedFormFields.filter(f => !f.formField.section);
+        },
+        bclconvertFields() {
+            return this.orderedFormFields.filter(f => f.formField.section === 'bclconvert');
         }
     },
     methods: {
@@ -919,148 +843,75 @@ const SampleFormFields = {
         onIndexInput(fieldName, event) {
             const sanitized = this.sanitizeIndex(event.target.value);
             this.updateField(fieldName, sanitized);
+        },
+        isFieldReadonly(field) {
+            if (field.key === 'sample_id') {
+                return this.mode === 'edit' && !this.isNewSample;
+            }
+            return field.formField.readonly === true;
+        },
+        getHelpText(field) {
+            const helpText = field.formField.helpText;
+            if (!helpText) return null;
+            return helpText[this.mode] || null;
+        },
+        getOverrideCyclesLabel() {
+            return this.mode === 'edit'
+                ? '(auto-calculated from recipe and UMI config)'
+                : '(leave empty - will be calculated after saving)';
         }
     },
     template: /*html*/`
         <div class="row">
-            <!-- Sample ID -->
-            <div class="col-md-6 mb-3">
-                <label :for="mode + '_sample_id'" class="form-label">Sample ID:</label>
-                <input 
-                    type="text" 
-                    class="form-control" 
-                    :id="mode + '_sample_id'" 
-                    :value="formData.sample_id"
-                    @input="updateField('sample_id', $event.target.value)"
-                    :readonly="sampleIdReadonly">
-                <small v-if="mode === 'add'" class="form-text text-muted">
-                    Replace XXXX with a 3-4 digit number (e.g., 001 or 1001)
-                </small>
-            </div>
-            <!-- Sample Name -->
-            <div class="col-md-6 mb-3">
-                <label :for="mode + '_sample_name'" class="form-label">Sample Name:</label>
-                <input 
-                    type="text" 
-                    class="form-control" 
-                    :id="mode + '_sample_name'" 
-                    :value="formData.sample_name"
-                    @input="updateField('sample_name', $event.target.value)">
-                <small v-if="mode === 'add'" class="form-text text-muted">
-                    Replace XXXX with a 3-4 digit number (e.g., 001 or 1001)
-                </small>
-            </div>
-            <!-- Sample Project -->
-            <div class="col-md-6 mb-3">
-                <label :for="mode + '_sample_project'" class="form-label">Sample Project:</label>
-                <input 
-                    type="text" 
-                    class="form-control" 
-                    :id="mode + '_sample_project'" 
-                    :value="formData.sample_project"
-                    @input="updateField('sample_project', $event.target.value)"
-                    readonly>
-            </div>
-            <!-- Sample Ref -->
-            <div class="col-md-6 mb-3">
-                <label :for="mode + '_sample_ref'" class="form-label">Sample Ref:</label>
-                <input 
-                    type="text" 
-                    class="form-control" 
-                    :id="mode + '_sample_ref'" 
-                    :value="formData.sample_ref"
-                    @input="updateField('sample_ref', $event.target.value)">
-            </div>
-            <!-- Index 1 -->
-            <div class="col-md-6 mb-3">
-                <label :for="mode + '_index_1'" class="form-label">Index 1:</label>
-                <input
-                    type="text"
-                    class="form-control font-monospace"
-                    :id="mode + '_index_1'"
-                    :value="formData.index_1"
-                    @input="onIndexInput('index_1', $event)"
-                    pattern="[ACGT]*"
-                    title="Only ACGT characters are allowed">
-            </div>
-            <!-- Index 2 -->
-            <div class="col-md-6 mb-3">
-                <label :for="mode + '_index_2'" class="form-label">Index 2:</label>
-                <input
-                    type="text"
-                    class="form-control font-monospace"
-                    :id="mode + '_index_2'"
-                    :value="formData.index_2"
-                    @input="onIndexInput('index_2', $event)"
-                    pattern="[ACGT]*"
-                    title="Only ACGT characters are allowed">
-            </div>
-            <!-- Named Index -->
-            <div class="col-md-6 mb-3">
-                <label :for="mode + '_named_index'" class="form-label">Named Index:</label>
-                <input 
-                    type="text" 
-                    class="form-control" 
-                    :id="mode + '_named_index'" 
-                    :value="formData.named_index"
-                    @input="updateField('named_index', $event.target.value)">
-            </div>
-            <!-- Recipe -->
-            <div class="col-md-6 mb-3">
-                <label :for="mode + '_recipe'" class="form-label">Recipe:</label>
-                <input 
-                    type="text" 
-                    class="form-control" 
-                    :id="mode + '_recipe'" 
-                    :value="formData.recipe"
-                    @input="updateField('recipe', $event.target.value)">
-            </div>
-            <!-- Operator -->
-            <div class="col-md-6 mb-3">
-                <label :for="mode + '_operator'" class="form-label">Operator:</label>
-                <input 
-                    type="text" 
-                    class="form-control" 
-                    :id="mode + '_operator'" 
-                    :value="formData.operator"
-                    @input="updateField('operator', $event.target.value)">
-            </div>
-            <!-- Control -->
-            <div class="col-md-6 mb-3">
-                <label :for="mode + '_control'" class="form-label">Control:</label>
-                <select 
-                    class="form-select" 
-                    :id="mode + '_control'" 
-                    :value="formData.control"
-                    @input="updateField('control', $event.target.value)">
-                    <option value="N">N</option>
-                    <option value="Y">Y</option>
-                </select>
-            </div>
-            <!-- Description -->
-            <div class="col-md-12 mb-3">
-                <label :for="mode + '_description'" class="form-label">Description:</label>
-                <textarea 
-                    class="form-control" 
-                    :id="mode + '_description'" 
-                    :value="formData.description"
-                    @input="updateField('description', $event.target.value)"
-                    rows="2"></textarea>
-            </div>
-            <!-- Override Cycles -->
-            <div class="col-md-12 mb-3">
-                <label :for="mode + '_override_cycles'" class="form-label">
-                    Override Cycles:
-                    <span class="text-muted small">{{ overrideCyclesHelp }}</span>
-                </label>
-                <input 
-                    type="text" 
-                    class="form-control font-monospace bg-light" 
-                    :id="mode + '_override_cycles'" 
-                    :value="formData.override_cycles"
-                    @input="updateField('override_cycles', $event.target.value)"
-                    readonly>
-            </div>
+            <!-- Regular Fields -->
+            <template v-for="field in regularFields" :key="field.key">
+                <!-- Text and Index inputs -->
+                <div v-if="field.formField.inputType === 'text' || field.formField.inputType === 'index'"
+                     :class="'col-md-' + field.formField.columnWidth + ' mb-3'">
+                    <label :for="mode + '_' + field.key" class="form-label">{{ field.label }}:</label>
+                    <input
+                        :type="'text'"
+                        :class="'form-control' + (field.formField.inputType === 'index' ? ' font-monospace' : '') + (field.formField.cssClass ? ' ' + field.formField.cssClass : '')"
+                        :id="mode + '_' + field.key"
+                        :value="formData[field.key]"
+                        @input="field.formField.inputType === 'index' ? onIndexInput(field.key, $event) : updateField(field.key, $event.target.value)"
+                        :readonly="isFieldReadonly(field)"
+                        :pattern="field.formField.pattern"
+                        :title="field.formField.title">
+                    <small v-if="getHelpText(field)" class="form-text text-muted">{{ getHelpText(field) }}</small>
+                    <span v-if="field.key === 'override_cycles'" class="text-muted small">{{ getOverrideCyclesLabel() }}</span>
+                </div>
+
+                <!-- Textarea -->
+                <div v-else-if="field.formField.inputType === 'textarea'"
+                     :class="'col-md-' + field.formField.columnWidth + ' mb-3'">
+                    <label :for="mode + '_' + field.key" class="form-label">{{ field.label }}:</label>
+                    <textarea
+                        class="form-control"
+                        :id="mode + '_' + field.key"
+                        :value="formData[field.key]"
+                        @input="updateField(field.key, $event.target.value)"
+                        :rows="field.formField.rows || 3"></textarea>
+                    <small v-if="getHelpText(field)" class="form-text text-muted">{{ getHelpText(field) }}</small>
+                </div>
+
+                <!-- Select dropdown -->
+                <div v-else-if="field.formField.inputType === 'select'"
+                     :class="'col-md-' + field.formField.columnWidth + ' mb-3'">
+                    <label :for="mode + '_' + field.key" class="form-label">{{ field.label }}:</label>
+                    <select
+                        class="form-select"
+                        :id="mode + '_' + field.key"
+                        :value="formData[field.key]"
+                        @input="updateField(field.key, $event.target.value)">
+                        <option v-for="option in field.formField.options" :key="option.value" :value="option.value">
+                            {{ option.label }}
+                        </option>
+                    </select>
+                    <small v-if="getHelpText(field)" class="form-text text-muted">{{ getHelpText(field) }}</small>
+                </div>
+            </template>
+
             <!-- BCLConvert Settings Section -->
             <div class="col-md-12 mb-3">
                 <hr>
@@ -1069,118 +920,67 @@ const SampleFormFields = {
                     <span class="text-muted small">(Values not included use BCLConvert defaults)</span>
                 </h6>
             </div>
-            <!-- Trim UMI -->
-            <div class="col-md-6 mb-3">
-                <label class="form-label">Trim UMI:</label>
-                <div class="form-check">
-                    <input 
-                        type="radio" 
-                        class="form-check-input" 
-                        :id="mode + '_trim_umi_yes'" 
-                        :name="mode + '_trim_umi'"
-                        :checked="formData.trim_umi === true"
-                        @change="updateField('trim_umi', true)">
-                    <label class="form-check-label" :for="mode + '_trim_umi_yes'">
-                        Yes
-                    </label>
+
+            <!-- BCLConvert Fields -->
+            <template v-for="field in bclconvertFields" :key="field.key">
+                <!-- Boolean radio (Yes/No/Default) -->
+                <div v-if="field.formField.inputType === 'radio-boolean-nullable'"
+                     :class="'col-md-' + field.formField.columnWidth + ' mb-3'">
+                    <label class="form-label">{{ field.label }}:</label>
+                    <div class="form-check">
+                        <input
+                            type="radio"
+                            class="form-check-input"
+                            :id="mode + '_' + field.key + '_yes'"
+                            :name="mode + '_' + field.key"
+                            :checked="formData[field.key] === true"
+                            @change="updateField(field.key, true)">
+                        <label class="form-check-label" :for="mode + '_' + field.key + '_yes'">
+                            Yes
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input
+                            type="radio"
+                            class="form-check-input"
+                            :id="mode + '_' + field.key + '_no'"
+                            :name="mode + '_' + field.key"
+                            :checked="formData[field.key] === false"
+                            @change="updateField(field.key, false)">
+                        <label class="form-check-label" :for="mode + '_' + field.key + '_no'">
+                            No
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input
+                            type="radio"
+                            class="form-check-input"
+                            :id="mode + '_' + field.key + '_default'"
+                            :name="mode + '_' + field.key"
+                            :checked="formData[field.key] === null"
+                            @change="updateField(field.key, null)">
+                        <label class="form-check-label" :for="mode + '_' + field.key + '_default'">
+                            Do not override
+                        </label>
+                    </div>
                 </div>
-                <div class="form-check">
-                    <input 
-                        type="radio" 
-                        class="form-check-input" 
-                        :id="mode + '_trim_umi_no'" 
-                        :name="mode + '_trim_umi'"
-                        :checked="formData.trim_umi === false"
-                        @change="updateField('trim_umi', false)">
-                    <label class="form-check-label" :for="mode + '_trim_umi_no'">
-                        No
-                    </label>
+
+                <!-- Number inputs -->
+                <div v-else-if="field.formField.inputType === 'number'"
+                     :class="'col-md-' + field.formField.columnWidth + ' mb-3'">
+                    <label :for="mode + '_' + field.key" class="form-label">{{ field.label }}:</label>
+                    <input
+                        type="number"
+                        class="form-control"
+                        :id="mode + '_' + field.key"
+                        :value="formData[field.key]"
+                        @input="updateField(field.key, $event.target.value ? Number($event.target.value) : null)"
+                        :min="field.formField.min"
+                        :max="field.formField.max"
+                        :placeholder="field.formField.placeholder">
+                    <small v-if="getHelpText(field)" class="form-text text-muted">{{ getHelpText(field) }}</small>
                 </div>
-                <div class="form-check">
-                    <input 
-                        type="radio" 
-                        class="form-check-input" 
-                        :id="mode + '_trim_umi_default'" 
-                        :name="mode + '_trim_umi'"
-                        :checked="formData.trim_umi === null"
-                        @change="updateField('trim_umi', null)">
-                    <label class="form-check-label" :for="mode + '_trim_umi_default'">
-                        Do not override
-                    </label>
-                </div>
-            </div>
-            <!-- Create FASTQ for Index Reads -->
-            <div class="col-md-6 mb-3">
-                <label class="form-label">Create FASTQ for Index Reads:</label>
-                <div class="form-check">
-                    <input 
-                        type="radio" 
-                        class="form-check-input" 
-                        :id="mode + '_create_fastq_yes'" 
-                        :name="mode + '_create_fastq'"
-                        :checked="formData.create_fastq_for_index_reads === true"
-                        @change="updateField('create_fastq_for_index_reads', true)">
-                    <label class="form-check-label" :for="mode + '_create_fastq_yes'">
-                        Yes
-                    </label>
-                </div>
-                <div class="form-check">
-                    <input 
-                        type="radio" 
-                        class="form-check-input" 
-                        :id="mode + '_create_fastq_no'" 
-                        :name="mode + '_create_fastq'"
-                        :checked="formData.create_fastq_for_index_reads === false"
-                        @change="updateField('create_fastq_for_index_reads', false)">
-                    <label class="form-check-label" :for="mode + '_create_fastq_no'">
-                        No
-                    </label>
-                </div>
-                <div class="form-check">
-                    <input 
-                        type="radio" 
-                        class="form-check-input" 
-                        :id="mode + '_create_fastq_default'" 
-                        :name="mode + '_create_fastq'"
-                        :checked="formData.create_fastq_for_index_reads === null"
-                        @change="updateField('create_fastq_for_index_reads', null)">
-                    <label class="form-check-label" :for="mode + '_create_fastq_default'">
-                        Do not override
-                    </label>
-                </div>
-            </div>
-            <!-- Barcode Mismatches Index 1 -->
-            <div class="col-md-6 mb-3">
-                <label :for="mode + '_barcode_mismatches_index1'" class="form-label">
-                    Barcode Mismatches Index 1:
-                </label>
-                <input 
-                    type="number" 
-                    class="form-control" 
-                    :id="mode + '_barcode_mismatches_index1'" 
-                    :value="formData.barcode_mismatches_index1"
-                    @input="updateField('barcode_mismatches_index1', $event.target.value ? Number($event.target.value) : null)"
-                    min="0" 
-                    max="2" 
-                    placeholder="Default">
-                <small class="form-text text-muted">0-2 mismatches allowed (leave blank for default)</small>
-            </div>
-            <!-- Barcode Mismatches Index 2 -->
-            <div class="col-md-6 mb-3">
-                <label :for="mode + '_barcode_mismatches_index2'" class="form-label">
-                    Barcode Mismatches Index 2:
-                </label>
-                <input 
-                    type="number" 
-                    class="form-control" 
-                    :id="mode + '_barcode_mismatches_index2'" 
-                    :value="formData.barcode_mismatches_index2"
-                    @input="updateField('barcode_mismatches_index2', $event.target.value ? Number($event.target.value) : null)"
-                    min="0" 
-                    max="2" 
-                    placeholder="Default">
-                <small class="form-text text-muted">0-2 mismatches allowed (leave blank for default)</small>
-            </div>
+            </template>
         </div>
     `
 };
@@ -1243,7 +1043,7 @@ const SampleTable = {
             required: true
         }
     },
-    template: `
+    template: /*html*/`
         <div class="table-responsive">
             <table class="table table-sm mb-0">
                 <thead>
@@ -1261,6 +1061,7 @@ const SampleTable = {
                             :title="getEditTooltip(lane, sample.uuid, columnKey)">
                             <code v-if="isCodeFormattedColumn(columnKey)">{{ formatCellValue(sample[columnKey], columnKey) }}</code>
                             <span v-else>{{ formatCellValue(sample[columnKey], columnKey) }}</span>
+                            <span v-if="columnKey === 'sample_id' && sample.deleted" class="badge bg-danger ms-2">DELETED</span>
                         </td>
                         <td>
                             <button
@@ -1273,6 +1074,7 @@ const SampleTable = {
                             <button
                                 class="btn btn-sm btn-outline-primary ml-1"
                                 @click="$emit('openEditModal', lane, sample.uuid)"
+                                :disabled="!getActionButtonsConfig(lane, sample).edit.enabled"
                                 :title="getActionButtonsConfig(lane, sample).edit.title">
                                 <i class="fa fa-pencil"></i> Edit
                             </button>
@@ -1283,6 +1085,7 @@ const SampleTable = {
         </div>
     `
 };
+
 /**
  * ProjectLaneCard Component
  * 
@@ -1357,7 +1160,7 @@ const ProjectLaneCard = {
             required: true
         }
     },
-    template: `
+    template: /*html*/`
         <div class="card">
             <div class="card-header bg-light">
                 <h5 class="mb-0">
@@ -1418,11 +1221,11 @@ const ProjectLaneCard = {
         </div>
     `
 };
+
 const vDemuxSampleInfoEditor = {
     // Register child components
     components: {
         ConfigInspectModal,
-        CustomConfigModal,
         SampleFormFields,
         SampleTable,
         ProjectLaneCard
@@ -1439,6 +1242,7 @@ const vDemuxSampleInfoEditor = {
             .filter(f => !f.bulkEditable)
             .map(f => f.key);
         return {
+            CONSTANTS: CONSTANTS,  // Expose constants to template
             fieldConfig: FIELD_CONFIG,
             limsUrl: config.lims_url || '',
             flowcell_id: '',
@@ -1479,21 +1283,7 @@ const vDemuxSampleInfoEditor = {
             showConfigModal: false,
             configModalSources: [],
             configModalSample: null,
-            expandedConfigSources: [],  // Track which config sources are expanded
-            showCustomConfigModal: false,
-            customConfigEditMode: false,  // Track if editing existing config
-            customConfigEditIndex: null,  // Track which config is being edited
-            customConfigFormData: {
-                name: '',
-                target_type: 'project',  // 'project', 'lane', or 'project_lane'
-                target_project: '',
-                target_lane: '',
-                trim_umi: null,
-                create_fastq_for_index_reads: null,
-                barcode_mismatches_index1: null,
-                barcode_mismatches_index2: null
-            },
-            customConfigsCollapsed: true  // Track custom configs section collapse state
+            expandedConfigSources: []  // Track which config sources are expanded
         }
     },
     computed: {
@@ -1726,41 +1516,9 @@ const vDemuxSampleInfoEditor = {
             if (!this.demux_data || !this.demux_data.samplesheets) return [];
             return this.demux_data.samplesheets;
         },
-        customConfigTargetSamples() {
-            // Get samples that match the custom config target criteria
-            if (!this.demux_data) return [];
-            // For "lane" type, we don't need target_project
-            const needsProject = this.customConfigFormData.target_type !== 'lane';
-            if (needsProject && !this.customConfigFormData.target_project) return [];
-            const matchingSamples = [];
-            Object.entries(this.calculatedLanes).forEach(([lane, laneData]) => {
-                // Check if lane matches (if target_type includes lane filtering)
-                const laneMatches = this.customConfigFormData.target_type === 'project' ||
-                    this.customConfigFormData.target_lane === lane;
-                if (!laneMatches) return;
-                Object.entries(laneData.sample_rows).forEach(([uuid, sample]) => {
-                    const settingsVersions = Object.keys(sample.settings).sort().reverse();
-                    const latestSettings = sample.settings[settingsVersions[0]];
-                    const sampleProject = latestSettings.per_sample_fields?.Sample_Project;
-                    // For "lane" type, include all projects; otherwise check for matching project
-                    const projectMatches = this.customConfigFormData.target_type === 'lane' ||
-                        sampleProject === this.customConfigFormData.target_project;
-                    if (projectMatches) {
-                        matchingSamples.push({
-                            lane,
-                            uuid,
-                            sample_id: latestSettings.per_sample_fields?.Sample_ID,
-                            sample,
-                            latestSettings
-                        });
-                    }
-                });
-            });
-            return matchingSamples;
-        },
         sortedConfigModalSettings() {
             // Return settings sorted by timestamp in descending order (newest first)
-            if (!this.configModalSample.settings) {
+            if (!this.configModalSample || !this.configModalSample.settings) {
                 return [];
             }
             return Object.entries(this.configModalSample.settings)
@@ -1827,6 +1585,8 @@ const vDemuxSampleInfoEditor = {
             Object.entries(this.calculatedLanes).forEach(([lane, laneData]) => {
                 if (filterLane && lane !== filterLane) return;
                 Object.entries(laneData.sample_rows).forEach(([uuid, sample]) => {
+                    // Skip deleted samples
+                    if (sample.deleted) return;
                     const latestSettings = this.getLatestSettings(sample);
                     if (this.projectMatches(sample, latestSettings, targetProject)) {
                         samples.push({ lane, uuid, sample, latestSettings });
@@ -1866,6 +1626,10 @@ const vDemuxSampleInfoEditor = {
             if (value === undefined || value === null) return 'null';
             if (type === 'boolean' || type === 'number') return String(value);
             if (type === 'object') return JSON.stringify(value);
+            // Handle arrays specially - sort them for consistent comparison
+            if (Array.isArray(value)) {
+                return JSON.stringify([...value].sort());
+            }
             return value;
         },
         /**
@@ -1951,11 +1715,15 @@ const vDemuxSampleInfoEditor = {
                 control: getValue('control', sample.control),
                 mask_short_reads: per_sample_fields.MaskShortReads,
                 minimum_trimmed_read_length: per_sample_fields.MinimumTrimmedReadLength,
-                override_cycles: getValue('override_cycles', per_sample_fields.OverrideCycles)
+                override_cycles: getValue('override_cycles', per_sample_fields.OverrideCycles),
+                deleted: sample.deleted || false,
+                deleted_at: sample.deleted_at,
+                deleted_by: sample.deleted_by
             };
         },
         // ===== End Helper Methods =====
         // ===== Template Helper Methods (Refactoring #6) =====
+
         /**
          * Check if a cell should show code formatting (for index columns)
          * @param {string} columnKey - The column key
@@ -1964,6 +1732,7 @@ const vDemuxSampleInfoEditor = {
         isCodeFormattedColumn(columnKey) {
             return columnKey === 'index_1' || columnKey === 'index_2';
         },
+
         /**
          * Get CSS classes for a table cell
          * @param {string} lane - The lane number
@@ -1976,6 +1745,7 @@ const vDemuxSampleInfoEditor = {
                 'bg-info': this.isFieldEdited(lane, uuid, columnKey)
             };
         },
+
         /**
          * Get configuration for action buttons for a sample
          * @param {string} lane - The lane number
@@ -1984,21 +1754,25 @@ const vDemuxSampleInfoEditor = {
          */
         getActionButtonsConfig(lane, sample) {
             const hasConfigSources = Array.isArray(sample.config_sources) && sample.config_sources.length > 0;
+            const isDeleted = sample.deleted || false;
             return {
                 inspect: {
-                    enabled: hasConfigSources,
-                    title: hasConfigSources 
-                        ? 'View Stage 1 configuration details (stored settings)' 
-                        : 'No configuration sources available',
+                    enabled: hasConfigSources && !isDeleted,
+                    title: isDeleted
+                        ? 'Cannot inspect deleted sample'
+                        : (hasConfigSources
+                            ? 'View Stage 1 configuration details (stored settings)' 
+                            : 'No configuration sources available'),
                     onClick: () => this.openConfigModal(this.calculatedLanes[lane].sample_rows[sample.uuid], lane)
                 },
                 edit: {
-                    enabled: true,
-                    title: 'Edit sample',
+                    enabled: !isDeleted,
+                    title: isDeleted ? 'Cannot edit deleted sample' : 'Edit sample',
                     onClick: () => this.openEditModal(lane, sample.uuid)
                 }
             };
         },
+
         /**
          * Get the sample count text with proper pluralization
          * @param {number} count - Number of samples
@@ -2007,6 +1781,7 @@ const vDemuxSampleInfoEditor = {
         getSampleCountText(count) {
             return `${count} sample${count !== 1 ? 's' : ''}`;
         },
+
         /**
          * Check if a sample row should be highlighted
          * @param {string} lane - The lane number
@@ -2014,11 +1789,16 @@ const vDemuxSampleInfoEditor = {
          * @returns {Object} Object with class names
          */
         getRowClasses(lane, uuid) {
+            const sample = this.calculatedLanes[lane]?.sample_rows[uuid];
+            const isDeleted = sample?.deleted || false;
             return {
-                'table-info': this.isSampleEdited(lane, uuid)
+                'table-info': this.isSampleEdited(lane, uuid),
+                'table-danger': isDeleted,
+                'text-decoration-line-through': isDeleted
             };
         },
         // ===== End Template Helper Methods =====
+
         fetchSampleClassificationConfig() {
             // Fetch full sample classification configuration from the API
             if (this.sampleClassificationConfig) return; // Already loaded
@@ -2058,7 +1838,7 @@ const vDemuxSampleInfoEditor = {
                 const fieldData = {};
                 // For each bulk-editable field, collect values from all project samples
                 bulkEditableFields.forEach(fieldConfig => {
-                    const values = new Set();
+                    const valueToSamples = new Map(); // Map of normalized value -> array of sample IDs
                     projectSamples.forEach(({ sample, settings }) => {
                         const value = this.getFieldValueFromSettings(
                             sample,
@@ -2071,16 +1851,31 @@ const vDemuxSampleInfoEditor = {
                             value !== undefined ? value : this.getDefaultValue(fieldConfig.key),
                             fieldConfig.type
                         );
-                        values.add(normalizedValue);
+                        if (!valueToSamples.has(normalizedValue)) {
+                            valueToSamples.set(normalizedValue, []);
+                        }
+                        const sampleId = settings.per_sample_fields?.Sample_ID || 'Unknown';
+                        valueToSamples.get(normalizedValue).push(sampleId);
                     });
-                    const uniqueValues = Array.from(values);
+                    const uniqueValues = Array.from(valueToSamples.keys());
                     // Check for inconsistency
                     if (uniqueValues.length > 1) {
-                        const valuesDisplay = uniqueValues
-                            .map(v => v === '' || v === 'null' ? '(empty)' : v)
-                            .join(', ');
+                        // Build a more informative display
+                        const valueParts = uniqueValues.map(v => {
+                            const displayValue = v === '' || v === 'null' ? '(empty)' : v;
+                            const sampleIds = valueToSamples.get(v);
+                            const count = sampleIds.length;
+
+                            // If only 1-2 samples have this value, show their IDs
+                            if (count <= 2) {
+                                return `"${displayValue}" (${sampleIds.join(', ')})`;
+                            } else {
+                                return `"${displayValue}" (${count} samples)`;
+                            }
+                        });
+                        const valuesDisplay = valueParts.join(' vs ');
                         this.addSampleProjectWarnings.push(
-                            `${fieldConfig.label}: Inconsistent values (${valuesDisplay})`
+                            `${fieldConfig.label}: ${valuesDisplay}`
                         );
                     }
                     // Store the first (or only) value, denormalized
@@ -2113,128 +1908,6 @@ const vDemuxSampleInfoEditor = {
             this.configModalSources = [];
             this.configModalSample = null;
             this.expandedConfigSources = [];
-        },
-        openCustomConfigModal(configToEdit = null, configIndex = null) {
-            // Open modal to create or edit custom configuration
-            if (configToEdit) {
-                // Edit mode - populate form with existing config
-                this.customConfigEditMode = true;
-                this.customConfigEditIndex = configIndex;
-                this.customConfigFormData = {
-                    name: configToEdit.name,
-                    target_type: configToEdit.target_type,
-                    target_project: configToEdit.target_project,
-                    target_lane: configToEdit.target_lane || '',
-                    trim_umi: configToEdit.raw_samplesheet_settings?.TrimUMI ?? null,
-                    create_fastq_for_index_reads: configToEdit.raw_samplesheet_settings?.CreateFastqForIndexReads ?? null,
-                    barcode_mismatches_index1: configToEdit.raw_samplesheet_settings?.BarcodeMismatchesIndex1 ?? null,
-                    barcode_mismatches_index2: configToEdit.raw_samplesheet_settings?.BarcodeMismatchesIndex2 ?? null
-                };
-            } else {
-                // Create mode - reset form
-                this.customConfigEditMode = false;
-                this.customConfigEditIndex = null;
-                this.customConfigFormData = {
-                    name: '',
-                    target_type: 'project',
-                    target_project: '',
-                    target_lane: '',
-                    trim_umi: null,
-                    create_fastq_for_index_reads: null,
-                    barcode_mismatches_index1: null,
-                    barcode_mismatches_index2: null
-                };
-            }
-            this.showCustomConfigModal = true;
-        },
-        closeCustomConfigModal() {
-            this.showCustomConfigModal = false;
-            // Reset the form state to prevent issues when reopening
-            this.customConfigEditMode = false;
-            this.customConfigEditIndex = null;
-            this.customConfigFormData = {
-                name: '',
-                target_type: 'project',
-                target_project: '',
-                target_lane: '',
-                trim_umi: null,
-                create_fastq_for_index_reads: null,
-                barcode_mismatches_index1: null,
-                barcode_mismatches_index2: null
-            };
-        },
-        saveCustomConfig() {
-            // Validate inputs
-            if (!this.customConfigFormData.name) {
-                alert('Please provide a name for this custom configuration.');
-                return;
-            }
-            // Target project is only required for 'project' and 'project_lane' types
-            if ((this.customConfigFormData.target_type === 'project' || this.customConfigFormData.target_type === 'project_lane')
-                && !this.customConfigFormData.target_project) {
-                alert('Please select a target project.');
-                return;
-            }
-            if ((this.customConfigFormData.target_type === 'lane' || this.customConfigFormData.target_type === 'project_lane')
-                && !this.customConfigFormData.target_lane) {
-                alert('Please select a target lane.');
-                return;
-            }
-            // Check if at least one BCLConvert setting is configured
-            const hasSettings = this.customConfigFormData.trim_umi !== null ||
-                this.customConfigFormData.create_fastq_for_index_reads !== null ||
-                this.customConfigFormData.barcode_mismatches_index1 !== null ||
-                this.customConfigFormData.barcode_mismatches_index2 !== null;
-            if (!hasSettings) {
-                alert('Please configure at least one BCLConvert setting.');
-                return;
-            }
-            // Build the custom config object
-            const customConfig = {
-                name: this.customConfigFormData.name,
-                target_type: this.customConfigFormData.target_type,
-                raw_samplesheet_settings: {},
-                edit_mode: this.customConfigEditMode,
-                edit_index: this.customConfigEditIndex
-            };
-            // Add target_project only if it's provided (not needed for "lane" type)
-            if (this.customConfigFormData.target_project) {
-                customConfig.target_project = this.customConfigFormData.target_project;
-            }
-            if (this.customConfigFormData.target_type !== 'project') {
-                customConfig.target_lane = this.customConfigFormData.target_lane;
-            }
-            // Add only non-null BCLConvert settings
-            if (this.customConfigFormData.trim_umi !== null) {
-                customConfig.raw_samplesheet_settings.TrimUMI = this.customConfigFormData.trim_umi;
-            }
-            if (this.customConfigFormData.create_fastq_for_index_reads !== null) {
-                customConfig.raw_samplesheet_settings.CreateFastqForIndexReads = this.customConfigFormData.create_fastq_for_index_reads;
-            }
-            if (this.customConfigFormData.barcode_mismatches_index1 !== null) {
-                customConfig.raw_samplesheet_settings.BarcodeMismatchesIndex1 = this.customConfigFormData.barcode_mismatches_index1;
-            }
-            if (this.customConfigFormData.barcode_mismatches_index2 !== null) {
-                customConfig.raw_samplesheet_settings.BarcodeMismatchesIndex2 = this.customConfigFormData.barcode_mismatches_index2;
-            }
-            // Send to backend
-            this.error_messages = [];
-            const payload = {
-                flowcell_id: this.flowcell_id,
-                custom_config: customConfig
-            };
-            axios.post(`/api/v1/demux_sample_info/${this.flowcell_id}/custom_config`, payload)
-                .then(response => {
-                    // Refresh the data after successful save
-                    this.demux_data = response.data;
-                    this.closeCustomConfigModal();
-                    const action = this.customConfigEditMode ? 'updated' : 'created';
-                    alert(`Custom configuration ${action} successfully!`);
-                })
-                .catch(error => {
-                    this.error_messages.push('Error saving custom configuration. Please try again.');
-                    console.error(error);
-                });
         },
         toggleConfigSource(index) {
             // Toggle the expanded state of a config source
@@ -2341,16 +2014,7 @@ const vDemuxSampleInfoEditor = {
             return null;
         },
         /**
-         * Parse custom configuration
-         * @param {string} configName - The custom config name
-         * @returns {Object|null} The custom config or null
-         */
-        parseCustomConfig(configName) {
-            if (!this.demux_data?.custom_configs) return null;
-            return this.demux_data.custom_configs.find(c => c.name === configName) || null;
-        },
-        /**
-         * Parse standard configuration (non-conditional, non-instrument, non-custom)
+         * Parse standard configuration (non-conditional, non-instrument)
          * @param {string} category - The config category
          * @param {string} key - The config key
          * @returns {*} The configuration value
@@ -2387,9 +2051,6 @@ const vDemuxSampleInfoEditor = {
             // Handle special categories
             if (category === 'instrument_type_mapping') {
                 return this.parseInstrumentTypeConfig(parts.slice(1));
-            }
-            if (category === 'custom_config') {
-                return this.parseCustomConfig(key);
             }
             // Handle standard configurations
             return this.parseStandardConfig(category, key);
@@ -2687,6 +2348,14 @@ const vDemuxSampleInfoEditor = {
             return latestSettings[field];
         },
         getEditTooltip(lane, uuid, field) {
+            // Check if sample is deleted first
+            const sample = this.calculatedLanes[lane]?.sample_rows[uuid];
+            if (sample?.deleted) {
+                const deletedAt = sample.deleted_at ? this.formatTimestamp(sample.deleted_at) : 'Unknown';
+                const deletedBy = sample.deleted_by || 'Unknown';
+                return `DELETED: ${deletedAt} by ${deletedBy}`;
+            }
+
             // Generate tooltip text showing before and after values
             if (!this.isFieldEdited(lane, uuid, field)) return '';
             const originalValue = this.getOriginalValue(lane, uuid, field) || 'N/A';
@@ -2833,6 +2502,44 @@ const vDemuxSampleInfoEditor = {
                 // Clear all edited data
                 this.editedData = {};
             }
+        },
+        deleteSample(lane, uuid) {
+            // Get sample info for confirmation message
+            const laneData = this.calculatedLanes[lane];
+            if (!laneData || !laneData.sample_rows[uuid]) return;
+            const sample = laneData.sample_rows[uuid];
+            const settingsVersions = Object.keys(sample.settings).sort().reverse();
+            const latestSettings = sample.settings[settingsVersions[0]];
+            const sampleId = latestSettings.per_sample_fields?.Sample_ID || 'Unknown';
+
+            // Confirm deletion
+            if (!confirm(`Are you sure you want to delete sample "${sampleId}" from lane ${lane}?\n\nThis action will be traceable in the database, but the sample will no longer appear in samplesheets.`)) {
+                return;
+            }
+
+            this.error_messages = [];
+            this.saving = true;
+
+            // Send delete request to backend
+            axios.delete(`/api/v1/demux_sample_info/${this.flowcell_id}/sample/${lane}/${uuid}`)
+                .then(response => {
+                    // Refresh the data after successful deletion
+                    this.demux_data = response.data;
+                    // Clear any edits for this sample
+                    if (this.editedData[lane] && this.editedData[lane][uuid]) {
+                        delete this.editedData[lane][uuid];
+                        if (Object.keys(this.editedData[lane]).length === 0) {
+                            delete this.editedData[lane];
+                        }
+                    }
+                    this.saving = false;
+                    alert(`Sample "${sampleId}" deleted successfully!`);
+                })
+                .catch(error => {
+                    this.error_messages.push('Error deleting sample. Please try again or contact a system administrator.');
+                    console.error(error);
+                    this.saving = false;
+                });
         },
         getConfigSources(sample) {
             // Extract config_sources from the sample's latest settings
@@ -3003,22 +2710,22 @@ const vDemuxSampleInfoEditor = {
                 sample_id: newSampleId,
                 sample_name: newSampleId,
                 sample_project: this.addSampleTargetProject,
-                sample_ref: '',
+                sample_ref: this.getDefaultValue('sample_ref'),
                 index_1: '',
                 index_2: '',
                 named_index: '',
-                recipe: '',
-                operator: '',
-                description: '',
-                control: CONSTANTS.DEFAULTS.CONTROL,
+                recipe: this.getDefaultValue('recipe'),
+                operator: this.getDefaultValue('operator'),
+                description: this.getDefaultValue('description'),
+                control: this.getDefaultValue('control'),
                 override_cycles: '',
-                mask_short_reads: CONSTANTS.DEFAULTS.MASK_SHORT_READS,
-                minimum_trimmed_read_length: CONSTANTS.DEFAULTS.MIN_TRIMMED_LENGTH,
-                umi_config: null,
-                trim_umi: null,
-                create_fastq_for_index_reads: null,
-                barcode_mismatches_index1: null,
-                barcode_mismatches_index2: null
+                mask_short_reads: this.getDefaultValue('mask_short_reads'),
+                minimum_trimmed_read_length: this.getDefaultValue('minimum_trimmed_read_length'),
+                umi_config: this.getDefaultValue('umi_config'),
+                trim_umi: this.getDefaultValue('trim_umi'),
+                create_fastq_for_index_reads: this.getDefaultValue('create_fastq_for_index_reads'),
+                barcode_mismatches_index1: this.getDefaultValue('barcode_mismatches_index1'),
+                barcode_mismatches_index2: this.getDefaultValue('barcode_mismatches_index2')
             };
             // Pre-fill bulk-editable fields from project samples (if project is set)
             this.updateAddSampleFormWithProjectDefaults(this.addSampleTargetProject);
@@ -3553,11 +3260,6 @@ const vDemuxSampleInfoEditor = {
                                             @click="openBulkEditModal">
                                             <i class="fa fa-edit"></i> Bulk Edit Actions
                                         </button>
-                                        <button
-                                            class="btn btn-info me-2"
-                                            @click="openCustomConfigModal()">
-                                            <i class="fa fa-magic"></i> Custom Config
-                                        </button>
                                         <span v-if="hasChanges">
                                             <button
                                                 class="btn btn-success me-2"
@@ -3627,68 +3329,6 @@ const vDemuxSampleInfoEditor = {
                                                             <span v-if="column.key === 'sample_id'" class="badge bg-secondary ms-1">Required</span>
                                                         </label>
                                                     </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <!-- Custom Configurations -->
-                                <div v-if="demux_data && demux_data.custom_configs && demux_data.custom_configs.length > 0" class="card mt-3 mb-4">
-                                    <div class="card-header" @click="customConfigsCollapsed = !customConfigsCollapsed" style="cursor: pointer;">
-                                        <h5 class="mb-0">
-                                            <i class="fa" :class="customConfigsCollapsed ? 'fa-caret-right' : 'fa-caret-down'"></i>
-                                            Custom Configurations
-                                            <span class="badge bg-info ms-2">{{ demux_data.custom_configs.length }}</span>
-                                        </h5>
-                                    </div>
-                                    <div class="card-body" v-show="!customConfigsCollapsed">
-                                        <p class="text-muted mb-3">
-                                            Custom configurations that have been applied to samples in this flowcell.
-                                        </p>
-                                        <div v-for="(config, index) in demux_data.custom_configs" :key="index" class="card mb-2">
-                                            <div class="card-body">
-                                                <div class="d-flex justify-content-between align-items-start mb-2">
-                                                    <div>
-                                                        <h6 class="mb-1">
-                                                            <i class="fa fa-magic text-info"></i>
-                                                            <strong>{{ config.name }}</strong>
-                                                        </h6>
-                                                        <div class="text-muted small">
-                                                            <div><strong>Target:</strong>
-                                                                <span v-if="config.target_type === 'project'">All lanes in project {{ config.target_project }}</span>
-                                                                <span v-else-if="config.target_type === 'lane'">All projects in lane {{ config.target_lane }}</span>
-                                                                <span v-else>Project {{ config.target_project }} in lane {{ config.target_lane }}</span>
-                                                            </div>
-                                                            <div v-if="config.created_at"><strong>Created:</strong> {{ new Date(config.created_at).toLocaleString() }}</div>
-                                                            <div v-if="config.created_by"><strong>Created by:</strong> {{ config.created_by }}</div>
-                                                        </div>
-                                                    </div>
-                                                    <div>
-                                                        <button class="btn btn-sm btn-outline-primary" @click="openCustomConfigModal(config, index)" title="Edit">
-                                                            <i class="fa fa-edit"></i> Edit
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                                <div class="mt-2">
-                                                    <strong>BCLConvert Settings:</strong>
-                                                    <ul class="mb-0 mt-1 small">
-                                                        <li v-if="config.raw_samplesheet_settings.TrimUMI !== undefined">
-                                                            TrimUMI:
-                                                            <code v-if="config.raw_samplesheet_settings.TrimUMI === 'EXCLUDE'" class="text-danger">Do not include</code>
-                                                            <code v-else>{{ config.raw_samplesheet_settings.TrimUMI }}</code>
-                                                        </li>
-                                                        <li v-if="config.raw_samplesheet_settings.CreateFastqForIndexReads !== undefined">
-                                                            CreateFastqForIndexReads:
-                                                            <code v-if="config.raw_samplesheet_settings.CreateFastqForIndexReads === 'EXCLUDE'" class="text-danger">Do not include</code>
-                                                            <code v-else>{{ config.raw_samplesheet_settings.CreateFastqForIndexReads }}</code>
-                                                        </li>
-                                                        <li v-if="config.raw_samplesheet_settings.BarcodeMismatchesIndex1 !== undefined">
-                                                            BarcodeMismatchesIndex1: <code>{{ config.raw_samplesheet_settings.BarcodeMismatchesIndex1 }}</code>
-                                                        </li>
-                                                        <li v-if="config.raw_samplesheet_settings.BarcodeMismatchesIndex2 !== undefined">
-                                                            BarcodeMismatchesIndex2: <code>{{ config.raw_samplesheet_settings.BarcodeMismatchesIndex2 }}</code>
-                                                        </li>
-                                                    </ul>
                                                 </div>
                                             </div>
                                         </div>
@@ -4061,6 +3701,15 @@ const vDemuxSampleInfoEditor = {
                                     </div> <!-- End Bulk Operations Tab -->
                                 </div>
                                 <div class="modal-footer">
+                                    <!-- Delete button - only show when editing an existing sample -->
+                                    <button
+                                        v-if="unifiedModalTab === CONSTANTS.MODAL_TABS.EDIT && !editModalIsNew"
+                                        type="button"
+                                        class="btn btn-sm btn-outline-danger me-auto"
+                                        @click="deleteSample(editModalLane, editModalUuid)"
+                                        title="Delete this sample (will be traceable in database)">
+                                        <i class="fa fa-trash"></i> Delete Sample
+                                    </button>
                                     <button type="button" class="btn btn-secondary" @click="closeUnifiedModal">Cancel</button>
                                     <button v-if="unifiedModalTab === CONSTANTS.MODAL_TABS.EDIT" type="button" class="btn btn-primary" @click="saveEditModal">
                                         {{ editModalIsNew ? 'Add Sample' : 'Save Changes' }}
@@ -4093,17 +3742,6 @@ const vDemuxSampleInfoEditor = {
                         :was-bclsetting-manually-edited="wasBCLSettingManuallyEdited"
                         @close="closeConfigModal"
                         @toggle-source="toggleConfigSource" />
-                    <!-- Custom Config Modal Component -->
-                    <CustomConfigModal
-                        :show="showCustomConfigModal"
-                        :edit-mode="customConfigEditMode"
-                        :form-data="customConfigFormData"
-                        :available-projects="availableProjects"
-                        :available-lanes="Object.keys(calculatedLanes)"
-                        :target-samples="customConfigTargetSamples"
-                        @close="closeCustomConfigModal"
-                        @save="saveCustomConfig"
-                        @update:formData="customConfigFormData = $event" />
                 </div>
             </div>
         </div>
