@@ -1061,7 +1061,7 @@ const SampleTable = {
                             :title="getEditTooltip(lane, sample.uuid, columnKey)">
                             <code v-if="isCodeFormattedColumn(columnKey)">{{ formatCellValue(sample[columnKey], columnKey) }}</code>
                             <span v-else>{{ formatCellValue(sample[columnKey], columnKey) }}</span>
-                            <span v-if="columnKey === 'sample_id' && sample.deleted" class="badge bg-danger ms-2">DELETED</span>
+                            <span v-if="columnKey === 'sample_name' && sample.deleted" class="badge bg-danger ms-2">DELETED</span>
                         </td>
                         <td>
                             <button
@@ -1235,7 +1235,6 @@ const vDemuxSampleInfoEditor = {
         const defaultVisibleColumns = ['sample_name', 'last_modified', 'sample_type', 'index_1', 'index_2', 'umi_config', 'recipe', 'override_cycles'];
         // Derive availableColumns from FIELD_CONFIG
         const availableColumns = Object.values(FIELD_CONFIG)
-            .filter(f => !f.key.includes('trim_umi') && !f.key.includes('create_fastq') && !f.key.includes('barcode_mismatches'))
             .map(f => ({ key: f.key, label: f.label }));
         // Derive bulkEditExcludedFields from FIELD_CONFIG
         const bulkEditExcludedFields = Object.values(FIELD_CONFIG)
@@ -1287,6 +1286,39 @@ const vDemuxSampleInfoEditor = {
         }
     },
     computed: {
+        columnsByCategory() {
+            // Group columns by category: Sample Info, Project Info, Indices, Metadata, BCLConvert Settings
+            const categories = {
+                'Sample Info': [],
+                'Project Info': [],
+                'Indices': [],
+                'Metadata': [],
+                'BCLConvert Settings': []
+            };
+
+            this.availableColumns.forEach(column => {
+                const fieldConfig = this.fieldConfig[column.key];
+                if (!fieldConfig) {
+                    categories['Metadata'].push(column);
+                    return;
+                }
+
+                // Categorize based on field properties
+                if (fieldConfig.settingsPath && fieldConfig.settingsPath[0] === 'raw_samplesheet_settings') {
+                    categories['BCLConvert Settings'].push(column);
+                } else if (['sample_id', 'sample_name', 'sample_ref', 'sample_type', 'config_sources'].includes(column.key)) {
+                    categories['Sample Info'].push(column);
+                } else if (['sample_project', 'project_name', 'project_id'].includes(column.key)) {
+                    categories['Project Info'].push(column);
+                } else if (['index_1', 'index_2', 'index_length', 'named_index', 'umi_config', 'umi_length'].includes(column.key)) {
+                    categories['Indices'].push(column);
+                } else {
+                    categories['Metadata'].push(column);
+                }
+            });
+
+            return categories;
+        },
         uploadedSamplesByLane() {
             if (!this.demux_data || !this.demux_data.uploaded_lims_info) {
                 return {};
@@ -1529,7 +1561,9 @@ const vDemuxSampleInfoEditor = {
         addSampleTargetProject(newProject) {
             // Update editFormData.sample_project when target project changes
             if (this.unifiedModalTab === CONSTANTS.MODAL_TABS.ADD && this.editFormData) {
-                this.editFormData.sample_project = newProject || '';
+                // Get the project name (not ID) for the Sample_Project field
+                const projectDetails = this.selectedProjectDetails;
+                this.editFormData.sample_project = projectDetails.name || '';
                 // Update sample_id and sample_name to next ID for this project
                 const nextId = this.nextSampleId;
                 // Sample_ID should be prefixed with 'Sample_', Sample_Name should not
@@ -1708,6 +1742,7 @@ const vDemuxSampleInfoEditor = {
                 index_2: getValue('index_2', per_sample_fields.index2),
                 index_length: other_details.index_length,
                 umi_config: other_details.umi_config,
+                umi_length: other_details.umi_length,
                 named_index: getValue('named_index', other_details.named_index),
                 recipe: getValue('recipe', other_details.recipe),
                 operator: getValue('operator', other_details.operator),
@@ -1716,6 +1751,10 @@ const vDemuxSampleInfoEditor = {
                 mask_short_reads: per_sample_fields.MaskShortReads,
                 minimum_trimmed_read_length: per_sample_fields.MinimumTrimmedReadLength,
                 override_cycles: getValue('override_cycles', per_sample_fields.OverrideCycles),
+                trim_umi: getValue('trim_umi', latestSettings.raw_samplesheet_settings?.TrimUMI),
+                create_fastq_for_index_reads: getValue('create_fastq_for_index_reads', latestSettings.raw_samplesheet_settings?.CreateFastqForIndexReads),
+                barcode_mismatches_index1: getValue('barcode_mismatches_index1', latestSettings.raw_samplesheet_settings?.BarcodeMismatchesIndex1),
+                barcode_mismatches_index2: getValue('barcode_mismatches_index2', latestSettings.raw_samplesheet_settings?.BarcodeMismatchesIndex2),
                 deleted: sample.deleted || false,
                 deleted_at: sample.deleted_at,
                 deleted_by: sample.deleted_by
@@ -1817,14 +1856,24 @@ const vDemuxSampleInfoEditor = {
                 // Reset fields to defaults when no project is selected
                 if (this.editFormData) {
                     // Use FIELD_CONFIG to reset all bulk-editable fields
+                    // Exclude sample_project since it's managed by the addSampleTargetProject watcher
                     Object.values(FIELD_CONFIG)
-                        .filter(f => f.bulkEditable)
+                        .filter(f => f.bulkEditable && f.key !== 'sample_project')
                         .forEach(fieldConfig => {
                             this.editFormData[fieldConfig.key] = this.getDefaultValue(fieldConfig.key);
                         });
+                    // Clear sample_project when no project selected
+                    this.editFormData.sample_project = '';
                 }
                 return {};
             }
+
+            // Set sample_project to the project name (not ID)
+            const projectDetails = this.selectedProjectDetails;
+            if (this.editFormData) {
+                this.editFormData.sample_project = projectDetails.name || '';
+            }
+
             // Collect all samples from this project using helper method
             const projectSamplesData = this.getSamplesForProject(targetProject);
             const projectSamples = projectSamplesData.map(({ sample, latestSettings }) => ({
@@ -2322,7 +2371,15 @@ const vDemuxSampleInfoEditor = {
                 }
                 return 'N/A';
             }
-            return value || 'N/A';
+            // Handle boolean values
+            if (typeof value === 'boolean') {
+                return value ? 'true' : 'false';
+            }
+            // Handle null/undefined values
+            if (value === null || value === undefined) {
+                return 'N/A';
+            }
+            return value;
         },
         isFieldEditable(columnKey) {
             // Determine which fields should be editable
@@ -2656,6 +2713,8 @@ const vDemuxSampleInfoEditor = {
                 sample_id: currentSettings.sample_id || latestSettings.per_sample_fields?.Sample_ID,
                 sample_name: currentSettings.sample_name || latestSettings.per_sample_fields?.Sample_Name,
                 sample_project: currentSettings.sample_project || latestSettings.per_sample_fields?.Sample_Project,
+                project_name: currentSettings.project_name || sample.project_name || '',
+                project_id: currentSettings.project_id || sample.project_id || '',
                 sample_ref: currentSettings.sample_ref || latestSettings.other_details?.sample_ref,
                 index_1: currentSettings.index_1 || latestSettings.per_sample_fields?.index || '',
                 index_2: currentSettings.index_2 || latestSettings.per_sample_fields?.index2 || '',
@@ -2709,7 +2768,7 @@ const vDemuxSampleInfoEditor = {
             this.editFormData = {
                 sample_id: newSampleId,
                 sample_name: newSampleId,
-                sample_project: this.addSampleTargetProject,
+                sample_project: '',  // Will be set by addSampleTargetProject watcher or updateAddSampleFormWithProjectDefaults
                 sample_ref: this.getDefaultValue('sample_ref'),
                 index_1: '',
                 index_2: '',
@@ -2801,7 +2860,7 @@ const vDemuxSampleInfoEditor = {
                 const projectDetails = this.selectedProjectDetails;
                 const newSettings = {
                     ...this.editFormData,
-                    sample_project: this.addSampleTargetProject || undefined,
+                    sample_project: projectDetails.name || undefined,
                     project_id: projectDetails.id || undefined,
                     project_name: projectDetails.name || undefined,
                     flowcell_id: this.flowcell_id,
@@ -3298,13 +3357,44 @@ const vDemuxSampleInfoEditor = {
                                     <div class="card-header" @click="columnConfigCollapsed = !columnConfigCollapsed" style="cursor: pointer;">
                                         <h5 class="mb-0">
                                             <i class="fa" :class="columnConfigCollapsed ? 'fa-caret-right' : 'fa-caret-down'"></i>
-                                            Column Configuration
+                                            Configure view
                                         </h5>
                                     </div>
                                     <div class="card-body" v-show="!columnConfigCollapsed">
                                         <div class="row">
                                             <div class="col-12">
+                                                <!-- Grouping Options -->
+                                                <div class="mb-4">
+                                                    <h6 class="text-muted mb-3">Grouping Options</h6>
+                                                    <div class="form-check form-switch mb-3">
+                                                        <input
+                                                            class="form-check-input"
+                                                            type="checkbox"
+                                                            id="groupByProjectFirstToggle"
+                                                            v-model="groupByProjectFirst">
+                                                        <label class="form-check-label" for="groupByProjectFirstToggle">
+                                                            <strong>Group by Project → Lanes</strong>
+                                                            <small class="text-muted d-block">
+                                                                <span v-if="!groupByProjectFirst">Currently: Lanes → Projects (samples grouped by lane, then by project)</span>
+                                                                <span v-else>Currently: Projects → Lanes (samples grouped by project, then by lane)</span>
+                                                            </small>
+                                                        </label>
+                                                    </div>
+                                                    <div class="form-check form-switch">
+                                                        <input
+                                                            class="form-check-input"
+                                                            type="checkbox"
+                                                            id="groupByNamedIndexToggle"
+                                                            v-model="groupByNamedIndex">
+                                                        <label class="form-check-label" for="groupByNamedIndexToggle">
+                                                            <strong>Group by Named Index</strong>
+                                                            <small class="text-muted d-block">Display samples grouped by their index name (useful for 10X samples and index expansion workflows)</small>
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                                <!-- Column Selection -->
                                                 <div class="mb-3">
+                                                    <h6 class="text-muted mb-3">Column Selection</h6>
                                                     <label class="form-label">Presets:</label>
                                                     <div class="btn-group" role="group">
                                                         <input type="radio" class="btn-check" name="columnPreset" id="presetDefault" value="default" @change="applyColumnPreset('default')" autocomplete="off" checked>
@@ -3314,58 +3404,27 @@ const vDemuxSampleInfoEditor = {
                                                     </div>
                                                 </div>
                                                 <p class="text-muted mb-2">Select columns to display:</p>
-                                                <div class="d-flex flex-wrap gap-2">
-                                                    <div v-for="column in availableColumns" :key="column.key" class="form-check form-check-inline">
-                                                        <input
-                                                            class="form-check-input"
-                                                            type="checkbox"
-                                                            :id="'col-' + column.key"
-                                                            :value="column.key"
-                                                            :checked="isColumnVisible(column.key)"
-                                                            :disabled="column.key === 'sample_id'"
-                                                            @change="toggleColumn(column.key)">
-                                                        <label class="form-check-label" :for="'col-' + column.key" :class="{ 'text-muted': column.key === 'sample_id' }">
-                                                            {{ column.label }}
-                                                            <span v-if="column.key === 'sample_id'" class="badge bg-secondary ms-1">Required</span>
-                                                        </label>
+                                                <!-- Columns by category -->
+                                                <div v-for="(columns, category) in columnsByCategory" :key="category" class="mb-3">
+                                                    <h6 class="text-secondary mb-2" v-if="columns.length > 0">{{ category }}</h6>
+                                                    <div class="d-flex flex-wrap gap-2">
+                                                        <div v-for="column in columns" :key="column.key" class="form-check form-check-inline">
+                                                            <input
+                                                                class="form-check-input"
+                                                                type="checkbox"
+                                                                :id="'col-' + column.key"
+                                                                :value="column.key"
+                                                                :checked="isColumnVisible(column.key)"
+                                                                :disabled="column.key === 'sample_name'"
+                                                                @change="toggleColumn(column.key)">
+                                                            <label class="form-check-label" :for="'col-' + column.key" :class="{ 'text-muted': column.key === 'sample_name' }">
+                                                                {{ column.label }}
+                                                                <span v-if="column.key === 'sample_name'" class="badge bg-secondary ms-1">Required</span>
+                                                            </label>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <!-- Grouping Order Toggle -->
-                                <div class="card mt-3 mb-3">
-                                    <div class="card-body">
-                                        <div class="form-check form-switch">
-                                            <input
-                                                class="form-check-input"
-                                                type="checkbox"
-                                                id="groupByProjectFirstToggle"
-                                                v-model="groupByProjectFirst">
-                                            <label class="form-check-label" for="groupByProjectFirstToggle">
-                                                <strong>Group by Project → Lanes</strong>
-                                                <small class="text-muted d-block">
-                                                    <span v-if="!groupByProjectFirst">Currently: Lanes → Projects (samples grouped by lane, then by project)</span>
-                                                    <span v-else>Currently: Projects → Lanes (samples grouped by project, then by lane)</span>
-                                                </small>
-                                            </label>
-                                        </div>
-                                    </div>
-                                </div>
-                                <!-- Named Index Grouping Toggle -->
-                                <div class="card mt-3 mb-3">
-                                    <div class="card-body">
-                                        <div class="form-check form-switch">
-                                            <input
-                                                class="form-check-input"
-                                                type="checkbox"
-                                                id="groupByNamedIndexToggle"
-                                                v-model="groupByNamedIndex">
-                                            <label class="form-check-label" for="groupByNamedIndexToggle">
-                                                <strong>Group by Named Index</strong>
-                                                <small class="text-muted d-block">Display samples grouped by their index name (useful for 10X samples and index expansion workflows)</small>
-                                            </label>
                                         </div>
                                     </div>
                                 </div>
@@ -3738,8 +3797,8 @@ const vDemuxSampleInfoEditor = {
                         :get-config-details="getConfigDetails"
                         :trace-config-value-source="traceConfigValueSource"
                         :format-config-source-label="formatConfigSourceLabel"
-                        :get-all-bclconvert-settings="getAllBCLConvertSettings"
-                        :was-bclsetting-manually-edited="wasBCLSettingManuallyEdited"
+                        :get-all-b-c-l-convert-settings="getAllBCLConvertSettings"
+                        :was-b-c-l-setting-manually-edited="wasBCLSettingManuallyEdited"
                         @close="closeConfigModal"
                         @toggle-source="toggleConfigSource" />
                 </div>

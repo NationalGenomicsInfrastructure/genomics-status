@@ -1618,6 +1618,8 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                 # sample_row level (top level of sample, not in settings)
                 "control": ("sample_row", "control"),
                 "description": ("sample_row", "description"),
+                "project_id": ("sample_row", "project_id"),
+                "project_name": ("sample_row", "project_name"),
             }
 
             # Fetch the existing document
@@ -1722,6 +1724,10 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                             "last_modified": timestamp,
                             "control": "N",  # Default, can be overwritten
                             "description": "",  # Default, can be overwritten
+                            "project_id": "",  # Default, can be overwritten
+                            "project_name": "",  # Default, can be overwritten
+                            "library_method": "",  # Default, can be overwritten
+                            "flowcell_id": flowcell_id,
                             "settings": {}
                         }
                         
@@ -1741,16 +1747,16 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                             },
                             "other_details": {
                                 "sample_ref": "",
-                                "sample_type": "",  # No Stage 1 classification
+                                "sample_type": "manually_added",  # Mark as manually added
                                 "named_index": "",
                                 "recipe": "",
                                 "operator": "",
                                 "index_length": 0,
                                 "umi_config": None,
-                                "library_method": ""
+                                "library_method": "",
+                                "config_sources": ["manually_added"]  # Indicate manual addition
                             },
-                            "raw_samplesheet_settings": {},
-                            "config_sources": []  # Empty - no Stage 1 rules applied
+                            "raw_samplesheet_settings": {}
                         }
                         
                         # Add the sample row to the lane
@@ -1775,6 +1781,11 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                     for field_key, new_value in edited_fields.items():
                         if field_key not in allowed_fields:
                             # Skip fields that aren't in the allowed list
+                            continue
+                        
+                        # For new samples, skip sample_type and config_sources
+                        # These are set automatically by the backend to indicate manual addition
+                        if is_new_sample and field_key in ["sample_type", "config_sources"]:
                             continue
 
                         # Validate the value (especially for raw_samplesheet_settings)
