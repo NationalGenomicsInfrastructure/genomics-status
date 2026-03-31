@@ -1257,8 +1257,8 @@ const vDemuxSampleInfoEditor = {
             defaultVisibleColumns: defaultVisibleColumns,
             bulkEditExcludedFields: bulkEditExcludedFields,
             showBulkEditModal: false,
-            showUnifiedModal: false,
-            unifiedModalTab: CONSTANTS.MODAL_TABS.EDIT,
+            showEditModal: false,
+            showAddModal: false,
             columnConfigCollapsed: true,
             groupByNamedIndex: false,
             groupByProjectFirst: false,
@@ -1560,7 +1560,7 @@ const vDemuxSampleInfoEditor = {
     watch: {
         addSampleTargetProject(newProject) {
             // Update editFormData.sample_project when target project changes
-            if (this.unifiedModalTab === CONSTANTS.MODAL_TABS.ADD && this.editFormData) {
+            if (this.showAddModal && this.editFormData) {
                 // Get the project name (not ID) for the Sample_Project field
                 const projectDetails = this.selectedProjectDetails;
                 this.editFormData.sample_project = projectDetails.name || '';
@@ -1575,7 +1575,7 @@ const vDemuxSampleInfoEditor = {
         },
         addSampleTargetLanes(newLanes) {
             // Update editModalLane when lanes change
-            if (this.unifiedModalTab === CONSTANTS.MODAL_TABS.ADD && newLanes.length > 0) {
+            if (this.showAddModal && newLanes.length > 0) {
                 this.editModalLane = newLanes[0];
             }
         }
@@ -2673,8 +2673,7 @@ const vDemuxSampleInfoEditor = {
             }
         },
         openBulkEditModal() {
-            this.showUnifiedModal = true;
-            this.unifiedModalTab = CONSTANTS.MODAL_TABS.BULK;
+            this.showBulkEditModal = true;
             this.bulkEditProject = '';
             this.bulkEditLane = '';
             this.bulkEditAction = 'reverse_complement_index1';
@@ -2691,18 +2690,19 @@ const vDemuxSampleInfoEditor = {
         },
         closeBulkEditModal() {
             this.showBulkEditModal = false;
-            this.showUnifiedModal = false;
         },
-        closeUnifiedModal() {
-            this.showUnifiedModal = false;
-            this.editModalSample = null;
+        closeAddModal() {
+            this.showAddModal = false;
+            this.addSampleTargetProject = '';
+            this.addSampleTargetLanes = [];
+            this.addSampleProjectWarnings = [];
+            this.editFormData = {};
         },
         openEditModal(lane, uuid) {
             // Open edit modal for an existing sample
             const laneData = this.calculatedLanes[lane];
             if (!laneData || !laneData.sample_rows[uuid]) return;
-            this.showUnifiedModal = true;
-            this.unifiedModalTab = CONSTANTS.MODAL_TABS.EDIT;
+            this.showEditModal = true;
             const sample = laneData.sample_rows[uuid];
             const settingsVersions = Object.keys(sample.settings).sort().reverse();
             const latestSettings = sample.settings[settingsVersions[0]];
@@ -2792,12 +2792,10 @@ const vDemuxSampleInfoEditor = {
             this.editModalUuid = uuid;
             this.editModalSample = null;
             this.editModalIsNew = true;
-            this.showUnifiedModal = true;
-            this.unifiedModalTab = CONSTANTS.MODAL_TABS.ADD;
+            this.showAddModal = true;
         },
         closeEditModal() {
             this.showEditModal = false;
-            this.showUnifiedModal = false;
             this.editModalSample = null;
             this.editModalLane = null;
             this.editModalUuid = null;
@@ -2806,144 +2804,87 @@ const vDemuxSampleInfoEditor = {
             this.fieldHistory = {};
             this.showFieldHistory = false;
         },
-        saveEditModal() {
-            // Validation for Add Sample tab
-            if (this.unifiedModalTab === CONSTANTS.MODAL_TABS.ADD) {
-                if (this.addSampleTargetLanes.length === 0) {
-                    alert('Please select at least one target lane.');
-                    return;
-                }
-                // Validate Sample ID format: Sample_ProjectPrefix_XXXX where XXXX is 3-4 digits
-                const sampleId = this.editFormData.sample_id;
-                const sampleName = this.editFormData.sample_name;
-                // Sample ID should start with "Sample_"
-                if (!sampleId.startsWith('Sample_')) {
-                    alert('Sample ID must start with "Sample_" (e.g., Sample_P12345_1001)');
-                    return;
-                }
-                // Remove "Sample_" prefix to get the project part
-                const sampleIdWithoutPrefix = sampleId.substring(7); // Remove "Sample_"
-                const lastUnderscoreIndex = sampleIdWithoutPrefix.lastIndexOf('_');
-                if (lastUnderscoreIndex <= 0) {
-                    alert('Sample ID must have format: Sample_ProjectPrefix_XXXX (e.g., Sample_P12345_1001)');
-                    return;
-                }
-                const numPartId = sampleIdWithoutPrefix.substring(lastUnderscoreIndex + 1);
-                if (!/^\d{3,4}$/.test(numPartId)) {
-                    alert('Sample ID must have 3 or 4 digits after the last underscore (e.g., Sample_P12345_001 or Sample_P12345_1001).\nPlease replace XXXX with your sample number.');
-                    return;
-                }
-                // Validate Sample Name format: ProjectPrefix_XXXX (without "Sample_" prefix)
-                const lastUnderscoreIndexName = sampleName.lastIndexOf('_');
-                if (lastUnderscoreIndexName <= 0) {
-                    alert('Sample Name must have format: ProjectPrefix_XXXX (e.g., P12345_1001)');
-                    return;
-                }
-                const numPartName = sampleName.substring(lastUnderscoreIndexName + 1);
-                if (!/^\d{3,4}$/.test(numPartName)) {
-                    alert('Sample Name must have 3 or 4 digits after the last underscore (e.g., P12345_001 or P12345_1001).\nPlease replace XXXX with your sample number.');
-                    return;
-                }
-                // Check that Sample ID and Sample Name match (Sample ID = "Sample_" + Sample Name)
-                if (sampleId !== 'Sample_' + sampleName) {
-                    alert('Sample ID must be "Sample_" + Sample Name.\nSample ID: ' + sampleId + '\nShould be: Sample_' + sampleName);
-                    return;
-                }
-            }
+        saveEditedSample() {
             // Save the edited sample data
             const lane = this.editModalLane;
             const uuid = this.editModalUuid;
-            if (this.editModalIsNew && this.unifiedModalTab === CONSTANTS.MODAL_TABS.ADD) {
-                // Use the selected lanes
-                const targetLanes = this.addSampleTargetLanes;
-                const timestamp = new Date().toISOString();
-                const projectDetails = this.selectedProjectDetails;
-                const newSettings = {
-                    ...this.editFormData,
-                    sample_project: projectDetails.name || undefined,
-                    project_id: projectDetails.id || undefined,
-                    project_name: projectDetails.name || undefined,
-                    flowcell_id: this.flowcell_id,
-                    mask_short_reads: 0,
-                    minimum_trimmed_read_length: 0
-                };
-                // Add sample to all target lanes
-                targetLanes.forEach(targetLane => {
-                    const laneSpecificSettings = {
-                        ...newSettings,
-                        lane: targetLane
-                    };
-                    // Add to editedData
-                    if (!this.editedData[targetLane]) {
-                        this.editedData[targetLane] = {};
+            // Update existing sample - only save changed fields
+            Object.keys(this.editFormData).forEach(field => {
+                let newValue = this.editFormData[field];
+                // Sanitize raw_samplesheet_settings number fields: convert NaN or empty string to null
+                if (field === 'barcode_mismatches_index1' || field === 'barcode_mismatches_index2') {
+                    if (newValue === '' || Number.isNaN(newValue)) {
+                        newValue = null;
                     }
-                    this.editedData[targetLane][uuid] = laneSpecificSettings;
-                    // Add to the actual data structure for immediate display
-                    if (!this.demux_data.calculated.lanes[targetLane]) {
-                        this.demux_data.calculated.lanes[targetLane] = { sample_rows: {} };
-                    }
-                    this.demux_data.calculated.lanes[targetLane].sample_rows[uuid] = {
-                        sample_id: laneSpecificSettings.sample_id,
-                        project_id: projectDetails.id,
-                        project_name: projectDetails.name,
-                        last_modified: timestamp,
-                        settings: {
-                            [timestamp]: laneSpecificSettings
-                        }
-                    };
-                });
-                if (targetLanes.length === 1) {
-                    alert(`Added new sample ${newSettings.sample_id} to lane ${targetLanes[0]}`);
-                } else {
-                    alert(`Added new sample ${newSettings.sample_id} to ${targetLanes.length} lanes: ${targetLanes.map(l => 'Lane ' + l).join(', ')}`);
                 }
-            } else if (this.editModalIsNew) {
-                // Add new sample to the data structure (legacy path)
-                const timestamp = new Date().toISOString();
-                const projectDetails = this.selectedProjectDetails;
-                const newSettings = {
-                    ...this.editFormData,
-                    project_id: projectDetails.id || undefined,
-                    project_name: projectDetails.name || undefined,
-                    lane: lane,
-                    flowcell_id: this.flowcell_id,
-                    mask_short_reads: 0,
-                    minimum_trimmed_read_length: 0
+                this.updateValue(lane, uuid, field, newValue);
+            });
+            alert(`Updated sample in lane ${lane}`);
+            this.closeEditModal();
+        },
+        saveAddedSample() {
+            // Validation for Add Sample
+            if (this.addSampleTargetLanes.length === 0) {
+                alert('Please select at least one lane.');
+                return;
+            }
+            // Check if Sample ID or Sample Name is filled
+            if (!this.editFormData.sample_id && !this.editFormData.sample_name) {
+                alert('Please provide either a Sample ID or Sample Name.');
+                return;
+            }
+            // Confirmation for multi-lane add
+            if (this.addSampleTargetLanes.length > 1) {
+                const confirmation = confirm(`Are you sure you want to add this sample to ${this.addSampleTargetLanes.length} lanes (${this.addSampleTargetLanes.join(', ')})?`);
+                if (!confirmation) {
+                    return;
+                }
+            }
+            // Use the selected lanes
+            const targetLanes = this.addSampleTargetLanes;
+            const timestamp = new Date().toISOString();
+            const projectDetails = this.selectedProjectDetails;
+            const uuid = this.editModalUuid;
+            const newSettings = {
+                ...this.editFormData,
+                sample_project: projectDetails.name || undefined,
+                project_id: projectDetails.id || undefined,
+                project_name: projectDetails.name || undefined,
+                flowcell_id: this.flowcell_id,
+                mask_short_reads: 0,
+                minimum_trimmed_read_length: 0
+            };
+            // Add sample to all target lanes
+            targetLanes.forEach(targetLane => {
+                const laneSpecificSettings = {
+                    ...newSettings,
+                    lane: targetLane
                 };
                 // Add to editedData
-                if (!this.editedData[lane]) {
-                    this.editedData[lane] = {};
+                if (!this.editedData[targetLane]) {
+                    this.editedData[targetLane] = {};
                 }
-                this.editedData[lane][uuid] = newSettings;
+                this.editedData[targetLane][uuid] = laneSpecificSettings;
                 // Add to the actual data structure for immediate display
-                if (!this.demux_data.calculated.lanes[lane]) {
-                    this.demux_data.calculated.lanes[lane] = { sample_rows: {} };
+                if (!this.demux_data.calculated.lanes[targetLane]) {
+                    this.demux_data.calculated.lanes[targetLane] = { sample_rows: {} };
                 }
-                this.demux_data.calculated.lanes[lane].sample_rows[uuid] = {
-                    sample_id: newSettings.sample_id,
+                this.demux_data.calculated.lanes[targetLane].sample_rows[uuid] = {
+                    sample_id: laneSpecificSettings.sample_id,
                     project_id: projectDetails.id,
                     project_name: projectDetails.name,
                     last_modified: timestamp,
                     settings: {
-                        [timestamp]: newSettings
+                        [timestamp]: laneSpecificSettings
                     }
                 };
-                alert(`Added new sample ${newSettings.sample_id} to lane ${lane}`);
+            });
+            if (targetLanes.length === 1) {
+                alert(`Added new sample ${newSettings.sample_id} to lane ${targetLanes[0]}`);
             } else {
-                // Update existing sample - only save changed fields
-                Object.keys(this.editFormData).forEach(field => {
-                    let newValue = this.editFormData[field];
-                    // Sanitize raw_samplesheet_settings number fields: convert NaN or empty string to null
-                    if (field === 'barcode_mismatches_index1' || field === 'barcode_mismatches_index2') {
-                        if (newValue === '' || Number.isNaN(newValue)) {
-                            newValue = null;
-                        }
-                    }
-                    this.updateValue(lane, uuid, field, newValue);
-                });
-                alert(`Updated sample in lane ${lane}`);
+                alert(`Added new sample ${newSettings.sample_id} to ${targetLanes.length} lanes: ${targetLanes.map(l => 'Lane ' + l).join(', ')}`);
             }
-            this.closeEditModal();
+            this.closeAddModal();
         },
         reverseComplement(sequence) {
             // Reverse complement a DNA sequence
@@ -3541,15 +3482,15 @@ const vDemuxSampleInfoEditor = {
                             </div>
                         </div> <!-- end tab-content -->
                     </template>
-                <!-- Unified Sample Management Modal with Tabs -->
-                    <div v-if="showUnifiedModal" class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5); overflow-y: auto;">
+                <!-- Edit Sample Modal -->
+                    <div v-if="showEditModal" class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5); overflow-y: auto;">
                         <div class="modal-dialog modal-lg">
                             <div class="modal-content">
                                 <div class="modal-header">
-                                    <h5 class="modal-title">Sample Management</h5>
+                                    <h5 class="modal-title">Edit Sample</h5>
                                     <div class="ms-auto me-2">
                                         <button
-                                            v-if="unifiedModalTab === CONSTANTS.MODAL_TABS.EDIT && !editModalIsNew && Object.keys(fieldHistory).length > 0"
+                                            v-if="Object.keys(fieldHistory).length > 0"
                                             type="button"
                                             class="btn btn-sm btn-outline-secondary"
                                             @click="showFieldHistory = !showFieldHistory">
@@ -3557,31 +3498,11 @@ const vDemuxSampleInfoEditor = {
                                             {{ showFieldHistory ? 'Hide History' : 'Show Field History' }}
                                         </button>
                                     </div>
-                                    <button type="button" class="btn-close" @click="closeUnifiedModal"></button>
+                                    <button type="button" class="btn-close" @click="closeEditModal"></button>
                                 </div>
-                                <!-- Nav Tabs -->
-                                <ul class="nav nav-tabs px-3 pt-2" style="border-bottom: 1px solid #dee2e6;">
-                                    <li class="nav-item">
-                                        <a class="nav-link" :class="{ active: unifiedModalTab === CONSTANTS.MODAL_TABS.EDIT }" @click="unifiedModalTab = CONSTANTS.MODAL_TABS.EDIT" href="javascript:void(0)">
-                                            <i class="fa fa-edit"></i> Edit Sample
-                                        </a>
-                                    </li>
-                                    <li class="nav-item">
-                                        <a class="nav-link" :class="{ active: unifiedModalTab === CONSTANTS.MODAL_TABS.ADD }" @click="unifiedModalTab = CONSTANTS.MODAL_TABS.ADD" href="javascript:void(0)">
-                                            <i class="fa fa-plus"></i> Add Sample
-                                        </a>
-                                    </li>
-                                    <li class="nav-item">
-                                        <a class="nav-link" :class="{ active: unifiedModalTab === CONSTANTS.MODAL_TABS.BULK }" @click="unifiedModalTab = CONSTANTS.MODAL_TABS.BULK" href="javascript:void(0)">
-                                            <i class="fa fa-cogs"></i> Bulk Operations
-                                        </a>
-                                    </li>
-                                </ul>
                                 <div class="modal-body">
-                                    <!-- Tab: Edit Sample -->
-                                    <div v-if="unifiedModalTab === CONSTANTS.MODAL_TABS.EDIT" class="tab-pane-content">
-                                    <!-- Config Sources Info (only for existing samples) -->
-                                    <div v-if="!editModalIsNew && editModalSample" class="row mb-3">
+                                    <!-- Config Sources Info -->
+                                    <div v-if="editModalSample" class="row mb-3">
                                         <div class="col-12">
                                             <div class="card bg-light border-info">
                                                 <div class="card-body">
@@ -3598,8 +3519,8 @@ const vDemuxSampleInfoEditor = {
                                             </div>
                                         </div>
                                     </div>
-                                    <!-- Field History (only for existing samples when toggled) -->
-                                    <div v-if="!editModalIsNew && showFieldHistory && Object.keys(fieldHistory).length > 0" class="row mb-3">
+                                    <!-- Field History -->
+                                    <div v-if="showFieldHistory && Object.keys(fieldHistory).length > 0" class="row mb-3">
                                         <div class="col-12">
                                             <div class="card border-warning">
                                                 <div class="card-body">
@@ -3607,7 +3528,6 @@ const vDemuxSampleInfoEditor = {
                                                         <i class="fa fa-history"></i> Field History
                                                     </h6>
                                                     <p class="mb-3 small text-muted">Historical changes to individual fields for this sample:</p>
-                                                    <!-- Iterate through each field that has history -->
                                                     <div v-for="(changes, fieldName) in fieldHistory" :key="fieldName" class="mb-3">
                                                         <div class="d-flex align-items-center mb-2">
                                                             <strong class="text-primary">{{ fieldName }}:</strong>
@@ -3638,10 +3558,6 @@ const vDemuxSampleInfoEditor = {
                                                             </div>
                                                         </div>
                                                     </div>
-                                                    <!-- Empty state (shouldn't happen if we check Object.keys length) -->
-                                                    <div v-if="Object.keys(fieldHistory).length === 0" class="text-muted fst-italic">
-                                                        No field history available for this sample.
-                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
@@ -3649,137 +3565,147 @@ const vDemuxSampleInfoEditor = {
                                     <!-- Sample Form Fields -->
                                     <SampleFormFields
                                         v-model="editFormData"
-                                        :is-new-sample="editModalIsNew"
+                                        :is-new-sample="false"
                                         mode="edit" />
-                                    </div> <!-- End Edit Sample Tab -->
-                                    <!-- Tab: Add Sample -->
-                                    <div v-if="unifiedModalTab === CONSTANTS.MODAL_TABS.ADD" class="tab-pane-content">
-                                        <!-- Target Selection -->
-                                        <div class="card border-primary mb-3">
-                                            <div class="card-header bg-primary text-white">
-                                                <h6 class="mb-0"><i class="fa fa-crosshairs"></i> Where to add the sample?</h6>
-                                            </div>
-                                            <div class="card-body">
-                                                <div class="row">
-                                                    <div class="col-md-6 mb-3">
-                                                        <label class="form-label">Lane(s): <span class="text-danger">*</span></label>
-                                                        <div class="border rounded p-2" style="max-height: 200px; overflow-y: auto;">
-                                                            <div class="form-check">
-                                                                <input type="checkbox" class="form-check-input" id="addSample_allLanes"
-                                                                    :checked="addSampleTargetLanes.length === availableLanes.length"
-                                                                    @change="addSampleTargetLanes = $event.target.checked ? availableLanes.slice() : []">
-                                                                <label class="form-check-label" for="addSample_allLanes">
-                                                                    <strong>All Lanes</strong>
-                                                                </label>
-                                                            </div>
-                                                            <hr class="my-1">
-                                                            <div v-for="lane in availableLanes" :key="lane" class="form-check">
-                                                                <input type="checkbox" class="form-check-input" :id="'addSample_lane_' + lane"
-                                                                    :value="lane" v-model="addSampleTargetLanes">
-                                                                <label class="form-check-label" :for="'addSample_lane_' + lane">
-                                                                    Lane {{ lane }}
-                                                                </label>
-                                                            </div>
-                                                        </div>
-                                                        <small class="form-text text-muted">Select at least one lane (required)</small>
-                                                    </div>
-                                                    <div class="col-md-6 mb-3">
-                                                        <label for="addSample_project" class="form-label">Project:</label>
-                                                        <select class="form-select" id="addSample_project" v-model="addSampleTargetProject">
-                                                            <option value="">-- None --</option>
-                                                            <option v-for="project in availableProjects" :key="project.id || project.name" :value="project.id || project.name">
-                                                                {{ project.displayName }}
-                                                            </option>
-                                                        </select>
-                                                        <small class="form-text text-muted">Optional: select if sample belongs to a project</small>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <!-- Sample form fields (same as edit, but for new sample) -->
-                                        <div v-if="addSampleTargetLanes.length > 0" class="alert alert-success">
-                                            <strong><i class="fa fa-check-circle"></i> Adding sample to Lane(s):</strong> {{ addSampleTargetLanes.map(l => 'Lane ' + l).join(', ') }}<br>
-                                            <strong>Project:</strong> {{ addSampleTargetProject || 'None' }}<br>
-                                            <small class="d-block mt-1"><strong>Sample ID Template:</strong> Sample_{{ nextSampleId || 'ProjectID_XXXX' }} <em class="text-muted">(replace XXXX with your sample number)</em></small>
-                                            <small class="d-block mt-1"><strong>Sample Name Template:</strong> {{ nextSampleId || 'ProjectID_XXXX' }} <em class="text-muted">(same as Sample ID but without the Sample_ prefix)</em></small>
-                                        </div>
-                                        <!-- Warning for inconsistent project values -->
-                                        <div v-if="addSampleTargetLanes.length > 0 && addSampleProjectWarnings.length > 0" class="alert alert-info">
-                                            <strong><i class="fa fa-info-circle"></i> Inconsistent Field Values Detected:</strong>
-                                            <p class="mb-1 mt-2">The following fields have different values across samples in this project. The form has been pre-filled with values from the first sample, but you may want to review these fields:</p>
-                                            <ul class="mb-0 mt-2">
-                                                <li v-for="(warning, idx) in addSampleProjectWarnings" :key="idx">{{ warning }}</li>
-                                            </ul>
-                                        </div>
-                                        <!-- Info about manual sample addition -->
-                                        <div v-if="addSampleTargetLanes.length > 0" class="alert alert-info">
-                                            <strong><i class="fa fa-info-circle"></i> Note:</strong>
-                                            Manually added samples require you to fill in all fields. Unlike LIMS-uploaded samples, Stage 1 processing rules will not be applied.
-                                        </div>
-                                        <div v-else-if="addSampleTargetLanes.length === 0" class="alert alert-warning">
-                                            <i class="fa fa-exclamation-triangle"></i> Please select at least one lane above to continue
-                                        </div>
-                                        <div v-if="addSampleTargetLanes.length > 0">
-                                            <!-- Sample Form Fields Component -->
-                                            <SampleFormFields
-                                                v-model="editFormData"
-                                                :is-new-sample="true"
-                                                mode="add" />
-                                        </div> <!-- End conditional form fields -->
-                                    </div> <!-- End Add Sample Tab -->
-                                    <!-- Tab: Bulk Operations -->
-                                    <div v-if="unifiedModalTab === CONSTANTS.MODAL_TABS.BULK" class="tab-pane-content">
-                                        <div class="mb-3">
-                                            <label for="bulkEditAction_unified" class="form-label">Action:</label>
-                                            <select class="form-select" id="bulkEditAction_unified" v-model="bulkEditAction" @change="updateProjectLaneSelection">
-                                                <option value="reverse_complement_index1">Reverse Complement Index 1</option>
-                                                <option value="reverse_complement_index2">Reverse Complement Index 2</option>
-                                            </select>
-                                        </div>
-                                        <div class="mb-3">
-                                            <label for="bulkEditProject_unified" class="form-label">Project:</label>
-                                            <select class="form-select" id="bulkEditProject_unified" v-model="bulkEditProject" @change="updateProjectLaneSelection" required>
-                                                <option value="">-- Select Project --</option>
-                                                <option v-for="project in availableProjects" :key="project" :value="project">
-                                                    {{ project }}
-                                                </option>
-                                            </select>
-                                        </div>
-                                        <div class="mb-3" v-if="bulkEditProject">
-                                            <label for="bulkEditLane_unified" class="form-label">Lane:</label>
-                                            <select class="form-select" id="bulkEditLane_unified" v-model="bulkEditLane" :disabled="isSingleLaneProject">
-                                                <option v-if="!isSingleLaneProject" value="all">All Lanes</option>
-                                                <option v-for="lane in projectLanes" :key="lane" :value="lane">
-                                                    Lane {{ lane }}
-                                                </option>
-                                            </select>
-                                            <small v-if="isSingleLaneProject" class="form-text text-muted">
-                                                This project is only present in one lane.
-                                            </small>
-                                        </div>
-                                    </div> <!-- End Bulk Operations Tab -->
                                 </div>
                                 <div class="modal-footer">
-                                    <!-- Delete button - only show when editing an existing sample -->
                                     <button
-                                        v-if="unifiedModalTab === CONSTANTS.MODAL_TABS.EDIT && !editModalIsNew"
                                         type="button"
                                         class="btn btn-sm btn-outline-danger me-auto"
                                         @click="deleteSample(editModalLane, editModalUuid)"
                                         title="Delete this sample (will be traceable in database)">
                                         <i class="fa fa-trash"></i> Delete Sample
                                     </button>
-                                    <button type="button" class="btn btn-secondary" @click="closeUnifiedModal">Cancel</button>
-                                    <button v-if="unifiedModalTab === CONSTANTS.MODAL_TABS.EDIT" type="button" class="btn btn-primary" @click="saveEditModal">
-                                        {{ editModalIsNew ? 'Add Sample' : 'Save Changes' }}
-                                    </button>
-                                    <button v-if="unifiedModalTab === CONSTANTS.MODAL_TABS.ADD" type="button" class="btn btn-success" @click="saveEditModal"
+                                    <button type="button" class="btn btn-secondary" @click="closeEditModal">Cancel</button>
+                                    <button type="button" class="btn btn-primary" @click="saveEditedSample">Save Changes</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Add Sample Modal -->
+                    <div v-if="showAddModal" class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5); overflow-y: auto;">
+                        <div class="modal-dialog modal-lg">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title"><i class="fa fa-plus"></i> Add New Sample</h5>
+                                    <button type="button" class="btn-close" @click="closeAddModal"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <!-- Target Selection -->
+                                    <div class="card border-primary mb-3">
+                                        <div class="card-header bg-primary text-white">
+                                            <h6 class="mb-0"><i class="fa fa-crosshairs"></i> Where to add the sample?</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="row">
+                                                <div class="col-md-6 mb-3">
+                                                    <label class="form-label">Lane(s): <span class="text-danger">*</span></label>
+                                                    <div class="border rounded p-2" style="max-height: 200px; overflow-y: auto;">
+                                                        <div class="form-check">
+                                                            <input type="checkbox" class="form-check-input" id="addSample_allLanes"
+                                                                :checked="addSampleTargetLanes.length === availableLanes.length"
+                                                                @change="addSampleTargetLanes = $event.target.checked ? availableLanes.slice() : []">
+                                                            <label class="form-check-label" for="addSample_allLanes">
+                                                                <strong>All Lanes</strong>
+                                                            </label>
+                                                        </div>
+                                                        <hr class="my-1">
+                                                        <div v-for="lane in availableLanes" :key="lane" class="form-check">
+                                                            <input type="checkbox" class="form-check-input" :id="'addSample_lane_' + lane"
+                                                                :value="lane" v-model="addSampleTargetLanes">
+                                                            <label class="form-check-label" :for="'addSample_lane_' + lane">
+                                                                Lane {{ lane }}
+                                                            </label>
+                                                        </div>
+                                                    </div>
+                                                    <small class="form-text text-muted">Select at least one lane (required)</small>
+                                                </div>
+                                                <div class="col-md-6 mb-3">
+                                                    <label for="addSample_project" class="form-label">Project:</label>
+                                                    <select class="form-select" id="addSample_project" v-model="addSampleTargetProject">
+                                                        <option value="">-- None --</option>
+                                                        <option v-for="project in availableProjects" :key="project.id || project.name" :value="project.id || project.name">
+                                                            {{ project.displayName }}
+                                                        </option>
+                                                    </select>
+                                                    <small class="form-text text-muted">Optional: select if sample belongs to a project</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- Sample form fields -->
+                                    <div v-if="addSampleTargetLanes.length > 0 && addSampleProjectWarnings.length > 0" class="alert alert-warning">
+                                        <strong><i class="fa fa-info-circle"></i> Inconsistent Field Values Detected:</strong>
+                                        <p class="mb-1 mt-2">The following fields have different values across samples in this project. The form has been pre-filled with values from the first sample, but you may want to review these fields:</p>
+                                        <ul class="mb-0 mt-2">
+                                            <li v-for="(warning, idx) in addSampleProjectWarnings" :key="idx">{{ warning }}</li>
+                                        </ul>
+                                    </div>
+                                    <div v-if="addSampleTargetLanes.length > 0" class="alert alert-info">
+                                        <strong><i class="fa fa-info-circle"></i> Note:</strong>
+                                        Manually added samples require you to fill in all fields. Unlike LIMS-uploaded samples, Stage 1 processing rules will not be applied.
+                                    </div>
+                                    <div v-else-if="addSampleTargetLanes.length === 0" class="alert alert-warning">
+                                        <i class="fa fa-exclamation-triangle"></i> Please select at least one lane above to continue
+                                    </div>
+                                    <div v-if="addSampleTargetLanes.length > 0">
+                                        <SampleFormFields
+                                            v-model="editFormData"
+                                            :is-new-sample="true"
+                                            mode="add" />
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" @click="closeAddModal">Cancel</button>
+                                    <button type="button" class="btn btn-success" @click="saveAddedSample"
                                         :disabled="addSampleTargetLanes.length === 0">
                                         <i class="fa fa-plus"></i> Add Sample
                                     </button>
-                                    <button v-if="unifiedModalTab === CONSTANTS.MODAL_TABS.BULK" type="button" class="btn btn-primary" @click="applyBulkEdit">
-                                        Apply
-                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Bulk Operations Modal -->
+                    <div v-if="showBulkEditModal" class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5); overflow-y: auto;">
+                        <div class="modal-dialog modal-lg">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title"><i class="fa fa-cogs"></i> Bulk Operations</h5>
+                                    <button type="button" class="btn-close" @click="closeBulkEditModal"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <div class="mb-3">
+                                        <label for="bulkEditAction" class="form-label">Action:</label>
+                                        <select class="form-select" id="bulkEditAction" v-model="bulkEditAction" @change="updateProjectLaneSelection">
+                                            <option value="reverse_complement_index1">Reverse Complement Index 1</option>
+                                            <option value="reverse_complement_index2">Reverse Complement Index 2</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="bulkEditProject" class="form-label">Project:</label>
+                                        <select class="form-select" id="bulkEditProject" v-model="bulkEditProject" @change="updateProjectLaneSelection" required>
+                                            <option value="">-- Select Project --</option>
+                                            <option v-for="project in availableProjects" :key="project" :value="project">
+                                                {{ project }}
+                                            </option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-3" v-if="bulkEditProject">
+                                        <label for="bulkEditLane" class="form-label">Lane:</label>
+                                        <select class="form-select" id="bulkEditLane" v-model="bulkEditLane" :disabled="isSingleLaneProject">
+                                            <option v-if="!isSingleLaneProject" value="all">All Lanes</option>
+                                            <option v-for="lane in projectLanes" :key="lane" :value="lane">
+                                                Lane {{ lane }}
+                                            </option>
+                                        </select>
+                                        <small v-if="isSingleLaneProject" class="form-text text-muted">
+                                            This project is only present in one lane.
+                                        </small>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" @click="closeBulkEditModal">Cancel</button>
+                                    <button type="button" class="btn btn-primary" @click="applyBulkEdit">Apply</button>
                                 </div>
                             </div>
                         </div>
