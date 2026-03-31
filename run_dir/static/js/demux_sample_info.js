@@ -1266,6 +1266,8 @@ const vDemuxSampleInfoEditor = {
             bulkEditAction: 'reverse_complement_index1',
             bulkEditProject: '',
             bulkEditLane: 'all',
+            bulkEditFormData: {},
+            bulkEditProjectWarnings: [],  // Warnings about inconsistent values in project for bulk edit
             // Add Sample specific variables
             addSampleTargetProject: '',
             addSampleTargetLanes: [],  // Multiple lanes (at least one required)
@@ -1555,6 +1557,12 @@ const vDemuxSampleInfoEditor = {
             }
             return Object.entries(this.configModalSample.settings)
                 .sort((a, b) => b[0].localeCompare(a[0])); // ISO timestamps sort lexicographically
+        },
+        bulkEditableFields() {
+            // Get all fields that are bulkEditable and have formField config, sorted by order
+            return Object.values(FIELD_CONFIG)
+                .filter(field => field.bulkEditable && field.formField?.showInForm)
+                .sort((a, b) => a.formField.order - b.formField.order);
         }
     },
     watch: {
@@ -1577,6 +1585,17 @@ const vDemuxSampleInfoEditor = {
             // Update editModalLane when lanes change
             if (this.showAddModal && newLanes.length > 0) {
                 this.editModalLane = newLanes[0];
+            }
+        },
+        bulkEditProject(newProject) {
+            // Pre-fill bulk edit form when project changes
+            if (this.showBulkEditModal) {
+                if (newProject) {
+                    this.populateFormWithProjectDefaults(newProject, this.bulkEditFormData, this.bulkEditProjectWarnings);
+                } else {
+                    // Clear warnings and reset form when no project selected
+                    this.populateFormWithProjectDefaults(null, this.bulkEditFormData, this.bulkEditProjectWarnings);
+                }
             }
         }
     },
@@ -1849,22 +1868,114 @@ const vDemuxSampleInfoEditor = {
                     console.error('Failed to load sample classification config:', error);
                 });
         },
+        /**
+         * Generic method to populate a form with project defaults and detect inconsistencies
+         * @param {string} targetProject - The project identifier
+         * @param {Object} formData - The form data object to populate
+         * @param {Array} warningsArray - The warnings array to populate (pass by reference)
+         * @param {boolean} excludeSampleProject - Whether to exclude sample_project field
+         * @returns {Object} Field data with pre-filled values
+         */
+        populateFormWithProjectDefaults(targetProject, formData, warningsArray, excludeSampleProject = false) {
+            // Clear warnings
+            warningsArray.splice(0, warningsArray.length);
+            
+            if (!targetProject || !formData) {
+                // Reset fields to defaults when no project is selected
+                if (formData) {
+                    Object.values(FIELD_CONFIG)
+                        .filter(f => f.bulkEditable && (!excludeSampleProject || f.key !== 'sample_project'))
+                        .forEach(fieldConfig => {
+                            formData[fieldConfig.key] = this.getDefaultValue(fieldConfig.key);
+                        });
+                    if (excludeSampleProject) {
+                        formData.sample_project = '';
+                    }
+                }
+                return {};
+            }
+
+            // Collect all samples from this project using helper method
+            const projectSamplesData = this.getSamplesForProject(targetProject);
+            const projectSamples = projectSamplesData.map(({ sample, latestSettings }) => ({
+                sample,
+                settings: latestSettings
+            }));
+            
+            if (projectSamples.length === 0) {
+                return {};
+            }
+
+            // Get all bulk-editable fields from FIELD_CONFIG
+            const bulkEditableFields = Object.values(FIELD_CONFIG)
+                .filter(f => f.bulkEditable && (!excludeSampleProject || f.key !== 'sample_project'));
+            const fieldData = {};
+            
+            // For each bulk-editable field, collect values from all project samples
+            bulkEditableFields.forEach(fieldConfig => {
+                const valueToSamples = new Map(); // Map of normalized value -> array of sample IDs
+                projectSamples.forEach(({ sample, settings }) => {
+                    const value = this.getFieldValueFromSettings(
+                        sample,
+                        settings,
+                        fieldConfig.settingsPath,
+                        fieldConfig.topLevel
+                    );
+                    // Normalize value for comparison
+                    const normalizedValue = this.normalizeForComparison(
+                        value !== undefined ? value : this.getDefaultValue(fieldConfig.key),
+                        fieldConfig.type
+                    );
+                    if (!valueToSamples.has(normalizedValue)) {
+                        valueToSamples.set(normalizedValue, []);
+                    }
+                    const sampleId = settings.per_sample_fields?.Sample_ID || 'Unknown';
+                    valueToSamples.get(normalizedValue).push(sampleId);
+                });
+                const uniqueValues = Array.from(valueToSamples.keys());
+                
+                // Check for inconsistency
+                if (uniqueValues.length > 1) {
+                    // Build a more informative display
+                    const valueParts = uniqueValues.map(v => {
+                        const displayValue = v === '' || v === 'null' ? '(empty)' : v;
+                        const sampleIds = valueToSamples.get(v);
+                        const count = sampleIds.length;
+
+                        // If only 1-2 samples have this value, show their IDs
+                        if (count <= 2) {
+                            return `"${displayValue}" (${sampleIds.join(', ')})`;
+                        } else {
+                            return `"${displayValue}" (${count} samples)`;
+                        }
+                    });
+                    const valuesDisplay = valueParts.join(' vs ');
+                    warningsArray.push(
+                        `${fieldConfig.label}: ${valuesDisplay}`
+                    );
+                }
+                // Store the first (or only) value, denormalized
+                fieldData[fieldConfig.key] = this.denormalizeValue(
+                    uniqueValues[0],
+                    fieldConfig.type
+                );
+            });
+            
+            // Update the form with these defaults
+            Object.entries(fieldData).forEach(([key, value]) => {
+                formData[key] = value !== undefined && value !== null 
+                    ? value 
+                    : this.getDefaultValue(key);
+            });
+            
+            return fieldData;
+        },
         updateAddSampleFormWithProjectDefaults(targetProject) {
             // Pre-fill bulk-editable fields from existing project samples and warn if values differ
             this.addSampleProjectWarnings = [];
             if (!targetProject || !this.editFormData) {
-                // Reset fields to defaults when no project is selected
-                if (this.editFormData) {
-                    // Use FIELD_CONFIG to reset all bulk-editable fields
-                    // Exclude sample_project since it's managed by the addSampleTargetProject watcher
-                    Object.values(FIELD_CONFIG)
-                        .filter(f => f.bulkEditable && f.key !== 'sample_project')
-                        .forEach(fieldConfig => {
-                            this.editFormData[fieldConfig.key] = this.getDefaultValue(fieldConfig.key);
-                        });
-                    // Clear sample_project when no project selected
-                    this.editFormData.sample_project = '';
-                }
+                // Reset using generic method
+                this.populateFormWithProjectDefaults(null, this.editFormData, this.addSampleProjectWarnings, true);
                 return {};
             }
 
@@ -1874,73 +1985,8 @@ const vDemuxSampleInfoEditor = {
                 this.editFormData.sample_project = projectDetails.name || '';
             }
 
-            // Collect all samples from this project using helper method
-            const projectSamplesData = this.getSamplesForProject(targetProject);
-            const projectSamples = projectSamplesData.map(({ sample, latestSettings }) => ({
-                sample,
-                settings: latestSettings
-            }));
-            if (projectSamples.length > 0) {
-                // Get all bulk-editable fields from FIELD_CONFIG
-                const bulkEditableFields = Object.values(FIELD_CONFIG)
-                    .filter(f => f.bulkEditable && f.key !== 'sample_project'); // Exclude sample_project
-                const fieldData = {};
-                // For each bulk-editable field, collect values from all project samples
-                bulkEditableFields.forEach(fieldConfig => {
-                    const valueToSamples = new Map(); // Map of normalized value -> array of sample IDs
-                    projectSamples.forEach(({ sample, settings }) => {
-                        const value = this.getFieldValueFromSettings(
-                            sample,
-                            settings,
-                            fieldConfig.settingsPath,
-                            fieldConfig.topLevel
-                        );
-                        // Normalize value for comparison
-                        const normalizedValue = this.normalizeForComparison(
-                            value !== undefined ? value : this.getDefaultValue(fieldConfig.key),
-                            fieldConfig.type
-                        );
-                        if (!valueToSamples.has(normalizedValue)) {
-                            valueToSamples.set(normalizedValue, []);
-                        }
-                        const sampleId = settings.per_sample_fields?.Sample_ID || 'Unknown';
-                        valueToSamples.get(normalizedValue).push(sampleId);
-                    });
-                    const uniqueValues = Array.from(valueToSamples.keys());
-                    // Check for inconsistency
-                    if (uniqueValues.length > 1) {
-                        // Build a more informative display
-                        const valueParts = uniqueValues.map(v => {
-                            const displayValue = v === '' || v === 'null' ? '(empty)' : v;
-                            const sampleIds = valueToSamples.get(v);
-                            const count = sampleIds.length;
-
-                            // If only 1-2 samples have this value, show their IDs
-                            if (count <= 2) {
-                                return `"${displayValue}" (${sampleIds.join(', ')})`;
-                            } else {
-                                return `"${displayValue}" (${count} samples)`;
-                            }
-                        });
-                        const valuesDisplay = valueParts.join(' vs ');
-                        this.addSampleProjectWarnings.push(
-                            `${fieldConfig.label}: ${valuesDisplay}`
-                        );
-                    }
-                    // Store the first (or only) value, denormalized
-                    fieldData[fieldConfig.key] = this.denormalizeValue(
-                        uniqueValues[0],
-                        fieldConfig.type
-                    );
-                });
-                // Update the edit form with these defaults
-                Object.entries(fieldData).forEach(([key, value]) => {
-                    this.editFormData[key] = value !== undefined && value !== null 
-                        ? value 
-                        : this.getDefaultValue(key);
-                });
-            }
-            return {};
+            // Use generic method to populate form and get warnings
+            return this.populateFormWithProjectDefaults(targetProject, this.editFormData, this.addSampleProjectWarnings, true);
         },
         openConfigModal(sample, lane) {
             // Open modal to show config sources and their details
@@ -2677,6 +2723,14 @@ const vDemuxSampleInfoEditor = {
             this.bulkEditProject = '';
             this.bulkEditLane = '';
             this.bulkEditAction = 'reverse_complement_index1';
+            this.bulkEditProjectWarnings = [];
+            // Initialize bulk edit form data with empty values for all bulk editable fields
+            this.bulkEditFormData = {};
+            Object.values(FIELD_CONFIG)
+                .filter(field => field.bulkEditable && field.formField?.showInForm)
+                .forEach(field => {
+                    this.bulkEditFormData[field.key] = '';
+                });
         },
         updateProjectLaneSelection() {
             // When project changes, update lane selection
@@ -2927,11 +2981,26 @@ const vDemuxSampleInfoEditor = {
                                 this.updateValue(lane, uuid, 'index_2', newIndex);
                                 editCount++;
                             }
+                        } else if (this.bulkEditAction === 'edit_fields') {
+                            // Apply bulk field edits - only update fields that have non-empty values
+                            let sampleEdited = false;
+                            Object.entries(this.bulkEditFormData).forEach(([fieldKey, value]) => {
+                                // Only update if value is not empty (handle different "empty" values)
+                                const isEmpty = value === '' || value === null || value === undefined;
+                                if (!isEmpty) {
+                                    this.updateValue(lane, uuid, fieldKey, value);
+                                    sampleEdited = true;
+                                }
+                            });
+                            if (sampleEdited) {
+                                editCount++;
+                            }
                         }
                     }
                 });
             });
-            alert(`Applied ${this.bulkEditAction} to ${editCount} sample(s) in project ${this.bulkEditProject}`);
+            const actionLabel = this.bulkEditAction === 'edit_fields' ? 'field edits' : this.bulkEditAction;
+            alert(`Applied ${actionLabel} to ${editCount} sample(s) in project ${this.bulkEditProject}`);
             this.closeBulkEditModal();
         },
         addNewSample() {
@@ -3679,14 +3748,15 @@ const vDemuxSampleInfoEditor = {
                                         <select class="form-select" id="bulkEditAction" v-model="bulkEditAction" @change="updateProjectLaneSelection">
                                             <option value="reverse_complement_index1">Reverse Complement Index 1</option>
                                             <option value="reverse_complement_index2">Reverse Complement Index 2</option>
+                                            <option value="edit_fields">Edit Fields</option>
                                         </select>
                                     </div>
                                     <div class="mb-3">
                                         <label for="bulkEditProject" class="form-label">Project:</label>
                                         <select class="form-select" id="bulkEditProject" v-model="bulkEditProject" @change="updateProjectLaneSelection" required>
                                             <option value="">-- Select Project --</option>
-                                            <option v-for="project in availableProjects" :key="project" :value="project">
-                                                {{ project }}
+                                            <option v-for="project in availableProjects" :key="project.id || project.name" :value="project.id || project.name">
+                                                {{ project.displayName }}
                                             </option>
                                         </select>
                                     </div>
@@ -3701,6 +3771,92 @@ const vDemuxSampleInfoEditor = {
                                         <small v-if="isSingleLaneProject" class="form-text text-muted">
                                             This project is only present in one lane.
                                         </small>
+                                    </div>
+                                    <!-- Warning for inconsistent field values -->
+                                    <div v-if="bulkEditAction === 'edit_fields' && bulkEditProject && bulkEditProjectWarnings.length > 0" class="alert alert-warning">
+                                        <strong><i class="fa fa-info-circle"></i> Inconsistent Field Values Detected:</strong>
+                                        <p class="mb-1 mt-2">The following fields have different values across samples in this project. The form has been pre-filled with values from the majority of samples, but you may want to review these fields:</p>
+                                        <ul class="mb-0 mt-2">
+                                            <li v-for="(warning, idx) in bulkEditProjectWarnings" :key="idx">{{ warning }}</li>
+                                        </ul>
+                                    </div>
+                                    <!-- Bulk Edit Fields Form -->
+                                    <div v-if="bulkEditAction === 'edit_fields' && bulkEditProject" class="mt-4">
+                                        <h6 class="mb-3">Edit Fields (applied to all samples in selected project/lane):</h6>
+                                        <div class="alert alert-info">
+                                            <i class="fa fa-info-circle"></i> Only fields with values entered below will be updated. Leave fields empty to keep existing values.
+                                        </div>
+                                        <div class="row">
+                                            <!-- Iterate through bulk editable fields -->
+                                            <template v-for="field in bulkEditableFields" :key="field.key">
+                                                <!-- Text and Index inputs -->
+                                                <div v-if="field.formField.inputType === 'text' || field.formField.inputType === 'index'"
+                                                     :class="'col-md-' + field.formField.columnWidth + ' mb-3'">
+                                                    <label :for="'bulk_' + field.key" class="form-label">{{ field.label }}:</label>
+                                                    <input
+                                                        :type="'text'"
+                                                        :class="'form-control' + (field.formField.inputType === 'index' ? ' font-monospace' : '')"
+                                                        :id="'bulk_' + field.key"
+                                                        v-model="bulkEditFormData[field.key]"
+                                                        :placeholder="'Leave empty to keep existing'">
+                                                </div>
+                                                <!-- Textarea -->
+                                                <div v-else-if="field.formField.inputType === 'textarea'"
+                                                     :class="'col-md-' + field.formField.columnWidth + ' mb-3'">
+                                                    <label :for="'bulk_' + field.key" class="form-label">{{ field.label }}:</label>
+                                                    <textarea
+                                                        class="form-control"
+                                                        :id="'bulk_' + field.key"
+                                                        v-model="bulkEditFormData[field.key]"
+                                                        :rows="field.formField.rows || 3"
+                                                        :placeholder="'Leave empty to keep existing'"></textarea>
+                                                </div>
+                                                <!-- Select dropdown -->
+                                                <div v-else-if="field.formField.inputType === 'select'"
+                                                     :class="'col-md-' + field.formField.columnWidth + ' mb-3'">
+                                                    <label :for="'bulk_' + field.key" class="form-label">{{ field.label }}:</label>
+                                                    <select class="form-select" :id="'bulk_' + field.key" v-model="bulkEditFormData[field.key]">
+                                                        <option value="">-- Keep existing --</option>
+                                                        <option v-for="opt in field.formField.options" :key="opt.value" :value="opt.value">
+                                                            {{ opt.label }}
+                                                        </option>
+                                                    </select>
+                                                </div>
+                                                <!-- Radio boolean nullable -->
+                                                <div v-else-if="field.formField.inputType === 'radio-boolean-nullable'"
+                                                     :class="'col-md-' + field.formField.columnWidth + ' mb-3'">
+                                                    <label class="form-label">{{ field.label }}:</label>
+                                                    <div>
+                                                        <div class="form-check form-check-inline">
+                                                            <input class="form-check-input" type="radio" :name="'bulk_' + field.key" :id="'bulk_' + field.key + '_null'" :value="null" v-model="bulkEditFormData[field.key]" checked>
+                                                            <label class="form-check-label" :for="'bulk_' + field.key + '_null'">Keep existing</label>
+                                                        </div>
+                                                        <div class="form-check form-check-inline">
+                                                            <input class="form-check-input" type="radio" :name="'bulk_' + field.key" :id="'bulk_' + field.key + '_true'" :value="true" v-model="bulkEditFormData[field.key]">
+                                                            <label class="form-check-label" :for="'bulk_' + field.key + '_true'">True</label>
+                                                        </div>
+                                                        <div class="form-check form-check-inline">
+                                                            <input class="form-check-input" type="radio" :name="'bulk_' + field.key" :id="'bulk_' + field.key + '_false'" :value="false" v-model="bulkEditFormData[field.key]">
+                                                            <label class="form-check-label" :for="'bulk_' + field.key + '_false'">False</label>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <!-- Number input -->
+                                                <div v-else-if="field.formField.inputType === 'number'"
+                                                     :class="'col-md-' + field.formField.columnWidth + ' mb-3'">
+                                                    <label :for="'bulk_' + field.key" class="form-label">{{ field.label }}:</label>
+                                                    <input
+                                                        type="number"
+                                                        class="form-control"
+                                                        :id="'bulk_' + field.key"
+                                                        v-model.number="bulkEditFormData[field.key]"
+                                                        :min="field.formField.min"
+                                                        :max="field.formField.max"
+                                                        :placeholder="field.formField.placeholder || 'Leave empty to keep existing'">
+                                                    <small v-if="field.formField.helpText" class="form-text text-muted">{{ field.formField.helpText.edit || field.formField.helpText.add }}</small>
+                                                </div>
+                                            </template>
+                                        </div>
                                     </div>
                                 </div>
                                 <div class="modal-footer">
