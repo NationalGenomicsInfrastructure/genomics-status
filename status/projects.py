@@ -681,6 +681,69 @@ class ProjectsSearchHandler(ProjectsBaseDataHandler):
         self.write(json.dumps(self.search_project_names(search_string)))
 
 
+class ProjectReadsSequencedHandler(ProjectsBaseDataHandler):
+    """Serves the total number of reads sequenced for a given project.
+
+    Loaded through /api/v1/project_reads_sequenced/([^/]*)$
+    """
+
+    def get(self, project):
+        view_rows = self.application.cloudant.post_view(
+            db="projects",
+            ddoc="project",
+            view="summary",
+            keys=[["open", project], ["closed", project]],
+        ).get_result()["rows"]
+        if not len(view_rows) == 1:
+            return {}
+
+        summary_row = view_rows[0]
+        self.set_header("Content-type", "application/json")
+        all_reads = ReadsTotalHandler.get_total_reads(self.application, project)
+        reads_sum = 0
+        for flowcells in all_reads.values():
+            for flowcell in flowcells:
+                # Include all non-failed samples, even if they don't have a sample_status
+                if flowcell.get("sample_status", {}) not in ["Failed"]:
+                    reads_sum += flowcell["cl"]
+
+        # Check if the project's flowcell field contains "Universal-"
+        project_flowcell = summary_row["value"]["details"].get("flowcell", "")
+        is_universal = project_flowcell.startswith("Universal-")
+
+        reads_sequenced = 0
+        # 1 unit = 600 million reads - only show units for Universal projects
+        # For Universal projects, check if reads meet 90% of (units_ordered * 600M)
+        units_achieved = reads_sum / 600000000
+        reads_sequenced_meets_threshold = True  # Default for non-Universal projects
+
+        if is_universal:
+            units_ordered_str = summary_row["value"]["details"].get(
+                "sequence_units_ordered_(lanes)", ""
+            )
+            try:
+                units_ordered = float(units_ordered_str) if units_ordered_str else 0
+                if units_ordered > 0:
+                    expected_reads = units_ordered * 600000000
+                    threshold = expected_reads * 0.9
+                    reads_sequenced_meets_threshold = reads_sum >= threshold
+            except (ValueError, TypeError):
+                units_ordered = 0
+
+            reads_sequenced = str(reads_sum) + f" (~ {round(units_achieved, 2)} units)"
+        else:
+            reads_sequenced = str(reads_sum)
+
+        self.write(
+            json.dumps(
+                {
+                    "reads_sequenced": reads_sequenced,
+                    "reads_sequenced_meets_threshold": reads_sequenced_meets_threshold,
+                }
+            )
+        )
+
+
 class ProjectDataHandler(ProjectsBaseDataHandler):
     """Serves brief information of a given project.
 
@@ -708,49 +771,6 @@ class ProjectDataHandler(ProjectsBaseDataHandler):
 
         summary_row = view_rows[0]
         summary_row, field_sources = self.project_summary_data(summary_row)
-
-        # Calculate total reads sequenced for non-failed samples in the project
-        all_reads = ReadsTotalHandler.get_total_reads(self.application, project)
-        reads_sum = 0
-        for flowcells in all_reads.values():
-            for flowcell in flowcells:
-                # Include all non-failed samples, even if they don't have a sample_status
-                if flowcell.get("sample_status", {}) not in ["Failed"]:
-                    reads_sum += flowcell["cl"]
-
-        # Check if the project's flowcell field contains "Universal-"
-        project_flowcell = summary_row["value"].get("flowcell", "")
-        is_universal = project_flowcell.startswith("Universal-")
-
-        # 1 unit = 600 million reads - only show units for Universal projects
-        # For Universal projects, check if reads meet 90% of (units_ordered * 600M)
-        units_achieved = reads_sum / 600000000
-        meets_threshold = True  # Default for non-Universal projects
-
-        if is_universal:
-            units_ordered_str = summary_row["value"].get(
-                "sequence_units_ordered_(lanes)", ""
-            )
-            try:
-                units_ordered = float(units_ordered_str) if units_ordered_str else 0
-                if units_ordered > 0:
-                    expected_reads = units_ordered * 600000000
-                    threshold = expected_reads * 0.9
-                    meets_threshold = reads_sum >= threshold
-            except (ValueError, TypeError):
-                units_ordered = 0
-
-            summary_row["value"]["reads_sequenced"] = (
-                str(reads_sum) + f" (~ {round(units_achieved, 2)} units)"
-            )
-        else:
-            summary_row["value"]["reads_sequenced"] = str(reads_sum)
-
-        summary_row["value"]["reads_sequenced_meets_threshold"] = meets_threshold
-
-        field_sources["reads_sequenced"] = (
-            "Calculated by Genomics Status (backend) from all non-failed samples in the project"
-        )
 
         date_result_rows = self.application.cloudant.post_view(
             db="projects",
