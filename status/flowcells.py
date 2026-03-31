@@ -575,6 +575,19 @@ class ReadsTotalHandler(SafeHandler):
     def get_total_reads(app, query):
         data = {}
         ordereddata = OrderedDict()
+
+        # Get all flowcell info at once instead of per-row
+        fc_info_cache = {}
+        fc_info_view = app.cloudant.post_view(
+            db="x_flowcells",
+            ddoc="info",
+            view="summary",
+            descending=True,
+        ).get_result()["rows"]
+
+        for row in fc_info_view:
+            fc_info_cache[row["key"]] = row["value"]
+
         xfc_view = app.cloudant.post_view(
             db="x_flowcells",
             ddoc="samples",
@@ -589,22 +602,13 @@ class ReadsTotalHandler(SafeHandler):
                 data[row["key"]] = []
             # To add correct threshold values
             fc_long_name = row["value"]["fcp"].split(":")[0]
-            fc_date_run = fc_long_name.split("_")[0]
-            if len(fc_date_run) > 6:
-                fc_date_run = fc_date_run[-6:]
-            fc_short_name = fc_date_run + "_" + fc_long_name.split("_")[-1]
-            fc_view = app.cloudant.post_view(
-                db="x_flowcells",
-                ddoc="info",
-                view="summary",
-                key=fc_short_name,
-                descending=True,
-            ).get_result()["rows"]
-            for info_row in fc_view:
-                row["value"]["run_mode"] = info_row["value"]["run_mode"]
-                row["value"]["longer_read_length"] = info_row["value"][
-                    "longer_read_length"
-                ]
+            fc_parts = fc_long_name.split("_")
+            fc_date_run = fc_parts[0][-6:]
+            fc_short_name = fc_date_run + "_" + fc_parts[-1]
+            if fc_short_name in fc_info_cache:
+                info = fc_info_cache[fc_short_name]
+                row["value"]["run_mode"] = info["run_mode"]
+                row["value"]["longer_read_length"] = info["longer_read_length"]
             data[row["key"]].append(row["value"])
 
         # To check if sample is failed on lane level
