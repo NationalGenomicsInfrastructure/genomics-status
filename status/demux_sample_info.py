@@ -1241,9 +1241,7 @@ class DemuxSampleInfoDataHandler(SafeHandler):
 
         return bcl_settings_filtered
 
-    def _recalculate_all_samplesheet_settings(
-        self, calculated_lanes
-    ):
+    def _recalculate_all_samplesheet_settings(self, calculated_lanes):
         """Recalculate samplesheet_settings for all samples in all lanes.
 
         This should be called when the document is updated,
@@ -1275,9 +1273,7 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                 # Update the stored samplesheet_settings
                 latest_settings["samplesheet_settings"] = samplesheet_settings
 
-    def _generate_samplesheets(
-        self, flowcell_id, calculated_lanes, metadata
-    ):
+    def _generate_samplesheets(self, flowcell_id, calculated_lanes, metadata):
         """Generate Illumina v2 samplesheets grouped by lane and BCLConvert settings.
 
         Stage 3: Samplesheet Assembly - Groups samples by their samplesheet_settings
@@ -1728,9 +1724,9 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                             "project_name": "",  # Default, can be overwritten
                             "library_method": "",  # Default, can be overwritten
                             "flowcell_id": flowcell_id,
-                            "settings": {}
+                            "settings": {},
                         }
-                        
+
                         # Create initial settings structure with defaults
                         # These will be overwritten by edited_fields below
                         new_settings = {
@@ -1743,7 +1739,7 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                                 "index2": "",
                                 "MaskShortReads": 0,
                                 "MinimumTrimmedReadLength": 0,
-                                "OverrideCycles": ""
+                                "OverrideCycles": "",
                             },
                             "other_details": {
                                 "sample_ref": "",
@@ -1754,13 +1750,17 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                                 "index_length": 0,
                                 "umi_config": None,
                                 "library_method": "",
-                                "config_sources": ["manually_added"]  # Indicate manual addition
+                                "config_sources": [
+                                    "manually_added"
+                                ],  # Indicate manual addition
                             },
-                            "raw_samplesheet_settings": {}
+                            "raw_samplesheet_settings": {},
                         }
-                        
+
                         # Add the sample row to the lane
-                        document["calculated"]["lanes"][lane_key]["sample_rows"][sample_uuid] = sample_row
+                        document["calculated"]["lanes"][lane_key]["sample_rows"][
+                            sample_uuid
+                        ] = sample_row
                     else:
                         # Existing sample - get the current sample row
                         sample_row = document["calculated"]["lanes"][lane_key][
@@ -1782,10 +1782,13 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                         if field_key not in allowed_fields:
                             # Skip fields that aren't in the allowed list
                             continue
-                        
+
                         # For new samples, skip sample_type and config_sources
                         # These are set automatically by the backend to indicate manual addition
-                        if is_new_sample and field_key in ["sample_type", "config_sources"]:
+                        if is_new_sample and field_key in [
+                            "sample_type",
+                            "config_sources",
+                        ]:
                             continue
 
                         # Validate the value (especially for raw_samplesheet_settings)
@@ -1799,7 +1802,7 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                         # Handle settings level fields
                         elif section in new_settings:
                             new_settings[section][actual_key] = new_value
-                    
+
                     # Track the sample ID in appropriate set
                     sample_id = new_settings["per_sample_fields"].get(
                         "Sample_ID", sample_uuid
@@ -1821,7 +1824,7 @@ class DemuxSampleInfoDataHandler(SafeHandler):
 
                         # Calculate index lengths from actual index sequences
                         index_lengths = [len(index_1), len(index_2)]
-                        
+
                         # Update index_length in other_details
                         new_settings["other_details"]["index_length"] = len(index_1)
 
@@ -1854,16 +1857,20 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                 if added_samples:
                     added_list = ", ".join(sorted(added_samples)[:10])
                     if len(added_samples) > 10:
-                        parts.append(f"Added {len(added_samples)} samples: {added_list}...")
+                        parts.append(
+                            f"Added {len(added_samples)} samples: {added_list}..."
+                        )
                     else:
                         parts.append(f"Added samples: {added_list}")
                 if modified_samples:
                     modified_list = ", ".join(sorted(modified_samples)[:10])
                     if len(modified_samples) > 10:
-                        parts.append(f"Modified {len(modified_samples)} samples: {modified_list}...")
+                        parts.append(
+                            f"Modified {len(modified_samples)} samples: {modified_list}..."
+                        )
                     else:
                         parts.append(f"Modified samples: {modified_list}")
-                
+
                 comment = "Manual edit: " + "; ".join(parts) if parts else "Manual edit"
 
             document["calculated"]["version_history"][timestamp] = {
@@ -1940,10 +1947,10 @@ class SampleDeleteHandler(DemuxSampleInfoDataHandler):
 
     def delete(self, flowcell_id, lane, sample_uuid):
         """Mark a sample as deleted while maintaining version history.
-        
+
         The sample is not actually removed from the database, but marked as deleted
         and will not appear in generated samplesheets.
-        
+
         Args:
             flowcell_id: The flowcell identifier
             lane: The lane number
@@ -1992,7 +1999,9 @@ class SampleDeleteHandler(DemuxSampleInfoDataHandler):
             if lane_key not in document.get("calculated", {}).get("lanes", {}):
                 self.set_status(404)
                 self.write(
-                    json.dumps({"error": f"Lane {lane} not found in flowcell {flowcell_id}"})
+                    json.dumps(
+                        {"error": f"Lane {lane} not found in flowcell {flowcell_id}"}
+                    )
                 )
                 return
 
@@ -2011,19 +2020,19 @@ class SampleDeleteHandler(DemuxSampleInfoDataHandler):
             # Check if sample is already deleted
             if sample_row.get("deleted", False):
                 self.set_status(400)
-                self.write(
-                    json.dumps(
-                        {"error": "Sample is already deleted"}
-                    )
-                )
+                self.write(json.dumps({"error": "Sample is already deleted"}))
                 return
 
             # Get sample ID for logging
-            settings_versions = sorted(sample_row.get("settings", {}).keys(), reverse=True)
+            settings_versions = sorted(
+                sample_row.get("settings", {}).keys(), reverse=True
+            )
             sample_id = "Unknown"
             if settings_versions:
                 latest_settings = sample_row["settings"][settings_versions[0]]
-                sample_id = latest_settings.get("per_sample_fields", {}).get("Sample_ID", "Unknown")
+                sample_id = latest_settings.get("per_sample_fields", {}).get(
+                    "Sample_ID", "Unknown"
+                )
 
             # Create timestamp for this deletion
             timestamp = datetime.datetime.now(datetime.timezone.utc).isoformat(

@@ -81,6 +81,106 @@ class FlowcellsHandler(SafeHandler):
             note_keys.append(note_key)
             temp_flowcells[row["key"]] = row["value"]
 
+        # Query y_flowcells database and merge entries that don't exist in x_flowcells
+        try:
+            six_months_ago = (
+                datetime.datetime.now() - relativedelta(months=6)
+            ).strftime("%Y%m%d")
+
+            y_flowcells_view_params = {
+                "db": "y_flowcells",
+                "ddoc": "summary",
+                "view": "date_flowcell_id",
+                "descending": True,
+            }
+
+            if not all:
+                # With descending=True, end_key specifies where to stop
+                y_flowcells_view_params["end_key"] = [six_months_ago]
+            else:
+                y_flowcells_view_params["limit"] = 500
+
+            y_flowcells_rows = (
+                self.application.cloudant.post_view(**y_flowcells_view_params)
+                .get_result()
+                .get("rows", [])
+            )
+
+            # Collect all rundir IDs from x_flowcells for deduplication
+            x_flowcells_rundirs = {
+                fc.get("run id") for fc in temp_flowcells.values() if fc.get("run id")
+            }
+
+            # Process y_flowcells entries
+            for row in y_flowcells_rows:
+                key = row.get("key", [])
+                if len(key) < 2:
+                    continue
+
+                flowcell_id = key[1]
+                value = row.get("value", {})
+                runfolder_id = value.get("runfolder_id")
+
+                # Skip if this runfolder already exists in x_flowcells
+                # This ensures x_flowcells takes precedence
+                if runfolder_id and runfolder_id in x_flowcells_rundirs:
+                    continue
+
+                # Format startdate from sequencing_started_timestamp
+                startdate = "N/A"
+                seq_started_ts = value.get("sequencing_started_timestamp")
+                if seq_started_ts:
+                    try:
+                        startdate = datetime.datetime.strptime(
+                            seq_started_ts.split("T")[0], "%Y-%m-%d"
+                        ).strftime("%Y-%m-%d")
+                    except (ValueError, AttributeError):
+                        pass
+
+                # Fallback: extract date from runfolder_id if startdate is still N/A
+                if startdate == "N/A" and runfolder_id:
+                    try:
+                        # runfolder_id typically starts with YYMMDD or YYYYMMDD
+                        date_part = runfolder_id.split("_")[0]
+                        if date_part.isdigit():
+                            if len(date_part) == 6:
+                                # YYMMDD format - add "20" prefix
+                                startdate = datetime.datetime.strptime(
+                                    "20" + date_part, "%Y%m%d"
+                                ).strftime("%Y-%m-%d")
+                            elif len(date_part) == 8:
+                                # YYYYMMDD format
+                                startdate = datetime.datetime.strptime(
+                                    date_part, "%Y%m%d"
+                                ).strftime("%Y-%m-%d")
+                    except (ValueError, IndexError, AttributeError):
+                        pass
+
+                # Create x_flowcells-compatible structure for y_flowcells entry
+                y_fc_entry = {
+                    "run id": runfolder_id or flowcell_id,
+                    "flowcell_id": flowcell_id,
+                    "startdate": startdate,
+                    "run_mode": value.get("run_mode", "N/A"),
+                    "actual_run_setup": value.get("run_setup", "N/A"),
+                    "lane_info": value.get("lane_info", {}),
+                    "instrument": value.get("instrument", ""),
+                    "source": "y_flowcells",
+                    "sequencing_started": value.get("sequencing_started", False),
+                    "sequencing_finished": value.get("sequencing_finished", False),
+                    "demultiplexing": None,  # Not available for y_flowcells
+                }
+
+                # Use flowcell_id as key for y_flowcells entries
+                temp_flowcells[flowcell_id] = y_fc_entry
+
+                # Add to note_keys for running notes lookup
+                note_key = runfolder_id or flowcell_id
+                note_keys.append(note_key)
+
+        except Exception as e:
+            application_log.warning(f"Failed to fetch y_flowcells: {str(e)}")
+
         notes = self.application.cloudant.post_view(
             db="running_notes",
             ddoc="latest_note_previews",
@@ -102,7 +202,38 @@ class FlowcellsHandler(SafeHandler):
                 row["value"]["created_at_utc"]: row["value"]
             }
 
-        return OrderedDict(sorted(temp_flowcells.items(), reverse=True))
+        # Sort flowcells by date (most recent first)
+        # Priority: startdate, then run id, then flowcell key
+        def get_sort_key(item):
+            key, fc = item
+
+            # Try startdate first (format: YYYY-MM-DD)
+            startdate = fc.get("startdate")
+            if startdate and startdate != "N/A":
+                try:
+                    # Remove dashes for string sorting: YYYY-MM-DD -> YYYYMMDD
+                    return startdate.replace("-", "")
+                except (AttributeError, ValueError):
+                    pass
+
+            # Try run id (often starts with date like YYMMDD or YYYYMMDD)
+            run_id = fc.get("run id")
+            if run_id:
+                parts = run_id.split("_")
+                if parts and parts[0].isdigit():
+                    # If starts with 6 digits (YYMMDD), prefix with '20'
+                    if len(parts[0]) == 6:
+                        return "20" + run_id
+                    # Already 8 digits (YYYYMMDD) or other format
+                    return run_id
+
+            # Fallback to key (flowcell ID)
+            return key
+
+        sorted_flowcells = sorted(
+            temp_flowcells.items(), key=get_sort_key, reverse=True
+        )
+        return OrderedDict(sorted_flowcells)
 
     def list_ont_flowcells(self, unfetched_runs):
         """Load the rows of the nanopore_runs:info/all_stats view
