@@ -11,17 +11,26 @@ class SensorpushBaseHandler(SafeHandler):
         # A reasonable start time
         start_time = datetime.datetime.now() - datetime.timedelta(days=start_days_ago)
         start_time_str = start_time.strftime("%Y-%m-%dT00:00:00")
+        end_time_str = datetime.datetime.now().strftime("%Y-%m-%dT00:00:00")
 
-        # Fetch all sensor names from the start day
-        # If a sensor is missing for that date, it won't be fetched
+        # Fetch all sensor names that have data for the given time range.
+        # The reduce function extracts the unique sensor ids.
+        # If a sensor is missing for the entire period, it won't be fetched
         sensor_id_view = self.application.cloudant.post_view(
             db="sensorpush",
             ddoc="sensor_id",
             view="by_date",
-            descending=True,
-            key=start_time_str,
+            descending=False,
+            reduce=True,
+            start_key=start_time_str,
+            end_key=end_time_str,
         ).get_result()["rows"]
-        sensors = [row["value"] for row in sensor_id_view]
+
+        # Return empty dict if no sensors found in the time range
+        if len(sensor_id_view) == 0:
+            return {}
+
+        sensors = sensor_id_view[0]["value"]
         if sensors == []:
             return {}
 
@@ -118,8 +127,16 @@ class SensorpushHandler(SensorpushBaseHandler):
     """Serves a page which lists all sensors with temperature info."""
 
     def get(self):
-        sensor_data = self.get_samples(start_days_ago=28)
+        sensor_data = self.get_samples(start_days_ago=120)
         sensor_24h_data = self.get_samples(start_days_ago=1)
+        # Get most recent data (last 24 hours) to check if sensors are currently active
+        # Note: Each document represents 24 hours, so 1 day is the minimum granularity
+        sensor_recent_data = sensor_24h_data  # Reuse the 24h data
+
+        # Extract list of sensors with recent data (currently active)
+        active_sensor_names = [
+            sensor_info["sensor_name"] for sensor_info in sensor_recent_data.values()
+        ]
 
         t = self.application.loader.load("sensorpush.html")
         self.write(
@@ -128,5 +145,6 @@ class SensorpushHandler(SensorpushBaseHandler):
                 user=self.get_current_user(),
                 sensor_data=sensor_data,
                 sensor_24h_data=sensor_24h_data,
+                active_sensors=active_sensor_names,
             )
         )
