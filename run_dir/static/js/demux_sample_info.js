@@ -113,7 +113,7 @@ const FIELD_CONFIG = {
         label: 'Sample Type',
         backendKey: 'sample_type',
         settingsPath: ['other_details', 'sample_type'],
-        bulkEditable: true,
+        bulkEditable: false,
         historyDisplayName: 'Sample Type',
         topLevel: false
     },
@@ -122,7 +122,7 @@ const FIELD_CONFIG = {
         label: 'Config Sources (Stage 1)',
         backendKey: 'config_sources',
         settingsPath: ['other_details', 'config_sources'],
-        bulkEditable: true,
+        bulkEditable: false,
         historyDisplayName: 'Config Sources',
         topLevel: false
     },
@@ -1268,6 +1268,7 @@ const vDemuxSampleInfoEditor = {
             bulkEditLane: 'all',
             bulkEditFormData: {},
             bulkEditProjectWarnings: [],  // Warnings about inconsistent values in project for bulk edit
+            bulkEditTargetSamples: [],  // Array of sample UUIDs to edit (empty = all samples)
             // Add Sample specific variables
             addSampleTargetProject: '',
             addSampleTargetLanes: [],  // Multiple lanes (at least one required)
@@ -1563,33 +1564,60 @@ const vDemuxSampleInfoEditor = {
             return Object.values(FIELD_CONFIG)
                 .filter(field => field.bulkEditable && field.formField?.showInForm)
                 .sort((a, b) => a.formField.order - b.formField.order);
+        },
+        bulkEditAvailableSamples() {
+            // Get samples in the selected project/lane for bulk edit
+            if (!this.bulkEditProject) return [];
+            const lanesToInclude = this.bulkEditLane === 'all' ? this.projectLanes : [this.bulkEditLane];
+            const samples = [];
+            lanesToInclude.forEach(lane => {
+                const samplesInLane = this.getSamplesForProject(this.bulkEditProject, lane);
+                samplesInLane.forEach(({ uuid, sample, latestSettings }) => {
+                    samples.push({
+                        uuid: uuid,
+                        lane: lane,
+                        sampleId: latestSettings.per_sample_fields?.Sample_ID || 'Unknown',
+                        sampleName: latestSettings.per_sample_fields?.Sample_Name || 'Unknown',
+                        sample: sample
+                    });
+                });
+            });
+            // Sort by lane, then by sample ID
+            return samples.sort((a, b) => {
+                const laneCompare = String(a.lane).localeCompare(String(b.lane), undefined, { numeric: true });
+                if (laneCompare !== 0) return laneCompare;
+                return a.sampleId.localeCompare(b.sampleId);
+            });
         }
     },
     watch: {
         addSampleTargetProject(newProject) {
             // Update editFormData.sample_project when target project changes
             if (this.showAddModal && this.editFormData) {
-                // Get the project name (not ID) for the Sample_Project field
-                const projectDetails = this.selectedProjectDetails;
-                this.editFormData.sample_project = projectDetails.name || '';
                 // Update sample_id and sample_name to next ID for this project
                 const nextId = this.nextSampleId;
                 // Sample_ID should be prefixed with 'Sample_', Sample_Name should not
                 this.editFormData.sample_id = nextId ? 'Sample_' + nextId : '';
                 this.editFormData.sample_name = nextId;
                 // Pre-fill form with project-based defaults and show warnings if values differ
+                // This will populate sample_project from existing samples' Sample_Project field
                 this.updateAddSampleFormWithProjectDefaults(newProject);
             }
         },
         addSampleTargetLanes(newLanes) {
-            // Update editModalLane when lanes change
+            // Update editModalLane and lane field when lanes change
             if (this.showAddModal && newLanes.length > 0) {
                 this.editModalLane = newLanes[0];
+                if (this.editFormData) {
+                    this.editFormData.lane = newLanes[0];
+                }
             }
         },
         bulkEditProject(newProject) {
             // Pre-fill bulk edit form when project changes
             if (this.showBulkEditModal) {
+                // Clear sample selection when project changes
+                this.bulkEditTargetSamples = [];
                 if (newProject) {
                     this.populateFormWithProjectDefaults(newProject, this.bulkEditFormData, this.bulkEditProjectWarnings);
                 } else {
@@ -1597,9 +1625,76 @@ const vDemuxSampleInfoEditor = {
                     this.populateFormWithProjectDefaults(null, this.bulkEditFormData, this.bulkEditProjectWarnings);
                 }
             }
+        },
+        bulkEditLane(newLane) {
+            // Clear sample selection when lane changes
+            if (this.showBulkEditModal) {
+                this.bulkEditTargetSamples = [];
+            }
         }
     },
     methods: {
+        // ===== Helper Methods for Data Structure Transformation =====
+        /**
+         * Transform flat form data to nested backend structure
+         * 
+         * This helper centralizes the transformation between two data formats:
+         * - FLAT: Used for forms and editing - simple, clean v-model bindings
+         *   Example: {sample_id: "Sample_001", sample_ref: "hg38", recipe: "TruSeq"}
+         * 
+         * - NESTED: Used by backend and for display - matches database structure
+         *   Example: {
+         *     per_sample_fields: {Sample_ID: "Sample_001"},
+         *     other_details: {sample_ref: "hg38", recipe: "TruSeq"}
+         *   }
+         * 
+         * Uses FIELD_CONFIG.settingsPath to automatically map fields, ensuring consistency
+         * and preventing manual mapping errors. This is the single source of truth for
+         * flat→nested transformation.
+         * 
+         * @param {Object} flatData - Flat form data object (e.g., {sample_id: "123", sample_ref: "hg38"})
+         * @returns {Object} Nested backend structure with per_sample_fields, other_details, raw_samplesheet_settings
+         * 
+         * Note: topLevel fields (description, control, project_id, project_name) are not included
+         * in the returned structure as they live directly on the sample object, not in settings.
+         */
+        flatToBackendStructure(flatData) {
+            const backendStructure = {
+                per_sample_fields: {},
+                other_details: {},
+                raw_samplesheet_settings: {}
+            };
+            
+            // Process each field in FIELD_CONFIG
+            Object.values(FIELD_CONFIG).forEach(fieldConfig => {
+                const fieldKey = fieldConfig.key;
+                const value = flatData[fieldKey];
+                
+                // Skip if value is not present in flatData
+                if (value === undefined) return;
+                
+                // Handle topLevel fields (stored on sample object, not in settings)
+                if (fieldConfig.topLevel) {
+                    // These will be handled separately: description, control, project_id, project_name, last_modified
+                    return;
+                }
+                
+                // Map to nested structure based on settingsPath
+                const settingsPath = fieldConfig.settingsPath;
+                if (!settingsPath || settingsPath.length < 2) return;
+                
+                const section = settingsPath[0]; // e.g., 'per_sample_fields', 'other_details'
+                const actualKey = settingsPath[1]; // e.g., 'Sample_ID', 'sample_ref'
+                
+                // Set the value in the appropriate section
+                if (backendStructure[section] !== undefined) {
+                    backendStructure[section][actualKey] = value;
+                }
+            });
+            
+            return backendStructure;
+        },
+        
         // ===== Helper Methods for Sample Object Building (Refactoring #1) =====
         /**
          * Get the latest settings for a sample
@@ -1711,6 +1806,9 @@ const vDemuxSampleInfoEditor = {
          */
         getDefaultValue(fieldKey) {
             const defaults = {
+                'sample_project': '',
+                'project_name': '',
+                'project_id': '',
                 'sample_ref': '',
                 'recipe': '',
                 'operator': '',
@@ -1873,10 +1971,9 @@ const vDemuxSampleInfoEditor = {
          * @param {string} targetProject - The project identifier
          * @param {Object} formData - The form data object to populate
          * @param {Array} warningsArray - The warnings array to populate (pass by reference)
-         * @param {boolean} excludeSampleProject - Whether to exclude sample_project field
          * @returns {Object} Field data with pre-filled values
          */
-        populateFormWithProjectDefaults(targetProject, formData, warningsArray, excludeSampleProject = false) {
+        populateFormWithProjectDefaults(targetProject, formData, warningsArray) {
             // Clear warnings
             warningsArray.splice(0, warningsArray.length);
             
@@ -1884,13 +1981,10 @@ const vDemuxSampleInfoEditor = {
                 // Reset fields to defaults when no project is selected
                 if (formData) {
                     Object.values(FIELD_CONFIG)
-                        .filter(f => f.bulkEditable && (!excludeSampleProject || f.key !== 'sample_project'))
+                        .filter(f => f.bulkEditable)
                         .forEach(fieldConfig => {
                             formData[fieldConfig.key] = this.getDefaultValue(fieldConfig.key);
                         });
-                    if (excludeSampleProject) {
-                        formData.sample_project = '';
-                    }
                 }
                 return {};
             }
@@ -1908,7 +2002,7 @@ const vDemuxSampleInfoEditor = {
 
             // Get all bulk-editable fields from FIELD_CONFIG
             const bulkEditableFields = Object.values(FIELD_CONFIG)
-                .filter(f => f.bulkEditable && (!excludeSampleProject || f.key !== 'sample_project'));
+                .filter(f => f.bulkEditable);
             const fieldData = {};
             
             // For each bulk-editable field, collect values from all project samples
@@ -1975,18 +2069,13 @@ const vDemuxSampleInfoEditor = {
             this.addSampleProjectWarnings = [];
             if (!targetProject || !this.editFormData) {
                 // Reset using generic method
-                this.populateFormWithProjectDefaults(null, this.editFormData, this.addSampleProjectWarnings, true);
+                this.populateFormWithProjectDefaults(null, this.editFormData, this.addSampleProjectWarnings);
                 return {};
             }
 
-            // Set sample_project to the project name (not ID)
-            const projectDetails = this.selectedProjectDetails;
-            if (this.editFormData) {
-                this.editFormData.sample_project = projectDetails.name || '';
-            }
-
             // Use generic method to populate form and get warnings
-            return this.populateFormWithProjectDefaults(targetProject, this.editFormData, this.addSampleProjectWarnings, true);
+            // This will populate sample_project from existing samples' Sample_Project field
+            return this.populateFormWithProjectDefaults(targetProject, this.editFormData, this.addSampleProjectWarnings);
         },
         openConfigModal(sample, lane) {
             // Open modal to show config sources and their details
@@ -2724,6 +2813,7 @@ const vDemuxSampleInfoEditor = {
             this.bulkEditLane = '';
             this.bulkEditAction = 'reverse_complement_index1';
             this.bulkEditProjectWarnings = [];
+            this.bulkEditTargetSamples = [];
             // Initialize bulk edit form data with empty values for all bulk editable fields
             this.bulkEditFormData = {};
             Object.values(FIELD_CONFIG)
@@ -2741,6 +2831,8 @@ const vDemuxSampleInfoEditor = {
             } else {
                 this.bulkEditLane = '';
             }
+            // Clear sample selection when project or lane changes
+            this.bulkEditTargetSamples = [];
         },
         closeBulkEditModal() {
             this.showBulkEditModal = false;
@@ -2824,6 +2916,7 @@ const vDemuxSampleInfoEditor = {
                 sample_name: newSampleId,
                 sample_project: '',  // Will be set by addSampleTargetProject watcher or updateAddSampleFormWithProjectDefaults
                 sample_ref: this.getDefaultValue('sample_ref'),
+                lane: this.addSampleTargetLanes[0] || null,  // Show the first target lane (will be saved to all target lanes)
                 index_1: '',
                 index_2: '',
                 named_index: '',
@@ -2887,6 +2980,12 @@ const vDemuxSampleInfoEditor = {
                 alert('Please provide either a Sample ID or Sample Name.');
                 return;
             }
+            // Check if XXXX placeholder is still present in sample_id or sample_name
+            if ((this.editFormData.sample_id && this.editFormData.sample_id.includes('XXXX')) ||
+                (this.editFormData.sample_name && this.editFormData.sample_name.includes('XXXX'))) {
+                alert('Please replace XXXX in the Sample ID or Sample Name with a 3-4 digit number (e.g., 001 or 1001).');
+                return;
+            }
             // Confirmation for multi-lane add
             if (this.addSampleTargetLanes.length > 1) {
                 const confirmation = confirm(`Are you sure you want to add this sample to ${this.addSampleTargetLanes.length} lanes (${this.addSampleTargetLanes.join(', ')})?`);
@@ -2901,12 +3000,8 @@ const vDemuxSampleInfoEditor = {
             const uuid = this.editModalUuid;
             const newSettings = {
                 ...this.editFormData,
-                sample_project: projectDetails.name || undefined,
-                project_id: projectDetails.id || undefined,
-                project_name: projectDetails.name || undefined,
-                flowcell_id: this.flowcell_id,
-                mask_short_reads: 0,
-                minimum_trimmed_read_length: 0
+                // Only set flowcell_id explicitly - all other fields are already populated correctly in editFormData
+                flowcell_id: this.flowcell_id
             };
             // Add sample to all target lanes
             targetLanes.forEach(targetLane => {
@@ -2914,11 +3009,17 @@ const vDemuxSampleInfoEditor = {
                     ...newSettings,
                     lane: targetLane
                 };
-                // Add to editedData
+                // Add to editedData (flat structure for saving)
                 if (!this.editedData[targetLane]) {
                     this.editedData[targetLane] = {};
                 }
                 this.editedData[targetLane][uuid] = laneSpecificSettings;
+                
+                // Create backend-compatible structure for immediate display using helper
+                const backendStructureSettings = this.flatToBackendStructure(laneSpecificSettings);
+                // Add flowcell_id which is not in FIELD_CONFIG
+                backendStructureSettings.flowcell_id = this.flowcell_id;
+                
                 // Add to the actual data structure for immediate display
                 if (!this.demux_data.calculated.lanes[targetLane]) {
                     this.demux_data.calculated.lanes[targetLane] = { sample_rows: {} };
@@ -2927,9 +3028,11 @@ const vDemuxSampleInfoEditor = {
                     sample_id: laneSpecificSettings.sample_id,
                     project_id: projectDetails.id,
                     project_name: projectDetails.name,
+                    description: laneSpecificSettings.description,
+                    control: laneSpecificSettings.control,
                     last_modified: timestamp,
                     settings: {
-                        [timestamp]: laneSpecificSettings
+                        [timestamp]: backendStructureSettings
                     }
                 };
             });
@@ -2954,12 +3057,26 @@ const vDemuxSampleInfoEditor = {
                 alert('Please select a project.');
                 return;
             }
+
+            // Determine which samples to edit
+            const samplesToEdit = this.bulkEditTargetSamples.length > 0
+                ? this.bulkEditTargetSamples
+                : this.bulkEditAvailableSamples.map(s => s.uuid);
+
+            if (samplesToEdit.length === 0) {
+                alert('No samples selected or available for editing.');
+                return;
+            }
+
             let editCount = 0;
             const lanesToEdit = this.bulkEditLane === 'all' ? this.projectLanes : [this.bulkEditLane];
             lanesToEdit.forEach(lane => {
                 const laneData = this.calculatedLanes[lane];
                 if (!laneData) return;
                 Object.entries(laneData.sample_rows).forEach(([uuid, sample]) => {
+                    // Skip if this sample is not in the target list
+                    if (!samplesToEdit.includes(uuid)) return;
+
                     const settingsVersions = Object.keys(sample.settings).sort().reverse();
                     const latestSettings = sample.settings[settingsVersions[0]];
                     const sampleProject = latestSettings.per_sample_fields?.Sample_Project;
@@ -3000,7 +3117,10 @@ const vDemuxSampleInfoEditor = {
                 });
             });
             const actionLabel = this.bulkEditAction === 'edit_fields' ? 'field edits' : this.bulkEditAction;
-            alert(`Applied ${actionLabel} to ${editCount} sample(s) in project ${this.bulkEditProject}`);
+            const sampleCountLabel = this.bulkEditTargetSamples.length > 0
+                ? `${editCount} selected sample(s)`
+                : `${editCount} sample(s)`;
+            alert(`Applied ${actionLabel} to ${sampleCountLabel} in project ${this.bulkEditProject}`);
             this.closeBulkEditModal();
         },
         addNewSample() {
@@ -3772,6 +3892,33 @@ const vDemuxSampleInfoEditor = {
                                             This project is only present in one lane.
                                         </small>
                                     </div>
+                                    <!-- Sample Selection -->
+                                    <div class="mb-3" v-if="bulkEditProject && bulkEditAvailableSamples.length > 0">
+                                        <label class="form-label">Samples to Edit (optional):</label>
+                                        <div class="border rounded p-2" style="max-height: 250px; overflow-y: auto;">
+                                            <div class="form-check">
+                                                <input type="checkbox" class="form-check-input" id="bulkEdit_allSamples"
+                                                    :checked="bulkEditTargetSamples.length === bulkEditAvailableSamples.length"
+                                                    @change="bulkEditTargetSamples = $event.target.checked ? bulkEditAvailableSamples.map(s => s.uuid) : []">
+                                                <label class="form-check-label" for="bulkEdit_allSamples">
+                                                    <strong>All Samples ({{ bulkEditAvailableSamples.length }})</strong>
+                                                </label>
+                                            </div>
+                                            <hr class="my-1">
+                                            <div v-for="sampleInfo in bulkEditAvailableSamples" :key="sampleInfo.uuid" class="form-check">
+                                                <input type="checkbox" class="form-check-input" :id="'bulkEdit_sample_' + sampleInfo.uuid"
+                                                    :value="sampleInfo.uuid" v-model="bulkEditTargetSamples">
+                                                <label class="form-check-label" :for="'bulkEdit_sample_' + sampleInfo.uuid">
+                                                    <span class="badge bg-secondary me-1">L{{ sampleInfo.lane }}</span>
+                                                    <span class="font-monospace">{{ sampleInfo.sampleId }}</span>
+                                                    <span class="text-muted ms-1">({{ sampleInfo.sampleName }})</span>
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <small class="form-text text-muted">
+                                            Click "All Samples" to select all, or manually select specific samples below
+                                        </small>
+                                    </div>
                                     <!-- Warning for inconsistent field values -->
                                     <div v-if="bulkEditAction === 'edit_fields' && bulkEditProject && bulkEditProjectWarnings.length > 0" class="alert alert-warning">
                                         <strong><i class="fa fa-info-circle"></i> Inconsistent Field Values Detected:</strong>
@@ -3782,7 +3929,15 @@ const vDemuxSampleInfoEditor = {
                                     </div>
                                     <!-- Bulk Edit Fields Form -->
                                     <div v-if="bulkEditAction === 'edit_fields' && bulkEditProject" class="mt-4">
-                                        <h6 class="mb-3">Edit Fields (applied to all samples in selected project/lane):</h6>
+                                        <h6 class="mb-3">
+                                            Edit Fields
+                                            <span v-if="bulkEditTargetSamples.length > 0" class="text-muted">
+                                                (applied to {{ bulkEditTargetSamples.length }} selected sample{{ bulkEditTargetSamples.length !== 1 ? 's' : '' }})
+                                            </span>
+                                            <span v-else class="text-muted">
+                                                (applied to all {{ bulkEditAvailableSamples.length }} sample{{ bulkEditAvailableSamples.length !== 1 ? 's' : '' }})
+                                            </span>
+                                        </h6>
                                         <div class="alert alert-info">
                                             <i class="fa fa-info-circle"></i> Only fields with values entered below will be updated. Leave fields empty to keep existing values.
                                         </div>
