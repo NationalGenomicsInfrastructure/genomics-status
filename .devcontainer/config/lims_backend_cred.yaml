@@ -1,0 +1,4 @@
+# Fake LIMS backend credentials for local development
+baseuri: http://localhost:8443
+username: fake_user
+password: fake_password

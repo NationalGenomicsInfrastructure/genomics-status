@@ -490,7 +490,7 @@ function load_presets() {
     if (!jQuery.isEmptyObject(user_presets)) {
       for (var preset in user_presets) {
         userDefPresetsDropdown+='<li><a href="#" class="clickDropdownGetValue dropdown-item" style="cursor:pointer;" data-value="'+preset+'"> '+preset+'</a></li>';
-        allPresetsDropdownMod+='<li><a href="#" class="clickDropdownGetValue dropdown-item" style="cursor:pointer;" data-value="'+preset+'" data-origin="userdefined"">'+preset+'</a></li>';
+        allPresetsDropdownMod+='<li><a href="#" class="clickDropdownGetValue dropdown-item" style="cursor:pointer;" data-value="'+preset+'" data-origin="userdefined">'+preset+'</a></li>';
       }
     }
     userDefPresetsDropdown+='</ul>';
