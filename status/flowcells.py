@@ -81,14 +81,14 @@ class FlowcellsHandler(SafeHandler):
             note_keys.append(note_key)
             temp_flowcells[row["key"]] = row["value"]
 
-        # Query y_flowcells database and merge entries that don't exist in x_flowcells
+        # Query flowcell_status database and merge entries that don't exist in x_flowcells
         try:
             six_months_ago = (
                 datetime.datetime.now() - relativedelta(months=6)
             ).strftime("%Y%m%d")
 
-            y_flowcells_view_params = {
-                "db": "y_flowcells",
+            flowcell_status_view_params = {
+                "db": "flowcell_status",
                 "ddoc": "summary",
                 "view": "date_flowcell_id",
                 "descending": True,
@@ -96,12 +96,11 @@ class FlowcellsHandler(SafeHandler):
 
             if not all:
                 # With descending=True, end_key specifies where to stop
-                y_flowcells_view_params["end_key"] = [six_months_ago]
-            else:
-                y_flowcells_view_params["limit"] = 500
+                flowcell_status_view_params["end_key"] = [six_months_ago]
+            # When all=True, fetch everything (no limit needed)
 
-            y_flowcells_rows = (
-                self.application.cloudant.post_view(**y_flowcells_view_params)
+            flowcell_status_rows = (
+                self.application.cloudant.post_view(**flowcell_status_view_params)
                 .get_result()
                 .get("rows", [])
             )
@@ -111,8 +110,8 @@ class FlowcellsHandler(SafeHandler):
                 fc.get("run id") for fc in temp_flowcells.values() if fc.get("run id")
             }
 
-            # Process y_flowcells entries
-            for row in y_flowcells_rows:
+            # Process flowcell_status entries
+            for row in flowcell_status_rows:
                 key = row.get("key", [])
                 if len(key) < 2:
                     continue
@@ -125,6 +124,13 @@ class FlowcellsHandler(SafeHandler):
                 # This ensures x_flowcells takes precedence
                 if runfolder_id and runfolder_id in x_flowcells_rundirs:
                     continue
+
+                # Special case: MiSeq i100 flowcells may have "A" prepended in flowcell_status
+                # Check if removing the "A" matches an existing x_flowcells entry
+                if runfolder_id and runfolder_id.startswith("A"):
+                    without_a = runfolder_id[1:]
+                    if without_a in x_flowcells_rundirs:
+                        continue
 
                 # Format startdate from sequencing_started_timestamp
                 startdate = "N/A"
@@ -156,8 +162,8 @@ class FlowcellsHandler(SafeHandler):
                     except (ValueError, IndexError, AttributeError):
                         pass
 
-                # Create x_flowcells-compatible structure for y_flowcells entry
-                y_fc_entry = {
+                # Create x_flowcells-compatible structure for flowcell_status entry
+                fc_status_entry = {
                     "run id": runfolder_id or flowcell_id,
                     "flowcell_id": flowcell_id,
                     "startdate": startdate,
@@ -165,21 +171,72 @@ class FlowcellsHandler(SafeHandler):
                     "actual_run_setup": value.get("run_setup", "N/A"),
                     "lane_info": value.get("lane_info", {}),
                     "instrument": value.get("instrument", ""),
-                    "source": "y_flowcells",
+                    "source": "flowcell_status",
                     "sequencing_started": value.get("sequencing_started", False),
                     "sequencing_finished": value.get("sequencing_finished", False),
-                    "demultiplexing": None,  # Not available for y_flowcells
+                    "demultiplexing": None,  # Not available for flowcell_status
                 }
 
-                # Use flowcell_id as key for y_flowcells entries
-                temp_flowcells[flowcell_id] = y_fc_entry
+                # Use flowcell_id as key for flowcell_status entries
+                temp_flowcells[flowcell_id] = fc_status_entry
 
                 # Add to note_keys for running notes lookup
                 note_key = runfolder_id or flowcell_id
                 note_keys.append(note_key)
 
         except Exception as e:
-            application_log.warning(f"Failed to fetch y_flowcells: {str(e)}")
+            application_log.warning(f"Failed to fetch flowcell_status: {str(e)}")
+
+        # Query demux_sample_info to get run_setup for flowcell_status entries
+        # Only query if there are flowcell_status entries
+        if any(fc.get("source") == "flowcell_status" for fc in temp_flowcells.values()):
+            try:
+                demux_view_params = {
+                    "db": "demux_sample_info",
+                    "ddoc": "summary",
+                    "view": "date_flowcell_id",
+                    "include_docs": False,
+                    "descending": True,
+                }
+
+                if not all:
+                    # Match the time range used for flowcell_status
+                    demux_view_params["end_key"] = [six_months_ago]
+                # When all=True, fetch everything (no limit)
+
+                demux_rows = (
+                    self.application.cloudant.post_view(**demux_view_params)
+                    .get_result()
+                    .get("rows", [])
+                )
+
+                # Build a lookup dict for run_setup from demux_sample_info
+                demux_run_setup = {}
+                for row in demux_rows:
+                    key = row.get("key", [])
+                    if len(key) >= 2:
+                        fc_id = key[1]
+                        value = row.get("value", {})
+                        run_setup = value.get("run_setup")
+                        if run_setup:
+                            demux_run_setup[fc_id] = run_setup
+
+                # Update flowcell_status entries with run_setup from demux_sample_info
+                for fc_key, fc_data in temp_flowcells.items():
+                    if fc_data.get("source") == "flowcell_status":
+                        flowcell_id = fc_data.get("flowcell_id", fc_key)
+
+                        # Try direct match first
+                        if flowcell_id in demux_run_setup:
+                            fc_data["actual_run_setup"] = demux_run_setup[flowcell_id]
+                        # Handle A-prefix case: if flowcell_status has "A000..." try "000..."
+                        elif flowcell_id.startswith("A"):
+                            without_a = flowcell_id[1:]
+                            if without_a in demux_run_setup:
+                                fc_data["actual_run_setup"] = demux_run_setup[without_a]
+
+            except Exception as e:
+                application_log.warning(f"Failed to fetch demux_sample_info for run_setup: {str(e)}")
 
         notes = self.application.cloudant.post_view(
             db="running_notes",
