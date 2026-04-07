@@ -133,6 +133,7 @@ from status.reports import (
     MultiQCReportHandler,
     ProjectSummaryReportHandler,
     SingleCellSampleSummaryReportHandler,
+    VisiumReportHandler,
 )
 from status.running_notes import (
     InvoicingNotesHandler,
@@ -413,6 +414,10 @@ class Application(tornado.web.Application):
             ("/user_management", UserManagementHandler),
             ("/userpref", UserPrefPageHandler),
             ("/userpref_b5", UserPrefPageHandler_b5),
+            (
+                "/visium_sample_summary_report/(P[^/]*)/([^/]*)/([^/]*)$",
+                VisiumReportHandler,
+            ),
             ("/worksets", WorksetsHandler),
             ("/workset_queues", WorksetQueuesHandler),
             ("/workset/([^/]*)$", WorksetHandler),
@@ -484,6 +489,7 @@ class Application(tornado.web.Application):
         # │    └── toulligqc_reports/
         # ├── minknow_reports/
         # ├── mqc_reports/
+        # ├── Visium/<project_id>/
         # └── yggdrasil/<project_id>/
         self.reports_path = settings.get("reports_path")
         self.report_path = {}
@@ -492,6 +498,7 @@ class Application(tornado.web.Application):
         self.report_path["toulligqc"] = Path(
             self.reports_path, "other_reports", "toulligqc_reports"
         )
+        self.report_path["visium"] = Path(self.reports_path, "Visium")
         self.report_path["yggdrasil"] = Path(self.reports_path, "yggdrasil")
 
         # lims backend credentials

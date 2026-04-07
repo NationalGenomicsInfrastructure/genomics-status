@@ -23,6 +23,7 @@ from status.reports import (
     MultiQCReportHandler,
     ProjectSummaryReportHandler,
     SingleCellSampleSummaryReportHandler,
+    VisiumReportHandler,
 )
 from status.util import SafeHandler, dthandler
 
@@ -835,6 +836,11 @@ class ProjectDataHandler(ProjectsBaseDataHandler):
             summary_row["value"]["reports"]["sample_summary_reports"] = (
                 group_summary_reports
             )
+        visium_reports = VisiumReportHandler.get_visium_reports(
+            self.application, project
+        )
+        if visium_reports:
+            summary_row["value"]["reports"]["visium_reports"] = visium_reports
 
         # Get people assignments
         people_assignments_view_result = self.application.cloudant.post_view(
@@ -847,6 +853,8 @@ class ProjectDataHandler(ProjectsBaseDataHandler):
         summary_row["value"]["people_assigned"] = []
         for people_row in people_assignments_view_result.get("rows", []):
             summary_row["value"]["people_assigned"] = people_row["value"]
+
+        print(summary_row["value"]["reports"])
 
         return summary_row["value"]
 
@@ -1156,6 +1164,10 @@ class ProjectSamplesOldHandler(SafeHandler):
                         group_summary_reports[sample_id] = {}
                     group_summary_reports[sample_id][method] = report
             reports["sample_summary_reports"] = group_summary_reports
+        if visium_reports := VisiumReportHandler.get_visium_reports(
+            self.application, project
+        ):
+            reports["visium_reports"] = visium_reports
         self.write(
             t.generate(
                 gs_globals=self.application.gs_globals,

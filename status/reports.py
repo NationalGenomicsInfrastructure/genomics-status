@@ -167,3 +167,49 @@ class SingleCellSampleSummaryReportHandler(SafeHandler):
                         reports.extend(sample_reps)
 
         return reports
+
+
+class VisiumReportHandler(SafeHandler):
+    """Handler for Visium sample summary reports generated using yggdrasil"""
+
+    def get(self, project_id: str, sample_id: str, rep_name: str) -> None:
+        proj_path = os.path.join(self.application.report_path["visium"], project_id)
+        report_path = os.path.join(proj_path, sample_id, rep_name)
+        report = None
+        if os.path.exists(report_path):
+            with open(report_path) as report_file:
+                report = report_file.read()
+        if report:
+            self.write(report)
+        else:
+            t = self.application.loader.load("error_page.html")
+            self.write(
+                t.generate(
+                    gs_globals=self.application.gs_globals,
+                    status="404",
+                    reason="Visium Sample Summary Report Not Found",
+                    user=self.get_current_user(),
+                )
+            )
+
+    @staticmethod
+    def get_visium_reports(app: Any, project_id: str) -> dict[str, str] | None:
+        """Returns a dictionary of visium sample summary reports for the requested project if sample_id is None,
+        otherwise returns the report for the requested sample"""
+
+        proj_path = os.path.join(app.report_path["visium"], project_id)
+        reports = {}
+
+        if os.path.exists(proj_path):
+            # Reports will be named as <sample_id>_web_summary.html
+            reports.update(
+                {
+                    f.split("_web_summary.html")[0]: f
+                    for f in os.listdir(proj_path)
+                    if os.path.isfile(os.path.join(proj_path, f))
+                    and f.startswith(f"{project_id}_")
+                    and f.endswith("_web_summary.html")
+                }
+            )
+
+        return reports

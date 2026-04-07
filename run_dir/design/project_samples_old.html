@@ -143,14 +143,14 @@ Description: Details page for a single project
           <a class="dropdown-item" href="#" disabled>No reports to show</a>
         {% end %}
         {% if 'multiqc' in reports%}
-        {% for key in reports['multiqc'] %}
-          {% if 'qc' in key %}
-            {% set rep_name = ' QC' %}
-          {% else %}
-            {% set rep_name = ' '+key.strip('_').capitalize() %}
+          {% for key in reports['multiqc'] %}
+            {% if 'qc' in key %}
+              {% set rep_name = ' QC' %}
+            {% else %}
+              {% set rep_name = ' '+key.strip('_').capitalize() %}
+            {% end %}
+          <a class="dropdown-item" href="/multiqc_report/{{ project }}?type={{ key }}" target="_blank">MultiQC {{ rep_name }}</a>
           {% end %}
-         <a class="dropdown-item" href="/multiqc_report/{{ project }}?type={{ key }}" target="_blank">MultiQC {{ rep_name }}</a>
-         {% end %}
         {% end %}
         {% if 'project_summary' in reports %}
           <a class="dropdown-item" href="/proj_summary_report/{{ project }}" target="_blank">Project Summary</a>
@@ -161,6 +161,12 @@ Description: Details page for a single project
             {% for method, report in values.items() %}
               <a class="dropdown-item" href="/singlecell_sample_summary_report/{{ project }}/{{ sample }}/{{ report }}" target="_blank"> {{ sample }} {{ method }} </a>
             {% end %}
+          {% end %}
+        {% end %}
+        {% if 'visium_reports' in reports %}
+        <h6 class="dropdown-header">Visium Sample Summary</h6>
+          {% for sample, report in reports['visium_reports'].items() %}
+              <a class="dropdown-item" href="/visium_sample_summary_report/{{ project }}/{{ sample }}/{{ report }}" target="_blank"> {{ sample }} </a>
           {% end %}
         {% end %}
       </div>
