@@ -854,8 +854,6 @@ class ProjectDataHandler(ProjectsBaseDataHandler):
         for people_row in people_assignments_view_result.get("rows", []):
             summary_row["value"]["people_assigned"] = people_row["value"]
 
-        print(summary_row["value"]["reports"])
-
         return summary_row["value"]
 
 
