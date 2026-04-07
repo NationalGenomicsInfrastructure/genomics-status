@@ -166,7 +166,7 @@ Description: Details page for a single project
         {% if 'visium_reports' in reports %}
         <h6 class="dropdown-header">Visium Sample Summary</h6>
           {% for sample, report in reports['visium_reports'].items() %}
-              <a class="dropdown-item" href="/visium_sample_summary_report/{{ project }}/{{ sample }}/{{ report }}" target="_blank"> {{ sample }} </a>
+              <a class="dropdown-item" href="/visium_sample_summary_report/{{ project }}/{{ report }}" target="_blank"> {{ sample }} </a>
           {% end %}
         {% end %}
       </div>

@@ -172,9 +172,9 @@ class SingleCellSampleSummaryReportHandler(SafeHandler):
 class VisiumReportHandler(SafeHandler):
     """Handler for Visium sample summary reports generated using yggdrasil"""
 
-    def get(self, project_id: str, sample_id: str, rep_name: str) -> None:
+    def get(self, project_id: str, rep_name: str) -> None:
         proj_path = os.path.join(self.application.report_path["visium"], project_id)
-        report_path = os.path.join(proj_path, sample_id, rep_name)
+        report_path = os.path.join(proj_path, rep_name)
         report = None
         if os.path.exists(report_path):
             with open(report_path) as report_file:

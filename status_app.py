@@ -415,7 +415,7 @@ class Application(tornado.web.Application):
             ("/userpref", UserPrefPageHandler),
             ("/userpref_b5", UserPrefPageHandler_b5),
             (
-                "/visium_sample_summary_report/(P[^/]*)/([^/]*)/([^/]*)$",
+                "/visium_sample_summary_report/(P[^/]*)/([^/]*)$",
                 VisiumReportHandler,
             ),
             ("/worksets", WorksetsHandler),
