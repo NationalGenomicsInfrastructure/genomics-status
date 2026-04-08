@@ -212,6 +212,15 @@ function make_project_links(s){
   // - Not capture lookahead to make sure that were not followed by any more word characters
   // Example: 20230621_1629_MN19414_APT766_494e1a8c or 20230815_1205_3G_PAO31800_201c040e
   s = s.replace(/([\W])(\d{8})(_\d{4})(_\w{2,8})(_\w{6,8})(_\w{8})(?!\w)/g, '$1<a class="text-decoration-none" href="/flowcells_ont/$2$3$4$5$6">$2$3$4$5$6</a>');
+
+  // Searches for Element FlowCell IDs and replaces with a link (modified from Illumina FCs)
+  // - $1 = Captures a non-word character (javascript can't do lookbehind)
+  // - $2 = Matches flowcell date - eg 20230621
+  // - $3 = Matches string that begins with an underscore followed by 2 chars and ends with 6 digits - eg. _AV242106
+  // - $4 = Matches remaining flowcell ID which is a string that begins with an underscore followed by a letter and ends with 10 digits - eg. _A2507535225
+  // - Not capture lookahead to make sure that were not followed by any more word characters
+  // Example: 20251007_AV242106_A2507535225
+  s = s.replace(/([\W])(\d{8})(_[A-Z]{2}\d{6})(_[A-Z]\d{10})(?!\w)/g, '$1<a class="text-decoration-none" href="/flowcells_element/$2$3$4">$2$3$4</a>');
   
   return s;
 }

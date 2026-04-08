@@ -103,6 +103,7 @@ from status.projects import (
     PresetsOnLoadHandler,
     PrioProjectsTableHandler,
     ProjectDataHandler,
+    ProjectReadsSequencedHandler,
     ProjectRNAMetaDataHandler,
     ProjectSamplesDataHandler,
     ProjectSamplesHandler,
@@ -299,6 +300,7 @@ class Application(tornado.web.Application):
             ),
             ("/api/v1/project/([^/]*)/tickets", ProjectTicketsDataHandler),
             ("/api/v1/projects_fields", ProjectsFieldsDataHandler),
+            ("/api/v1/project_reads_sequenced/([^/]*)$", ProjectReadsSequencedHandler),
             ("/api/v1/project_summary/([^/]*)$", ProjectDataHandler),
             ("/api/v1/project_search/([^/]*)$", ProjectsSearchHandler),
             ("/api/v1/project_websocket", ProjectCardsWebSocket),
@@ -425,7 +427,7 @@ class Application(tornado.web.Application):
         # Global connection to the database
         cloudant = cloudant_v1.CloudantV1(
             authenticator=CouchDbSessionAuthenticator(
-                settings.get("username"), settings.get("password")
+                settings.get("couch_username"), settings.get("couch_password")
             )
         )
         cloudant.set_service_url(settings.get("couch_url"))
@@ -443,9 +445,6 @@ class Application(tornado.web.Application):
                     "make sure that the doc is available with the "
                     "corresponding defaults information."
                 )
-
-        # Load private instrument listing
-        self.instrument_list = settings.get("instruments")
 
         # If settings states  mode, no authentication is used
         self.test_mode = settings["Testing mode"]
@@ -471,9 +470,6 @@ class Application(tornado.web.Application):
 
         # Slack
         self.slack_token = settings["slack"]["token"]
-
-        # Load password seed
-        self.password_seed = settings.get("password_seed")
 
         # Location of the psul log
         self.psul_log = settings.get("psul_log")
