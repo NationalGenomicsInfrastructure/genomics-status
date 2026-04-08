@@ -1,6 +1,5 @@
-// Hard-coded lists of expected sensors, I guess this would be more suitable in a config file somewhere.
-const EXPECTED_FRIDGES = ['K01 A3730', 'K02 A3711', 'K10 A3571', 'K04 A3590'];
-const EXPECTED_FREEZERS = ['F29 A3590', 'F25 A3590', 'F07 A3711', "F26 A3330", "F39 Clean Room", "F21 A3590", "F18 A3711", "F17 A3590", "F08 A3590", "F38 A3590", "F22 A3590", "F31 A3590", "F35 A3590", "F24 A3590", "F37 A3730", "F30 A3590", "F32 A3571", "F36 A3590", "F33 A3730", "F34 A3730", "F13 A3590", "F19 A3711"];
+// Expected sensors lists are now loaded from gs_configs database and passed via the template
+// See sensorpush.html for EXPECTED_FRIDGES and EXPECTED_FREEZERS variables
 
 // Store chart instances for cleanup
 var chartInstances = {};

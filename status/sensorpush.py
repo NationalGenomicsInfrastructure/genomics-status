@@ -2,6 +2,9 @@
 
 import datetime
 import json
+import logging
+
+import ibm_cloud_sdk_core
 
 from status.util import SafeHandler
 
@@ -127,6 +130,8 @@ class SensorpushHandler(SensorpushBaseHandler):
     """Serves a page which lists all sensors with temperature info."""
 
     def get(self):
+        log = logging.getLogger(__name__)
+
         sensor_data = self.get_samples(start_days_ago=120)
         sensor_24h_data = self.get_samples(start_days_ago=1)
         # Get most recent data (last 24 hours) to check if sensors are currently active
@@ -138,6 +143,20 @@ class SensorpushHandler(SensorpushBaseHandler):
             sensor_info["sensor_name"] for sensor_info in sensor_recent_data.values()
         ]
 
+        # Fetch expected sensors configuration from gs_configs
+        try:
+            config_doc = self.application.cloudant.get_document(
+                "gs_configs", "sensorpush_expected_sensors"
+            ).get_result()
+            expected_fridges = config_doc.get("expected_fridges", [])
+            expected_freezers = config_doc.get("expected_freezers", [])
+        except ibm_cloud_sdk_core.api_exception.ApiException as e:
+            log.warning(
+                f"Failed to get sensorpush_expected_sensors config, using empty lists: {e}"
+            )
+            expected_fridges = []
+            expected_freezers = []
+
         t = self.application.loader.load("sensorpush.html")
         self.write(
             t.generate(
@@ -146,5 +165,7 @@ class SensorpushHandler(SensorpushBaseHandler):
                 sensor_data=sensor_data,
                 sensor_24h_data=sensor_24h_data,
                 active_sensors=active_sensor_names,
+                expected_fridges=expected_fridges,
+                expected_freezers=expected_freezers,
             )
         )
