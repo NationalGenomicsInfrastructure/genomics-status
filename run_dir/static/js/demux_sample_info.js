@@ -1262,6 +1262,7 @@ const vDemuxSampleInfoEditor = {
             columnConfigCollapsed: true,
             groupByNamedIndex: false,
             groupByProjectFirst: false,
+            copiedSamplesheetIndex: null,  // Track which samplesheet was just copied for visual feedback
             saveComment: '',
             bulkEditAction: 'reverse_complement_index1',
             bulkEditProject: '',
@@ -3238,6 +3239,22 @@ const vDemuxSampleInfoEditor = {
             link.click();
             document.body.removeChild(link);
         },
+        async copySamplesheetToClipboard(samplesheet, index) {
+            // Copy samplesheet content to clipboard
+            const content = this.generateSamplesheetContent(samplesheet);
+            try {
+                await navigator.clipboard.writeText(content);
+                // Store the copied samplesheet index for visual feedback
+                this.copiedSamplesheetIndex = index;
+                // Clear the feedback after 2 seconds
+                setTimeout(() => {
+                    this.copiedSamplesheetIndex = null;
+                }, 2000);
+            } catch (err) {
+                console.error('Failed to copy samplesheet:', err);
+                alert('Failed to copy to clipboard. Please try again.');
+            }
+        },
         handlePopState(event) {
             // Handle browser back/forward buttons
             const urlParams = new URLSearchParams(window.location.search);
@@ -3422,8 +3439,8 @@ const vDemuxSampleInfoEditor = {
                                                 <td>{{ sample.sample_id }}</td>
                                                 <td>{{ sample.sample_name }}</td>
                                                 <td>{{ sample.sample_ref }}</td>
-                                                <td><code>{{ sample.index_1 }}</code></td>
-                                                <td><code>{{ sample.index_2 }}</code></td>
+                                                <td><code>{{ sample.index }}</code></td>
+                                                <td><code>{{ sample.index2 }}</code></td>
                                                 <td>{{ sample.description }}</td>
                                                 <td>{{ sample.control }}</td>
                                                 <td>{{ sample.recipe }}</td>
@@ -3440,18 +3457,18 @@ const vDemuxSampleInfoEditor = {
                                     <h3 class="mb-0">Calculated Samples (by Lane)</h3>
                                     <div>
                                         <button
-                                            class="btn btn-success me-2"
+                                            class="btn btn-success mr-2"
                                             @click="openEditModalForNewSample()">
                                             <i class="fa fa-plus"></i> Add Sample
                                         </button>
                                         <button
-                                            class="btn btn-primary me-2"
+                                            class="btn btn-primary mr-2"
                                             @click="openBulkEditModal">
                                             <i class="fa fa-edit"></i> Bulk Edit Actions
                                         </button>
                                         <span v-if="hasChanges">
                                             <button
-                                                class="btn btn-success me-2"
+                                                class="btn btn-success mr-2"
                                                 @click="saveChanges"
                                                 :disabled="saving">
                                                 <span v-if="saving" class="spinner-border spinner-border-sm me-2" role="status"></span>
@@ -3655,9 +3672,18 @@ const vDemuxSampleInfoEditor = {
                                                 </h5>
                                                 <small class="text-muted">{{ samplesheet.sample_count }} sample{{ samplesheet.sample_count !== 1 ? 's' : '' }}</small>
                                             </div>
-                                            <button class="btn btn-primary btn-sm" @click="downloadSamplesheet(samplesheet)">
-                                                <i class="fa fa-download"></i> Download
-                                            </button>
+                                            <div class="btn-group">
+                                                <button class="btn btn-primary btn-sm" @click="downloadSamplesheet(samplesheet)">
+                                                    <i class="fa fa-download"></i> Download
+                                                </button>
+                                                <button class="btn btn-sm"
+                                                    :class="copiedSamplesheetIndex === index ? 'btn-success' : 'btn-outline-primary'"
+                                                    @click="copySamplesheetToClipboard(samplesheet, index)"
+                                                    :title="copiedSamplesheetIndex === index ? 'Copied!' : 'Copy to clipboard'">
+                                                    <i class="fa" :class="copiedSamplesheetIndex === index ? 'fa-check' : 'fa-clipboard'"></i>
+                                                    {{ copiedSamplesheetIndex === index ? 'Copied!' : 'Copy' }}
+                                                </button>
+                                            </div>
                                         </div>
                                         <div class="card-body">
                                             <!-- Samplesheet Preview -->

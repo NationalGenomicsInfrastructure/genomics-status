@@ -312,8 +312,8 @@ class TestGenerateSamplesheets(unittest.TestCase):
         self.assertEqual(result[0]["projects"], ["Lane1_Project"])
         self.assertEqual(result[1]["projects"], ["Lane2_Project"])
 
-    def test_override_cycles_from_other_details(self):
-        """Test that OverrideCycles is populated from other_details if present."""
+    def test_override_cycles_from_per_sample_fields(self):
+        """Test that OverrideCycles is populated from per_sample_fields."""
         flowcell_id = "OVERRIDE_TEST"
         override_value = "Y151;I8U2;I8U2;Y151"
         calculated_lanes = {
@@ -329,12 +329,10 @@ class TestGenerateSamplesheets(unittest.TestCase):
                                     "index": "ATCGATCG",
                                     "index2": "GCTAGCTA",
                                     "Sample_Project": "Project_UMI",
-                                    "OverrideCycles": "ORIGINAL",
+                                    "OverrideCycles": override_value,
                                 },
                                 "raw_samplesheet_settings": {},
-                                "other_details": {
-                                    "override_cycles": override_value,
-                                },
+                                "other_details": {},
                             }
                         }
                     }
@@ -347,7 +345,7 @@ class TestGenerateSamplesheets(unittest.TestCase):
             flowcell_id, calculated_lanes, metadata
         )
 
-        # Check that override_cycles from other_details is used
+        # Check that OverrideCycles from per_sample_fields is used
         self.assertEqual(
             result[0]["BCLConvert_Data"][0]["OverrideCycles"], override_value
         )

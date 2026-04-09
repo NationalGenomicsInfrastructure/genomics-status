@@ -1159,7 +1159,6 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                                     "config_sources": config_sources,
                                     "library_method": library_method or "",
                                     "project_id": project_id or "",
-                                    "override_cycles": override_cycles,
                                 },
                                 "per_sample_fields": {
                                     "Lane": sample_in_lane["lane"],
@@ -1324,7 +1323,6 @@ class DemuxSampleInfoDataHandler(SafeHandler):
 
                 # Build sample data for samplesheet
                 fields = latest_settings.get("per_sample_fields", {})
-                other_details = latest_settings.get("other_details", {})
 
                 sample_data = {
                     "Lane": lane,
@@ -1335,9 +1333,7 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                     "index": fields.get("index", ""),
                     "index2": fields.get("index2", ""),
                     "Sample_Project": fields.get("Sample_Project", ""),
-                    "OverrideCycles": other_details.get(
-                        "override_cycles", fields.get("OverrideCycles", "")
-                    ),
+                    "OverrideCycles": fields.get("OverrideCycles", ""),
                 }
 
                 settings_groups[settings_key]["samples"].append(sample_data)

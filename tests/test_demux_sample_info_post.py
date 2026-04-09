@@ -146,8 +146,8 @@ class TestDemuxSampleInfoPost(AsyncHTTPTestCase):
         handler = DemuxSampleInfoDataHandler(self.get_app(), MagicMock())
 
         sample = {
-            "index_1": "SI-TS-B7",
-            "index_2": "",
+            "index": "SI-TS-B7",
+            "index2": "",
             "control": "N",
             "sample_name": "Test_Sample",
         }
@@ -163,8 +163,8 @@ class TestDemuxSampleInfoPost(AsyncHTTPTestCase):
         handler = DemuxSampleInfoDataHandler(self.get_app(), MagicMock())
 
         sample = {
-            "index_1": "SI-GA-A1",
-            "index_2": "",
+            "index": "SI-GA-A1",
+            "index2": "",
             "control": "N",
             "sample_name": "Test_Sample",
         }
@@ -181,8 +181,8 @@ class TestDemuxSampleInfoPost(AsyncHTTPTestCase):
         handler = DemuxSampleInfoDataHandler(self.get_app(), MagicMock())
 
         sample = {
-            "index_1": "CGCCTCT",  # 7bp
-            "index_2": "CGTTCCT",  # 7bp
+            "index": "CGCCTCT",  # 7bp
+            "index2": "CGTTCCT",  # 7bp
             "control": "N",
             "sample_name": "Test_Sample",
         }
@@ -198,8 +198,8 @@ class TestDemuxSampleInfoPost(AsyncHTTPTestCase):
         handler = DemuxSampleInfoDataHandler(self.get_app(), MagicMock())
 
         sample = {
-            "index_1": "NOINDEX",  # Must be explicit "NOINDEX" string
-            "index_2": "",
+            "index": "NOINDEX",  # Must be explicit "NOINDEX" string
+            "index2": "",
             "control": "N",
             "sample_name": "Test_Sample",
         }
@@ -214,8 +214,8 @@ class TestDemuxSampleInfoPost(AsyncHTTPTestCase):
         handler = DemuxSampleInfoDataHandler(self.get_app(), MagicMock())
 
         sample = {
-            "index_1": "CGCCTCT",
-            "index_2": "",
+            "index": "CGCCTCT",
+            "index2": "",
             "control": "Y",
             "sample_name": "PhiX",
         }
@@ -229,8 +229,8 @@ class TestDemuxSampleInfoPost(AsyncHTTPTestCase):
         handler = DemuxSampleInfoDataHandler(self.get_app(), MagicMock())
 
         sample = {
-            "index_1": "ATCACGTT",
-            "index_2": "",
+            "index": "ATCACGTT",
+            "index2": "",
             "control": "N",
             "sample_name": "Test_Sample",
         }
@@ -249,8 +249,8 @@ class TestDemuxSampleInfoPost(AsyncHTTPTestCase):
         handler = DemuxSampleInfoDataHandler(self.get_app(), MagicMock())
 
         sample = {
-            "index_1": "SMARTSEQ-1A",  # Matches SMARTSEQ pattern
-            "index_2": "",
+            "index": "SMARTSEQ-1A",  # Matches SMARTSEQ pattern
+            "index2": "",
             "control": "N",
             "sample_name": "Test_Sample",
         }
@@ -265,8 +265,8 @@ class TestDemuxSampleInfoPost(AsyncHTTPTestCase):
         handler = DemuxSampleInfoDataHandler(self.get_app(), MagicMock())
 
         sample = {
-            "index_1": "ATCACG",  # 6bp (below threshold of 8)
-            "index_2": "",
+            "index": "ATCACG",  # 6bp (below threshold of 8)
+            "index2": "",
             "control": "N",
             "sample_name": "Test_Sample",
         }
@@ -316,8 +316,8 @@ class TestDemuxSampleInfoPost(AsyncHTTPTestCase):
                 r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
             )
             # Check 10X_DUAL classification (SI-TS-* indices)
-            # Access index_1 from the top level of sample_data (not in settings)
-            if "index_1" in sample_data:
+            # Access index from the top level of sample_data (not in settings)
+            if "index" in sample_data:
                 # Top-level has classification info
                 self.assertIn("sample_type", sample_data)
 
