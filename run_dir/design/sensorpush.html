@@ -121,10 +121,10 @@
   <script src="/static/js/sensorpush.js"></script>
   <script>
     // Pass active sensors list from backend to JavaScript
-    var ACTIVE_SENSORS = {% raw json_encode(active_sensors) %};
-    var SENSOR_24H_DATA = {% raw json_encode(sensor_24h_data) %};
-    var EXPECTED_FRIDGES = {% raw json_encode(expected_fridges) %};
-    var EXPECTED_FREEZERS = {% raw json_encode(expected_freezers) %};
+    const ACTIVE_SENSORS = {% raw json_encode(active_sensors) %};
+    const SENSOR_24H_DATA = {% raw json_encode(sensor_24h_data) %};
+    const EXPECTED_FRIDGES = {% raw json_encode(expected_fridges) %};
+    const EXPECTED_FREEZERS = {% raw json_encode(expected_freezers) %};
 
     $(document).ready(function(){
       // Check and display warnings (function defined in sensorpush.js)
