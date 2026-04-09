@@ -3792,7 +3792,7 @@ const vDemuxSampleInfoEditor = {
                                         <i class="fa fa-trash"></i> Delete Sample
                                     </button>
                                     <button type="button" class="btn btn-secondary" @click="closeEditModal">Cancel</button>
-                                    <button type="button" class="btn btn-primary" @click="saveEditedSample">Save Changes</button>
+                                    <button type="button" class="btn btn-primary" @click="saveEditedSample">Apply Changes</button>
                                 </div>
                             </div>
                         </div>

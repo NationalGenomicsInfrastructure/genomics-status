@@ -236,7 +236,9 @@ class FlowcellsHandler(SafeHandler):
                                 fc_data["actual_run_setup"] = demux_run_setup[without_a]
 
             except Exception as e:
-                application_log.warning(f"Failed to fetch demux_sample_info for run_setup: {str(e)}")
+                application_log.warning(
+                    f"Failed to fetch demux_sample_info for run_setup: {str(e)}"
+                )
 
         notes = self.application.cloudant.post_view(
             db="running_notes",

@@ -35,6 +35,10 @@ from status.config_handler import ConfigDataHandler
 from status.controls import ControlsHandler
 from status.data_deliveries_plot import DataDeliveryHandler, DeliveryPlotHandler
 from status.deliveries import DeliveriesPageHandler
+from status.demux_configuration import (
+    DemuxConfigurationDetailHandler,
+    DemuxConfigurationHandler,
+)
 from status.demux_sample_info import (
     DemuxSampleInfoDataHandler,
     DemuxSampleInfoEditorHandler,
@@ -389,6 +393,8 @@ class Application(tornado.web.Application):
                 SampleDeleteHandler,
             ),
             ("/api/v1/demux_sample_info_list", DemuxSampleInfoListHandler),
+            ("/api/v1/demux_configuration", DemuxConfigurationHandler),
+            ("/api/v1/demux_configuration/([^/]*)$", DemuxConfigurationDetailHandler),
             (
                 "/api/v1/sample_classification_presets",
                 SampleClassificationPresetsHandler,
@@ -627,19 +633,46 @@ class Application(tornado.web.Application):
         tornado.web.Application.__init__(self, handlers, **settings)
 
     def _load_sample_classification_patterns(self):
-        """Load sample classification patterns from JSON configuration file."""
-        # Get the directory where status_app.py is located and navigate to configuration_files
-        main_repo_dir = Path(__file__).parent
-        config_path = (
-            main_repo_dir
-            / "configuration_files"
-            / "sample_classification_patterns.json"
-        )
-        with config_path.open("r") as f:
-            config = json.load(f)
+        """Load sample classification patterns from CouchDB demux_configuration database.
 
-        # Store the full configuration for access by handlers
-        self.sample_classification_config = config
+        This method fetches the active configuration version from the demux_configuration
+        database.
+        """
+        database_name = "demux_configuration"
+
+        try:
+            # Try to load from CouchDB using view for better performance
+            result = self.cloudant.post_view(
+                db=database_name,
+                ddoc="config_views",
+                view="active_config",
+                descending=True,
+                limit=1,
+                include_docs=True,
+            ).get_result()
+
+            if result.get("rows") and len(result["rows"]) > 0:
+                doc = result["rows"][0]["doc"]
+                config = doc["configuration"]
+
+                # Store both the configuration and metadata
+                self.sample_classification_config = config
+                self.sample_classification_config_version = doc["version"]
+                self.sample_classification_config_id = doc["_id"]
+
+                logging.info(
+                    f"Loaded demux configuration version {doc['version']} from CouchDB "
+                    f"(created: {doc.get('created_at', 'unknown')})"
+                )
+                return
+            else:
+                logging.warning(
+                    f"No active configuration found in {database_name}, falling back to JSON file"
+                )
+        except Exception as e:
+            logging.warning(
+                f"Could not load configuration from CouchDB ({e}), falling back to JSON file"
+            )
 
     def _load_named_indices(self, config_dir):
         """Load named indices from CSV files in the named_indices directory.
