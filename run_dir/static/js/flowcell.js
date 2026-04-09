@@ -23,3 +23,8 @@ load_running_notes();
 if($('#ln-js').length>0){
     load_links();
 }
+
+$('#generate_rn_template').click(function(e){
+    e.preventDefault();
+    $('#new_note_text').val(fc_running_note_template);
+});

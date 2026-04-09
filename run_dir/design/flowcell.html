@@ -45,6 +45,12 @@
             <a id="statusdb_link" href="{{ statusdb_url }}/_utils/index.html?flowcells#/database/x_flowcells/{{ statusdb_id }}" data-toggle="tooltip" title="Opens flowcell page in StatusDB" class="btn btn-light btn-xs float-left" target="_blank">StatusDB</a>
           </td>
       </tr>
+      <tr class="darkth">
+        <th>Generate RN template:</th>
+          <td>
+            <button id="generate_rn_template" data-toggle="tooltip" title="Fill running note with flowcell demux template" class="btn btn-light btn-xs" type="button">Generate running note template</button>
+          </td>
+      </tr>
     </table>
     <div class="tabbable mb-3">
       <ul class="nav nav-tabs">
@@ -286,6 +292,9 @@
     </div>
 </div>
 
+<script>
+    const fc_running_note_template = `{% raw running_note_template %}`;
+</script>
 <script src="/static/js/running_notes.js?v={{ gs_globals['git_commit'] }}" id="rn-js" data-note-type="flowcell"></script>
 <script src="/static/js/links.js?v={{ gs_globals['git_commit'] }}" id="ln-js" data-link-type="flowcell"></script>
 <script src="/static/js/flowcell.js?v={{ gs_globals['git_commit'] }}" id="flowcells-js" data-flowcell="{{ flowcell.get('name') }}"></script>
