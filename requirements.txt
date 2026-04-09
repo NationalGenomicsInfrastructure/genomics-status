@@ -3,6 +3,7 @@ cffi
 cryptography
 genologics @ git+https://github.com/SciLifeLab/genologics.git
 genologics_sql @ git+https://github.com/NationalGenomicsInfrastructure/genologics_sql.git
+html-sanitizer
 httplib2>=0.10.3
 ibmcloudant>=0.9.1
 jwcrypto
@@ -21,5 +22,5 @@ selenium
 setuptools
 slack_sdk
 tornado>=6.0.2
-weasyprint==52.5
+weasyprint>=68.0
 Zenpy

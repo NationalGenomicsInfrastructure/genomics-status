@@ -1,8 +1,8 @@
 /* flowcell.html */
 
-const display_undetermined = (lane) => {
+function display_undetermined(lane) {
     $(`#table_ud_lane_${lane}:first`).slideToggle();
-};
+}
 
 // Copy flowcell lane table to clipboard
 $('.lane-copy').on('click', (event) => {

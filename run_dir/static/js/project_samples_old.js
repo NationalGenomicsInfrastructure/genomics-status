@@ -18,6 +18,7 @@ $(document).ready(function() {
     load_running_notes();
     load_links();
     load_charon_summary();
+    load_project_reads();
   });
 
   // Prevent traditional html submit function
@@ -328,8 +329,9 @@ function load_all_udfs(){
 
     // Display hidden single cell section if application is single cell
     let application = 'application' in data ? data['application'] : '';
-    
-    if(application.includes('single cell')){
+    let library_construction_method = 'library_construction_method' in data ? data['library_construction_method'].toLowerCase() : '';
+
+    if(application.includes('single cell') && !library_construction_method.includes('finished library')){
       $('.single_cell_udf').removeAttr('hidden');
     }
 
@@ -513,6 +515,26 @@ function load_all_udfs(){
           $("#project_summary_link_dropdown>ul").append('<li><a class="dropdown-item" href="'+ lims_uri +summary[0]+'" target="_blank"> Created: '+summary[1]+'</a></li>');
         });
       }
+      else if (prettify(key) == 'flowcell') {
+        // Check if it's a Universal project and update the label
+        if (value && value.startsWith('Universal-')) {
+          $('#lanes_ordered_label').text('Units Ordered');
+        }
+        // Continue with normal processing
+        if (prettyobj(key).length > 0) {
+          prettyobj(key).html(auto_format(value));
+        } else if (safeobj(key).length > 0) {
+          safeobj(key).html(auto_format(value));
+        }
+      }
+      else if (prettify(key) == 'nda' || prettify(key) == 'mta') {
+        if (value && value.toLowerCase().includes('yes')) {
+          safeobj(key).html('<span class="badge bg-danger sentenceCase">'+value+'</span> ');
+        }
+        else {
+          safeobj(key).html('<span class="badge bg-success sentenceCase">'+value+'</span> ');
+        }
+      }
       // Everything else
       else {
 			  if(prettyobj(key).length > 0){
@@ -564,6 +586,27 @@ function load_all_udfs(){
       $('#page_content').html('<h1>Error - Project Not Found</h1><div class="alert alert-danger">Oops! Sorry about that, we can\'t find the project <strong>'+project+'</strong></div>');
   });
 };
+
+function load_project_reads() {
+  return $.getJSON("/api/v1/project_reads_sequenced/" + project, function (data) {
+    if (data['reads_sequenced']) {
+      const values = data['reads_sequenced'].split('(');
+      if (values.length > 1) {
+        // Has units - format with badge only on units
+        let badge_class = 'bg-warning';
+        if (data['reads_sequenced_meets_threshold']) {
+          badge_class = 'bg-success';
+        }
+        prettyobj('reads_sequenced').html(nice_numbers(values[0].trim()) + ' <span class="badge ' + badge_class + '" id="reads_sequenced_badge">(' + values[1]);
+      } else {
+        // No units - just the number
+        prettyobj('reads_sequenced').html(nice_numbers(values[0].trim()));
+      }
+    }
+  }).fail(function( jqxhr, textStatus, error ) {
+      console.log( "Couldn't load project reads: " + textStatus + ", " + error );
+  });
+}
 
 function prettify(s, nospecialchars) {
   // Replaces whitespace with underscores. Replaces sequential _s with one

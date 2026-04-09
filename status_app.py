@@ -104,6 +104,15 @@ from status.production import (
     ProductionCronjobsHandler,
 )
 from status.project_cards import ProjectCardsHandler, ProjectCardsWebSocket
+from status.project_creation import (
+    ProjectCreationCountDetailsDataHandler,
+    ProjectCreationDataHandler,
+    ProjectCreationFormDataHandler,
+    ProjectCreationHandler,
+    ProjectCreationIndividualDataFetchHandler,
+    ProjectCreationListFormsDataHandler,
+    ProjectCreationListFormsHandler,
+)
 from status.projects import (
     CaliperImageHandler,
     CharonProjectHandler,
@@ -114,6 +123,7 @@ from status.projects import (
     PresetsOnLoadHandler,
     PrioProjectsTableHandler,
     ProjectDataHandler,
+    ProjectReadsSequencedHandler,
     ProjectRNAMetaDataHandler,
     ProjectSamplesDataHandler,
     ProjectSamplesHandler,
@@ -143,6 +153,7 @@ from status.reports import (
     MultiQCReportHandler,
     ProjectSummaryReportHandler,
     SingleCellSampleSummaryReportHandler,
+    VisiumReportHandler,
 )
 from status.running_notes import (
     InvoicingNotesHandler,
@@ -200,6 +211,7 @@ from status.worksets import (
     WorksetSearchHandler,
     WorksetsHandler,
 )
+from status.yield_calculator import YieldCalculatorHandler
 
 ONT_RUN_PATTERN = r"\d{8}_\d{4}_[0-9a-zA-Z]+_[0-9a-zA-Z]+_[0-9a-zA-Z]+"
 
@@ -308,7 +320,11 @@ class Application(tornado.web.Application):
                 ProjectPeopleAssignmentDataHandler,
             ),
             ("/api/v1/project/([^/]*)/tickets", ProjectTicketsDataHandler),
+            ("/api/v1/project_count_details", ProjectCreationCountDetailsDataHandler),
+            ("/api/v1/project_creation_form", ProjectCreationFormDataHandler),
+            ("/api/v1/project_creation_forms", ProjectCreationListFormsDataHandler),
             ("/api/v1/projects_fields", ProjectsFieldsDataHandler),
+            ("/api/v1/project_reads_sequenced/([^/]*)$", ProjectReadsSequencedHandler),
             ("/api/v1/project_summary/([^/]*)$", ProjectDataHandler),
             ("/api/v1/project_search/([^/]*)$", ProjectsSearchHandler),
             ("/api/v1/project_websocket", ProjectCardsWebSocket),
@@ -353,6 +369,11 @@ class Application(tornado.web.Application):
                 YearDeliverytimeApplicationHandler,
             ),
             ("/api/v1/deliveries/set_bioinfo_responsible$", DeliveriesPageHandler),
+            ("/api/v1/submit_project_creation_form", ProjectCreationDataHandler),
+            (
+                "/api/v1/project_creation_data_fetch",
+                ProjectCreationIndividualDataFetchHandler,
+            ),
             ("/api/v1/suggestions", SuggestionBoxDataHandler),
             (r"/api/v1/test/(\w+)?", TestDataHandler),
             ("/api/v1/user_management/users", UserManagementDataHandler),
@@ -414,6 +435,8 @@ class Application(tornado.web.Application):
             ("/production/cronjobs", ProductionCronjobsHandler),
             ("/project/([^/]*)$", ProjectSamplesOldHandler),
             ("/project_new/([^/]*)$", ProjectSamplesHandler),
+            ("/project_creation", ProjectCreationHandler),
+            ("/project_creation_forms", ProjectCreationListFormsHandler),
             ("/projects", ProjectsHandler),
             ("/project_cards", ProjectCardsHandler),
             ("/proj_meta", ProjMetaCompareHandler),
@@ -427,6 +450,7 @@ class Application(tornado.web.Application):
             ("/demux_sample_info_editor", DemuxSampleInfoEditorHandler),
             ("/sensorpush", SensorpushHandler),
             ("/sequencing_queues", SequencingQueuesHandler),
+            ("/yield_calculator", YieldCalculatorHandler),
             (
                 "/singlecell_sample_summary_report/(P[^/]*)/([^/]*)/([^/]*)$",
                 SingleCellSampleSummaryReportHandler,
@@ -436,6 +460,10 @@ class Application(tornado.web.Application):
             ("/user_management", UserManagementHandler),
             ("/userpref", UserPrefPageHandler),
             ("/userpref_b5", UserPrefPageHandler_b5),
+            (
+                "/visium_sample_summary_report/(P[^/]*)/([^/]*)$",
+                VisiumReportHandler,
+            ),
             ("/worksets", WorksetsHandler),
             ("/workset_queues", WorksetQueuesHandler),
             ("/workset/([^/]*)$", WorksetHandler),
@@ -450,7 +478,7 @@ class Application(tornado.web.Application):
         # Global connection to the database
         cloudant = cloudant_v1.CloudantV1(
             authenticator=CouchDbSessionAuthenticator(
-                settings.get("username"), settings.get("password")
+                settings.get("couch_username"), settings.get("couch_password")
             )
         )
         cloudant.set_service_url(settings.get("couch_url"))
@@ -468,9 +496,6 @@ class Application(tornado.web.Application):
                     "make sure that the doc is available with the "
                     "corresponding defaults information."
                 )
-
-        # Load private instrument listing
-        self.instrument_list = settings.get("instruments")
 
         # If settings states  mode, no authentication is used
         self.test_mode = settings["Testing mode"]
@@ -497,9 +522,6 @@ class Application(tornado.web.Application):
         # Slack
         self.slack_token = settings["slack"]["token"]
 
-        # Load password seed
-        self.password_seed = settings.get("password_seed")
-
         # Location of the psul log
         self.psul_log = settings.get("psul_log")
 
@@ -519,6 +541,7 @@ class Application(tornado.web.Application):
         # │    └── toulligqc_reports/
         # ├── minknow_reports/
         # ├── mqc_reports/
+        # ├── Visium/<project_id>/
         # └── yggdrasil/<project_id>/
         self.reports_path = settings.get("reports_path")
         self.report_path = {}
@@ -527,6 +550,7 @@ class Application(tornado.web.Application):
         self.report_path["toulligqc"] = Path(
             self.reports_path, "other_reports", "toulligqc_reports"
         )
+        self.report_path["visium"] = Path(self.reports_path, "Visium")
         self.report_path["yggdrasil"] = Path(self.reports_path, "yggdrasil")
 
         # lims backend credentials

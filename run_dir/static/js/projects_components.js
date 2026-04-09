@@ -46,7 +46,8 @@ export const vProjectDetails = {
             visible_info_ids: [],
             new_link_type: '',
             new_link_name: '',
-            pricing_app: null
+            pricing_app: null,
+            modal_opened: false
         }
     },
     computed: {
@@ -219,6 +220,7 @@ export const vProjectDetails = {
         if (this.$root.single_project_mode) {
             this.$root.fetchProjectDetails(this.project_id);
             this.$root.fetchAllUsers();
+            this.modal_opened = true;  // Set to true for single project mode
         }
     },
     mounted: function() {
@@ -637,7 +639,7 @@ export const vProjectDetails = {
                     </ul>
                     <div class="tab-content" id="myTabContent">
                         <div class="tab-pane fade show active" ref="project-running-notes-pane" role="tabpanel" aria-labelledby="project-running-notes-pane-btn" tabindex="0">
-                            <v-running-notes-tab ref="project-running-notes-pane-component" :partition_id="project_id" note_type="project"></v-running-notes-tab>
+                            <v-running-notes-tab ref="project-running-notes-pane-component" v-if="modal_opened && $root.current_user && Object.keys($root.all_users || {}).length > 0" :partition_id="project_id" note_type="project" :all_users_parent="$root.all_users" :current_user="user || $root.current_user"></v-running-notes-tab>
                         </div>
                         <div class="tab-pane fade" ref="project-details-pane" role="tabpanel" aria-labelledby="project-details-pane-btn" tabindex="0"><h1 class="mt-4"><i class="fa-light fa-triangle-person-digging mr-2"></i>Under construction</h1></div>
                         <div class="tab-pane fade" ref="project-samples-pane" role="tabpanel" aria-labelledby="project-samples-pane-btn" tabindex="0"><h1 class="mt-4"><i class="fa-light fa-triangle-person-digging mr-2"></i>Under construction</h1></div>
@@ -680,6 +682,7 @@ export const vProjectCard = {
                 // Remove modal-open class from body
                 this.$root.open_modal_card = this;
                 this.$refs.project_details_component.unmount_pricing_app();
+                this.$refs.project_details_component.modal_opened = false;
 
                 $(this.$el).on('hidden.bs.modal', function (e) {
                     resolve();
@@ -693,6 +696,7 @@ export const vProjectCard = {
             this.$nextTick(function () {
                 // Add modal-open class to body
                 this.$root.open_modal_card = this;
+                this.$refs.project_details_component.modal_opened = true;  // Set flag when opening
                 this.$refs.project_details_component.switchTab('project-running-notes-pane');
                 this.modal.show();
             })

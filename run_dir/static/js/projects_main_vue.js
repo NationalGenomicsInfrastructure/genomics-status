@@ -14,8 +14,8 @@ const vProjectsStatus = {
             websocket_message:'',
             websocket: null,
             /* Used for tagging running notes. */
-            all_users: [],
-            current_user: '',
+            all_users: {},
+            current_user: null,
             /* Used to determine behaviour of the app depending on if it's a single project or multiple projects */
             single_project_mode: false,
             /* Only used on project cards page */
@@ -93,6 +93,11 @@ const vProjectsStatus = {
                 }
             }
         }
+    },
+    mounted() {
+        // Fetch once for all child components
+        this.fetchAllUsers();
+        this.fetchCurrentUser();
     },
     computed: {
         /* Only used on project cards page */
@@ -412,6 +417,20 @@ const vProjectsStatus = {
                 .catch(error => {
                     console.log(error)
                     this.error_messages.push('Unable to fetch users, please try again or contact a system administrator.')
+                })
+        },
+        fetchCurrentUser() {
+            axios
+                .get('/api/v1/current_user')
+                .then(response => {
+                    let data = response.data
+                    if (data !== null) {
+                        this.current_user = data
+                    }
+                })
+                .catch(error => {
+                    console.log(error)
+                    this.$root.error_messages.push('Unable to fetch current user, please try again or contact a system administrator.')
                 })
         },
         // Helper methods
