@@ -27,4 +27,5 @@ if($('#ln-js').length>0){
 $('#generate_rn_template').click(function(e){
     e.preventDefault();
     $('#new_note_text').val(fc_running_note_template);
+    preview_running_notes();
 });
