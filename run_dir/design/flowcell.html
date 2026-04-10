@@ -49,9 +49,25 @@
         <th>Generate RN template:</th>
           <td>
             <button id="generate_rn_template" data-toggle="tooltip" title="Fill running note with flowcell demux template" class="btn btn-light btn-xs" type="button">Generate running note template</button>
+            <button type="button" class="btn btn-xs btn-outline-secondary" id="template_info"><span class="fa fa-info-circle"></span></button>
           </td>
       </tr>
     </table>
+    <div id='displayInfo' style="display:none;" class="alert alert-info mt-1" role="alert">
+        <span type="button" class="btn-close float-right" aria-label="Close"></span>
+        This button adds template text to the running note textarea in the format
+        <pre>
+         FlowcellID
+
+        &lt;!-- START:PXXX--&gt; 
+
+        **ProjectName (PXXX)**
+
+        &lt;!-- END:PXXX--&gt;
+        </pre>
+        for each project on the flowcell in the project specific part, where PXXX is the projectid. Project specific information added between the START and END comments for a particular project will be posted only to that project, while information added outside of any project specific comments will be posted to all projects on the flowcell.
+        It is only possible to project specific information to projects that are part of the flowcell, addition of tags for a project that is NOT on the flowcell will be handled like general information and be posted to all projects on the flowcell, but NOT to the absent project.
+    </div>
     <div class="tabbable mb-3">
       <ul class="nav nav-tabs">
         <li class="nav-item">
