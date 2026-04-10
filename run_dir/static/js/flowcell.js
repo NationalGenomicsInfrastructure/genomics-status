@@ -29,3 +29,10 @@ $('#generate_rn_template').click(function(e){
     $('#new_note_text').val(fc_running_note_template);
     preview_running_notes();
 });
+
+$('#template_info').on('click', function(){
+    $('#displayInfo').slideToggle();
+});
+$('#displayInfo').find('span[type="button"]').click(function(){
+    $('#displayInfo').slideToggle();
+});
