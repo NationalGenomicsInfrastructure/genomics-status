@@ -189,6 +189,12 @@ class RunningNotesDataHandler(SafeHandler):
             )
             raise Exception(f"Failed to create running note for {partition_id}")
 
+        def clean_html_comments(text):
+            """Remove HTML comments from the text to prevent issues in slack notifications.
+            Does not remove multiline html comments
+            """
+            return re.sub(r"<!--.*?-->(\n)*", "", text)
+
         #### Check and send mail to tagged users (for all running notes types)
         #### except for project running notes that are copied from worksets and flowcells
         pattern = re.compile("(@)([a-zA-Z0-9.-]+)")
@@ -199,7 +205,7 @@ class RunningNotesDataHandler(SafeHandler):
                     application,
                     userTags,
                     note_details,
-                    note,
+                    clean_html_comments(note),
                     categories,
                     user,
                     created_time,
@@ -222,7 +228,7 @@ class RunningNotesDataHandler(SafeHandler):
                     application,
                     [proj_coord],
                     note_details,
-                    note,
+                    clean_html_comments(note),
                     categories,
                     user,
                     created_time,
