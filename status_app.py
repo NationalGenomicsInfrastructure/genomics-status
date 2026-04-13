@@ -636,7 +636,7 @@ class Application(tornado.web.Application):
         """Load sample classification patterns from CouchDB demux_configuration database.
 
         This method fetches the active configuration version from the demux_configuration
-        database. If the database is unavailable, it falls back to loading from the JSON file.
+        database.
         """
         database_name = "demux_configuration"
 
@@ -658,7 +658,7 @@ class Application(tornado.web.Application):
             # Verify this is an active configuration
             if not doc.get("active", False):
                 logging.warning(
-                    f"No active configuration found in {database_name}, falling back to JSON file"
+                    f"No active configuration found in {database_name}"
                 )
             else:
                 config = doc["configuration"]
