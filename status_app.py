@@ -636,23 +636,31 @@ class Application(tornado.web.Application):
         """Load sample classification patterns from CouchDB demux_configuration database.
 
         This method fetches the active configuration version from the demux_configuration
-        database.
+        database. If the database is unavailable, it falls back to loading from the JSON file.
         """
         database_name = "demux_configuration"
 
-        try:
-            # Try to load from CouchDB using view for better performance
-            result = self.cloudant.post_view(
-                db=database_name,
-                ddoc="config_views",
-                view="active_config",
-                descending=True,
-                limit=1,
-                include_docs=True,
-            ).get_result()
+        # Try to load from CouchDB using view for better performance
+        # Query for all configurations sorted by [active, created_at] descending
+        # Active configs (true) come first, so limit=1 gives us the most recent active config
+        result = self.cloudant.post_view(
+            db=database_name,
+            ddoc="summary",
+            view="active_created_at",
+            descending=True,
+            limit=1,
+            include_docs=True,
+        ).get_result()
 
-            if result.get("rows") and len(result["rows"]) > 0:
-                doc = result["rows"][0]["doc"]
+        if result.get("rows") and len(result["rows"]) > 0:
+            doc = result["rows"][0]["doc"]
+
+            # Verify this is an active configuration
+            if not doc.get("active", False):
+                logging.warning(
+                    f"No active configuration found in {database_name}, falling back to JSON file"
+                )
+            else:
                 config = doc["configuration"]
 
                 # Store both the configuration and metadata
@@ -665,13 +673,9 @@ class Application(tornado.web.Application):
                     f"(created: {doc.get('created_at', 'unknown')})"
                 )
                 return
-            else:
-                logging.warning(
-                    f"No active configuration found in {database_name}, falling back to JSON file"
-                )
-        except Exception as e:
+        else:
             logging.warning(
-                f"Could not load configuration from CouchDB ({e}), falling back to JSON file"
+                f"No active configuration found in {database_name}"
             )
 
     def _load_named_indices(self, config_dir):

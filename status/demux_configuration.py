@@ -16,10 +16,13 @@ class DemuxConfigurationHandler(SafeHandler):
             database_name = "demux_configuration"
 
             # Get all configuration documents using view
+            # Returns all configs sorted by [active, created_at] descending
+            # Active configs (true) come first, then inactive (false)
             result = self.application.cloudant.post_view(
                 db=database_name,
-                ddoc="config_views",
-                view="all_versions",
+                ddoc="summary",
+                view="active_created_at",
+                descending=True,
                 include_docs=False,
             ).get_result()
 
