@@ -2,7 +2,6 @@
 
 import base64
 import csv
-import json
 import logging
 import subprocess
 import uuid
@@ -653,9 +652,7 @@ class Application(tornado.web.Application):
 
             # Verify this is an active configuration
             if not doc.get("active", False):
-                logging.warning(
-                    f"No active configuration found in {database_name}"
-                )
+                logging.warning(f"No active configuration found in {database_name}")
             else:
                 config = doc["configuration"]
 
@@ -670,9 +667,7 @@ class Application(tornado.web.Application):
                 )
                 return
         else:
-            logging.warning(
-                f"No active configuration found in {database_name}"
-            )
+            logging.warning(f"No active configuration found in {database_name}")
 
     def _load_named_indices(self, config_dir):
         """Load named indices from CSV files in the named_indices directory.
