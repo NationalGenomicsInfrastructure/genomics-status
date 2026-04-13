@@ -2441,7 +2441,7 @@ const vDemuxSampleInfoEditor = {
         },
         backToList() {
             // Return to the flowcell list page
-            window.location.href = '/y_flowcells';
+            window.location.href = '/flowcells';
         },
         formatTimestamp(timestamp) {
             if (!timestamp) return '';
@@ -3295,7 +3295,7 @@ const vDemuxSampleInfoEditor = {
                     <div v-if="!demux_data" class="card mt-4 mb-4">
                         <div class="card-body">
                             <p class="mb-3">
-                                <a href="/y_flowcells" class="btn btn-sm btn-outline-primary">
+                                <a href="/flowcells" class="btn btn-sm btn-outline-primary">
                                     <i class="fa fa-list me-1"></i> View Flowcell List
                                 </a>
                             </p>

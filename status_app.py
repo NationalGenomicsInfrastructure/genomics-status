@@ -42,8 +42,6 @@ from status.demux_configuration import (
 from status.demux_sample_info import (
     DemuxSampleInfoDataHandler,
     DemuxSampleInfoEditorHandler,
-    DemuxSampleInfoListHandler,
-    DemuxSampleInfoListPageHandler,
     SampleClassificationConfigHandler,
     SampleClassificationPresetsHandler,
     SampleDeleteHandler,
@@ -392,7 +390,6 @@ class Application(tornado.web.Application):
                 "/api/v1/demux_sample_info/([^/]*)/sample/([^/]*)/([^/]*)$",
                 SampleDeleteHandler,
             ),
-            ("/api/v1/demux_sample_info_list", DemuxSampleInfoListHandler),
             ("/api/v1/demux_configuration", DemuxConfigurationHandler),
             ("/api/v1/demux_configuration/([^/]*)$", DemuxConfigurationDetailHandler),
             (
@@ -452,7 +449,6 @@ class Application(tornado.web.Application):
             ("/sample_requirements", SampleRequirementsViewHandler),
             ("/sample_requirements_preview", SampleRequirementsPreviewHandler),
             ("/sample_requirements_update", SampleRequirementsUpdateHandler),
-            ("/y_flowcells", DemuxSampleInfoListPageHandler),
             ("/demux_sample_info_editor", DemuxSampleInfoEditorHandler),
             ("/sensorpush", SensorpushHandler),
             ("/sequencing_queues", SequencingQueuesHandler),
