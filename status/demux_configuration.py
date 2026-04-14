@@ -12,61 +12,55 @@ class DemuxConfigurationHandler(SafeHandler):
 
     def get(self):
         """Get current configuration info and list of all versions."""
-        try:
-            database_name = "demux_configuration"
+        database_name = "demux_configuration"
 
-            # Get all configuration documents using view
-            # Returns all configs sorted by [active, created_at] descending
-            # Active configs (true) come first, then inactive (false)
-            result = self.application.cloudant.post_view(
-                db=database_name,
-                ddoc="summary",
-                view="active_created_at",
-                descending=True,
-                include_docs=False,
-            ).get_result()
+        # Returns all configs sorted by [active, created_at] descending
+        # Active configs (true) come first, then inactive (false)
+        result = self.application.cloudant.post_view(
+            db=database_name,
+            ddoc="summary",
+            view="active_created_at",
+            descending=True,
+            include_docs=False,
+        ).get_result()
 
-            versions = []
-            active_version = None
+        versions = []
+        active_version = None
 
-            for row in result.get("rows", []):
-                version_info = {
-                    "id": row["value"]["id"],
-                    "version": row["value"]["version"],
-                    "created_at": row["value"].get("created_at"),
-                    "created_by": row["value"].get("created_by"),
-                    "comment": row["value"].get("comment"),
-                    "active": row["value"].get("active", False),
-                }
-
-                versions.append(version_info)
-
-                if row["value"].get("active"):
-                    active_version = version_info
-
-            # Get current loaded version from application
-            current_loaded = {
-                "version": getattr(
-                    self.application, "sample_classification_config_version", "unknown"
-                ),
-                "id": getattr(
-                    self.application, "sample_classification_config_id", None
-                ),
+        for row in result.get("rows", []):
+            version_info = {
+                "id": row["value"]["id"],
+                "version": row["value"]["version"],
+                "created_at": row["value"].get("created_at"),
+                "created_by": row["value"].get("created_by"),
+                "comment": row["value"].get("comment"),
+                "active": row["value"].get("active", False),
             }
 
-            response = {
-                "current_loaded": current_loaded,
-                "active_in_database": active_version,
-                "all_versions": versions,
-            }
+            versions.append(version_info)
 
-            self.set_status(200)
-            self.write(json.dumps(response, indent=2))
+            if row["value"].get("active"):
+                active_version = version_info
 
-        except Exception as e:
-            logging.error(f"Error fetching configuration versions: {e}")
-            self.set_status(500)
-            self.write(json.dumps({"error": str(e)}))
+        # Get current loaded version from application
+        current_loaded = {
+            "version": getattr(
+                self.application, "sample_classification_config_version", "unknown"
+            ),
+            "id": getattr(
+                self.application, "sample_classification_config_id", None
+            ),
+        }
+
+        response = {
+            "current_loaded": current_loaded,
+            "active_in_database": active_version,
+            "all_versions": versions,
+        }
+
+        self.set_status(200)
+        self.write(json.dumps(response, indent=2))
+
 
 
 class DemuxConfigurationDetailHandler(SafeHandler):
@@ -74,24 +68,19 @@ class DemuxConfigurationDetailHandler(SafeHandler):
 
     def get(self, config_id):
         """Get a specific configuration version by ID."""
-        try:
-            database_name = "demux_configuration"
+        database_name = "demux_configuration"
 
-            # Get the specific document
-            doc = self.application.cloudant.get_document(
-                db=database_name, doc_id=config_id
-            ).get_result()
+        # Get the specific document
+        doc = self.application.cloudant.get_document(
+            db=database_name, doc_id=config_id
+        ).get_result()
 
-            if not doc:
-                self.set_status(404)
-                self.write(json.dumps({"error": "Configuration version not found"}))
-                return
+        if not doc:
+            self.set_status(404)
+            self.write(json.dumps({"error": "Configuration version not found"}))
+            return
 
-            # Return full document including configuration
-            self.set_status(200)
-            self.write(json.dumps(doc, indent=2))
+        # Return full document including configuration
+        self.set_status(200)
+        self.write(json.dumps(doc, indent=2))
 
-        except Exception as e:
-            logging.error(f"Error fetching configuration {config_id}: {e}")
-            self.set_status(500)
-            self.write(json.dumps({"error": str(e)}))
