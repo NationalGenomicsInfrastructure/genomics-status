@@ -2,7 +2,6 @@
 """Handler for managing demux configuration versions in CouchDB."""
 
 import json
-import logging
 
 from status.util import SafeHandler
 
@@ -11,8 +10,15 @@ class DemuxConfigurationHandler(SafeHandler):
     """Handler for viewing demux configuration metadata and versions."""
 
     def get(self):
-        """Get current configuration info and list of all versions."""
+        """Get current configuration info and list of all versions.
+
+        Query Parameters:
+            active (str): If 'true', returns only the active configuration document
+        """
         database_name = "demux_configuration"
+
+        # Check if user wants just the active configuration
+        get_active_only = self.get_argument("active", "false").lower() == "true"
 
         # Returns all configs sorted by [active, created_at] descending
         # Active configs (true) come first, then inactive (false)
@@ -21,9 +27,30 @@ class DemuxConfigurationHandler(SafeHandler):
             ddoc="summary",
             view="active_created_at",
             descending=True,
-            include_docs=False,
+            include_docs=get_active_only,  # Include docs only if requesting active config
         ).get_result()
 
+        if get_active_only:
+            # Return just the active configuration document
+            if result.get("rows") and len(result["rows"]) > 0:
+                doc = result["rows"][0]["doc"]
+
+                if not doc.get("active", False):
+                    self.set_status(404)
+                    self.write(json.dumps({"error": "No active configuration found"}))
+                    return
+
+                # Return the configuration section (same format as SampleClassificationConfigHandler)
+                config = doc.get("configuration", {})
+                self.set_status(200)
+                self.write(json.dumps(config, indent=2))
+                return
+            else:
+                self.set_status(404)
+                self.write(json.dumps({"error": "No active configuration found"}))
+                return
+
+        # Original behavior: return summary of all versions
         versions = []
         active_version = None
 
@@ -47,9 +74,7 @@ class DemuxConfigurationHandler(SafeHandler):
             "version": getattr(
                 self.application, "sample_classification_config_version", "unknown"
             ),
-            "id": getattr(
-                self.application, "sample_classification_config_id", None
-            ),
+            "id": getattr(self.application, "sample_classification_config_id", None),
         }
 
         response = {
@@ -60,7 +85,6 @@ class DemuxConfigurationHandler(SafeHandler):
 
         self.set_status(200)
         self.write(json.dumps(response, indent=2))
-
 
 
 class DemuxConfigurationDetailHandler(SafeHandler):
@@ -83,4 +107,3 @@ class DemuxConfigurationDetailHandler(SafeHandler):
         # Return full document including configuration
         self.set_status(200)
         self.write(json.dumps(doc, indent=2))
-

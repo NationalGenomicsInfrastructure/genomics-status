@@ -41,7 +41,6 @@ from status.demux_configuration import (
 from status.demux_sample_info import (
     DemuxSampleInfoDataHandler,
     DemuxSampleInfoEditorHandler,
-    SampleClassificationConfigHandler,
     SampleClassificationPresetsHandler,
     SampleDeleteHandler,
 )
@@ -394,10 +393,6 @@ class Application(tornado.web.Application):
             (
                 "/api/v1/sample_classification_presets",
                 SampleClassificationPresetsHandler,
-            ),
-            (
-                "/api/v1/sample_classification_config",
-                SampleClassificationConfigHandler,
             ),
             ("/barcode", BarcodeHandler),
             ("/controls", ControlsHandler),

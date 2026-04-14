@@ -1959,7 +1959,7 @@ const vDemuxSampleInfoEditor = {
         fetchSampleClassificationConfig() {
             // Fetch full sample classification configuration from the API
             if (this.sampleClassificationConfig) return; // Already loaded
-            axios.get('/api/v1/sample_classification_config')
+            axios.get('/api/v1/demux_configuration?active=true')
                 .then(response => {
                     this.sampleClassificationConfig = response.data;
                 })
