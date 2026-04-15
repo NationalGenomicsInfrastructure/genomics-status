@@ -22,7 +22,9 @@ class TestInstrumentTypeMapping(unittest.TestCase):
         self.handler = DemuxSampleInfoDataHandler(MagicMock(), MagicMock())
         self.handler.application = MagicMock()
 
-        self.handler.application.sample_classification_config = get_classification_config()
+        self.handler.application.sample_classification_config = (
+            get_classification_config()
+        )
 
     def test_instrument_type_only(self):
         """Test configuration with instrument type but no run mode."""

@@ -254,7 +254,9 @@ class TestDemuxSampleInfoPost(AsyncHTTPTestCase):
         classification = handler._classify_sample_type(sample, library_method="")
 
         self.assertEqual(classification["sample_type"], "SMARTSEQ")
-        self.assertEqual(classification["index_length"], [11, 0])  # Actual string length of SMARTSEQ-1A
+        self.assertEqual(
+            classification["index_length"], [11, 0]
+        )  # Actual string length of SMARTSEQ-1A
 
     def test_classify_sample_type_short_single_index(self):
         """Test classification of short single index samples."""
@@ -409,12 +411,15 @@ class TestDemuxSampleInfoPost(AsyncHTTPTestCase):
 
     def test_post_endpoint_already_exists(self):
         """Test POST request when document already exists."""
+
         # Route post_view calls: return existing doc for the duplicate check,
         # empty rows for internal project-lookup calls
         def post_view_side_effect(*args, **kwargs):
             mock_result = MagicMock()
             if kwargs.get("db") == "demux_sample_info":
-                mock_result.get_result.return_value = {"rows": [{"id": "existing_doc_id"}]}
+                mock_result.get_result.return_value = {
+                    "rows": [{"id": "existing_doc_id"}]
+                }
             else:
                 mock_result.get_result.return_value = {"rows": []}
             return mock_result

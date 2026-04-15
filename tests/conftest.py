@@ -3,7 +3,9 @@ from pathlib import Path
 import yaml
 from ibmcloudant import CouchDbSessionAuthenticator, cloudant_v1
 
-_SETTINGS_FILE = Path(__file__).parent.parent / "run_dir" / "settings" / "settings_dev.yaml"
+_SETTINGS_FILE = (
+    Path(__file__).parent.parent / "run_dir" / "settings" / "settings_dev.yaml"
+)
 
 _config_cache = None
 
