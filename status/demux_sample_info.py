@@ -810,6 +810,191 @@ class DemuxSampleInfoDataHandler(SafeHandler):
             lanes_with_samples[lane].append(sample)
         return lanes_with_samples
 
+    def _get_project_info(self, sample_in_lane):
+        """Extract project information from sample data.
+
+        Args:
+            sample_in_lane: Sample object from uploaded_lims_info
+
+        Returns:
+            tuple: (project_name, library_method, project_id)
+        """
+        sample_project = sample_in_lane.get("sample_project", "")
+        project_name = sample_project.replace("__", ".", 1) if sample_project else ""
+        if project_name:
+            library_method = self._get_project_library_method(project_name)
+            project_id, _ = self._get_project_id_by_name(project_name)
+        else:
+            library_method = None
+            project_id = ""
+
+        return project_name, library_method, project_id
+
+    def _build_bcl_convert_settings(self):
+        """Build BCL convert settings from defaults.
+
+        Returns:
+            tuple: (bcl_convert_settings dict, config_sources list)
+        """
+        config = self.application.sample_classification_config
+        bcl_settings_defaults = config.get("bcl_convert_settings", {}).get(
+            "raw_samplesheet_settings", {}
+        )
+        bcl_convert_settings = {}
+        config_sources = []
+
+        # Apply default raw_samplesheet_settings
+        if bcl_settings_defaults:
+            for setting_name, setting_config in bcl_settings_defaults.items():
+                default_value = setting_config.get("default")
+                bcl_convert_settings[setting_name] = default_value
+            config_sources.append("bcl_convert_settings.raw_samplesheet_settings")
+
+        return bcl_convert_settings, config_sources
+
+    def _expand_named_indices(self, sample_in_lane, sample_classification):
+        """Expand named indices into individual sequences.
+
+        Args:
+            sample_in_lane: Sample object from uploaded_lims_info
+            sample_classification: Classification result dict
+
+        Returns:
+            tuple: (sequences_to_create list, named_index string)
+        """
+        index_1_value = sample_in_lane["index"]
+        named_indices_file = sample_classification.get("named_indices")
+        named_index = ""
+
+        if named_indices_file:
+            named_indices_dict = self.application.named_indices.get(
+                named_indices_file, {}
+            )
+
+            if index_1_value in named_indices_dict:
+                # Named index found - use the sequences from the dictionary
+                named_index = index_1_value
+                sequences_to_create = named_indices_dict[named_index]
+            else:
+                # Named index not found - treat as standard sample with single entry
+                sequences_to_create = [
+                    [index_1_value, sample_in_lane.get("index2", "")]
+                ]
+        else:
+            # No named indices file specified - use original indices
+            sequences_to_create = [[index_1_value, sample_in_lane.get("index2", "")]]
+
+        return sequences_to_create, named_index
+
+    def _create_sample_row(
+        self,
+        sample_in_lane,
+        sequences,
+        sample_classification,
+        bcl_convert_settings,
+        config_sources,
+        project_name,
+        project_id,
+        library_method,
+        named_index,
+        timestamp,
+        metadata,
+    ):
+        """Create a single sample row with all settings.
+
+        Args:
+            sample_in_lane: Sample object from uploaded_lims_info
+            sequences: Index sequences [index1, index2]
+            sample_classification: Classification result dict
+            bcl_convert_settings: BCL convert settings dict
+            config_sources: List of config sources applied
+            project_name: Project name
+            project_id: Project ID
+            library_method: Library construction method
+            named_index: Named index string (if applicable)
+            timestamp: ISO format timestamp
+            metadata: Run metadata
+
+        Returns:
+            dict: Complete sample row structure
+        """
+        # Unpack sequences (can be 1 or 2 elements)
+        index_1_value = sample_in_lane["index"]
+        index_1 = sequences[0] if len(sequences) > 0 else index_1_value
+        index_2 = (
+            sequences[1] if len(sequences) > 1 else sample_in_lane.get("index2", "")
+        )
+
+        # Normalize "NoIndex" to empty string for BCLConvert samplesheets
+        if index_1.upper() == "NOINDEX":
+            index_1 = ""
+        if index_2.upper() == "NOINDEX":
+            index_2 = ""
+
+        # Generate OverrideCycles if not already set in raw_samplesheet_settings
+        override_cycles = ""
+        if (
+            "OverrideCycles" not in bcl_convert_settings
+            or not bcl_convert_settings["OverrideCycles"]
+        ):
+            run_setup = metadata.get("run_setup", "")
+            recipe = sample_in_lane.get("recipe", "")
+            index_lengths = sample_classification["index_length"]
+            umi_config = sample_classification.get("umi_config")
+            override_cycles = self._generate_override_cycles(
+                run_setup, recipe, index_lengths, umi_config
+            )
+
+        # Build the sample row structure
+        sample_row = {
+            "last_modified": timestamp,
+            "library_method": library_method or "",
+            "project_id": project_id or "",
+            "project_name": project_name,
+            "control": sample_in_lane["control"],
+            "description": sample_in_lane["description"],
+            "flowcell_id": sample_in_lane["flowcell_id"],
+            "settings": {
+                timestamp: {
+                    "other_details": {
+                        "named_index": named_index,
+                        "operator": sample_in_lane["operator"],
+                        "recipe": sample_in_lane["recipe"],
+                        "sample_ref": sample_in_lane["sample_ref"],
+                        "sample_type": sample_classification["sample_type"],
+                        "index_length": sample_classification["index_length"],
+                        "umi_config": sample_classification["umi_config"],
+                        "config_sources": config_sources,
+                        "library_method": library_method or "",
+                        "project_id": project_id or "",
+                    },
+                    "per_sample_fields": {
+                        "Lane": sample_in_lane["lane"],
+                        "Sample_ID": f"Sample_{sample_in_lane['sample_id']}",
+                        "index": index_1,
+                        "index2": index_2,
+                        "MaskShortReads": 0,
+                        "MinimumTrimmedReadLength": 0,
+                        "OverrideCycles": override_cycles,
+                        "Sample_Name": sample_in_lane["sample_name"],
+                        "Sample_Project": sample_in_lane["sample_project"],
+                    },
+                    "raw_samplesheet_settings": bcl_convert_settings,
+                }
+            },
+        }
+
+        # Calculate and store Stage 2 samplesheet settings
+        settings_entry = sample_row["settings"][timestamp]
+        samplesheet_settings = self._calculate_samplesheet_settings(
+            bcl_convert_settings,
+            settings_entry["other_details"],
+            settings_entry["per_sample_fields"],
+        )
+        settings_entry["samplesheet_settings"] = samplesheet_settings
+
+        return sample_row
+
     def _create_calculated_lanes(self, lanes_with_samples, timestamp, metadata):
         """Create the calculated lanes structure with sample rows.
 
@@ -827,39 +1012,17 @@ class DemuxSampleInfoDataHandler(SafeHandler):
             calculated_lanes[lane] = {"sample_rows": {}}
 
             for sample_in_lane in samples_in_lane:
-                # Get library method and project_id for the project
-                # Convert sample_project format (replace __ with .)
-                sample_project = sample_in_lane.get("sample_project", "")
-                project_name = (
-                    sample_project.replace("__", ".", 1) if sample_project else ""
+                # Get project information
+                project_name, library_method, project_id = self._get_project_info(
+                    sample_in_lane
                 )
-                if project_name:
-                    library_method = self._get_project_library_method(project_name)
-                    project_id, _ = self._get_project_id_by_name(project_name)
-                else:
-                    library_method = None
-                    project_id = ""
 
-                # Build raw_samplesheet_settings from defaults first
-                config = self.application.sample_classification_config
-                bcl_settings_defaults = config.get("bcl_convert_settings", {}).get(
-                    "raw_samplesheet_settings", {}
+                # Build BCL convert settings with defaults
+                bcl_convert_settings, config_sources = (
+                    self._build_bcl_convert_settings()
                 )
-                bcl_convert_settings = {}
 
-                # Track config sources - start with defaults
-                config_sources = []
-
-                # STEP 1: Apply default raw_samplesheet_settings
-                if bcl_settings_defaults:
-                    for setting_name, setting_config in bcl_settings_defaults.items():
-                        default_value = setting_config.get("default")
-                        bcl_convert_settings[setting_name] = default_value
-                    config_sources.append(
-                        "bcl_convert_settings.raw_samplesheet_settings"
-                    )
-
-                # STEP 2-6: Classify the sample type (applies patterns, other_general_sample_types, library_method_mapping, instrument_type_mapping)
+                # Classify the sample type (STEPS 2-6)
                 sample_classification = self._classify_sample_type(
                     sample_in_lane, library_method, metadata
                 )
@@ -867,123 +1030,37 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                 # Add classification config sources
                 config_sources.extend(sample_classification.get("config_sources", []))
 
-                # Apply overrides from the matched pattern, general types, or library method
+                # Apply overrides from classification
                 classification_overrides = sample_classification.get(
                     "raw_samplesheet_settings", {}
                 )
                 if classification_overrides:
                     bcl_convert_settings.update(classification_overrides)
 
-                # Check if we need to expand named indices
-                index_1_value = sample_in_lane["index"]
-                named_indices_file = sample_classification.get("named_indices")
-                sequences_to_create = []
-                named_index = ""  # Only set if found in named indices lookup
-
-                # Check if this sample should use named indices expansion
-                if named_indices_file:
-                    named_indices_dict = self.application.named_indices.get(
-                        named_indices_file, {}
-                    )
-
-                    if index_1_value in named_indices_dict:
-                        # Named index found - use the sequences from the dictionary
-                        named_index = index_1_value
-                        sequences_to_create = named_indices_dict[named_index]
-                    else:
-                        # Named index not found - treat as standard sample with single entry
-                        sequences_to_create = [
-                            [index_1_value, sample_in_lane.get("index2", "")]
-                        ]
-                else:
-                    # No named indices file specified - use original indices
-                    sequences_to_create = [
-                        [index_1_value, sample_in_lane.get("index2", "")]
-                    ]
+                # Expand named indices if applicable
+                sequences_to_create, named_index = self._expand_named_indices(
+                    sample_in_lane, sample_classification
+                )
 
                 # Create a sample row for each sequence entry
                 for sequences in sequences_to_create:
                     sample_uuid = str(uuid.uuid4())
 
-                    # Unpack sequences (can be 1 or 2 elements)
-                    index_1 = sequences[0] if len(sequences) > 0 else index_1_value
-                    index_2 = (
-                        sequences[1]
-                        if len(sequences) > 1
-                        else sample_in_lane.get("index2", "")
+                    sample_row = self._create_sample_row(
+                        sample_in_lane=sample_in_lane,
+                        sequences=sequences,
+                        sample_classification=sample_classification,
+                        bcl_convert_settings=bcl_convert_settings,
+                        config_sources=config_sources,
+                        project_name=project_name,
+                        project_id=project_id,
+                        library_method=library_method,
+                        named_index=named_index,
+                        timestamp=timestamp,
+                        metadata=metadata,
                     )
 
-                    # Normalize "NoIndex" to empty string for BCLConvert samplesheets
-                    if index_1.upper() == "NOINDEX":
-                        index_1 = ""
-                    if index_2.upper() == "NOINDEX":
-                        index_2 = ""
-
-                    # Generate OverrideCycles if not already set in raw_samplesheet_settings
-                    override_cycles = ""
-                    if (
-                        "OverrideCycles" not in bcl_convert_settings
-                        or not bcl_convert_settings["OverrideCycles"]
-                    ):
-                        run_setup = metadata.get("run_setup", "")
-                        recipe = sample_in_lane.get("recipe", "")
-                        index_lengths = sample_classification["index_length"]
-                        umi_config = sample_classification.get("umi_config")
-                        override_cycles = self._generate_override_cycles(
-                            run_setup, recipe, index_lengths, umi_config
-                        )
-
-                    # project_name and project_id were already retrieved earlier in the function
-                    calculated_lanes[lane]["sample_rows"][sample_uuid] = {
-                        "last_modified": timestamp,
-                        "library_method": library_method or "",
-                        "project_id": project_id or "",
-                        "project_name": project_name,
-                        "control": sample_in_lane["control"],
-                        "description": sample_in_lane["description"],
-                        "flowcell_id": sample_in_lane["flowcell_id"],
-                        "settings": {
-                            timestamp: {
-                                "other_details": {
-                                    "named_index": named_index,
-                                    "operator": sample_in_lane["operator"],
-                                    "recipe": sample_in_lane["recipe"],
-                                    "sample_ref": sample_in_lane["sample_ref"],
-                                    "sample_type": sample_classification["sample_type"],
-                                    "index_length": sample_classification[
-                                        "index_length"
-                                    ],
-                                    "umi_config": sample_classification["umi_config"],
-                                    "config_sources": config_sources,
-                                    "library_method": library_method or "",
-                                    "project_id": project_id or "",
-                                },
-                                "per_sample_fields": {
-                                    "Lane": sample_in_lane["lane"],
-                                    "Sample_ID": f"Sample_{sample_in_lane['sample_id']}",
-                                    "index": index_1,
-                                    "index2": index_2,
-                                    "MaskShortReads": 0,
-                                    "MinimumTrimmedReadLength": 0,
-                                    "OverrideCycles": override_cycles,
-                                    "Sample_Name": sample_in_lane["sample_name"],
-                                    "Sample_Project": sample_in_lane["sample_project"],
-                                },
-                                "raw_samplesheet_settings": bcl_convert_settings,
-                            }
-                        },
-                    }
-
-                    # Calculate and store Stage 2 samplesheet settings
-                    settings_entry = calculated_lanes[lane]["sample_rows"][sample_uuid][
-                        "settings"
-                    ][timestamp]
-                    samplesheet_settings = self._calculate_samplesheet_settings(
-                        bcl_convert_settings,
-                        settings_entry["other_details"],
-                        settings_entry["per_sample_fields"],
-                    )
-                    settings_entry["samplesheet_settings"] = samplesheet_settings
+                    calculated_lanes[lane]["sample_rows"][sample_uuid] = sample_row
 
         return calculated_lanes
 
@@ -1448,6 +1525,9 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                     db="demux_sample_info", doc_id=doc_id
                 ).get_result()
 
+                # Store the original revision for conflict detection
+                original_rev = document.get("_rev")
+
             except Exception as db_error:
                 self.set_status(500)
                 self.write(
@@ -1706,6 +1786,20 @@ class DemuxSampleInfoDataHandler(SafeHandler):
 
             # Save the updated document back to the database
             try:
+                # Check for revision conflict before saving
+                current_rev = document.get("_rev")
+                if current_rev != original_rev:
+                    self.set_status(409)
+                    self.write(
+                        json.dumps(
+                            {
+                                "error": "Document was modified by another user. Please refresh and try again.",
+                                "error_code": "DOCUMENT_CONFLICT",
+                            }
+                        )
+                    )
+                    return
+
                 response = self.application.cloudant.post_document(
                     db="demux_sample_info", document=document
                 ).get_result()
@@ -1732,12 +1826,26 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                 self.write(json.dumps(updated_doc))
 
             except Exception as db_error:
-                self.set_status(500)
-                self.write(
-                    json.dumps(
-                        {"error": f"Database error saving document: {str(db_error)}"}
+                # Check if it's a CouchDB conflict error (status 409)
+                if hasattr(db_error, "status_code") and db_error.status_code == 409:
+                    self.set_status(409)
+                    self.write(
+                        json.dumps(
+                            {
+                                "error": "Document was modified by another user. Please refresh and try again.",
+                                "error_code": "DOCUMENT_CONFLICT",
+                            }
+                        )
                     )
-                )
+                else:
+                    self.set_status(500)
+                    self.write(
+                        json.dumps(
+                            {
+                                "error": f"Database error saving document: {str(db_error)}"
+                            }
+                        )
+                    )
                 return
 
         except json.JSONDecodeError as e:
