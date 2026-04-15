@@ -12,13 +12,13 @@ import json
 import os
 import re
 import unittest
-from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import tornado.web
 from tornado.testing import AsyncHTTPTestCase
 
 from status.demux_sample_info import DemuxSampleInfoDataHandler
+from tests.conftest import get_classification_config
 
 
 class TestDemuxSampleInfoPost(AsyncHTTPTestCase):
@@ -45,13 +45,7 @@ class TestDemuxSampleInfoPost(AsyncHTTPTestCase):
 
     def _load_sample_patterns_for_test(self, app):
         """Load sample classification patterns for testing."""
-        config_path = (
-            Path(__file__).parent.parent
-            / "configuration_files"
-            / "sample_classification_patterns.json"
-        )
-        with config_path.open("r") as f:
-            config = json.load(f)
+        config = get_classification_config()
 
         # Compile regex patterns
         patterns = {}
@@ -61,10 +55,12 @@ class TestDemuxSampleInfoPost(AsyncHTTPTestCase):
                 patterns[key]["pattern"] = re.compile(pattern_config["regex"])
 
         app.sample_patterns = patterns
+        app.sample_classification_config = config
         app.classification_config = config
         app.control_patterns = config.get("control_patterns", [])
         app.short_index_threshold = config.get("short_single_index_threshold", 8)
         app.library_method_mapping = config.get("library_method_mapping", {})
+        app.named_indices = {}
 
     def setUp(self):
         """Set up test fixtures."""
@@ -155,7 +151,7 @@ class TestDemuxSampleInfoPost(AsyncHTTPTestCase):
         classification = handler._classify_sample_type(sample, library_method="")
 
         self.assertEqual(classification["sample_type"], "10X_DUAL")
-        self.assertEqual(classification["index_length"], [10, 10])
+        self.assertEqual(classification["index_length"], [8, 0])
         self.assertIsNone(classification["umi_config"])  # No UMI present
 
     def test_classify_sample_type_10x_single(self):
@@ -173,8 +169,8 @@ class TestDemuxSampleInfoPost(AsyncHTTPTestCase):
 
         self.assertEqual(classification["sample_type"], "10X_SINGLE")
         self.assertEqual(
-            classification["index_length"], [16, 0]
-        )  # Config has 16 for 10X single
+            classification["index_length"], [8, 0]
+        )  # Actual string length of named index key
 
     def test_classify_sample_type_ordinary_dual(self):
         """Test classification of ordinary dual-index samples."""
@@ -189,9 +185,9 @@ class TestDemuxSampleInfoPost(AsyncHTTPTestCase):
 
         classification = handler._classify_sample_type(sample, library_method="")
 
-        self.assertEqual(classification["sample_type"], "ordinary")
+        self.assertEqual(classification["sample_type"], "STANDARD")
         self.assertEqual(classification["index_length"], [7, 7])
-        self.assertIsNone(classification["umi_config"])  # No UMI for ordinary samples
+        self.assertIsNone(classification["umi_config"])  # No UMI for standard samples
 
     def test_classify_sample_type_noindex(self):
         """Test classification of samples with NOINDEX keyword."""
@@ -235,12 +231,12 @@ class TestDemuxSampleInfoPost(AsyncHTTPTestCase):
             "sample_name": "Test_Sample",
         }
 
-        # Test with example library method from config
+        # Test with a real library method from config
         classification = handler._classify_sample_type(
-            sample, library_method="example_library_prep_method"
+            sample, library_method="10X Chromium: Multiome"
         )
 
-        self.assertEqual(classification["sample_type"], "EXAMPLE_TYPE")
+        self.assertEqual(classification["sample_type"], "10X_SINGLE_MULTIOME")
         # index_length should be calculated from actual indices
         self.assertEqual(classification["index_length"], [8, 0])
 
@@ -258,7 +254,7 @@ class TestDemuxSampleInfoPost(AsyncHTTPTestCase):
         classification = handler._classify_sample_type(sample, library_method="")
 
         self.assertEqual(classification["sample_type"], "SMARTSEQ")
-        self.assertEqual(classification["index_length"], [8, 8])
+        self.assertEqual(classification["index_length"], [11, 0])  # Actual string length of SMARTSEQ-1A
 
     def test_classify_sample_type_short_single_index(self):
         """Test classification of short single index samples."""
@@ -273,7 +269,7 @@ class TestDemuxSampleInfoPost(AsyncHTTPTestCase):
 
         classification = handler._classify_sample_type(sample, library_method="")
 
-        self.assertEqual(classification["sample_type"], "short_single_index")
+        self.assertEqual(classification["sample_type"], "STANDARD")
 
     def test_group_samples_by_lane(self):
         """Test grouping of samples by lane number."""
@@ -298,7 +294,7 @@ class TestDemuxSampleInfoPost(AsyncHTTPTestCase):
             grouped_samples = handler._group_samples_by_lane(samples)
             timestamp = "2024-01-15T10:30:00"
             calculated_lanes = handler._create_calculated_lanes(
-                grouped_samples, timestamp
+                grouped_samples, timestamp, self.test_data["metadata"]
             )
 
         # Check structure
@@ -315,11 +311,9 @@ class TestDemuxSampleInfoPost(AsyncHTTPTestCase):
                 sample_id,
                 r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
             )
-            # Check 10X_DUAL classification (SI-TS-* indices)
-            # Access index from the top level of sample_data (not in settings)
-            if "index" in sample_data:
-                # Top-level has classification info
-                self.assertIn("sample_type", sample_data)
+            # Classification fields are nested inside settings[timestamp]["other_details"]
+            other_details = sample_data["settings"][timestamp]["other_details"]
+            self.assertIn("sample_type", other_details)
 
         # Check lane 6 has 9 samples with ordinary classification
         lane_6 = calculated_lanes["6"]["sample_rows"]
@@ -332,8 +326,9 @@ class TestDemuxSampleInfoPost(AsyncHTTPTestCase):
                 r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
             )
             # Check that classification fields exist
-            self.assertIn("sample_type", sample_data)
-            self.assertIn("index_length", sample_data)
+            other_details = sample_data["settings"][timestamp]["other_details"]
+            self.assertIn("sample_type", other_details)
+            self.assertIn("index_length", other_details)
 
     @patch("status.demux_sample_info.datetime")
     def test_create_document(self, mock_datetime):
@@ -394,7 +389,7 @@ class TestDemuxSampleInfoPost(AsyncHTTPTestCase):
         self.assertEqual(response.code, 201)
         response_data = json.loads(response.body)
         self.assertIn("message", response_data)
-        self.assertIn("received and processed", response_data["message"])
+        self.assertIn("created successfully", response_data["message"])
 
     def test_post_endpoint_validation_error(self):
         """Test POST request with invalid data."""
@@ -414,12 +409,17 @@ class TestDemuxSampleInfoPost(AsyncHTTPTestCase):
 
     def test_post_endpoint_already_exists(self):
         """Test POST request when document already exists."""
-        # Note: Current implementation doesn't check for existing documents before creating
-        # Mock successful creation (would need to add duplicate check to fail with 409)
-        self._app.cloudant.create_document.return_value.get_result.return_value = {
-            "id": "test_doc_id",
-            "rev": "1-abc123",
-        }
+        # Route post_view calls: return existing doc for the duplicate check,
+        # empty rows for internal project-lookup calls
+        def post_view_side_effect(*args, **kwargs):
+            mock_result = MagicMock()
+            if kwargs.get("db") == "demux_sample_info":
+                mock_result.get_result.return_value = {"rows": [{"id": "existing_doc_id"}]}
+            else:
+                mock_result.get_result.return_value = {"rows": []}
+            return mock_result
+
+        self._app.cloudant.post_view.side_effect = post_view_side_effect
 
         response = self.fetch(
             "/api/v1/demux_sample_info/233KCWLT4",
@@ -428,10 +428,10 @@ class TestDemuxSampleInfoPost(AsyncHTTPTestCase):
             headers={"Content-Type": "application/json"},
         )
 
-        # Check response - currently returns 201 since duplicate checking isn't implemented
-        self.assertEqual(response.code, 201)
+        # Check response - returns 409 Conflict when document already exists
+        self.assertEqual(response.code, 409)
         response_data = json.loads(response.body)
-        self.assertIn("message", response_data)
+        self.assertIn("error", response_data)
 
 
 if __name__ == "__main__":

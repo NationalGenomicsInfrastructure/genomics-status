@@ -6,12 +6,11 @@ Tests the hierarchical configuration system where:
 - Run mode can override instrument type settings
 """
 
-import json
 import unittest
-from pathlib import Path
 from unittest.mock import MagicMock
 
 from status.demux_sample_info import DemuxSampleInfoDataHandler
+from tests.conftest import get_classification_config
 
 
 class TestInstrumentTypeMapping(unittest.TestCase):
@@ -23,14 +22,7 @@ class TestInstrumentTypeMapping(unittest.TestCase):
         self.handler = DemuxSampleInfoDataHandler(MagicMock(), MagicMock())
         self.handler.application = MagicMock()
 
-        # Load the actual sample classification config
-        config_path = (
-            Path(__file__).parent.parent.parent
-            / "configuration_files"
-            / "sample_classification_patterns.json"
-        )
-        with open(config_path) as f:
-            self.handler.application.sample_classification_config = json.load(f)
+        self.handler.application.sample_classification_config = get_classification_config()
 
     def test_instrument_type_only(self):
         """Test configuration with instrument type but no run mode."""
