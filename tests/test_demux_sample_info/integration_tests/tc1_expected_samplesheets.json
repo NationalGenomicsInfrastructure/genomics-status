@@ -1,0 +1,92 @@
+[
+  {
+    "lane": "1",
+    "projects": ["A__Berggren_25_01"],
+    "settings_index": 0,
+    "sample_count": 3,
+    "filename": "Lane1_A__Berggren_25_01_0.csv",
+    "Header": {
+      "FileFormatVersion": "2",
+      "RunName": "22GC2NLT1"
+    },
+    "raw_samplesheet_settings": {
+      "CreateFastqForIndexReads": false,
+      "MinimumTrimmedReadLength": 0,
+      "MaskShortReads": 0
+    },
+    "BCLConvert_Data": [
+      {
+        "Lane": "1",
+        "Sample_ID": "Sample_P36906_1001",
+        "Sample_Name": "P36906_1001",
+        "index": "GCTACGCT",
+        "index2": "TATAGCCT",
+        "Sample_Project": "A__Berggren_25_01",
+        "OverrideCycles": "R1:Y85;I1:I8;R2:Y215"
+      },
+      {
+        "Lane": "1",
+        "Sample_ID": "Sample_P36906_1002",
+        "Sample_Name": "P36906_1002",
+        "index": "CGAGGCTG",
+        "index2": "TATAGCCT",
+        "Sample_Project": "A__Berggren_25_01",
+        "OverrideCycles": "R1:Y85;I1:I8;R2:Y215"
+      },
+      {
+        "Lane": "1",
+        "Sample_ID": "Sample_P36906_1003",
+        "Sample_Name": "P36906_1003",
+        "index": "AAGAGGCA",
+        "index2": "TATAGCCT",
+        "Sample_Project": "A__Berggren_25_01",
+        "OverrideCycles": "R1:Y85;I1:I8;R2:Y215"
+      }
+    ]
+  },
+  {
+    "lane": "2",
+    "projects": ["A__Berggren_25_01"],
+    "settings_index": 0,
+    "sample_count": 3,
+    "filename": "Lane2_A__Berggren_25_01_0.csv",
+    "Header": {
+      "FileFormatVersion": "2",
+      "RunName": "22GC2NLT1"
+    },
+    "raw_samplesheet_settings": {
+      "CreateFastqForIndexReads": false,
+      "MinimumTrimmedReadLength": 0,
+      "MaskShortReads": 0
+    },
+    "BCLConvert_Data": [
+      {
+        "Lane": "2",
+        "Sample_ID": "Sample_P36906_1001",
+        "Sample_Name": "P36906_1001",
+        "index": "GCTACGCT",
+        "index2": "TATAGCCT",
+        "Sample_Project": "A__Berggren_25_01",
+        "OverrideCycles": "R1:Y85;I1:I8;R2:Y215"
+      },
+      {
+        "Lane": "2",
+        "Sample_ID": "Sample_P36906_1002",
+        "Sample_Name": "P36906_1002",
+        "index": "CGAGGCTG",
+        "index2": "TATAGCCT",
+        "Sample_Project": "A__Berggren_25_01",
+        "OverrideCycles": "R1:Y85;I1:I8;R2:Y215"
+      },
+      {
+        "Lane": "2",
+        "Sample_ID": "Sample_P36906_1003",
+        "Sample_Name": "P36906_1003",
+        "index": "AAGAGGCA",
+        "index2": "TATAGCCT",
+        "Sample_Project": "A__Berggren_25_01",
+        "OverrideCycles": "R1:Y85;I1:I8;R2:Y215"
+      }
+    ]
+  }
+]
