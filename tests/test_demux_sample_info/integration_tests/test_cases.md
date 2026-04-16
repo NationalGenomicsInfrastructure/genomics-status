@@ -1,4 +1,4 @@
-# Test case 1, Single index standard demux
+# Test case 1 - Single index standard demux
 ## Description
 
 - Single index
@@ -120,7 +120,7 @@ Lane,Sample_ID,Sample_Name,index,index2,Sample_Project
 2,Sample_P36906_1003,P36906_1003,AAGAGGCA,,A__Berggren_25_01
 ```
 
-# Test case 2, Dual index: Indexes or reads are shorter than the sequencing setup
+# Test case 2 - Dual index: Indexes or reads are shorter than the sequencing setup
 ## Description
 
 - Dual index, one or both indexes/reads are shorter than the sequencing setup
@@ -285,3 +285,357 @@ Lane,Sample_ID,Sample_Name,index,index2,Sample_Project,OverrideCycles
 6,Sample_P37556_1003,P37556_1003,TGGACGT,CAATCGA,A_Berggren_25_12,Y151;I7N3;I7N3;Y151
 6,Sample_P37556_1004,P37556_1004,ATACTGA,CCTTCGC,A_Berggren_25_12,Y151;I7N3;I7N3;Y151
 ```
+
+# Test case 3 - No index
+## Description
+
+- No index (PhiX reads will not be filtered and send to user, no undetermined reads)
+- One demux command, one sample sheet
+
+## Example data
+
+**Run:** 251118_M01548_0652_000000000-GV85B
+
+**Project and setup:** A.Berggren_25_08 (164-0-0-164)
+
+**Current bcl2fastq settings:**
+
+LIMS sample sheet:
+
+```bash
+[Header]
+Local Run Manager Analysis Id,76077
+Experiment Name,GV85B
+Date,2025-11-18
+Module,GenerateFASTQ - 3.1.0
+Workflow,GenerateFASTQ
+Library Prep Kit,Custom
+Index Kit,Custom
+Description,Production
+Chemistry,Default
+investigator name,Agneta Berg
+project name,A.Berggren_25_08
+
+[Reads]
+164
+164
+
+[Settings]
+onlygeneratefastq,1
+filterpcrduplicates,0
+
+[Data]
+Sample_ID,Sample_Name,Description,Sample_Project,FCID,Lane,Sample_Ref,Control,Recipe,Operator
+P37902_1001,P37902_1001,A__Berggren_25_08,A__Berggren_25_08,MS1046442-300V2,1,Other (- -),N,164-164,Agneta Berg
+```
+
+SampleSheet_0.csv
+
+```bash
+[Header]
+Chemistry,Default
+Date,2025-11-18
+Description,Production
+Experiment Name,GV85B
+Index Kit,Custom
+Library Prep Kit,Custom
+Local Run Manager Analysis Id,76077
+Module,GenerateFASTQ - 3.1.0
+Workflow,GenerateFASTQ
+investigator name,Agneta Berg
+project name,A.Berggren_25_08
+[Data]
+Sample_ID,Sample_Name,Description,Sample_Project,FCID,Lane,Sample_Ref,Control,Recipe,Operator
+Sample_P37902_1001,P37902_1001,A__Berggren_25_08,A__Berggren_25_08,MS1046442-300V2,1,Other (- -),N,164-164,Agneta Berg
+```
+
+bcl2fastq command:
+
+```bash
+bcl2fastq --use-bases-mask 1:Y164,Y164 \
+--output-dir /srv/ngi_data/sequencing/MiSeq/251118_M01548_0652_000000000-GV85B/Demultiplexing_0 \
+--sample-sheet /srv/ngi_data/sequencing/MiSeq/251118_M01548_0652_000000000-GV85B/SampleSheet_0.csv \
+--loading-threads 1 \
+--processing-threads 8 \
+--writing-threads 1 \
+--minimum-trimmed-read-length 0 \
+--mask-short-adapter-reads 0 \
+--ignore-missing-positions \
+--ignore-missing-controls \
+--ignore-missing-filter \
+--ignore-missing-bcls \
+--barcode-mismatches 0
+```
+
+## Suggestions
+
+### bclconvert command
+
+```bash
+bcl-convert \
+  --bcl-input-directory /path/to/RunFolder \
+  --output-directory Demux_lane1_sub0 \
+  --sample-sheet SampleSheet_lane_1_sub0.csv \
+  --bcl-sampleproject-subdirectories true \
+  --sample-name-column-enabled true \
+  --bcl-only-lane LANENR
+```
+
+### Sample sheet
+
+```bash
+[Header]
+FileFormatVersion,2
+RunName,Run_001
+InstrumentID,MYSEQ
+Date,2025-11-04
+
+[BCLConvert_Settings]
+SoftwareVersion,4.4.6
+MinimumTrimmedReadLength,0
+MaskShortReads,0
+
+[BCLConvert_Data]
+Lane,Sample_ID,Sample_Name,index,index2,Sample_Project
+1,Sample_P37902_1001,P37902_1001,,,A__Berggren_25_08
+```
+
+### Notes
+
+- `--barcode-mismatches 0` for bcl2fastq has been replaced with the sample sheet settings `BarcodeMismatchesIndex1` and `BarcodeMismatchesIndex2` . These can only be specified when index 1/2 is present.
+- In bclconvert: When a sample sheet contains one unindexed sample, all reads are placed in the sample FASTQ files (one each for Read 1 and Read 2)
+
+# Test case 4 - Mixed dual and single on one lane
+## Description
+
+- Mixed dual and single on one lane
+- Same or different projects
+- Subdemux? - bclconvert can possibly handle this in one run and give a correct undetermined file right away
+
+## Example data
+
+**Run:** [20251118_LH00202_0299_B233JTGLT4](https://genomics-status.scilifelab.se/flowcells/20251118_LH00202_0299_B233JTGLT4)
+
+**Project(s) and setup:** [A.Berggren_25_01](https://genomics-status.scilifelab.se/project/P36203) (151-X-X-151), [B.Bergman_25_01](https://genomics-status.scilifelab.se/project/P36705) (151-X-X-151), [C.Bergkvist_25_01](https://genomics-status.scilifelab.se/project/P37004) (151-8-0-151)
+
+**Current bcl2fastq settings:**
+
+LIMS sample sheet:
+
+```bash
+FCID,Lane,Sample_ID,Sample_Name,Sample_Ref,index,index2,Description,Control,Recipe,Operator,Sample_Project
+233JTGLT4,1,P36203_103,P36203_103,Human (Homo sapiens GRCh38),ACTCTCGA,CTGTACCA,A__Berggren_25_01,N,151-151,Agneta_Berg,A__Berggren_25_01
+233JTGLT4,1,P36203_303,P36203_303,Human (Homo sapiens GRCh38),TGAGCTAG,GAACGGTT,A__Berggren_25_01,N,151-151,Agneta_Berg,A__Berggren_25_01
+233JTGLT4,1,P36705_101,P36705_101,Human (Homo sapiens GRCh38),GCGCGGTTAA,AAGCTATAGC,B__Bergman_25_01,N,151-151,Agneta_Berg,B__Bergman_25_01
+233JTGLT4,1,P36705_102,P36705_102,Human (Homo sapiens GRCh38),TTCCTTGAGG,TAAGACAGCA,B__Bergman_25_01,N,151-151,Agneta_Berg,B__Bergman_25_01
+233JTGLT4,1,P36705_103,P36705_103,Human (Homo sapiens GRCh38),GAGTCGCTTC,AGCGAAGATT,B__Bergman_25_01,N,151-151,Agneta_Berg,B__Bergman_25_01
+233JTGLT4,1,P36705_104,P36705_104,Human (Homo sapiens GRCh38),GCATAAGATC,GAGAACTGGA,B__Bergman_25_01,N,151-151,Agneta_Berg,B__Bergman_25_01
+233JTGLT4,1,P36705_105,P36705_105,Human (Homo sapiens GRCh38),TAGAAGATCG,CGACCAGTGT,B__Bergman_25_01,N,151-151,Agneta_Berg,B__Bergman_25_01
+233JTGLT4,1,P36705_106,P36705_106,Human (Homo sapiens GRCh38),AACCTAGTGC,TACAGGTCCT,B__Bergman_25_01,N,151-151,Agneta_Berg,B__Bergman_25_01
+233JTGLT4,1,P36705_107,P36705_107,Human (Homo sapiens GRCh38),CGTGTATGTC,GCATCTCTAT,B__Bergman_25_01,N,151-151,Agneta_Berg,B__Bergman_25_01
+233JTGLT4,1,P36705_108,P36705_108,Human (Homo sapiens GRCh38),TTCAGATCCA,TGGCATTGGA,B__Bergman_25_01,N,151-151,Agneta_Berg,B__Bergman_25_01
+233JTGLT4,1,P36705_109,P36705_109,Human (Homo sapiens GRCh38),CTCACCAGTT,TTGGTGTGTC,B__Bergman_25_01,N,151-151,Agneta_Berg,B__Bergman_25_01
+233JTGLT4,1,P36705_110,P36705_110,Human (Homo sapiens GRCh38),ACTAGTAGTC,ACGTACACTC,B__Bergman_25_01,N,151-151,Agneta_Berg,B__Bergman_25_01
+233JTGLT4,1,P36705_111,P36705_111,Human (Homo sapiens GRCh38),AATAGACTGC,TCAAGGTCGC,B__Bergman_25_01,N,151-151,Agneta_Berg,B__Bergman_25_01
+233JTGLT4,1,P36705_112,P36705_112,Human (Homo sapiens GRCh38),ATGATCAACG,GTATAGCGTC,B__Bergman_25_01,N,151-151,Agneta_Berg,B__Bergman_25_01
+233JTGLT4,1,P37004_1001,P37004_1001,Human (Homo sapiens GRCh38),TCAGCGAA,,C__Bergkvist_25_01,N,151-151,Agneta_Berg,C__Bergkvist_25_01
+233JTGLT4,1,P37004_1002,P37004_1002,Human (Homo sapiens GRCh38),CCATTGTT,,C__Bergkvist_25_01,N,151-151,Agneta_Berg,C__Bergkvist_25_01
+233JTGLT4,1,P37004_1003,P37004_1003,Human (Homo sapiens GRCh38),AGAGGAAT,,C__Bergkvist_25_01,N,151-151,Agneta_Berg,C__Bergkvist_25_01
+233JTGLT4,1,P37004_1004,P37004_1004,Human (Homo sapiens GRCh38),CTTCCTTC,,C__Bergkvist_25_01,N,151-151,Agneta_Berg,C__Bergkvist_25_01
+233JTGLT4,1,P37004_1005,P37004_1005,Human (Homo sapiens GRCh38),CTTGCAGA,,C__Bergkvist_25_01,N,151-151,Agneta_Berg,C__Bergkvist_25_01
+233JTGLT4,1,P37004_1006,P37004_1006,Human (Homo sapiens GRCh38),TCTAGCGA,,C__Bergkvist_25_01,N,151-151,Agneta_Berg,C__Bergkvist_25_01
+233JTGLT4,1,P37004_1007,P37004_1007,Human (Homo sapiens GRCh38),TCAACTGT,,C__Bergkvist_25_01,N,151-151,Agneta_Berg,C__Bergkvist_25_01
+```
+
+SampleSheet_0.csv
+
+```bash
+[Header]
+[Data]
+FCID,Lane,Sample_ID,Sample_Name,Sample_Ref,index,index2,Description,Control,Recipe,Operator,Sample_Project
+233JTGLT4,1,Sample_P36203_103,P36203_103,Human (Homo sapiens GRCh38),ACTCTCGA,CTGTACCA,A__Berggren_25_01,N,151-151,Agneta_Berg,A__Berggren_25_01
+233JTGLT4,1,Sample_P36203_303,P36203_303,Human (Homo sapiens GRCh38),TGAGCTAG,GAACGGTT,A__Berggren_25_01,N,151-151,Agneta_Berg,A__Berggren_25_01
+```
+
+bcl2fastq command 0:
+
+```bash
+bcl2fastq **--use-bases-mask 1:Y151,I8N2,I8N2,Y151** \
+--use-bases-mask 2:Y151,I10,I10,Y151 \
+--use-bases-mask 3:Y151,I8N2,I8N2,Y151 \
+--use-bases-mask 4:Y151,I10,I10,Y151 \
+--use-bases-mask 5:Y151,I10,I10,Y151 \
+--use-bases-mask 6:Y151,I10,I10,Y151 \
+--use-bases-mask 8:Y151,I8N2,I8N2,Y151 \
+--output-dir /srv/ngi_data/sequencing/NovaSeqXPlus/20251118_LH00202_0299_B233JTGLT4/Demultiplexing_0 \
+--sample-sheet /srv/ngi_data/sequencing/NovaSeqXPlus/20251118_LH00202_0299_B233JTGLT4/SampleSheet_0.csv \
+--loading-threads 2 \
+--processing-threads 12 \
+--writing-threads 2 \
+--minimum-trimmed-read-length 0 \
+--mask-short-adapter-reads 0 \
+--ignore-missing-positions \
+--ignore-missing-controls \
+--ignore-missing-filter \
+--ignore-missing-bcls
+```
+
+SampleSheet_1.csv
+
+```bash
+[Header]
+[Data]
+FCID,Lane,Sample_ID,Sample_Name,Sample_Ref,index,index2,Description,Control,Recipe,Operator,Sample_Project
+233JTGLT4,1,Sample_P36705_101,P36705_101,Human (Homo sapiens GRCh38),GCGCGGTTAA,AAGCTATAGC,B__Bergman_25_01,N,151-151,Agneta_Berg,B__Bergman_25_01
+233JTGLT4,1,Sample_P36705_102,P36705_102,Human (Homo sapiens GRCh38),TTCCTTGAGG,TAAGACAGCA,B__Bergman_25_01,N,151-151,Agneta_Berg,B__Bergman_25_01
+233JTGLT4,1,Sample_P36705_103,P36705_103,Human (Homo sapiens GRCh38),GAGTCGCTTC,AGCGAAGATT,B__Bergman_25_01,N,151-151,Agneta_Berg,B__Bergman_25_01
+233JTGLT4,1,Sample_P36705_104,P36705_104,Human (Homo sapiens GRCh38),GCATAAGATC,GAGAACTGGA,B__Bergman_25_01,N,151-151,Agneta_Berg,B__Bergman_25_01
+233JTGLT4,1,Sample_P36705_105,P36705_105,Human (Homo sapiens GRCh38),TAGAAGATCG,CGACCAGTGT,B__Bergman_25_01,N,151-151,Agneta_Berg,B__Bergman_25_01
+233JTGLT4,1,Sample_P36705_106,P36705_106,Human (Homo sapiens GRCh38),AACCTAGTGC,TACAGGTCCT,B__Bergman_25_01,N,151-151,Agneta_Berg,B__Bergman_25_01
+233JTGLT4,1,Sample_P36705_107,P36705_107,Human (Homo sapiens GRCh38),CGTGTATGTC,GCATCTCTAT,B__Bergman_25_01,N,151-151,Agneta_Berg,B__Bergman_25_01
+233JTGLT4,1,Sample_P36705_108,P36705_108,Human (Homo sapiens GRCh38),TTCAGATCCA,TGGCATTGGA,B__Bergman_25_01,N,151-151,Agneta_Berg,B__Bergman_25_01
+233JTGLT4,1,Sample_P36705_109,P36705_109,Human (Homo sapiens GRCh38),CTCACCAGTT,TTGGTGTGTC,B__Bergman_25_01,N,151-151,Agneta_Berg,B__Bergman_25_01
+233JTGLT4,1,Sample_P36705_110,P36705_110,Human (Homo sapiens GRCh38),ACTAGTAGTC,ACGTACACTC,B__Bergman_25_01,N,151-151,Agneta_Berg,B__Bergman_25_01
+233JTGLT4,1,Sample_P36705_111,P36705_111,Human (Homo sapiens GRCh38),AATAGACTGC,TCAAGGTCGC,B__Bergman_25_01,N,151-151,Agneta_Berg,B__Bergman_25_01
+233JTGLT4,1,Sample_P36705_112,P36705_112,Human (Homo sapiens GRCh38),ATGATCAACG,GTATAGCGTC,B__Bergman_25_01,N,151-151,Agneta_Berg,B__Bergman_25_01
+```
+
+bcl2fastq command 1:
+
+```bash
+bcl2fastq **--use-bases-mask 1:Y151,I10,I10,Y151** \
+--use-bases-mask 3:Y151,I10,I10,Y151 \
+--output-dir /srv/ngi_data/sequencing/NovaSeqXPlus/20251118_LH00202_0299_B233JTGLT4/Demultiplexing_1 \
+--sample-sheet /srv/ngi_data/sequencing/NovaSeqXPlus/20251118_LH00202_0299_B233JTGLT4/SampleSheet_1.csv \
+--loading-threads 2 \
+--processing-threads 12 \
+--writing-threads 2 \
+--minimum-trimmed-read-length 0 \
+--mask-short-adapter-reads 0 \
+--ignore-missing-positions \
+--ignore-missing-controls \
+--ignore-missing-filter \
+--ignore-missing-bcls
+```
+
+SampleSheet_2.csv
+
+```bash
+[Header]
+[Data]
+FCID,Lane,Sample_ID,Sample_Name,Sample_Ref,index,index2,Description,Control,Recipe,Operator,Sample_Project
+233JTGLT4,1,Sample_P37004_1001,P37004_1001,Human (Homo sapiens GRCh38),TCAGCGAA,,C__Bergkvist_25_01,N,151-151,Agneta_Berg,C__Bergkvist_25_01
+233JTGLT4,1,Sample_P37004_1002,P37004_1002,Human (Homo sapiens GRCh38),CCATTGTT,,C__Bergkvist_25_01,N,151-151,Agneta_Berg,C__Bergkvist_25_01
+233JTGLT4,1,Sample_P37004_1003,P37004_1003,Human (Homo sapiens GRCh38),AGAGGAAT,,C__Bergkvist_25_01,N,151-151,Agneta_Berg,C__Bergkvist_25_01
+233JTGLT4,1,Sample_P37004_1004,P37004_1004,Human (Homo sapiens GRCh38),CTTCCTTC,,C__Bergkvist_25_01,N,151-151,Agneta_Berg,C__Bergkvist_25_01
+233JTGLT4,1,Sample_P37004_1005,P37004_1005,Human (Homo sapiens GRCh38),CTTGCAGA,,C__Bergkvist_25_01,N,151-151,Agneta_Berg,C__Bergkvist_25_01
+233JTGLT4,1,Sample_P37004_1006,P37004_1006,Human (Homo sapiens GRCh38),TCTAGCGA,,C__Bergkvist_25_01,N,151-151,Agneta_Berg,C__Bergkvist_25_01
+233JTGLT4,1,Sample_P37004_1007,P37004_1007,Human (Homo sapiens GRCh38),TCAACTGT,,C__Bergkvist_25_01,N,151-151,Agneta_Berg,C__Bergkvist_25_01
+```
+
+bcl2fastq command 2:
+
+```bash
+bcl2fastq **--use-bases-mask 1:Y151,I8N2,N10,Y151** \
+--use-bases-mask 7:Y151,I8N2,N10,Y151 \
+--output-dir /srv/ngi_data/sequencing/NovaSeqXPlus/20251118_LH00202_0299_B233JTGLT4/Demultiplexing_2 \
+--sample-sheet /srv/ngi_data/sequencing/NovaSeqXPlus/20251118_LH00202_0299_B233JTGLT4/SampleSheet_2.csv \
+--loading-threads 2 \
+--processing-threads 12 \
+--writing-threads 2 \
+--minimum-trimmed-read-length 0 \
+--mask-short-adapter-reads 0 \
+--ignore-missing-positions \
+--ignore-missing-controls \
+--ignore-missing-filter \
+--ignore-missing-bcls \
+**--barcode-mismatches 0**
+```
+
+## Suggestions
+
+### bclconvert command 0
+
+```bash
+bcl-convert \
+  --bcl-input-directory /path/to/RunFolder \
+  --output-directory Demux_lane1_sub0 \
+  --sample-sheet SampleSheet_lane_1_sub0.csv \
+  --bcl-sampleproject-subdirectories true \
+  --sample-name-column-enabled true \
+  --bcl-only-lane 1
+```
+
+### SampleSheet_lane_1_sub0.csv
+
+```bash
+[Header]
+FileFormatVersion,2
+RunName,Run_001
+InstrumentID,MYSEQ
+Date,2025-11-04
+
+[BCLConvert_Settings]
+SoftwareVersion,4.4.6
+MinimumTrimmedReadLength,0
+MaskShortReads,0
+
+[BCLConvert_Data]
+Lane,Sample_ID,Sample_Name,index,index2,Sample_Project,OverrideCycles
+1,Sample_P36203_103,P36203_103,ACTCTCGA,CTGTACCA,A__Berggren_25_01,Y151;I8N2;I8N2;Y151
+1,Sample_P36203_303,P36203_303,TGAGCTAG,GAACGGTT,A__Berggren_25_01,Y151;I8N2;I8N2;Y151
+1,Sample_P36705_101,P36705_101,GCGCGGTTAA,AAGCTATAGC,B__Bergman_25_01,Y151;I10;I10;Y151
+1,Sample_P36705_102,P36705_102,TTCCTTGAGG,TAAGACAGCA,B__Bergman_25_01,Y151;I10;I10;Y151
+1,Sample_P36705_103,P36705_103,GAGTCGCTTC,AGCGAAGATT,B__Bergman_25_01,Y151;I10;I10;Y151
+1,Sample_P36705_104,P36705_104,GCATAAGATC,GAGAACTGGA,B__Bergman_25_01,Y151;I10;I10;Y151
+1,Sample_P36705_105,P36705_105,TAGAAGATCG,CGACCAGTGT,B__Bergman_25_01,Y151;I10;I10;Y151
+1,Sample_P36705_106,P36705_106,AACCTAGTGC,TACAGGTCCT,B__Bergman_25_01,Y151;I10;I10;Y151
+1,Sample_P36705_107,P36705_107,CGTGTATGTC,GCATCTCTAT,B__Bergman_25_01,Y151;I10;I10;Y151
+1,Sample_P36705_108,P36705_108,TTCAGATCCA,TGGCATTGGA,B__Bergman_25_01,Y151;I10;I10;Y151
+1,Sample_P36705_109,P36705_109,CTCACCAGTT,TTGGTGTGTC,B__Bergman_25_01,Y151;I10;I10;Y151
+1,Sample_P36705_110,P36705_110,ACTAGTAGTC,ACGTACACTC,B__Bergman_25_01,Y151;I10;I10;Y151
+1,Sample_P36705_111,P36705_111,AATAGACTGC,TCAAGGTCGC,B__Bergman_25_01,Y151;I10;I10;Y151
+1,Sample_P36705_112,P36705_112,ATGATCAACG,GTATAGCGTC,B__Bergman_25_01,Y151;I10;I10;Y151
+```
+
+### bclconvert command 1
+
+```bash
+bcl-convert \
+  --bcl-input-directory /path/to/RunFolder \
+  --output-directory Demux_lane1_sub1 \
+  --sample-sheet SampleSheet_lane_1_sub1.csv \
+  --bcl-sampleproject-subdirectories true \
+  --sample-name-column-enabled true \
+  --bcl-only-lane 1
+```
+
+### SampleSheet_lane_1_sub1.csv
+
+```bash
+[Header]
+FileFormatVersion,2
+RunName,Run_001
+InstrumentID,MYSEQ
+Date,2025-11-04
+
+[BCLConvert_Settings]
+SoftwareVersion,4.4.6
+MinimumTrimmedReadLength,0
+MaskShortReads,0
+**BarcodeMismatchesIndex1,0**
+
+[BCLConvert_Data]
+Lane,Sample_ID,Sample_Name,index,index2,Sample_Project,OverrideCycles
+1,Sample_P37004_1001,P37004_1001,TCAGCGAA,,C__Bergkvist_25_01,Y151;I8N2;N10;Y151
+1,Sample_P37004_1002,P37004_1002,CCATTGTT,,C__Bergkvist_25_01,Y151;I8N2;N10;Y151
+1,Sample_P37004_1003,P37004_1003,AGAGGAAT,,C__Bergkvist_25_01,Y151;I8N2;N10;Y151
+1,Sample_P37004_1004,P37004_1004,CTTCCTTC,,C__Bergkvist_25_01,Y151;I8N2;N10;Y151
+1,Sample_P37004_1005,P37004_1005,CTTGCAGA,,C__Bergkvist_25_01,Y151;I8N2;N10;Y151
+1,Sample_P37004_1006,P37004_1006,TCTAGCGA,,C__Bergkvist_25_01,Y151;I8N2;N10;Y151
+1,Sample_P37004_1007,P37004_1007,TCAACTGT,,C__Bergkvist_25_01,Y151;I8N2;N10;Y151
+```
+
+### Notes
+
+- This lane needs to be split into two sub-demuxes since we need to set **`BarcodeMismatchesIndex1,0`** on the samples with only index1. - is this true?

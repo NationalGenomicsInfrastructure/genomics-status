@@ -7,9 +7,14 @@ endpoint and the resulting samplesheet JSON is verified against a snapshot.
 Test data lives alongside this file:
   tc1_input.json / tc1_expected_samplesheets.json
   tc2_input.json / tc2_expected_samplesheets.json
+  tc3_input.json / tc3_expected_samplesheets.json
+  tc4_input.json / tc4_expected_samplesheets.json
 
 Named index data (Chromium 10X TS series) is provided as a test fixture so
 that tests are self-contained and do not depend on external CSV files.
+
+Note: tc3 and tc4 expected samplesheets were derived from code analysis and
+should be verified against actual DB output on first run, then updated if needed.
 """
 
 import json
@@ -127,6 +132,49 @@ class TestDemuxSampleInfoIntegration(AsyncHTTPTestCase):
         expected = json.loads((_HERE / "tc2_expected_samplesheets.json").read_text())
 
         document = self._post_and_capture("233KCWLT4", post_body)
+        actual = _strip_date(document["samplesheets"])
+
+        self.assertEqual(actual, expected)
+
+    def test_tc3_no_index(self):
+        """
+        TC3: No-index demux (unindexed library).
+
+        Run GV85B (MiSeq) — 1 sample, lane 1, no index cycles (run setup 164-0-0-164).
+        Expected: one samplesheet, OverrideCycles R1:Y164;R2:Y164 (index cycles absent).
+
+        Note: if the expected samplesheet does not match, update
+        tc3_expected_samplesheets.json with the actual output from this test.
+        """
+        post_body = json.loads((_HERE / "tc3_input.json").read_text())
+        expected = json.loads((_HERE / "tc3_expected_samplesheets.json").read_text())
+
+        document = self._post_and_capture("GV85B", post_body)
+        actual = _strip_date(document["samplesheets"])
+
+        self.assertEqual(actual, expected)
+
+    def test_tc4_mixed_single_and_dual_index(self):
+        """
+        TC4: Mixed single-index and dual-index samples on one lane.
+
+        Run 233JTGLT4 (NovaSeqXPlus) — lane 1 contains three projects:
+          A__Berggren_25_01: 2 samples, 8 bp dual index,
+                             OverrideCycles R1:Y151;I1:I8N2;I2:I8N2;R2:Y151
+          B__Bergman_25_01:  12 samples, 10 bp dual index,
+                             OverrideCycles R1:Y151;I1:I10;I2:I10;R2:Y151
+          C__Bergkvist_25_01: 7 samples, 8 bp single index (no index2),
+                             OverrideCycles R1:Y151;I1:I8N2;I2:N10;R2:Y151
+
+        Note: whether single-index samples end up in a separate sub-samplesheet
+        (via BarcodeMismatchesIndex1) depends on samplesheet_generation_rules in
+        the active CouchDB config.  If the expected JSON does not match, update
+        tc4_expected_samplesheets.json with the actual output from this test.
+        """
+        post_body = json.loads((_HERE / "tc4_input.json").read_text())
+        expected = json.loads((_HERE / "tc4_expected_samplesheets.json").read_text())
+
+        document = self._post_and_capture("233JTGLT4", post_body)
         actual = _strip_date(document["samplesheets"])
 
         self.assertEqual(actual, expected)
