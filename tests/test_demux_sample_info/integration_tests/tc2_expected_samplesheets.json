@@ -23,7 +23,7 @@
         "index": "TAAACCCTAG",
         "index2": "TTCCTATCAG",
         "Sample_Project": "A__Berggren_25_01",
-        "OverrideCycles": "R1:Y43N108;I1:I8N2;I2:N10;R2:Y50N101"
+        "OverrideCycles": "R1:Y43N108;I1:I10;I2:I10;R2:Y50N101"
       },
       {
         "Lane": "3",
@@ -32,7 +32,7 @@
         "index": "CATGCTGCTC",
         "index2": "CGGTTTCCAC",
         "Sample_Project": "A__Berggren_25_01",
-        "OverrideCycles": "R1:Y43N108;I1:I8N2;I2:N10;R2:Y50N101"
+        "OverrideCycles": "R1:Y43N108;I1:I10;I2:I10;R2:Y50N101"
       },
       {
         "Lane": "3",
@@ -41,7 +41,7 @@
         "index": "GATCGCGGTA",
         "index2": "GACGGTTCCG",
         "Sample_Project": "A__Berggren_25_01",
-        "OverrideCycles": "R1:Y43N108;I1:I8N2;I2:N10;R2:Y50N101"
+        "OverrideCycles": "R1:Y43N108;I1:I10;I2:I10;R2:Y50N101"
       },
       {
         "Lane": "3",
@@ -50,7 +50,7 @@
         "index": "CTAGAAATTG",
         "index2": "CGAAAGTAAG",
         "Sample_Project": "A__Berggren_25_01",
-        "OverrideCycles": "R1:Y43N108;I1:I8N2;I2:N10;R2:Y50N101"
+        "OverrideCycles": "R1:Y43N108;I1:I10;I2:I10;R2:Y50N101"
       }
     ]
   },

@@ -10,7 +10,6 @@
       "RunName": "GV85B"
     },
     "raw_samplesheet_settings": {
-      "CreateFastqForIndexReads": false,
       "MinimumTrimmedReadLength": 0,
       "MaskShortReads": 0
     },

@@ -1,0 +1,79 @@
+{
+  "metadata": {
+    "num_lanes": 8,
+    "run_setup": "50-8-24-49",
+    "setup_lims_step_id": "24-TC11"
+  },
+  "uploaded_lims_info": [
+    {
+      "flowcell_id": "235WFLLT3",
+      "lane": "4",
+      "sample_id": "P36052_101",
+      "sample_name": "P36052_101",
+      "sample_ref": "Human (Homo sapiens GRCh38)",
+      "index": "SI-NA-A2",
+      "index2": "",
+      "description": "A__Berggren_25_03",
+      "control": "N",
+      "recipe": "50-49",
+      "operator": "Agneta_Berg",
+      "sample_project": "A__Berggren_25_03"
+    },
+    {
+      "flowcell_id": "235WFLLT3",
+      "lane": "4",
+      "sample_id": "P36052_102",
+      "sample_name": "P36052_102",
+      "sample_ref": "Human (Homo sapiens GRCh38)",
+      "index": "SI-NA-C2",
+      "index2": "",
+      "description": "A__Berggren_25_03",
+      "control": "N",
+      "recipe": "50-49",
+      "operator": "Agneta_Berg",
+      "sample_project": "A__Berggren_25_03"
+    },
+    {
+      "flowcell_id": "235WFLLT3",
+      "lane": "4",
+      "sample_id": "P36052_103",
+      "sample_name": "P36052_103",
+      "sample_ref": "Human (Homo sapiens GRCh38)",
+      "index": "SI-NA-B2",
+      "index2": "",
+      "description": "A__Berggren_25_03",
+      "control": "N",
+      "recipe": "50-49",
+      "operator": "Agneta_Berg",
+      "sample_project": "A__Berggren_25_03"
+    },
+    {
+      "flowcell_id": "235WFLLT3",
+      "lane": "4",
+      "sample_id": "P36052_104",
+      "sample_name": "P36052_104",
+      "sample_ref": "Human (Homo sapiens GRCh38)",
+      "index": "SI-NA-D2",
+      "index2": "",
+      "description": "A__Berggren_25_03",
+      "control": "N",
+      "recipe": "50-49",
+      "operator": "Agneta_Berg",
+      "sample_project": "A__Berggren_25_03"
+    },
+    {
+      "flowcell_id": "235WFLLT3",
+      "lane": "4",
+      "sample_id": "P36052_201",
+      "sample_name": "P36052_201",
+      "sample_ref": "Human (Homo sapiens GRCh38)",
+      "index": "SI-NA-E2",
+      "index2": "",
+      "description": "A__Berggren_25_03",
+      "control": "N",
+      "recipe": "50-49",
+      "operator": "Agneta_Berg",
+      "sample_project": "A__Berggren_25_03"
+    }
+  ]
+}
