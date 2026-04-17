@@ -213,27 +213,27 @@ class RunningNotesDataHandler(SafeHandler):
                 )
         ####
         ##Notify proj coordinators for all project running notes
-        if note_type == "project":
-            proj_coord = (
-                unicodedata.normalize("NFKD", proj_coord_with_accents)
-                .encode("ASCII", "ignore")
-                .decode("utf-8")
-            )
-            if (
-                proj_coord
-                and proj_coord not in userTags
-                and proj_coord != email.split("@")[0]
-            ):
-                RunningNotesDataHandler.notify_tagged_user(
-                    application,
-                    [proj_coord],
-                    note_details,
-                    clean_html_comments(note),
-                    categories,
-                    user,
-                    created_time,
-                    "creation",
-                )
+        # if note_type == "project":
+        #     proj_coord = (
+        #         unicodedata.normalize("NFKD", proj_coord_with_accents)
+        #         .encode("ASCII", "ignore")
+        #         .decode("utf-8")
+        #     )
+        #     if (
+        #         proj_coord
+        #         and proj_coord not in userTags
+        #         and proj_coord != email.split("@")[0]
+        #     ):
+        #         RunningNotesDataHandler.notify_tagged_user(
+        #             application,
+        #             [proj_coord],
+        #             note_details,
+        #             clean_html_comments(note),
+        #             categories,
+        #             user,
+        #             created_time,
+        #             "creation",
+        #         )
         ###
         # If the note is created on flowcell or workset, copy it to connected projects
         if note_type in ["flowcell", "workset", "flowcell_ont", "flowcell_element"]:
