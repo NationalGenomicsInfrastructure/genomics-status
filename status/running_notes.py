@@ -162,11 +162,17 @@ class RunningNotesDataHandler(SafeHandler):
                 key=lookup_key,
             ).get_result()["rows"][0]["value"]
 
+        def clean_html_comments(text):
+            """Remove HTML comments from the text to prevent issues in slack notifications.
+            Does not remove multiline html comments
+            """
+            return re.sub(r"<!--.*?-->(\n)*", "", text)
+
         newNote = {
             "_id": f"{partition_id}:{datetime.datetime.timestamp(created_time)}",
             "user": user,
             "email": email,
-            "note": note,
+            "note": clean_html_comments(note),
             "categories": categories,
             "projects": connected_projects,
             "parent": parent if parent else partition_id,
@@ -188,12 +194,6 @@ class RunningNotesDataHandler(SafeHandler):
                 f"Failed to create running note with id {newNote['_id']} by {user} at {created_time.isoformat()}"
             )
             raise Exception(f"Failed to create running note for {partition_id}")
-
-        def clean_html_comments(text):
-            """Remove HTML comments from the text to prevent issues in slack notifications.
-            Does not remove multiline html comments
-            """
-            return re.sub(r"<!--.*?-->(\n)*", "", text)
 
         #### Check and send mail to tagged users (for all running notes types)
         #### except for project running notes that are copied from worksets and flowcells
