@@ -140,10 +140,10 @@ LIMS sample sheet:
 ```bash
 FCID,Lane,Sample_ID,Sample_Name,Sample_Ref,index,index2,Description,Control,Recipe,Operator,Sample_Project
 ...
-233KCWLT4,3,P35504_101,P35504_101,Human (Homo sapiens GRCh38),SI-TS-A7,,A_Berggren_25_01,N,43-50,Agneta_Berg,A_Berggren_25_01
-233KCWLT4,3,P35504_201,P35504_201,Human (Homo sapiens GRCh38),SI-TS-B7,,A_Berggren_25_01,N,43-50,Agneta_Berg,A_Berggren_25_01
-233KCWLT4,3,P35504_301,P35504_301,Human (Homo sapiens GRCh38),SI-TS-C7,,A_Berggren_25_01,N,43-50,Agneta_Berg,A_Berggren_25_01
-233KCWLT4,3,P35504_401,P35504_401,Human (Homo sapiens GRCh38),SI-TS-D7,,A_Berggren_25_01,N,43-50,Agneta_Berg,A_Berggren_25_01
+233KCWLT4,3,P35504_101,P35504_101,Human (Homo sapiens GRCh38),SI-TS-A7,,A__Berggren_25_01,N,43-50,Agneta_Berg,A__Berggren_25_01
+233KCWLT4,3,P35504_201,P35504_201,Human (Homo sapiens GRCh38),SI-TS-B7,,A__Berggren_25_01,N,43-50,Agneta_Berg,A__Berggren_25_01
+233KCWLT4,3,P35504_301,P35504_301,Human (Homo sapiens GRCh38),SI-TS-C7,,A__Berggren_25_01,N,43-50,Agneta_Berg,A__Berggren_25_01
+233KCWLT4,3,P35504_401,P35504_401,Human (Homo sapiens GRCh38),SI-TS-D7,,A__Berggren_25_01,N,43-50,Agneta_Berg,A__Berggren_25_01
 ...
 233KCWLT4,6,P37556_1001,P37556_1001,Human (Homo sapiens GRCh38),CGCCTCT,CGTTCCT,A__Berggren_25_12,N,151-151,Agneta_Berg,A__Berggren_25_12
 233KCWLT4,6,P37556_1002,P37556_1002,Human (Homo sapiens GRCh38),CTTGCGG,CGCCTCA,A__Berggren_25_12,N,151-151,Agneta_Berg,A__Berggren_25_12
@@ -163,10 +163,10 @@ SampleSheet_0.csv
 [Header]
 [Data]
 FCID,Lane,Sample_ID,Sample_Name,Sample_Ref,index,index2,Description,Control,Recipe,Operator,Sample_Project
-233KCWLT4,3,Sample_P35504_101,P35504_101,Human (Homo sapiens GRCh38),TAAACCCTAG,TTCCTATCAG,A_Berggren_25_01,N,43-50,Agneta_Berg,A_Berggren_25_01
-233KCWLT4,3,Sample_P35504_201,P35504_201,Human (Homo sapiens GRCh38),CATGCTGCTC,CGGTTTCCAC,A_Berggren_25_01,N,43-50,Agneta_Berg,A_Berggren_25_01
-233KCWLT4,3,Sample_P35504_301,P35504_301,Human (Homo sapiens GRCh38),GATCGCGGTA,GACGGTTCCG,A_Berggren_25_01,N,43-50,Agneta_Berg,A_Berggren_25_01
-233KCWLT4,3,Sample_P35504_401,P35504_401,Human (Homo sapiens GRCh38),CTAGAAATTG,CGAAAGTAAG,A_Berggren_25_01,N,43-50,Agneta_Berg,A_Berggren_25_01
+233KCWLT4,3,Sample_P35504_101,P35504_101,Human (Homo sapiens GRCh38),TAAACCCTAG,TTCCTATCAG,A__Berggren_25_01,N,43-50,Agneta_Berg,A__Berggren_25_01
+233KCWLT4,3,Sample_P35504_201,P35504_201,Human (Homo sapiens GRCh38),CATGCTGCTC,CGGTTTCCAC,A__Berggren_25_01,N,43-50,Agneta_Berg,A__Berggren_25_01
+233KCWLT4,3,Sample_P35504_301,P35504_301,Human (Homo sapiens GRCh38),GATCGCGGTA,GACGGTTCCG,A__Berggren_25_01,N,43-50,Agneta_Berg,A__Berggren_25_01
+233KCWLT4,3,Sample_P35504_401,P35504_401,Human (Homo sapiens GRCh38),CTAGAAATTG,CGAAAGTAAG,A__Berggren_25_01,N,43-50,Agneta_Berg,A__Berggren_25_01
 
 ```
 
@@ -259,10 +259,10 @@ MaskShortReads,0
 
 [BCLConvert_Data]
 Lane,Sample_ID,Sample_Name,index,index2,Sample_Project,**OverrideCycles**
-3,Sample_P35504_101,P35504_101,TAAACCCTAG,TTCCTATCAG,A_Berggren_25_01,**Y43N108;I10;I10;Y50N101**
-3,Sample_P35504_201,P35504_201,CATGCTGCTC,CGGTTTCCAC,A_Berggren_25_01,**Y43N108;I10;I10;Y50N101**
-3,Sample_P35504_301,P35504_301,GATCGCGGTA,GACGGTTCCG,A_Berggren_25_01,**Y43N108;I10;I10;Y50N101**
-3,Sample_P35504_401,P35504_401,CTAGAAATTG,CGAAAGTAAG,A_Berggren_25_01,**Y43N108;I10;I10;Y50N101**
+3,Sample_P35504_101,P35504_101,TAAACCCTAG,TTCCTATCAG,A__Berggren_25_01,**Y43N108;I10;I10;Y50N101**
+3,Sample_P35504_201,P35504_201,CATGCTGCTC,CGGTTTCCAC,A__Berggren_25_01,**Y43N108;I10;I10;Y50N101**
+3,Sample_P35504_301,P35504_301,GATCGCGGTA,GACGGTTCCG,A__Berggren_25_01,**Y43N108;I10;I10;Y50N101**
+3,Sample_P35504_401,P35504_401,CTAGAAATTG,CGAAAGTAAG,A__Berggren_25_01,**Y43N108;I10;I10;Y50N101**
 ```
 
 ### Sample sheet Lane 6
@@ -280,10 +280,10 @@ MaskShortReads,0
 
 [BCLConvert_Data]
 Lane,Sample_ID,Sample_Name,index,index2,Sample_Project,OverrideCycles
-6,Sample_P37556_1001,P37556_1001,CGCCTCT,CGTTCCT,A_Berggren_25_12,Y151;I7N3;I7N3;Y151
-6,Sample_P37556_1002,P37556_1002,CTTGCGG,CGCCTCA,A_Berggren_25_12,Y151;I7N3;I7N3;Y151
-6,Sample_P37556_1003,P37556_1003,TGGACGT,CAATCGA,A_Berggren_25_12,Y151;I7N3;I7N3;Y151
-6,Sample_P37556_1004,P37556_1004,ATACTGA,CCTTCGC,A_Berggren_25_12,Y151;I7N3;I7N3;Y151
+6,Sample_P37556_1001,P37556_1001,CGCCTCT,CGTTCCT,A__Berggren_25_12,Y151;I7N3;I7N3;Y151
+6,Sample_P37556_1002,P37556_1002,CTTGCGG,CGCCTCA,A__Berggren_25_12,Y151;I7N3;I7N3;Y151
+6,Sample_P37556_1003,P37556_1003,TGGACGT,CAATCGA,A__Berggren_25_12,Y151;I7N3;I7N3;Y151
+6,Sample_P37556_1004,P37556_1004,ATACTGA,CCTTCGC,A__Berggren_25_12,Y151;I7N3;I7N3;Y151
 ```
 
 # Test case 3 - No index
@@ -906,7 +906,8 @@ Lane,Sample_ID,Sample_Name,index,index2,Sample_Project,OverrideCycles
 
 **Run: [20251111_LH00202_0295_A235WFLLT3](https://genomics-status.scilifelab.se/flowcells/20251111_LH00202_0295_A235WFLLT3)**
 
-**Project(s) and setup: [A.Berggren_25_03](https://genomics-status.scilifelab.se/project/P36052)**  (50-8-24-49)
+**Project(s) and setup: [A.Berggren_25_03](https://genomics-status.scilifelab.se/project/P36052)**  (50-8-24-49), Library method: 10X Chromium: Multiome
+
 
 **Current bcl2fastq settings:**
 
@@ -997,7 +998,9 @@ Date,2025-11-04
 SoftwareVersion,4.4.6
 MinimumTrimmedReadLength,0
 MaskShortReads,0
-**CreateFastqForIndexReads,1
+**
+BarcodeMismatchesIndex1: 0
+CreateFastqForIndexReads,1
 TrimUMI,0**
 
 [BCLConvert_Data]

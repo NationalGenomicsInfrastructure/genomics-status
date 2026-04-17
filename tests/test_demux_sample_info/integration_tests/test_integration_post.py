@@ -27,7 +27,7 @@ This writes ``tcN_actual_samplesheets.json`` next to the expected file for
 each failing test.  Inspect the diff, then overwrite the expected file if
 the new output is correct.
 
-Note: tc3–tc5, tc7, and tc11 expected samplesheets were derived from code
+Note: tc3-tc5, tc7, and tc11 expected samplesheets were derived from code
 analysis and should be verified against actual DB output on first run, then
 updated if needed.
 
@@ -63,12 +63,85 @@ _ALL_NAMED_INDICES = {
     "SI-TS-B7": [["CATGCTGCTC", "CGGTTTCCAC"]],
     "SI-TS-C7": [["GATCGCGGTA", "GACGGTTCCG"]],
     "SI-TS-D7": [["CTAGAAATTG", "CGAAAGTAAG"]],
-    "SI-NA-A2": [["TCTTAGGC", ""], ["AGCCCTTT", ""], ["CAAGTCCA", ""], ["GTGAGAAG", ""]],
-    "SI-NA-B2": [["TTAGATTG", ""], ["AAGTTGAT", ""], ["CCCACCCA", ""], ["GGTCGAGC", ""]],
-    "SI-NA-C2": [["TGCTCTGT", ""], ["AATCACTA", ""], ["CCGAGAAC", ""], ["GTAGTGCG", ""]],
-    "SI-NA-D2": [["TGTGATGC", ""], ["ACATTCCG", ""], ["CTGCGGTA", ""], ["GACACAAT", ""]],
-    "SI-NA-E2": [["TCATCAAG", ""], ["AGGCTGGT", ""], ["CACAACTA", ""], ["GTTGGTCC", ""]],
+    "SI-NA-A2": [
+        ["TCTTAGGC", ""],
+        ["AGCCCTTT", ""],
+        ["CAAGTCCA", ""],
+        ["GTGAGAAG", ""],
+    ],
+    "SI-NA-B2": [
+        ["TTAGATTG", ""],
+        ["AAGTTGAT", ""],
+        ["CCCACCCA", ""],
+        ["GGTCGAGC", ""],
+    ],
+    "SI-NA-C2": [
+        ["TGCTCTGT", ""],
+        ["AATCACTA", ""],
+        ["CCGAGAAC", ""],
+        ["GTAGTGCG", ""],
+    ],
+    "SI-NA-D2": [
+        ["TGTGATGC", ""],
+        ["ACATTCCG", ""],
+        ["CTGCGGTA", ""],
+        ["GACACAAT", ""],
+    ],
+    "SI-NA-E2": [
+        ["TCATCAAG", ""],
+        ["AGGCTGGT", ""],
+        ["CACAACTA", ""],
+        ["GTTGGTCC", ""],
+    ],
 }
+
+
+def _build_mock_project_lookup_helpers(
+    uploaded_lims_info, library_method_by_project_id=None
+):
+    """Build deterministic project and library-method lookups for tests.
+
+    Project names in fixtures can be anonymized. We derive project_id from
+    sample_id prefix (e.g. P36052_101 -> P36052), then map project_id to
+    library method via a test-local dictionary.
+    """
+    library_method_by_project_id = library_method_by_project_id or {}
+    project_name_to_id = {}
+
+    for sample in uploaded_lims_info:
+        sample_project = sample.get("sample_project", "")
+        project_name = sample_project.replace("__", ".", 1) if sample_project else ""
+        sample_id = sample.get("sample_id", "")
+        project_id = sample_id.split("_", 1)[0] if "_" in sample_id else ""
+        if project_name and project_id and project_name not in project_name_to_id:
+            project_name_to_id[project_name] = project_id
+
+    def project_lookup(project_name):
+        project_id = project_name_to_id.get(project_name, "")
+        doc_id = f"mock-{project_id}" if project_id else None
+        return project_id, doc_id
+
+    def library_method_lookup(project_name):
+        project_id = project_name_to_id.get(project_name, "")
+        return library_method_by_project_id.get(project_id, "")
+
+    return project_lookup, library_method_lookup
+
+
+class MockedDemuxSampleInfoDataHandler(DemuxSampleInfoDataHandler):
+    """Test handler that can use app-injected lookup callables."""
+
+    def _get_project_id_by_name(self, project_name):
+        lookup = getattr(self.application, "mock_project_lookup", None)
+        if callable(lookup):
+            return lookup(project_name)
+        return super()._get_project_id_by_name(project_name)
+
+    def _get_project_library_method(self, project_name):
+        lookup = getattr(self.application, "mock_library_method_lookup", None)
+        if callable(lookup):
+            return lookup(project_name)
+        return super()._get_project_library_method(project_name)
 
 
 def _strip_date(samplesheets):
@@ -81,6 +154,9 @@ def _strip_date(samplesheets):
 
 class TestDemuxSampleInfoIntegration(AsyncHTTPTestCase):
     """End-to-end POST tests that verify the generated samplesheet JSON."""
+
+    # Test-local overrides keyed by project_id (P-number).
+    _LIBRARY_METHOD_BY_PROJECT_ID = {}
 
     @classmethod
     def setUpClass(cls):
@@ -95,11 +171,18 @@ class TestDemuxSampleInfoIntegration(AsyncHTTPTestCase):
 
     def get_app(self):
         app = tornado.web.Application(
-            [(r"/api/v1/demux_sample_info/([\w\d-]+)", DemuxSampleInfoDataHandler)]
+            [
+                (
+                    r"/api/v1/demux_sample_info/([\w\d-]+)",
+                    MockedDemuxSampleInfoDataHandler,
+                )
+            ]
         )
         app.gs_globals = {}
         app.test_mode = True
         app.cloudant = MagicMock()
+        app.mock_project_lookup = None
+        app.mock_library_method_lookup = None
 
         config = get_classification_config()
 
@@ -121,6 +204,13 @@ class TestDemuxSampleInfoIntegration(AsyncHTTPTestCase):
 
     def _post_and_capture(self, flowcell_id, post_body):
         """POST to the endpoint and return the document that would be saved to CouchDB."""
+        project_lookup, library_lookup = _build_mock_project_lookup_helpers(
+            post_body.get("uploaded_lims_info", []),
+            self._LIBRARY_METHOD_BY_PROJECT_ID,
+        )
+        self._app.mock_project_lookup = project_lookup
+        self._app.mock_library_method_lookup = library_lookup
+
         self._app.cloudant.post_view.return_value.get_result.return_value = {"rows": []}
         self._app.cloudant.post_document.return_value.get_result.return_value = {
             "ok": True,
@@ -153,7 +243,9 @@ class TestDemuxSampleInfoIntegration(AsyncHTTPTestCase):
 
     def _run_tc_test(self, flowcell_id, tc_name):
         post_body = json.loads((_HERE / f"{tc_name}_input.json").read_text())
-        expected = json.loads((_HERE / f"{tc_name}_expected_samplesheets.json").read_text())
+        expected = json.loads(
+            (_HERE / f"{tc_name}_expected_samplesheets.json").read_text()
+        )
         document = self._post_and_capture(flowcell_id, post_body)
         actual = _strip_date(document["samplesheets"])
         self._assert_samplesheets(actual, expected, tc_name)
@@ -162,7 +254,7 @@ class TestDemuxSampleInfoIntegration(AsyncHTTPTestCase):
         """
         TC1: Single-index standard demux.
 
-        Run 22GC2NLT1 — 3 samples across 2 lanes, 8 bp single index, recipe 85-215.
+        Run 22GC2NLT1 - 3 samples across 2 lanes, 8 bp single index, recipe 85-215.
         Expected: one samplesheet per lane, OverrideCycles R1:Y85;I1:I8;R2:Y215.
         """
         self._run_tc_test("22GC2NLT1", "tc1")
@@ -171,13 +263,13 @@ class TestDemuxSampleInfoIntegration(AsyncHTTPTestCase):
         """
         TC2: Dual-index with shorter reads/indices than the sequencing setup.
 
-        Run 233KCWLT4 — lane 3: 4 × 10X samples (SI-TS-* named indices, recipe 43-50),
-        lane 6: 9 × standard dual-index samples (recipe 151-151), run setup 151-10-10-151.
+        Run 233KCWLT4 - lane 3: 4 x 10X samples (SI-TS-* named indices, recipe 43-50),
+        lane 6: 9 x standard dual-index samples (recipe 151-151), run setup 151-10-10-151.
         Expected:
-          Lane 3 — named indices expanded to 10 bp sequences,
+          Lane 3 - named indices expanded to 10 bp sequences,
                    OverrideCycles R1:Y43N108;I1:I8N2;I2:N10;R2:Y50N101,
                    TrimUMI enabled from 10X classification.
-          Lane 6 — 7 bp dual indices, OverrideCycles R1:Y151;I1:I7N3;I2:I7N3;R2:Y151.
+          Lane 6 - 7 bp dual indices, OverrideCycles R1:Y151;I1:I7N3;I2:I7N3;R2:Y151.
         """
         self._run_tc_test("233KCWLT4", "tc2")
 
@@ -185,7 +277,7 @@ class TestDemuxSampleInfoIntegration(AsyncHTTPTestCase):
         """
         TC3: No-index demux (unindexed library).
 
-        Run GV85B (MiSeq) — 1 sample, lane 1, no index cycles (run setup 164-0-0-164).
+        Run GV85B (MiSeq) - 1 sample, lane 1, no index cycles (run setup 164-0-0-164).
         Expected: one samplesheet, OverrideCycles R1:Y164;R2:Y164 (index cycles absent).
         """
         self._run_tc_test("GV85B", "tc3")
@@ -194,7 +286,7 @@ class TestDemuxSampleInfoIntegration(AsyncHTTPTestCase):
         """
         TC4: Mixed single-index and dual-index samples on one lane.
 
-        Run 233JTGLT4 (NovaSeqXPlus) — lane 1 contains three projects:
+        Run 233JTGLT4 (NovaSeqXPlus) - lane 1 contains three projects:
           A__Berggren_25_01: 2 samples, 8 bp dual index,
                              OverrideCycles R1:Y151;I1:I8N2;I2:I8N2;R2:Y151
           B__Bergman_25_01:  12 samples, 10 bp dual index,
@@ -208,7 +300,7 @@ class TestDemuxSampleInfoIntegration(AsyncHTTPTestCase):
         """
         TC5: Single-index samples where zero barcode mismatches are required.
 
-        Run 233JTGLT4 — lane 7: 30 samples, 8 bp single index, run setup 151-10-10-151.
+        Run 233JTGLT4 - lane 7: 30 samples, 8 bp single index, run setup 151-10-10-151.
         Expected: BarcodeMismatchesIndex1=0 in samplesheet settings,
                   OverrideCycles R1:Y151;I1:I8N2;I2:N10;R2:Y151.
         """
@@ -218,7 +310,7 @@ class TestDemuxSampleInfoIntegration(AsyncHTTPTestCase):
         """
         TC7: Standard dual-index demux where index length equals the sequencing setup.
 
-        Run 23FNTJLT3 — lane 4: 8 samples, 10 bp dual index, run setup 151-10-10-151.
+        Run 23FNTJLT3 - lane 4: 8 samples, 10 bp dual index, run setup 151-10-10-151.
         Expected: OverrideCycles R1:Y151;I1:I10;I2:I10;R2:Y151 (no masked cycles).
         """
         self._run_tc_test("23FNTJLT3", "tc7")
@@ -227,13 +319,21 @@ class TestDemuxSampleInfoIntegration(AsyncHTTPTestCase):
         """
         TC11: Named indices (SI-NA-*) with UMI in the I2 channel.
 
-        Run 235WFLLT3 — lane 4: 5 samples with SI-NA-* named indices, each
+        Run 235WFLLT3 - lane 4: 5 samples with SI-NA-* named indices, each
         expanded to 4 i7-only sequences (20 rows total).
         run_setup 50-8-24-49: I2 carries 24 UMI cycles, not a standard index.
         Expected: CreateFastqForIndexReads=true, TrimUMI=false,
                   OverrideCycles R1:Y50;I1:I8;I2:U24;R2:Y49.
         """
-        self._run_tc_test("235WFLLT3", "tc11")
+        old_mapping = dict(self._LIBRARY_METHOD_BY_PROJECT_ID)
+        self._LIBRARY_METHOD_BY_PROJECT_ID = {
+            **old_mapping,
+            "P36052": "10X Chromium: Multiome",
+        }
+        try:
+            self._run_tc_test("235WFLLT3", "tc11")
+        finally:
+            self._LIBRARY_METHOD_BY_PROJECT_ID = old_mapping
 
 
 if __name__ == "__main__":

@@ -561,7 +561,13 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                     )
                     if index1 in named_indices_dict:
                         first_seq = named_indices_dict[index1][0]
-                        result["index_length"] = [len(first_seq[0]), len(first_seq[1])]
+                        # Named index rows can be i7-only ([i7]) or dual ([i7, i5]).
+                        index1_seq = first_seq[0] if len(first_seq) > 0 else ""
+                        index2_seq = first_seq[1] if len(first_seq) > 1 else ""
+                        result["index_length"] = [
+                            len(index1_seq),
+                            len(index2_seq),
+                        ]
                 if pattern_config.get("raw_samplesheet_settings"):
                     result["raw_samplesheet_settings"].update(
                         pattern_config["raw_samplesheet_settings"]
@@ -1718,7 +1724,10 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                         index_lengths = [len(index_1), len(index_2)]
 
                         # Update index_length in other_details as [i7_len, i5_len]
-                        new_settings["other_details"]["index_length"] = [len(index_1), len(index_2)]
+                        new_settings["other_details"]["index_length"] = [
+                            len(index_1),
+                            len(index_2),
+                        ]
 
                         # Generate new OverrideCycles
                         override_cycles = self._generate_override_cycles(

@@ -172,6 +172,25 @@ class TestDemuxSampleInfoPost(AsyncHTTPTestCase):
             classification["index_length"], [8, 0]
         )  # Actual string length of named index key
 
+    def test_classify_sample_type_named_index_single_sequence_row(self):
+        """Regression: named index rows with only i7 sequence must not raise index errors."""
+        handler = DemuxSampleInfoDataHandler(self.get_app(), MagicMock())
+        handler.application.named_indices = {
+            "Chromium_10X_indexes": {"SI-NA-A2": [["TCTTAGGC"]]}
+        }
+
+        sample = {
+            "index": "SI-NA-A2",
+            "index2": "",
+            "control": "N",
+            "sample_name": "Test_Sample",
+        }
+
+        classification = handler._classify_sample_type(sample, library_method="")
+
+        self.assertEqual(classification["sample_type"], "10X_SINGLE")
+        self.assertEqual(classification["index_length"], [8, 0])
+
     def test_classify_sample_type_ordinary_dual(self):
         """Test classification of ordinary dual-index samples."""
         handler = DemuxSampleInfoDataHandler(self.get_app(), MagicMock())

@@ -13,7 +13,8 @@
       "TrimUMI": false,
       "CreateFastqForIndexReads": true,
       "MinimumTrimmedReadLength": 0,
-      "MaskShortReads": 0
+      "MaskShortReads": 0,
+      "BarcodeMismatchesIndex1": 0
     },
     "BCLConvert_Data": [
       {

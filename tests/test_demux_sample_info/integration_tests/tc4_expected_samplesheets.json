@@ -1,10 +1,13 @@
 [
   {
     "lane": "1",
-    "projects": ["A__Berggren_25_01", "B__Bergman_25_01", "C__Bergkvist_25_01"],
+    "projects": [
+      "A__Berggren_25_01",
+      "B__Bergman_25_01"
+    ],
     "settings_index": 0,
-    "sample_count": 21,
-    "filename": "Lane1_A__Berggren_25_01_B__Bergman_25_01_C__Bergkvist_25_01_0.csv",
+    "sample_count": 14,
+    "filename": "Lane1_A__Berggren_25_01_B__Bergman_25_01_0.csv",
     "Header": {
       "FileFormatVersion": "2",
       "RunName": "233JTGLT4"
@@ -140,7 +143,28 @@
         "index2": "GTATAGCGTC",
         "Sample_Project": "B__Bergman_25_01",
         "OverrideCycles": "R1:Y151;I1:I10;I2:I10;R2:Y151"
-      },
+      }
+    ]
+  },
+  {
+    "lane": "1",
+    "projects": [
+      "C__Bergkvist_25_01"
+    ],
+    "settings_index": 1,
+    "sample_count": 7,
+    "filename": "Lane1_C__Bergkvist_25_01_1.csv",
+    "Header": {
+      "FileFormatVersion": "2",
+      "RunName": "233JTGLT4"
+    },
+    "raw_samplesheet_settings": {
+      "CreateFastqForIndexReads": false,
+      "MinimumTrimmedReadLength": 0,
+      "MaskShortReads": 0,
+      "BarcodeMismatchesIndex1": 0
+    },
+    "BCLConvert_Data": [
       {
         "Lane": "1",
         "Sample_ID": "Sample_P37004_1001",
