@@ -554,6 +554,14 @@ class DemuxSampleInfoDataHandler(SafeHandler):
 
                 if pattern_config.get("named_indices"):
                     result["named_indices"] = pattern_config["named_indices"]
+                    # Resolve actual sequence lengths from the named index dict so
+                    # index_length reflects the real sequences, not len("SI-TS-A7").
+                    named_indices_dict = self.application.named_indices.get(
+                        pattern_config["named_indices"], {}
+                    )
+                    if index1 in named_indices_dict:
+                        first_seq = named_indices_dict[index1][0]
+                        result["index_length"] = [len(first_seq[0]), len(first_seq[1])]
                 if pattern_config.get("raw_samplesheet_settings"):
                     result["raw_samplesheet_settings"].update(
                         pattern_config["raw_samplesheet_settings"]
@@ -564,8 +572,8 @@ class DemuxSampleInfoDataHandler(SafeHandler):
 
         # STEP 3: Apply other general sample type configurations (if no pattern matched)
         if not pattern_matched:
-            # Check noindex
-            if index1.upper() == "NOINDEX":
+            # Check noindex — covers both explicit "NOINDEX" and an absent index sequence
+            if not index1 or index1.upper() == "NOINDEX":
                 noindex_config = sample_patterns["noindex"]["config"]
                 result["sample_type"] = noindex_config.get("sample_type")
                 result["index_length"] = [0, 0]  # No index for NOINDEX samples
@@ -1087,11 +1095,13 @@ class DemuxSampleInfoDataHandler(SafeHandler):
         bcl_settings = dict(bcl_settings)
 
         # Build condition-evaluation context from other_details
+        index_length = other_details.get("index_length") or [0, 0]
         samplesheet_sample_data = {
             "sample_type": other_details.get("sample_type"),
             "umi_config": other_details.get("umi_config"),
-            "index_length": other_details.get("index_length"),
             "named_index": other_details.get("named_index"),
+            "index1_length": index_length[0],
+            "index2_length": index_length[1],
         }
 
         # Get global samplesheet generation rules from config (Stage 2)
@@ -1707,8 +1717,8 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                         # Calculate index lengths from actual index sequences
                         index_lengths = [len(index_1), len(index_2)]
 
-                        # Update index_length in other_details
-                        new_settings["other_details"]["index_length"] = len(index_1)
+                        # Update index_length in other_details as [i7_len, i5_len]
+                        new_settings["other_details"]["index_length"] = [len(index_1), len(index_2)]
 
                         # Generate new OverrideCycles
                         override_cycles = self._generate_override_cycles(
