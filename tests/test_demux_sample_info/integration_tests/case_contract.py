@@ -20,37 +20,39 @@ class ContractError(ValueError):
 
 def discover_test_cases_from_markdown(markdown_text: str) -> list[dict[str, Any]]:
     """Discover test cases by scanning for '# Test case N' headings.
-    
+
     Returns a list of case dicts with:
-        - case_id: "tcN" 
+        - case_id: "tcN"
         - test_case_number: N (int)
         - input_fixture: "tcN_input.json"
         - expected_fixture: "tcN_expected_samplesheets.json"
     """
     matches = _TC_HEADING_RE.finditer(markdown_text)
     cases = []
-    
+
     for match in matches:
         number = int(match.group(1))
         case_id = f"tc{number}"
-        cases.append({
-            "case_id": case_id,
-            "test_case_number": number,
-            "input_fixture": f"{case_id}_input.json",
-            "expected_fixture": f"{case_id}_expected_samplesheets.json",
-        })
-    
+        cases.append(
+            {
+                "case_id": case_id,
+                "test_case_number": number,
+                "input_fixture": f"{case_id}_input.json",
+                "expected_fixture": f"{case_id}_expected_samplesheets.json",
+            }
+        )
+
     if not cases:
         raise ContractError("No test case headings found in markdown")
-    
+
     # Sort by test case number
     cases.sort(key=lambda c: c["test_case_number"])
-    
+
     # Check for duplicates
     numbers = [c["test_case_number"] for c in cases]
     if len(numbers) != len(set(numbers)):
         raise ContractError("Duplicate test case numbers found in markdown")
-    
+
     return cases
 
 
