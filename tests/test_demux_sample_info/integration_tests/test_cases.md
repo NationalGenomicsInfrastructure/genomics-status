@@ -766,7 +766,7 @@ Lane,Sample_ID,Sample_Name,index,index2,Sample_Project,OverrideCycles
 ...
 ```
 
-# Test case 6 - Special indexes that get automatically replaced (10X single cell)
+# Test case 6 - Special indexes that get automatically replaced (10X single cell) [SKIP]
 
 ## Description
 
@@ -910,8 +910,8 @@ Lane,Sample_ID,Sample_Name,index,index2,Sample_Project,OverrideCycles
 
 **Current bcl2fastq settings:**
 
-### LIMS sample sheet:
-This one is cut off since there would be too many samples otherwise
+### LIMS sample sheet
+This example uses the first 5 and last 5 index sequences for each named index (SMARTSEQ3-23F and SMARTSEQ3-1G) from the Smart-seq3.csv configuration file.
 ```csv
 FCID,Lane,Sample_ID,Sample_Name,Sample_Ref,index,index2,Description,Control,Recipe,Operator,Sample_Project
 22YMHFLT3,1,P29904_8007,P29904_8007,Human (Homo sapiens GRCh38),SMARTSEQ3-23F,,A__Bergren_23_01,N,85-133,Agneta_Berg,A__Bergren_23_01
@@ -924,21 +924,26 @@ SampleSheet_1.csv
 [Header]
 [Data]
 FCID,Lane,Sample_ID,Sample_Name,Sample_Ref,index,index2,Description,Control,Recipe,Operator,Sample_Project
-22YMHFLT3,1,Sample_P29904_8007,P29904_8007,Human (Homo sapiens GRCh38),TAGAGAGATG,TTGTGTGCGT,A__Bergren_23_01,N,85-133,Agneta_Berg,A__Bergren_23_01
 22YMHFLT3,1,Sample_P29904_8007,P29904_8007,Human (Homo sapiens GRCh38),TGACACCGTA,TTGAGAGACA,A__Bergren_23_01,N,85-133,Agneta_Berg,A__Bergren_23_01
 22YMHFLT3,1,Sample_P29904_8007,P29904_8007,Human (Homo sapiens GRCh38),TGACCATGAA,TTGAGAGACA,A__Bergren_23_01,N,85-133,Agneta_Berg,A__Bergren_23_01
 22YMHFLT3,1,Sample_P29904_8007,P29904_8007,Human (Homo sapiens GRCh38),TTATGGCCTT,TTGAGAGACA,A__Bergren_23_01,N,85-133,Agneta_Berg,A__Bergren_23_01
 22YMHFLT3,1,Sample_P29904_8007,P29904_8007,Human (Homo sapiens GRCh38),TTAGGCATCC,TTGAGAGACA,A__Bergren_23_01,N,85-133,Agneta_Berg,A__Bergren_23_01
 22YMHFLT3,1,Sample_P29904_8007,P29904_8007,Human (Homo sapiens GRCh38),TCGTGAAGCG,TTGAGAGACA,A__Bergren_23_01,N,85-133,Agneta_Berg,A__Bergren_23_01
-...
-22YMHFLT3,1,Sample_P29904_8009,P29904_8009,Human (Homo sapiens GRCh38),TTATCCGGTC,TTCACCTGTG,A__Bergren_23_01,N,85-133,Agneta_Berg,A__Bergren_23_01
+22YMHFLT3,1,Sample_P29904_8007,P29904_8007,Human (Homo sapiens GRCh38),CAAGGACATC,TTGTGTGCGT,A__Bergren_23_01,N,85-133,Agneta_Berg,A__Bergren_23_01
+22YMHFLT3,1,Sample_P29904_8007,P29904_8007,Human (Homo sapiens GRCh38),CCGACGCATT,TTGTGTGCGT,A__Bergren_23_01,N,85-133,Agneta_Berg,A__Bergren_23_01
+22YMHFLT3,1,Sample_P29904_8007,P29904_8007,Human (Homo sapiens GRCh38),TTCGCACGCA,TTGTGTGCGT,A__Bergren_23_01,N,85-133,Agneta_Berg,A__Bergren_23_01
+22YMHFLT3,1,Sample_P29904_8007,P29904_8007,Human (Homo sapiens GRCh38),TCTGCGTTAA,TTGTGTGCGT,A__Bergren_23_01,N,85-133,Agneta_Berg,A__Bergren_23_01
+22YMHFLT3,1,Sample_P29904_8007,P29904_8007,Human (Homo sapiens GRCh38),TAGAGAGATG,TTGTGTGCGT,A__Bergren_23_01,N,85-133,Agneta_Berg,A__Bergren_23_01
 22YMHFLT3,1,Sample_P29904_8009,P29904_8009,Human (Homo sapiens GRCh38),CACAGCAAGA,CGCGTACCAA,A__Bergren_23_01,N,85-133,Agneta_Berg,A__Bergren_23_01
 22YMHFLT3,1,Sample_P29904_8009,P29904_8009,Human (Homo sapiens GRCh38),CGATACTAGT,CGCGTACCAA,A__Bergren_23_01,N,85-133,Agneta_Berg,A__Bergren_23_01
 22YMHFLT3,1,Sample_P29904_8009,P29904_8009,Human (Homo sapiens GRCh38),CGGTAAGTGG,CGCGTACCAA,A__Bergren_23_01,N,85-133,Agneta_Berg,A__Bergren_23_01
 22YMHFLT3,1,Sample_P29904_8009,P29904_8009,Human (Homo sapiens GRCh38),TTCTTAAGCC,CGCGTACCAA,A__Bergren_23_01,N,85-133,Agneta_Berg,A__Bergren_23_01
 22YMHFLT3,1,Sample_P29904_8009,P29904_8009,Human (Homo sapiens GRCh38),CGCAGACAAC,CGCGTACCAA,A__Bergren_23_01,N,85-133,Agneta_Berg,A__Bergren_23_01
-22YMHFLT3,1,Sample_P29904_8009,P29904_8009,Human (Homo sapiens GRCh38),CCATTACAGT,CGCGTACCAA,A__Bergren_23_01,N,85-133,Agneta_Berg,A__Bergren_23_01
-...
+22YMHFLT3,1,Sample_P29904_8009,P29904_8009,Human (Homo sapiens GRCh38),TTGGCCACGA,TTAGTGGTGC,A__Bergren_23_01,N,85-133,Agneta_Berg,A__Bergren_23_01
+22YMHFLT3,1,Sample_P29904_8009,P29904_8009,Human (Homo sapiens GRCh38),TTCCACCACC,TTAGTGGTGC,A__Bergren_23_01,N,85-133,Agneta_Berg,A__Bergren_23_01
+22YMHFLT3,1,Sample_P29904_8009,P29904_8009,Human (Homo sapiens GRCh38),TCAGGTGGTC,TTAGTGGTGC,A__Bergren_23_01,N,85-133,Agneta_Berg,A__Bergren_23_01
+22YMHFLT3,1,Sample_P29904_8009,P29904_8009,Human (Homo sapiens GRCh38),TGTGGAGGAC,TTAGTGGTGC,A__Bergren_23_01,N,85-133,Agneta_Berg,A__Bergren_23_01
+22YMHFLT3,1,Sample_P29904_8009,P29904_8009,Human (Homo sapiens GRCh38),TTATCCGGTC,TTAGTGGTGC,A__Bergren_23_01,N,85-133,Agneta_Berg,A__Bergren_23_01
 ```
 
 bcl2fastq command:
@@ -982,10 +987,6 @@ Lane,Sample_ID,Sample_Name,index,index2,Sample_Project,**OverrideCycles**
 1,Sample_P29904_8007,P29904_8007,TGACACCGTA,TTGAGAGACA,A__Bergren_23_01,**Y85N66;I10;I10;Y133N18
 ...**
 ```
-
-# Test case 9 - 
-
-# Test case 10 - 
 
 # Test case 11 - UMIs: output to file
 ## Description

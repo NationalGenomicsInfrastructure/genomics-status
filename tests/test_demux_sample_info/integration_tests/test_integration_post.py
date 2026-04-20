@@ -58,7 +58,7 @@ _SAVE_ACTUAL = "--save-actual" in sys.argv
 # All named index sequences used across integration tests.
 # SI-TS-* (Chromium 10X TS-series) used in TC2; each maps to [i7, i5] pairs.
 # SI-NA-* (NA-series with UMI in I2) used in TC11; I2 is not an index channel.
-_ALL_NAMED_INDICES = {
+_CHROMIUM_10X_NAMED_INDICES = {
     "SI-TS-A7": [["TAAACCCTAG", "TTCCTATCAG"]],
     "SI-TS-B7": [["CATGCTGCTC", "CGGTTTCCAC"]],
     "SI-TS-C7": [["GATCGCGGTA", "GACGGTTCCG"]],
@@ -92,6 +92,34 @@ _ALL_NAMED_INDICES = {
         ["AGGCTGGT", ""],
         ["CACAACTA", ""],
         ["GTTGGTCC", ""],
+    ],
+}
+
+# SMARTSEQ3-* (Smart-seq3) used in TC8; first 5 and last 5 from each plate well.
+_SMARTSEQ3_NAMED_INDICES = {
+    "SMARTSEQ3-23F": [
+        ["TGACACCGTA", "TTGAGAGACA"],
+        ["TGACCATGAA", "TTGAGAGACA"],
+        ["TTATGGCCTT", "TTGAGAGACA"],
+        ["TTAGGCATCC", "TTGAGAGACA"],
+        ["TCGTGAAGCG", "TTGAGAGACA"],
+        ["CAAGGACATC", "TTGTGTGCGT"],
+        ["CCGACGCATT", "TTGTGTGCGT"],
+        ["TTCGCACGCA", "TTGTGTGCGT"],
+        ["TCTGCGTTAA", "TTGTGTGCGT"],
+        ["TAGAGAGATG", "TTGTGTGCGT"],
+    ],
+    "SMARTSEQ3-1G": [
+        ["CACAGCAAGA", "CGCGTACCAA"],
+        ["CGATACTAGT", "CGCGTACCAA"],
+        ["CGGTAAGTGG", "CGCGTACCAA"],
+        ["TTCTTAAGCC", "CGCGTACCAA"],
+        ["CGCAGACAAC", "CGCGTACCAA"],
+        ["TTGGCCACGA", "TTAGTGGTGC"],
+        ["TTCCACCACC", "TTAGTGGTGC"],
+        ["TCAGGTGGTC", "TTAGTGGTGC"],
+        ["TGTGGAGGAC", "TTAGTGGTGC"],
+        ["TTATCCGGTC", "TTAGTGGTGC"],
     ],
 }
 
@@ -198,7 +226,10 @@ class TestDemuxSampleInfoIntegration(AsyncHTTPTestCase):
         app.control_patterns = config.get("control_patterns", [])
         app.short_index_threshold = config.get("short_single_index_threshold", 8)
         app.library_method_mapping = config.get("library_method_mapping", {})
-        app.named_indices = {"Chromium_10X_indexes": _ALL_NAMED_INDICES}
+        app.named_indices = {
+            "Chromium_10X_indexes": _CHROMIUM_10X_NAMED_INDICES,
+            "Smart-seq3": _SMARTSEQ3_NAMED_INDICES,
+        }
 
         return app
 
@@ -314,6 +345,15 @@ class TestDemuxSampleInfoIntegration(AsyncHTTPTestCase):
         Expected: OverrideCycles R1:Y151;I1:I10;I2:I10;R2:Y151 (no masked cycles).
         """
         self._run_tc_test("23FNTJLT3", "tc7")
+
+    def test_tc8_special_indices_smartseq(self):
+        """
+        TC8: Special indices for Smart-seq
+
+        Run 22YMHFLT3 - lane 1, 2 samples with Smart Seq indices 23F and 1G, run setup 85-133
+        Expected: Named indices to be replaced by a lot of regular indices (> 300 per named index).
+        """
+        self._run_tc_test("22YMHFLT3", "tc8")
 
     def test_tc11_umi_named_indices(self):
         """

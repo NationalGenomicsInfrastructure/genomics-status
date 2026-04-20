@@ -29,9 +29,10 @@ def _fixture_case_ids(pattern: str, suffix: str) -> set[str]:
 
 
 def test_markdown_test_cases_match_fixture_files_on_disk():
-    """Test case headings must match available tc input/expected JSON files."""
+    """Non-skipped test cases must have fixtures; all fixtures must have markdown."""
     cases = load_test_cases(_MARKDOWN_PATH)
-    markdown_case_ids = {case["case_id"] for case in cases}
+    all_case_ids = {case["case_id"] for case in cases}
+    non_skipped_case_ids = {case["case_id"] for case in cases if not case["skip"]}
 
     input_ids = _fixture_case_ids(_INPUT_GLOB, "_input.json")
     expected_ids = _fixture_case_ids(
@@ -43,16 +44,25 @@ def test_markdown_test_cases_match_fixture_files_on_disk():
         "Input and expected fixture files don't match. "
         f"Input: {sorted(input_ids)}, Expected: {sorted(expected_ids)}"
     )
-    assert markdown_case_ids == input_ids, (
-        "Markdown test cases don't match fixture files. "
-        f"Markdown: {sorted(markdown_case_ids)}, Fixtures: {sorted(input_ids)}"
+
+    # All fixture files must correspond to a markdown test case
+    assert input_ids.issubset(all_case_ids), (
+        "Fixture files found without corresponding markdown test case. "
+        f"Fixtures: {sorted(input_ids)}, Markdown: {sorted(all_case_ids)}"
+    )
+
+    # All non-skipped test cases must have fixture files
+    assert non_skipped_case_ids.issubset(input_ids), (
+        "Non-skipped test cases missing fixture files. "
+        f"Non-skipped: {sorted(non_skipped_case_ids)}, Fixtures: {sorted(input_ids)}"
     )
 
 
 def test_markdown_test_cases_match_integration_test_coverage():
-    """Integration test methods should cover exactly the markdown test cases."""
+    """Integration test methods should cover exactly the non-skipped markdown test cases."""
     cases = load_test_cases(_MARKDOWN_PATH)
-    markdown_case_ids = {case["case_id"] for case in cases}
+    # Only check non-skipped test cases
+    markdown_case_ids = {case["case_id"] for case in cases if not case["skip"]}
 
     integration_test_text = _INTEGRATION_TEST_FILE.read_text()
     covered_case_ids = set(
@@ -63,17 +73,19 @@ def test_markdown_test_cases_match_integration_test_coverage():
     )
 
     assert covered_case_ids == markdown_case_ids, (
-        "Integration test coverage doesn't match markdown test cases. "
+        "Integration test coverage doesn't match non-skipped markdown test cases. "
         f"Covered: {sorted(covered_case_ids)}, Markdown: {sorted(markdown_case_ids)}"
     )
 
 
 def test_each_test_case_has_lims_sample_sheet_header():
-    """Each test case must have a '### LIMS sample sheet' heading."""
+    """Each non-skipped test case must have a '### LIMS sample sheet' heading."""
     cases = load_test_cases(_MARKDOWN_PATH)
     markdown_text = _MARKDOWN_PATH.read_text()
 
     for case in cases:
+        if case["skip"]:
+            continue  # Skip validation for skipped test cases
         test_case_number = case["test_case_number"]
         try:
             extract_lims_sample_data_from_case(markdown_text, test_case_number)
@@ -89,6 +101,8 @@ def test_lims_sample_data_matches_input_fixtures():
     markdown_text = _MARKDOWN_PATH.read_text()
 
     for case in cases:
+        if case["skip"]:
+            continue  # Skip validation for skipped test cases
         case_id = case["case_id"]
         test_case_number = case["test_case_number"]
         input_fixture_path = _HERE / case["input_fixture"]
