@@ -891,7 +891,97 @@ Lane,Sample_ID,Sample_Name,index,index2,Sample_Project,OverrideCycles
 4,Sample_P38454_1008,P38454_1008,GATCAAGGCA,ATTAACAAGG,A__Bergren_25_03
 ```
 
-# Test case 8 -
+# Test case 8 - Special indexes that get automatically replaced (SmartSeq)
+
+## Description
+
+- Special indexes that get automatically replaced (SmartSeq) and changes the base mask
+    - **Change name to index sequences in sample sheet**
+- Aggregation of individual samples happens somewhere
+    - **BCL Convert automatically pools reads from all rows sharing the same Sample ID into a single set of output FASTQ files.**
+- I1 and I2 are output to separate fastq files
+- Note in TACA for MiSeq: “Note that the index 2 of 10X or Smart-seq dual indexes will be converted to RC”
+
+## Example data
+
+**Run: [20250321_LH00217_0179_A22YMHFLT3](https://genomics-status.scilifelab.se/flowcells/20250321_A22YMHFLT3)**
+
+**Project(s) and setup:** [A.Bergren_23_01](https://genomics-status.scilifelab.se/project/P29904) (85-10-10-133)
+
+**Current bcl2fastq settings:**
+
+### LIMS sample sheet:
+This one is cut off since there would be too many samples otherwise
+```csv
+FCID,Lane,Sample_ID,Sample_Name,Sample_Ref,index,index2,Description,Control,Recipe,Operator,Sample_Project
+22YMHFLT3,1,P29904_8007,P29904_8007,Human (Homo sapiens GRCh38),SMARTSEQ3-23F,,A__Bergren_23_01,N,85-133,Agneta_Berg,A__Bergren_23_01
+22YMHFLT3,1,P29904_8009,P29904_8009,Human (Homo sapiens GRCh38),SMARTSEQ3-1G,,A__Bergren_23_01,N,85-133,Agneta_Berg,A__Bergren_23_01
+```
+
+SampleSheet_1.csv
+
+```bash
+[Header]
+[Data]
+FCID,Lane,Sample_ID,Sample_Name,Sample_Ref,index,index2,Description,Control,Recipe,Operator,Sample_Project
+22YMHFLT3,1,Sample_P29904_8007,P29904_8007,Human (Homo sapiens GRCh38),TAGAGAGATG,TTGTGTGCGT,A__Bergren_23_01,N,85-133,Agneta_Berg,A__Bergren_23_01
+22YMHFLT3,1,Sample_P29904_8007,P29904_8007,Human (Homo sapiens GRCh38),TGACACCGTA,TTGAGAGACA,A__Bergren_23_01,N,85-133,Agneta_Berg,A__Bergren_23_01
+22YMHFLT3,1,Sample_P29904_8007,P29904_8007,Human (Homo sapiens GRCh38),TGACCATGAA,TTGAGAGACA,A__Bergren_23_01,N,85-133,Agneta_Berg,A__Bergren_23_01
+22YMHFLT3,1,Sample_P29904_8007,P29904_8007,Human (Homo sapiens GRCh38),TTATGGCCTT,TTGAGAGACA,A__Bergren_23_01,N,85-133,Agneta_Berg,A__Bergren_23_01
+22YMHFLT3,1,Sample_P29904_8007,P29904_8007,Human (Homo sapiens GRCh38),TTAGGCATCC,TTGAGAGACA,A__Bergren_23_01,N,85-133,Agneta_Berg,A__Bergren_23_01
+22YMHFLT3,1,Sample_P29904_8007,P29904_8007,Human (Homo sapiens GRCh38),TCGTGAAGCG,TTGAGAGACA,A__Bergren_23_01,N,85-133,Agneta_Berg,A__Bergren_23_01
+...
+22YMHFLT3,1,Sample_P29904_8009,P29904_8009,Human (Homo sapiens GRCh38),TTATCCGGTC,TTCACCTGTG,A__Bergren_23_01,N,85-133,Agneta_Berg,A__Bergren_23_01
+22YMHFLT3,1,Sample_P29904_8009,P29904_8009,Human (Homo sapiens GRCh38),CACAGCAAGA,CGCGTACCAA,A__Bergren_23_01,N,85-133,Agneta_Berg,A__Bergren_23_01
+22YMHFLT3,1,Sample_P29904_8009,P29904_8009,Human (Homo sapiens GRCh38),CGATACTAGT,CGCGTACCAA,A__Bergren_23_01,N,85-133,Agneta_Berg,A__Bergren_23_01
+22YMHFLT3,1,Sample_P29904_8009,P29904_8009,Human (Homo sapiens GRCh38),CGGTAAGTGG,CGCGTACCAA,A__Bergren_23_01,N,85-133,Agneta_Berg,A__Bergren_23_01
+22YMHFLT3,1,Sample_P29904_8009,P29904_8009,Human (Homo sapiens GRCh38),TTCTTAAGCC,CGCGTACCAA,A__Bergren_23_01,N,85-133,Agneta_Berg,A__Bergren_23_01
+22YMHFLT3,1,Sample_P29904_8009,P29904_8009,Human (Homo sapiens GRCh38),CGCAGACAAC,CGCGTACCAA,A__Bergren_23_01,N,85-133,Agneta_Berg,A__Bergren_23_01
+22YMHFLT3,1,Sample_P29904_8009,P29904_8009,Human (Homo sapiens GRCh38),CCATTACAGT,CGCGTACCAA,A__Bergren_23_01,N,85-133,Agneta_Berg,A__Bergren_23_01
+...
+```
+
+bcl2fastq command:
+
+```bash
+Not found
+```
+
+## Suggestions
+
+### bclconvert command
+
+```bash
+bcl-convert \
+  --bcl-input-directory /path/to/RunFolder \
+  --output-directory Demux_lane1_sub0 \
+  --sample-sheet SampleSheet_lane_1_sub0.csv \
+  --bcl-sampleproject-subdirectories true \
+  --sample-name-column-enabled true \
+  --bcl-only-lane 1
+```
+
+### Sample sheet
+
+```bash
+[Header]
+FileFormatVersion,2
+RunName,Run_001
+InstrumentID,MYSEQ
+Date,2025-11-04
+
+[BCLConvert_Settings]
+SoftwareVersion,4.4.6
+MinimumTrimmedReadLength,0
+MaskShortReads,0
+**CreateFastqForIndexReads,1**
+
+[BCLConvert_Data]
+Lane,Sample_ID,Sample_Name,index,index2,Sample_Project,**OverrideCycles**
+1,Sample_P29904_8007,P29904_8007,TAGAGAGATG,TTGTGTGCGT,A__Bergren_23_01,**Y85N66;I10;I10;Y133N18**
+1,Sample_P29904_8007,P29904_8007,TGACACCGTA,TTGAGAGACA,A__Bergren_23_01,**Y85N66;I10;I10;Y133N18
+...**
+```
 
 # Test case 9 - 
 
