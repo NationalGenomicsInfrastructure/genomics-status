@@ -14,9 +14,9 @@
 
 **Current bcl2fastq settings:**
 
-LIMS sample sheet:
+### LIMS sample sheet
 
-```bash
+```csv
 FCID,Lane,Sample_ID,Sample_Name,Sample_Ref,index,index2,Description,Control,Recipe,Operator,Sample_Project
 22GC2NLT1,1,P36906_1001,P36906_1001,Human (Homo sapiens GRCh38),GCTACGCT,TATAGCCT,A__Berggren_25_01,N,85-215,Agneta_Berg,A__Berggren_25_01
 22GC2NLT1,1,P36906_1002,P36906_1002,Human (Homo sapiens GRCh38),CGAGGCTG,TATAGCCT,A__Berggren_25_01,N,85-215,Agneta_Berg,A__Berggren_25_01
@@ -135,9 +135,9 @@ Lane,Sample_ID,Sample_Name,index,index2,Sample_Project
 
 **Current bcl2fastq settings:**
 
-LIMS sample sheet:
+### LIMS sample sheet
 
-```bash
+```csv
 FCID,Lane,Sample_ID,Sample_Name,Sample_Ref,index,index2,Description,Control,Recipe,Operator,Sample_Project
 ...
 233KCWLT4,3,P35504_101,P35504_101,Human (Homo sapiens GRCh38),SI-TS-A7,,A__Berggren_25_01,N,43-50,Agneta_Berg,A__Berggren_25_01
@@ -300,9 +300,9 @@ Lane,Sample_ID,Sample_Name,index,index2,Sample_Project,OverrideCycles
 
 **Current bcl2fastq settings:**
 
-LIMS sample sheet:
+### LIMS sample sheet
 
-```bash
+```csv
 [Header]
 Local Run Manager Analysis Id,76077
 Experiment Name,GV85B
@@ -326,7 +326,7 @@ filterpcrduplicates,0
 
 [Data]
 Sample_ID,Sample_Name,Description,Sample_Project,FCID,Lane,Sample_Ref,Control,Recipe,Operator
-P37902_1001,P37902_1001,A__Berggren_25_08,A__Berggren_25_08,MS1046442-300V2,1,Other (- -),N,164-164,Agneta Berg
+P37902_1001,P37902_1001,A__Berggren_25_08,A__Berggren_25_08,GV85B,1,Other (- -),N,164-164,Agneta_Berg
 ```
 
 SampleSheet_0.csv
@@ -420,9 +420,9 @@ Lane,Sample_ID,Sample_Name,index,index2,Sample_Project
 
 **Current bcl2fastq settings:**
 
-LIMS sample sheet:
+### LIMS sample sheet
 
-```bash
+```csv
 FCID,Lane,Sample_ID,Sample_Name,Sample_Ref,index,index2,Description,Control,Recipe,Operator,Sample_Project
 233JTGLT4,1,P36203_103,P36203_103,Human (Homo sapiens GRCh38),ACTCTCGA,CTGTACCA,A__Berggren_25_01,N,151-151,Agneta_Berg,A__Berggren_25_01
 233JTGLT4,1,P36203_303,P36203_303,Human (Homo sapiens GRCh38),TGAGCTAG,GAACGGTT,A__Berggren_25_01,N,151-151,Agneta_Berg,A__Berggren_25_01
@@ -658,9 +658,9 @@ Lane,Sample_ID,Sample_Name,index,index2,Sample_Project,OverrideCycles
 
 **Current bcl2fastq settings:**
 
-LIMS sample sheet:
+### LIMS sample sheet
 
-```bash
+```csv
 FCID,Lane,Sample_ID,Sample_Name,Sample_Ref,index,index2,Description,Control,Recipe,Operator,Sample_Project
 233JTGLT4,7,P37869_1001,P37869_1001,Other (- -),TTACCGAC,,A__Berggren_25_02,N,151-151,Agneta_Berg,A__Berggren_25_02
 233JTGLT4,7,P37869_1002,P37869_1002,Other (- -),AGTGACCT,,A__Berggren_25_02,N,151-151,Agneta_Berg,A__Berggren_25_02
@@ -794,9 +794,9 @@ Lane,Sample_ID,Sample_Name,index,index2,Sample_Project,OverrideCycles
 
 **Current bcl2fastq settings:**
 
-LIMS sample sheet:
+### LIMS sample sheet
 
-```bash
+```csv
 [Data]
 FCID,Lane,Sample_ID,Sample_Name,Sample_Ref,index,index2,Description,Control,Recipe,Operator,Sample_Project
 ...
@@ -911,9 +911,9 @@ Lane,Sample_ID,Sample_Name,index,index2,Sample_Project,OverrideCycles
 
 **Current bcl2fastq settings:**
 
-LIMS sample sheet:
+### LIMS sample sheet
 
-```bash
+```csv
 [Data]
 FCID,Lane,Sample_ID,Sample_Name,Sample_Ref,index,index2,Description,Control,Recipe,Operator,Sample_Project
 ...
