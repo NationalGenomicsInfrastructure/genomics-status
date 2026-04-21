@@ -26,7 +26,7 @@ thresholds = {
     "NextSeq High": 75,
     "NextSeq 2000 P1": 100,
     "NextSeq 2000 P2": 400,
-    "NextSeq 2000 P3": 550,
+    "NextSeq 2000 P3": 1100,
 }
 
 # For universal units, each unit corresponds to 600M reads:
@@ -821,10 +821,10 @@ class FlowcellHandler(SafeHandler):
                 entry["value"]["lanedata"][lane_nr]["project_threshold_summary"] = (
                     project_threshold_summary
                 )
-            running_note_template = f"{entry['value']['full_name']}\n\n"
+            running_note_template = f"{entry['value']['full_name']} ({entry['value'].get('run_mode', '')})\n"
             for project_name, project_id in project_names.items():
                 running_note_template += f"<!-- START:{project_id} -->\n\n"
-                running_note_template += f"**{project_name} ({project_id})**\n\n\n"
+                running_note_template += f"**{project_name} ({project_id})**\n\n"
                 running_note_template += f"<!-- END:{project_id} -->\n\n"
 
             t = self.application.loader.load("flowcell.html")
