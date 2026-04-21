@@ -26,7 +26,7 @@ thresholds = {
     "NextSeq High": 75,
     "NextSeq 2000 P1": 100,
     "NextSeq 2000 P2": 400,
-    "NextSeq 2000 P3": 300,
+    "NextSeq 2000 P3": 1100,
 }
 
 # For universal units, each unit corresponds to 600M reads:
