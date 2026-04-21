@@ -1,7 +1,7 @@
 {
   "metadata": {
     "num_lanes": 1,
-    "run_setup": "85-10-10-133",
+    "run_setup": "151-10-10-151",
     "setup_lims_step_id": "24-TC8"
   },
   "uploaded_lims_info": [
@@ -15,7 +15,7 @@
       "index2": "",
       "description": "A__Bergren_23_01",
       "control": "N",
-      "recipe": "85-133",
+    "recipe": "85-10-10-133",
       "operator": "Agneta_Berg",
       "sample_project": "A__Bergren_23_01"
     },
@@ -29,7 +29,7 @@
       "index2": "",
       "description": "A__Bergren_23_01",
       "control": "N",
-      "recipe": "85-133",
+    "recipe": "85-10-10-133",
       "operator": "Agneta_Berg",
       "sample_project": "A__Bergren_23_01"
     }

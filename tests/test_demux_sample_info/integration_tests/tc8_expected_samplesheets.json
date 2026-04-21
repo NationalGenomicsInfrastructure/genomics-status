@@ -25,7 +25,7 @@
         "index": "TGACACCGTA",
         "index2": "TTGAGAGACA",
         "Sample_Project": "A__Bergren_23_01",
-        "OverrideCycles": "R1:Y85;I1:I10;I2:I10;R2:Y133"
+        "OverrideCycles": "R1:Y85N66;I1:I10;I2:I10;R2:Y133N18"
       },
       {
         "Lane": "1",
@@ -34,7 +34,7 @@
         "index": "TGACCATGAA",
         "index2": "TTGAGAGACA",
         "Sample_Project": "A__Bergren_23_01",
-        "OverrideCycles": "R1:Y85;I1:I10;I2:I10;R2:Y133"
+        "OverrideCycles": "R1:Y85N66;I1:I10;I2:I10;R2:Y133N18"
       },
       {
         "Lane": "1",
@@ -43,7 +43,7 @@
         "index": "TTATGGCCTT",
         "index2": "TTGAGAGACA",
         "Sample_Project": "A__Bergren_23_01",
-        "OverrideCycles": "R1:Y85;I1:I10;I2:I10;R2:Y133"
+        "OverrideCycles": "R1:Y85N66;I1:I10;I2:I10;R2:Y133N18"
       },
       {
         "Lane": "1",
@@ -52,7 +52,7 @@
         "index": "TTAGGCATCC",
         "index2": "TTGAGAGACA",
         "Sample_Project": "A__Bergren_23_01",
-        "OverrideCycles": "R1:Y85;I1:I10;I2:I10;R2:Y133"
+        "OverrideCycles": "R1:Y85N66;I1:I10;I2:I10;R2:Y133N18"
       },
       {
         "Lane": "1",
@@ -61,7 +61,7 @@
         "index": "TCGTGAAGCG",
         "index2": "TTGAGAGACA",
         "Sample_Project": "A__Bergren_23_01",
-        "OverrideCycles": "R1:Y85;I1:I10;I2:I10;R2:Y133"
+        "OverrideCycles": "R1:Y85N66;I1:I10;I2:I10;R2:Y133N18"
       },
       {
         "Lane": "1",
@@ -70,7 +70,7 @@
         "index": "CAAGGACATC",
         "index2": "TTGTGTGCGT",
         "Sample_Project": "A__Bergren_23_01",
-        "OverrideCycles": "R1:Y85;I1:I10;I2:I10;R2:Y133"
+        "OverrideCycles": "R1:Y85N66;I1:I10;I2:I10;R2:Y133N18"
       },
       {
         "Lane": "1",
@@ -79,7 +79,7 @@
         "index": "CCGACGCATT",
         "index2": "TTGTGTGCGT",
         "Sample_Project": "A__Bergren_23_01",
-        "OverrideCycles": "R1:Y85;I1:I10;I2:I10;R2:Y133"
+        "OverrideCycles": "R1:Y85N66;I1:I10;I2:I10;R2:Y133N18"
       },
       {
         "Lane": "1",
@@ -88,7 +88,7 @@
         "index": "TTCGCACGCA",
         "index2": "TTGTGTGCGT",
         "Sample_Project": "A__Bergren_23_01",
-        "OverrideCycles": "R1:Y85;I1:I10;I2:I10;R2:Y133"
+        "OverrideCycles": "R1:Y85N66;I1:I10;I2:I10;R2:Y133N18"
       },
       {
         "Lane": "1",
@@ -97,7 +97,7 @@
         "index": "TCTGCGTTAA",
         "index2": "TTGTGTGCGT",
         "Sample_Project": "A__Bergren_23_01",
-        "OverrideCycles": "R1:Y85;I1:I10;I2:I10;R2:Y133"
+        "OverrideCycles": "R1:Y85N66;I1:I10;I2:I10;R2:Y133N18"
       },
       {
         "Lane": "1",
@@ -106,7 +106,7 @@
         "index": "TAGAGAGATG",
         "index2": "TTGTGTGCGT",
         "Sample_Project": "A__Bergren_23_01",
-        "OverrideCycles": "R1:Y85;I1:I10;I2:I10;R2:Y133"
+        "OverrideCycles": "R1:Y85N66;I1:I10;I2:I10;R2:Y133N18"
       },
       {
         "Lane": "1",
@@ -115,7 +115,7 @@
         "index": "CACAGCAAGA",
         "index2": "CGCGTACCAA",
         "Sample_Project": "A__Bergren_23_01",
-        "OverrideCycles": "R1:Y85;I1:I10;I2:I10;R2:Y133"
+        "OverrideCycles": "R1:Y85N66;I1:I10;I2:I10;R2:Y133N18"
       },
       {
         "Lane": "1",
@@ -124,7 +124,7 @@
         "index": "CGATACTAGT",
         "index2": "CGCGTACCAA",
         "Sample_Project": "A__Bergren_23_01",
-        "OverrideCycles": "R1:Y85;I1:I10;I2:I10;R2:Y133"
+        "OverrideCycles": "R1:Y85N66;I1:I10;I2:I10;R2:Y133N18"
       },
       {
         "Lane": "1",
@@ -133,7 +133,7 @@
         "index": "CGGTAAGTGG",
         "index2": "CGCGTACCAA",
         "Sample_Project": "A__Bergren_23_01",
-        "OverrideCycles": "R1:Y85;I1:I10;I2:I10;R2:Y133"
+        "OverrideCycles": "R1:Y85N66;I1:I10;I2:I10;R2:Y133N18"
       },
       {
         "Lane": "1",
@@ -142,7 +142,7 @@
         "index": "TTCTTAAGCC",
         "index2": "CGCGTACCAA",
         "Sample_Project": "A__Bergren_23_01",
-        "OverrideCycles": "R1:Y85;I1:I10;I2:I10;R2:Y133"
+        "OverrideCycles": "R1:Y85N66;I1:I10;I2:I10;R2:Y133N18"
       },
       {
         "Lane": "1",
@@ -151,7 +151,7 @@
         "index": "CGCAGACAAC",
         "index2": "CGCGTACCAA",
         "Sample_Project": "A__Bergren_23_01",
-        "OverrideCycles": "R1:Y85;I1:I10;I2:I10;R2:Y133"
+        "OverrideCycles": "R1:Y85N66;I1:I10;I2:I10;R2:Y133N18"
       },
       {
         "Lane": "1",
@@ -160,7 +160,7 @@
         "index": "TTGGCCACGA",
         "index2": "TTAGTGGTGC",
         "Sample_Project": "A__Bergren_23_01",
-        "OverrideCycles": "R1:Y85;I1:I10;I2:I10;R2:Y133"
+        "OverrideCycles": "R1:Y85N66;I1:I10;I2:I10;R2:Y133N18"
       },
       {
         "Lane": "1",
@@ -169,7 +169,7 @@
         "index": "TTCCACCACC",
         "index2": "TTAGTGGTGC",
         "Sample_Project": "A__Bergren_23_01",
-        "OverrideCycles": "R1:Y85;I1:I10;I2:I10;R2:Y133"
+        "OverrideCycles": "R1:Y85N66;I1:I10;I2:I10;R2:Y133N18"
       },
       {
         "Lane": "1",
@@ -178,7 +178,7 @@
         "index": "TCAGGTGGTC",
         "index2": "TTAGTGGTGC",
         "Sample_Project": "A__Bergren_23_01",
-        "OverrideCycles": "R1:Y85;I1:I10;I2:I10;R2:Y133"
+        "OverrideCycles": "R1:Y85N66;I1:I10;I2:I10;R2:Y133N18"
       },
       {
         "Lane": "1",
@@ -187,7 +187,7 @@
         "index": "TGTGGAGGAC",
         "index2": "TTAGTGGTGC",
         "Sample_Project": "A__Bergren_23_01",
-        "OverrideCycles": "R1:Y85;I1:I10;I2:I10;R2:Y133"
+        "OverrideCycles": "R1:Y85N66;I1:I10;I2:I10;R2:Y133N18"
       },
       {
         "Lane": "1",
@@ -196,7 +196,7 @@
         "index": "TTATCCGGTC",
         "index2": "TTAGTGGTGC",
         "Sample_Project": "A__Bergren_23_01",
-        "OverrideCycles": "R1:Y85;I1:I10;I2:I10;R2:Y133"
+        "OverrideCycles": "R1:Y85N66;I1:I10;I2:I10;R2:Y133N18"
       }
     ]
   }

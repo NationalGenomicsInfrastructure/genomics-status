@@ -350,8 +350,10 @@ class TestDemuxSampleInfoIntegration(AsyncHTTPTestCase):
         """
         TC8: Special indices for Smart-seq
 
-        Run 22YMHFLT3 - lane 1, 2 samples with Smart Seq indices 23F and 1G, run setup 85-133
-        Expected: Named indices to be replaced by a lot of regular indices (> 300 per named index).
+        Run 22YMHFLT3 - lane 1, 2 samples with Smart Seq indices 23F and 1G
+        run_setup: 151-10-10-151, recipe: 85-10-10-133
+        Expected: Named indices to be replaced by 10 index pairs each (20 rows total).
+                  OverrideCycles R1:Y85N66;I1:I10;I2:I10;R2:Y133N18 (mask unused cycles).
         """
         self._run_tc_test("22YMHFLT3", "tc8")
 

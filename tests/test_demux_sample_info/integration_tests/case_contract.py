@@ -12,7 +12,13 @@ from typing import Any
 _TC_HEADING_RE = re.compile(r"^# Test case (\d+)\b.*$", re.MULTILINE)
 _TC_SKIP_RE = re.compile(r"\[SKIP\]", re.IGNORECASE)
 _LIMS_HEADING_RE = re.compile(r"^### LIMS sample sheet\s*$", re.MULTILINE)
+_SUGGESTIONS_HEADING_RE = re.compile(r"^## Suggestions\s*$", re.MULTILINE)
+_SAMPLESHEET_HEADING_RE = re.compile(
+    r"^### ((?:SampleSheet|Sample sheet)[^\n]*)\s*$", re.MULTILINE
+)
 _CSV_BLOCK_RE = re.compile(r"```csv\n(.*?)\n```", re.DOTALL)
+_BASH_BLOCK_RE = re.compile(r"```bash\n(.*?)\n```", re.DOTALL)
+_RUN_SETUP_RE = re.compile(r"^\*\*Run Setup \(Recipe\):\*\*\s+(.+)$", re.MULTILINE)
 
 
 class ContractError(ValueError):
@@ -145,6 +151,22 @@ def extract_lims_sample_data_from_case(
     return _parse_lims_csv(csv_text)
 
 
+def extract_run_setup_from_case(markdown_text: str, test_case_number: int) -> str:
+    """Extract run setup value from '**Run Setup (Recipe):**' line in a test case.
+
+    Returns the run setup string (e.g., '85-8-0-215' or '151-10-10-151').
+    """
+    section = _extract_test_case_section(markdown_text, test_case_number)
+
+    run_setup_match = _RUN_SETUP_RE.search(section)
+    if not run_setup_match:
+        raise ContractError(
+            f"Test case {test_case_number} has no '**Run Setup (Recipe):**' line"
+        )
+
+    return run_setup_match.group(1).strip()
+
+
 def translate_lims_csv_to_fixture_format(
     lims_rows: list[dict[str, str]],
 ) -> list[dict[str, Any]]:
@@ -177,6 +199,105 @@ def translate_lims_csv_to_fixture_format(
 
     return translated
 
+
+def _parse_ini_samplesheet(ini_text: str) -> dict[str, Any]:
+    """Parse BCLConvert INI-format samplesheet into structured dict.
+
+    Extracts [Header], [BCLConvert_Settings], and [BCLConvert_Data] sections.
+    Removes markdown bold markers (**) from values.
+    """
+    lines = ini_text.strip().split("\n")
+    result: dict[str, Any] = {
+        "Header": {},
+        "BCLConvert_Settings": {},
+        "BCLConvert_Data": [],
+    }
+
+    current_section = None
+    data_header = None
+
+    for line in lines:
+        line = line.strip().replace("**", "")  # Remove markdown bold
+        if not line:
+            continue
+
+        if line.startswith("[") and line.endswith("]"):
+            section_name = line[1:-1]
+            if section_name == "Header":
+                current_section = "Header"
+            elif section_name == "BCLConvert_Settings":
+                current_section = "BCLConvert_Settings"
+            elif section_name == "BCLConvert_Data":
+                current_section = "BCLConvert_Data"
+                data_header = None
+            else:
+                current_section = None
+            continue
+
+        if current_section in ("Header", "BCLConvert_Settings"):
+            if "," in line:
+                key, value = line.split(",", 1)
+                result[current_section][key.strip()] = value.strip()
+        elif current_section == "BCLConvert_Data":
+            parts = line.split(",")
+            if data_header is None:
+                data_header = [p.strip() for p in parts]
+            else:
+                if len(parts) == len(data_header):
+                    row = {}
+                    for key, value in zip(data_header, parts):
+                        row[key] = value.strip()
+                    result["BCLConvert_Data"].append(row)
+
+    return result
+
+
+def extract_expected_samplesheets_from_case(
+    markdown_text: str, test_case_number: int
+) -> list[dict[str, Any]]:
+    """Extract and parse expected samplesheets from '## Suggestions' section.
+
+    Returns a list of parsed samplesheet dicts, one per ### SampleSheet_*.csv found.
+    Each dict contains Header, BCLConvert_Settings, and BCLConvert_Data sections.
+    """
+    section = _extract_test_case_section(markdown_text, test_case_number)
+
+    suggestions_match = _SUGGESTIONS_HEADING_RE.search(section)
+    if not suggestions_match:
+        raise ContractError(
+            f"Test case {test_case_number} has no '## Suggestions' section"
+        )
+
+    suggestions_text = section[suggestions_match.end() :]
+
+    samplesheets = []
+    for sheet_match in _SAMPLESHEET_HEADING_RE.finditer(suggestions_text):
+        sheet_name = sheet_match.group(1)
+        sheet_start = sheet_match.end()
+
+        # Find the bash block containing the INI format
+        bash_match = _BASH_BLOCK_RE.search(suggestions_text, sheet_start)
+        if not bash_match:
+            continue
+
+        # Check if this bash block is before the next samplesheet heading
+        next_sheet_match = _SAMPLESHEET_HEADING_RE.search(
+            suggestions_text, sheet_match.end()
+        )
+        if next_sheet_match and bash_match.start() > next_sheet_match.start():
+            continue
+
+        ini_text = bash_match.group(1)
+        parsed = _parse_ini_samplesheet(ini_text)
+        parsed["samplesheet_name"] = sheet_name
+        samplesheets.append(parsed)
+
+    if not samplesheets:
+        raise ContractError(
+            f"Test case {test_case_number} Suggestions section has no samplesheets"
+        )
+
+    return samplesheets
 
 def _main() -> int:
     parser = argparse.ArgumentParser(
