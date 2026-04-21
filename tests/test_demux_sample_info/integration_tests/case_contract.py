@@ -299,6 +299,7 @@ def extract_expected_samplesheets_from_case(
 
     return samplesheets
 
+
 def _main() -> int:
     parser = argparse.ArgumentParser(
         description="Extract test case information from test_cases.md"
