@@ -13,11 +13,11 @@
       "sample_ref": "Human (Homo sapiens GRCh38)",
       "index": "SMARTSEQ3-23F",
       "index2": "",
-      "description": "A__Bergren_23_01",
+    "description": "A__Berggren_23_01",
       "control": "N",
     "recipe": "85-10-10-133",
       "operator": "Agneta_Berg",
-      "sample_project": "A__Bergren_23_01"
+    "sample_project": "A__Berggren_23_01"
     },
     {
       "flowcell_id": "22YMHFLT3",
@@ -27,11 +27,11 @@
       "sample_ref": "Human (Homo sapiens GRCh38)",
       "index": "SMARTSEQ3-1G",
       "index2": "",
-      "description": "A__Bergren_23_01",
+    "description": "A__Berggren_23_01",
       "control": "N",
     "recipe": "85-10-10-133",
       "operator": "Agneta_Berg",
-      "sample_project": "A__Bergren_23_01"
+    "sample_project": "A__Berggren_23_01"
     }
   ]
 }

@@ -13,11 +13,11 @@
       "sample_ref": "Other (- -)",
       "index": "GAACTGAGCG",
       "index2": "CGCTCCACGA",
-      "description": "A__Bergren_25_03",
+      "description": "A__Berggren_25_03",
       "control": "N",
       "recipe": "151-151",
       "operator": "Agneta_Berg",
-      "sample_project": "A__Bergren_25_03"
+      "sample_project": "A__Berggren_25_03"
     },
     {
       "flowcell_id": "23FNTJLT3",
@@ -27,11 +27,11 @@
       "sample_ref": "Other (- -)",
       "index": "AGGTCAGATA",
       "index2": "TATCTTGTAG",
-      "description": "A__Bergren_25_03",
+      "description": "A__Berggren_25_03",
       "control": "N",
       "recipe": "151-151",
       "operator": "Agneta_Berg",
-      "sample_project": "A__Bergren_25_03"
+      "sample_project": "A__Berggren_25_03"
     },
     {
       "flowcell_id": "23FNTJLT3",
@@ -41,11 +41,11 @@
       "sample_ref": "Other (- -)",
       "index": "CGTCTCATAT",
       "index2": "AGCTACTATA",
-      "description": "A__Bergren_25_03",
+      "description": "A__Berggren_25_03",
       "control": "N",
       "recipe": "151-151",
       "operator": "Agneta_Berg",
-      "sample_project": "A__Bergren_25_03"
+      "sample_project": "A__Berggren_25_03"
     },
     {
       "flowcell_id": "23FNTJLT3",
@@ -55,11 +55,11 @@
       "sample_ref": "Other (- -)",
       "index": "ATTCCATAAG",
       "index2": "CCACCAGGCA",
-      "description": "A__Bergren_25_03",
+      "description": "A__Berggren_25_03",
       "control": "N",
       "recipe": "151-151",
       "operator": "Agneta_Berg",
-      "sample_project": "A__Bergren_25_03"
+      "sample_project": "A__Berggren_25_03"
     },
     {
       "flowcell_id": "23FNTJLT3",
@@ -69,11 +69,11 @@
       "sample_ref": "Other (- -)",
       "index": "GACGAGATTA",
       "index2": "AGGATAATGT",
-      "description": "A__Bergren_25_03",
+      "description": "A__Berggren_25_03",
       "control": "N",
       "recipe": "151-151",
       "operator": "Agneta_Berg",
-      "sample_project": "A__Bergren_25_03"
+      "sample_project": "A__Berggren_25_03"
     },
     {
       "flowcell_id": "23FNTJLT3",
@@ -83,11 +83,11 @@
       "sample_ref": "Other (- -)",
       "index": "AACATCGCGC",
       "index2": "ACAAGTGGAC",
-      "description": "A__Bergren_25_03",
+      "description": "A__Berggren_25_03",
       "control": "N",
       "recipe": "151-151",
       "operator": "Agneta_Berg",
-      "sample_project": "A__Bergren_25_03"
+      "sample_project": "A__Berggren_25_03"
     },
     {
       "flowcell_id": "23FNTJLT3",
@@ -97,11 +97,11 @@
       "sample_ref": "Other (- -)",
       "index": "CTAGTGCTCT",
       "index2": "TACTGTTCCA",
-      "description": "A__Bergren_25_03",
+      "description": "A__Berggren_25_03",
       "control": "N",
       "recipe": "151-151",
       "operator": "Agneta_Berg",
-      "sample_project": "A__Bergren_25_03"
+      "sample_project": "A__Berggren_25_03"
     },
     {
       "flowcell_id": "23FNTJLT3",
@@ -111,11 +111,11 @@
       "sample_ref": "Other (- -)",
       "index": "GATCAAGGCA",
       "index2": "ATTAACAAGG",
-      "description": "A__Bergren_25_03",
+      "description": "A__Berggren_25_03",
       "control": "N",
       "recipe": "151-151",
       "operator": "Agneta_Berg",
-      "sample_project": "A__Bergren_25_03"
+      "sample_project": "A__Berggren_25_03"
     }
   ]
 }

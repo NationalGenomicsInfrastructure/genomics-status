@@ -377,6 +377,30 @@ class TestDemuxSampleInfoIntegration(AsyncHTTPTestCase):
         finally:
             self._LIBRARY_METHOD_BY_PROJECT_ID = old_mapping
 
+    def test_tc16_mixed_index_length_single_lane(self):
+        """
+        TC16: Mixed index lengths on a single lane.
+
+        Run 233JTGLT4 - lane 1: 4 samples with mixed index lengths.
+        2 samples with 10bp indices (P36705_101, P36705_102).
+        2 samples with 8bp indices (P37004_1001, P37004_1002).
+        Expected: Two separate demux runs for the same lane with BarcodeMismatchesIndex1=0.
+                  OverrideCycles R1:Y151;I1:I10;I2:N10;R2:Y151 for 10bp indices.
+                  OverrideCycles R1:Y151;I1:I8N2;I2:N10;R2:Y151 for 8bp indices.
+        """
+        self._run_tc_test("233JTGLT4", "tc16")
+
+    def test_tc18_single_index_shorter_than_setup(self):
+        """
+        TC18: Single-index samples where index length is shorter than sequencing setup.
+
+        Run 233JTGLT4 - lane 7: 30 samples with 8bp indices on a dual-index run setup.
+        run_setup 151-10-10-151: I1 expects 10bp but samples have 8bp indices.
+        Expected: BarcodeMismatchesIndex1=0, OverrideCycles R1:Y151;I1:I8N2;I2:N10;R2:Y151.
+        """
+        self._run_tc_test("233JTGLT4", "tc18")
+
+
 
 if __name__ == "__main__":
     unittest.main()

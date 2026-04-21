@@ -799,7 +799,7 @@ Lane,Sample_ID,Sample_Name,index,index2,Sample_Project,OverrideCycles
 
 **Run: [20251223_LH00188_0343_A23FNTJLT3](https://genomics-status.scilifelab.se/flowcells/20251223_LH00188_0343_A23FNTJLT3)**
 
-**Project(s) and setup: [A.Bergren_25_03](https://genomics-status.scilifelab.se/project/P38454)** (151-10-10-151)
+**Project(s) and setup: [A.Berggren_25_03](https://genomics-status.scilifelab.se/project/P38454)** (151-10-10-151)
 
 **Current bcl2fastq settings:**
 
@@ -809,14 +809,14 @@ Lane,Sample_ID,Sample_Name,index,index2,Sample_Project,OverrideCycles
 [Data]
 FCID,Lane,Sample_ID,Sample_Name,Sample_Ref,index,index2,Description,Control,Recipe,Operator,Sample_Project
 ...
-23FNTJLT3,4,P38454_1001,P38454_1001,Other (- -),GAACTGAGCG,CGCTCCACGA,A__Bergren_25_03,N,151-151,Agneta_Berg,A__Bergren_25_03
-23FNTJLT3,4,P38454_1002,P38454_1002,Other (- -),AGGTCAGATA,TATCTTGTAG,A__Bergren_25_03,N,151-151,Agneta_Berg,A__Bergren_25_03
-23FNTJLT3,4,P38454_1003,P38454_1003,Other (- -),CGTCTCATAT,AGCTACTATA,A__Bergren_25_03,N,151-151,Agneta_Berg,A__Bergren_25_03
-23FNTJLT3,4,P38454_1004,P38454_1004,Other (- -),ATTCCATAAG,CCACCAGGCA,A__Bergren_25_03,N,151-151,Agneta_Berg,A__Bergren_25_03
-23FNTJLT3,4,P38454_1005,P38454_1005,Other (- -),GACGAGATTA,AGGATAATGT,A__Bergren_25_03,N,151-151,Agneta_Berg,A__Bergren_25_03
-23FNTJLT3,4,P38454_1006,P38454_1006,Other (- -),AACATCGCGC,ACAAGTGGAC,A__Bergren_25_03,N,151-151,Agneta_Berg,A__Bergren_25_03
-23FNTJLT3,4,P38454_1007,P38454_1007,Other (- -),CTAGTGCTCT,TACTGTTCCA,A__Bergren_25_03,N,151-151,Agneta_Berg,A__Bergren_25_03
-23FNTJLT3,4,P38454_1008,P38454_1008,Other (- -),GATCAAGGCA,ATTAACAAGG,A__Bergren_25_03,N,151-151,Agneta_Berg,A__Bergren_25_03
+23FNTJLT3,4,P38454_1001,P38454_1001,Other (- -),GAACTGAGCG,CGCTCCACGA,A__Berggren_25_03,N,151-151,Agneta_Berg,A__Berggren_25_03
+23FNTJLT3,4,P38454_1002,P38454_1002,Other (- -),AGGTCAGATA,TATCTTGTAG,A__Berggren_25_03,N,151-151,Agneta_Berg,A__Berggren_25_03
+23FNTJLT3,4,P38454_1003,P38454_1003,Other (- -),CGTCTCATAT,AGCTACTATA,A__Berggren_25_03,N,151-151,Agneta_Berg,A__Berggren_25_03
+23FNTJLT3,4,P38454_1004,P38454_1004,Other (- -),ATTCCATAAG,CCACCAGGCA,A__Berggren_25_03,N,151-151,Agneta_Berg,A__Berggren_25_03
+23FNTJLT3,4,P38454_1005,P38454_1005,Other (- -),GACGAGATTA,AGGATAATGT,A__Berggren_25_03,N,151-151,Agneta_Berg,A__Berggren_25_03
+23FNTJLT3,4,P38454_1006,P38454_1006,Other (- -),AACATCGCGC,ACAAGTGGAC,A__Berggren_25_03,N,151-151,Agneta_Berg,A__Berggren_25_03
+23FNTJLT3,4,P38454_1007,P38454_1007,Other (- -),CTAGTGCTCT,TACTGTTCCA,A__Berggren_25_03,N,151-151,Agneta_Berg,A__Berggren_25_03
+23FNTJLT3,4,P38454_1008,P38454_1008,Other (- -),GATCAAGGCA,ATTAACAAGG,A__Berggren_25_03,N,151-151,Agneta_Berg,A__Berggren_25_03
 ...
 ```
 
@@ -827,14 +827,14 @@ SampleSheet_1.csv
 [Data]
 FCID,Lane,Sample_ID,Sample_Name,Sample_Ref,index,index2,Description,Control,Recipe,Operator,Sample_Project
 ...
-23FNTJLT3,4,Sample_P38454_1001,P38454_1001,Other (- -),GAACTGAGCG,CGCTCCACGA,A__Bergren_25_03,N,151-151,Agneta_Berg,A__Bergren_25_03
-23FNTJLT3,4,Sample_P38454_1002,P38454_1002,Other (- -),AGGTCAGATA,TATCTTGTAG,A__Bergren_25_03,N,151-151,Agneta_Berg,A__Bergren_25_03
-23FNTJLT3,4,Sample_P38454_1003,P38454_1003,Other (- -),CGTCTCATAT,AGCTACTATA,A__Bergren_25_03,N,151-151,Agneta_Berg,A__Bergren_25_03
-23FNTJLT3,4,Sample_P38454_1004,P38454_1004,Other (- -),ATTCCATAAG,CCACCAGGCA,A__Bergren_25_03,N,151-151,Agneta_Berg,A__Bergren_25_03
-23FNTJLT3,4,Sample_P38454_1005,P38454_1005,Other (- -),GACGAGATTA,AGGATAATGT,A__Bergren_25_03,N,151-151,Agneta_Berg,A__Bergren_25_03
-23FNTJLT3,4,Sample_P38454_1006,P38454_1006,Other (- -),AACATCGCGC,ACAAGTGGAC,A__Bergren_25_03,N,151-151,Agneta_Berg,A__Bergren_25_03
-23FNTJLT3,4,Sample_P38454_1007,P38454_1007,Other (- -),CTAGTGCTCT,TACTGTTCCA,A__Bergren_25_03,N,151-151,Agneta_Berg,A__Bergren_25_03
-23FNTJLT3,4,Sample_P38454_1008,P38454_1008,Other (- -),GATCAAGGCA,ATTAACAAGG,A__Bergren_25_03,N,151-151,Agneta_Berg,A__Bergren_25_03
+23FNTJLT3,4,Sample_P38454_1001,P38454_1001,Other (- -),GAACTGAGCG,CGCTCCACGA,A__Berggren_25_03,N,151-151,Agneta_Berg,A__Berggren_25_03
+23FNTJLT3,4,Sample_P38454_1002,P38454_1002,Other (- -),AGGTCAGATA,TATCTTGTAG,A__Berggren_25_03,N,151-151,Agneta_Berg,A__Berggren_25_03
+23FNTJLT3,4,Sample_P38454_1003,P38454_1003,Other (- -),CGTCTCATAT,AGCTACTATA,A__Berggren_25_03,N,151-151,Agneta_Berg,A__Berggren_25_03
+23FNTJLT3,4,Sample_P38454_1004,P38454_1004,Other (- -),ATTCCATAAG,CCACCAGGCA,A__Berggren_25_03,N,151-151,Agneta_Berg,A__Berggren_25_03
+23FNTJLT3,4,Sample_P38454_1005,P38454_1005,Other (- -),GACGAGATTA,AGGATAATGT,A__Berggren_25_03,N,151-151,Agneta_Berg,A__Berggren_25_03
+23FNTJLT3,4,Sample_P38454_1006,P38454_1006,Other (- -),AACATCGCGC,ACAAGTGGAC,A__Berggren_25_03,N,151-151,Agneta_Berg,A__Berggren_25_03
+23FNTJLT3,4,Sample_P38454_1007,P38454_1007,Other (- -),CTAGTGCTCT,TACTGTTCCA,A__Berggren_25_03,N,151-151,Agneta_Berg,A__Berggren_25_03
+23FNTJLT3,4,Sample_P38454_1008,P38454_1008,Other (- -),GATCAAGGCA,ATTAACAAGG,A__Berggren_25_03,N,151-151,Agneta_Berg,A__Berggren_25_03
 ...
 ```
 
@@ -890,14 +890,14 @@ MaskShortReads,0
 
 [BCLConvert_Data]
 Lane,Sample_ID,Sample_Name,index,index2,Sample_Project,OverrideCycles
-4,Sample_P38454_1001,P38454_1001,GAACTGAGCG,CGCTCCACGA,A__Bergren_25_03
-4,Sample_P38454_1002,P38454_1002,AGGTCAGATA,TATCTTGTAG,A__Bergren_25_03
-4,Sample_P38454_1003,P38454_1003,CGTCTCATAT,AGCTACTATA,A__Bergren_25_03
-4,Sample_P38454_1004,P38454_1004,ATTCCATAAG,CCACCAGGCA,A__Bergren_25_03
-4,Sample_P38454_1005,P38454_1005,GACGAGATTA,AGGATAATGT,A__Bergren_25_03
-4,Sample_P38454_1006,P38454_1006,AACATCGCGC,ACAAGTGGAC,A__Bergren_25_03
-4,Sample_P38454_1007,P38454_1007,CTAGTGCTCT,TACTGTTCCA,A__Bergren_25_03
-4,Sample_P38454_1008,P38454_1008,GATCAAGGCA,ATTAACAAGG,A__Bergren_25_03
+4,Sample_P38454_1001,P38454_1001,GAACTGAGCG,CGCTCCACGA,A__Berggren_25_03
+4,Sample_P38454_1002,P38454_1002,AGGTCAGATA,TATCTTGTAG,A__Berggren_25_03
+4,Sample_P38454_1003,P38454_1003,CGTCTCATAT,AGCTACTATA,A__Berggren_25_03
+4,Sample_P38454_1004,P38454_1004,ATTCCATAAG,CCACCAGGCA,A__Berggren_25_03
+4,Sample_P38454_1005,P38454_1005,GACGAGATTA,AGGATAATGT,A__Berggren_25_03
+4,Sample_P38454_1006,P38454_1006,AACATCGCGC,ACAAGTGGAC,A__Berggren_25_03
+4,Sample_P38454_1007,P38454_1007,CTAGTGCTCT,TACTGTTCCA,A__Berggren_25_03
+4,Sample_P38454_1008,P38454_1008,GATCAAGGCA,ATTAACAAGG,A__Berggren_25_03
 ```
 
 # Test case 8 - Special indexes that get automatically replaced (SmartSeq)
@@ -917,7 +917,7 @@ Lane,Sample_ID,Sample_Name,index,index2,Sample_Project,OverrideCycles
 
 **Run Setup (Recipe):** 151-10-10-151
 
-**Project(s) and setup:** [A.Bergren_23_01](https://genomics-status.scilifelab.se/project/P29904) (85-10-10-133)
+**Project(s) and setup:** [A.Berggren_23_01](https://genomics-status.scilifelab.se/project/P29904) (85-10-10-133)
 
 **Current bcl2fastq settings:**
 
@@ -925,8 +925,8 @@ Lane,Sample_ID,Sample_Name,index,index2,Sample_Project,OverrideCycles
 This example uses the first 5 and last 5 index sequences for each named index (SMARTSEQ3-23F and SMARTSEQ3-1G) from the Smart-seq3.csv configuration file.
 ```csv
 FCID,Lane,Sample_ID,Sample_Name,Sample_Ref,index,index2,Description,Control,Recipe,Operator,Sample_Project
-22YMHFLT3,1,P29904_8007,P29904_8007,Human (Homo sapiens GRCh38),SMARTSEQ3-23F,,A__Bergren_23_01,N,85-10-10-133,Agneta_Berg,A__Bergren_23_01
-22YMHFLT3,1,P29904_8009,P29904_8009,Human (Homo sapiens GRCh38),SMARTSEQ3-1G,,A__Bergren_23_01,N,85-10-10-133,Agneta_Berg,A__Bergren_23_01
+22YMHFLT3,1,P29904_8007,P29904_8007,Human (Homo sapiens GRCh38),SMARTSEQ3-23F,,A__Berggren_23_01,N,85-10-10-133,Agneta_Berg,A__Berggren_23_01
+22YMHFLT3,1,P29904_8009,P29904_8009,Human (Homo sapiens GRCh38),SMARTSEQ3-1G,,A__Berggren_23_01,N,85-10-10-133,Agneta_Berg,A__Berggren_23_01
 ```
 
 SampleSheet_1.csv
@@ -935,26 +935,26 @@ SampleSheet_1.csv
 [Header]
 [Data]
 FCID,Lane,Sample_ID,Sample_Name,Sample_Ref,index,index2,Description,Control,Recipe,Operator,Sample_Project
-22YMHFLT3,1,Sample_P29904_8007,P29904_8007,Human (Homo sapiens GRCh38),TGACACCGTA,TTGAGAGACA,A__Bergren_23_01,N,85-133,Agneta_Berg,A__Bergren_23_01
-22YMHFLT3,1,Sample_P29904_8007,P29904_8007,Human (Homo sapiens GRCh38),TGACCATGAA,TTGAGAGACA,A__Bergren_23_01,N,85-133,Agneta_Berg,A__Bergren_23_01
-22YMHFLT3,1,Sample_P29904_8007,P29904_8007,Human (Homo sapiens GRCh38),TTATGGCCTT,TTGAGAGACA,A__Bergren_23_01,N,85-133,Agneta_Berg,A__Bergren_23_01
-22YMHFLT3,1,Sample_P29904_8007,P29904_8007,Human (Homo sapiens GRCh38),TTAGGCATCC,TTGAGAGACA,A__Bergren_23_01,N,85-133,Agneta_Berg,A__Bergren_23_01
-22YMHFLT3,1,Sample_P29904_8007,P29904_8007,Human (Homo sapiens GRCh38),TCGTGAAGCG,TTGAGAGACA,A__Bergren_23_01,N,85-133,Agneta_Berg,A__Bergren_23_01
-22YMHFLT3,1,Sample_P29904_8007,P29904_8007,Human (Homo sapiens GRCh38),CAAGGACATC,TTGTGTGCGT,A__Bergren_23_01,N,85-133,Agneta_Berg,A__Bergren_23_01
-22YMHFLT3,1,Sample_P29904_8007,P29904_8007,Human (Homo sapiens GRCh38),CCGACGCATT,TTGTGTGCGT,A__Bergren_23_01,N,85-133,Agneta_Berg,A__Bergren_23_01
-22YMHFLT3,1,Sample_P29904_8007,P29904_8007,Human (Homo sapiens GRCh38),TTCGCACGCA,TTGTGTGCGT,A__Bergren_23_01,N,85-133,Agneta_Berg,A__Bergren_23_01
-22YMHFLT3,1,Sample_P29904_8007,P29904_8007,Human (Homo sapiens GRCh38),TCTGCGTTAA,TTGTGTGCGT,A__Bergren_23_01,N,85-133,Agneta_Berg,A__Bergren_23_01
-22YMHFLT3,1,Sample_P29904_8007,P29904_8007,Human (Homo sapiens GRCh38),TAGAGAGATG,TTGTGTGCGT,A__Bergren_23_01,N,85-133,Agneta_Berg,A__Bergren_23_01
-22YMHFLT3,1,Sample_P29904_8009,P29904_8009,Human (Homo sapiens GRCh38),CACAGCAAGA,CGCGTACCAA,A__Bergren_23_01,N,85-133,Agneta_Berg,A__Bergren_23_01
-22YMHFLT3,1,Sample_P29904_8009,P29904_8009,Human (Homo sapiens GRCh38),CGATACTAGT,CGCGTACCAA,A__Bergren_23_01,N,85-133,Agneta_Berg,A__Bergren_23_01
-22YMHFLT3,1,Sample_P29904_8009,P29904_8009,Human (Homo sapiens GRCh38),CGGTAAGTGG,CGCGTACCAA,A__Bergren_23_01,N,85-133,Agneta_Berg,A__Bergren_23_01
-22YMHFLT3,1,Sample_P29904_8009,P29904_8009,Human (Homo sapiens GRCh38),TTCTTAAGCC,CGCGTACCAA,A__Bergren_23_01,N,85-133,Agneta_Berg,A__Bergren_23_01
-22YMHFLT3,1,Sample_P29904_8009,P29904_8009,Human (Homo sapiens GRCh38),CGCAGACAAC,CGCGTACCAA,A__Bergren_23_01,N,85-133,Agneta_Berg,A__Bergren_23_01
-22YMHFLT3,1,Sample_P29904_8009,P29904_8009,Human (Homo sapiens GRCh38),TTGGCCACGA,TTAGTGGTGC,A__Bergren_23_01,N,85-133,Agneta_Berg,A__Bergren_23_01
-22YMHFLT3,1,Sample_P29904_8009,P29904_8009,Human (Homo sapiens GRCh38),TTCCACCACC,TTAGTGGTGC,A__Bergren_23_01,N,85-133,Agneta_Berg,A__Bergren_23_01
-22YMHFLT3,1,Sample_P29904_8009,P29904_8009,Human (Homo sapiens GRCh38),TCAGGTGGTC,TTAGTGGTGC,A__Bergren_23_01,N,85-133,Agneta_Berg,A__Bergren_23_01
-22YMHFLT3,1,Sample_P29904_8009,P29904_8009,Human (Homo sapiens GRCh38),TGTGGAGGAC,TTAGTGGTGC,A__Bergren_23_01,N,85-133,Agneta_Berg,A__Bergren_23_01
-22YMHFLT3,1,Sample_P29904_8009,P29904_8009,Human (Homo sapiens GRCh38),TTATCCGGTC,TTAGTGGTGC,A__Bergren_23_01,N,85-133,Agneta_Berg,A__Bergren_23_01
+22YMHFLT3,1,Sample_P29904_8007,P29904_8007,Human (Homo sapiens GRCh38),TGACACCGTA,TTGAGAGACA,A__Berggren_23_01,N,85-133,Agneta_Berg,A__Berggren_23_01
+22YMHFLT3,1,Sample_P29904_8007,P29904_8007,Human (Homo sapiens GRCh38),TGACCATGAA,TTGAGAGACA,A__Berggren_23_01,N,85-133,Agneta_Berg,A__Berggren_23_01
+22YMHFLT3,1,Sample_P29904_8007,P29904_8007,Human (Homo sapiens GRCh38),TTATGGCCTT,TTGAGAGACA,A__Berggren_23_01,N,85-133,Agneta_Berg,A__Berggren_23_01
+22YMHFLT3,1,Sample_P29904_8007,P29904_8007,Human (Homo sapiens GRCh38),TTAGGCATCC,TTGAGAGACA,A__Berggren_23_01,N,85-133,Agneta_Berg,A__Berggren_23_01
+22YMHFLT3,1,Sample_P29904_8007,P29904_8007,Human (Homo sapiens GRCh38),TCGTGAAGCG,TTGAGAGACA,A__Berggren_23_01,N,85-133,Agneta_Berg,A__Berggren_23_01
+22YMHFLT3,1,Sample_P29904_8007,P29904_8007,Human (Homo sapiens GRCh38),CAAGGACATC,TTGTGTGCGT,A__Berggren_23_01,N,85-133,Agneta_Berg,A__Berggren_23_01
+22YMHFLT3,1,Sample_P29904_8007,P29904_8007,Human (Homo sapiens GRCh38),CCGACGCATT,TTGTGTGCGT,A__Berggren_23_01,N,85-133,Agneta_Berg,A__Berggren_23_01
+22YMHFLT3,1,Sample_P29904_8007,P29904_8007,Human (Homo sapiens GRCh38),TTCGCACGCA,TTGTGTGCGT,A__Berggren_23_01,N,85-133,Agneta_Berg,A__Berggren_23_01
+22YMHFLT3,1,Sample_P29904_8007,P29904_8007,Human (Homo sapiens GRCh38),TCTGCGTTAA,TTGTGTGCGT,A__Berggren_23_01,N,85-133,Agneta_Berg,A__Berggren_23_01
+22YMHFLT3,1,Sample_P29904_8007,P29904_8007,Human (Homo sapiens GRCh38),TAGAGAGATG,TTGTGTGCGT,A__Berggren_23_01,N,85-133,Agneta_Berg,A__Berggren_23_01
+22YMHFLT3,1,Sample_P29904_8009,P29904_8009,Human (Homo sapiens GRCh38),CACAGCAAGA,CGCGTACCAA,A__Berggren_23_01,N,85-133,Agneta_Berg,A__Berggren_23_01
+22YMHFLT3,1,Sample_P29904_8009,P29904_8009,Human (Homo sapiens GRCh38),CGATACTAGT,CGCGTACCAA,A__Berggren_23_01,N,85-133,Agneta_Berg,A__Berggren_23_01
+22YMHFLT3,1,Sample_P29904_8009,P29904_8009,Human (Homo sapiens GRCh38),CGGTAAGTGG,CGCGTACCAA,A__Berggren_23_01,N,85-133,Agneta_Berg,A__Berggren_23_01
+22YMHFLT3,1,Sample_P29904_8009,P29904_8009,Human (Homo sapiens GRCh38),TTCTTAAGCC,CGCGTACCAA,A__Berggren_23_01,N,85-133,Agneta_Berg,A__Berggren_23_01
+22YMHFLT3,1,Sample_P29904_8009,P29904_8009,Human (Homo sapiens GRCh38),CGCAGACAAC,CGCGTACCAA,A__Berggren_23_01,N,85-133,Agneta_Berg,A__Berggren_23_01
+22YMHFLT3,1,Sample_P29904_8009,P29904_8009,Human (Homo sapiens GRCh38),TTGGCCACGA,TTAGTGGTGC,A__Berggren_23_01,N,85-133,Agneta_Berg,A__Berggren_23_01
+22YMHFLT3,1,Sample_P29904_8009,P29904_8009,Human (Homo sapiens GRCh38),TTCCACCACC,TTAGTGGTGC,A__Berggren_23_01,N,85-133,Agneta_Berg,A__Berggren_23_01
+22YMHFLT3,1,Sample_P29904_8009,P29904_8009,Human (Homo sapiens GRCh38),TCAGGTGGTC,TTAGTGGTGC,A__Berggren_23_01,N,85-133,Agneta_Berg,A__Berggren_23_01
+22YMHFLT3,1,Sample_P29904_8009,P29904_8009,Human (Homo sapiens GRCh38),TGTGGAGGAC,TTAGTGGTGC,A__Berggren_23_01,N,85-133,Agneta_Berg,A__Berggren_23_01
+22YMHFLT3,1,Sample_P29904_8009,P29904_8009,Human (Homo sapiens GRCh38),TTATCCGGTC,TTAGTGGTGC,A__Berggren_23_01,N,85-133,Agneta_Berg,A__Berggren_23_01
 ```
 
 bcl2fastq command:
@@ -994,8 +994,8 @@ MaskShortReads,0
 
 [BCLConvert_Data]
 Lane,Sample_ID,Sample_Name,index,index2,Sample_Project,**OverrideCycles**
-1,Sample_P29904_8007,P29904_8007,TAGAGAGATG,TTGTGTGCGT,A__Bergren_23_01,R1:Y85N66;I1:I10;I2:I10;R2:Y133N18
-1,Sample_P29904_8007,P29904_8007,TGACACCGTA,TTGAGAGACA,A__Bergren_23_01,R1:Y85N66;I1:I10;I2:I10;R2:Y133N18
+1,Sample_P29904_8007,P29904_8007,TAGAGAGATG,TTGTGTGCGT,A__Berggren_23_01,R1:Y85N66;I1:I10;I2:I10;R2:Y133N18
+1,Sample_P29904_8007,P29904_8007,TGACACCGTA,TTGAGAGACA,A__Berggren_23_01,R1:Y85N66;I1:I10;I2:I10;R2:Y133N18
 ...
 ```
 
@@ -1156,17 +1156,17 @@ Lane,Sample_ID,Sample_Name,index,index2,Sample_Project,**OverrideCycles**
 ## Example data
 
 **Run:** No example found
-**Run setup (Recipe):** 151-10-10-151
+**Run Setup (Recipe):** 151-10-10-151
 
 **Current bcl2fastq settings:**
 
-## LIMS sample sheet
+### LIMS sample sheet
 (made up)
 
-```bash
+```csv
 FCID,Lane,Sample_ID,Sample_Name,Sample_Ref,index,index2,Description,Control,Recipe,Operator,Sample_Project
-233JTGLT4,1,P36705_101,P36705_101,Human (Homo sapiens GRCh38),GCGCGGTTAA,,A__Bergren_25_01,N,151-151,Agneta_Berg,A__Bergren_25_01
-233JTGLT4,1,P36705_102,P36705_102,Human (Homo sapiens GRCh38),TTCCTTGAGG,,A__Bergren_25_01,N,151-151,Agneta_Berg,A__Bergren_25_01
+233JTGLT4,1,P36705_101,P36705_101,Human (Homo sapiens GRCh38),GCGCGGTTAA,,A__Berggren_25_01,N,151-151,Agneta_Berg,A__Berggren_25_01
+233JTGLT4,1,P36705_102,P36705_102,Human (Homo sapiens GRCh38),TTCCTTGAGG,,A__Berggren_25_01,N,151-151,Agneta_Berg,A__Berggren_25_01
 233JTGLT4,1,P37004_1001,P37004_1001,Human (Homo sapiens GRCh38),TCAGCGAA,,A__Bergman_25_01,N,151-151,Agneta_Berg,A__Bergman_25_01
 233JTGLT4,1,P37004_1002,P37004_1002,Human (Homo sapiens GRCh38),CCATTGTT,,A__Bergman_25_01,N,151-151,Agneta_Berg,A__Bergman_25_01
 
@@ -1178,8 +1178,8 @@ SampleSheet_0.csv (made up)
 [Header]
 [Data]
 FCID,Lane,Sample_ID,Sample_Name,Sample_Ref,index,index2,Description,Control,Recipe,Operator,Sample_Project
-233JTGLT4,1,P36705_101,P36705_101,Human (Homo sapiens GRCh38),GCGCGGTTAA,,A__Bergren_25_01,N,151-151,Agneta_Berg,A__Bergren_25_01
-233JTGLT4,1,P36705_102,P36705_102,Human (Homo sapiens GRCh38),TTCCTTGAGG,,A__Bergren_25_01,N,151-151,Agneta_Berg,A__Bergren_25_01
+233JTGLT4,1,P36705_101,P36705_101,Human (Homo sapiens GRCh38),GCGCGGTTAA,,A__Berggren_25_01,N,151-151,Agneta_Berg,A__Berggren_25_01
+233JTGLT4,1,P36705_102,P36705_102,Human (Homo sapiens GRCh38),TTCCTTGAGG,,A__Berggren_25_01,N,151-151,Agneta_Berg,A__Berggren_25_01
 ```
 
 SampleSheet_1.csv (made up)
@@ -1254,10 +1254,193 @@ MaskShortReads,0
 **BarcodeMismatchesIndex1,0**
 
 [BCLConvert_Data]
-Lane,Sample_ID,Sample_Name,index,index2,Sample_Project,**OverrideCycles**
-1,Sample_P36705_101,P36705_101,GCGCGGTTAA,,A__Bergren_25_01,R1:Y151;I1:I10;I2:N10;R2:Y151
-1,Sample_P36705_102,P36705_102,TTCCTTGAGG,,A__Bergren_25_01,R1:Y151;I1:I10;I2:N10;R2:Y151
-1,Sample_P37004_1001,P37004_1001,TCAGCGAA,,A__Bergman_25_01,R1:Y151;I1:I8N2;I2:N10;R2:Y151
-1,Sample_P37004_1002,P37004_1002,CCATTGTT,,A__Bergman_25_01,R1:Y151;I1:I8N2;I2:N10;R2:Y151
+Lane,Sample_ID,Sample_Name,index,index2,Sample_Project,OverrideCycles,BarcodeMismatchesIndex1
+1,Sample_P36705_101,P36705_101,GCGCGGTTAA,,A__Berggren_25_01,R1:Y151;I1:I10;I2:N10;R2:Y151,1
+1,Sample_P36705_102,P36705_102,TTCCTTGAGG,,A__Berggren_25_01,R1:Y151;I1:I10;I2:N10;R2:Y151,1
+1,Sample_P37004_1001,P37004_1001,TCAGCGAA,,A__Bergman_25_01,R1:Y151;I1:I8N2;I2:N10;R2:Y151,0
+1,Sample_P37004_1002,P37004_1002,CCATTGTT,,A__Bergman_25_01,R1:Y151;I1:I8N2;I2:N10;R2:Y151,0
 
+```
+
+# Test case 17 - Single index: sequencing setup was dual index [SKIP]
+
+## Description
+
+- Single index but sequencing setup was dual index
+- One demux
+- Same as “[Mixed dual and single on one lane](https://www.notion.so/Mixed-dual-and-single-on-one-lane-2a7274e6d5168009800ac373d70f4a39?pvs=21)”
+
+# Test case 18 - Single index: index or read is shorter than the sequencing setup
+
+## Description
+
+- Single index is shorter than the sequencing setup
+- One or more projects per lane
+- One demux
+
+## Example data
+
+**Run:** [20251118_LH00202_0299_B233JTGLT4](https://genomics-status.scilifelab.se/flowcells/20251118_LH00202_0299_B233JTGLT4)
+**Run Setup (Recipe):** 151-10-10-151
+
+**Project(s) and setup:** [A.Berggren_25_02](https://genomics-status.scilifelab.se/project/P37869) (151-X-X-151)
+
+**Current bcl2fastq settings:**
+
+### LIMS sample sheet
+
+```csv
+FCID,Lane,Sample_ID,Sample_Name,Sample_Ref,index,index2,Description,Control,Recipe,Operator,Sample_Project
+...
+233JTGLT4,7,P37869_1001,P37869_1001,Other (- -),TTACCGAC,,A__Berggren_25_02,N,151-151,Agneta_Berg,A__Berggren_25_02
+233JTGLT4,7,P37869_1002,P37869_1002,Other (- -),AGTGACCT,,A__Berggren_25_02,N,151-151,Agneta_Berg,A__Berggren_25_02
+233JTGLT4,7,P37869_1003,P37869_1003,Other (- -),TCGGATTC,,A__Berggren_25_02,N,151-151,Agneta_Berg,A__Berggren_25_02
+233JTGLT4,7,P37869_1004,P37869_1004,Other (- -),CAAGGTAC,,A__Berggren_25_02,N,151-151,Agneta_Berg,A__Berggren_25_02
+233JTGLT4,7,P37869_1005,P37869_1005,Other (- -),TCCTCATG,,A__Berggren_25_02,N,151-151,Agneta_Berg,A__Berggren_25_02
+233JTGLT4,7,P37869_1006,P37869_1006,Other (- -),GTCAGTCA,,A__Berggren_25_02,N,151-151,Agneta_Berg,A__Berggren_25_02
+233JTGLT4,7,P37869_1007,P37869_1007,Other (- -),CGAATACG,,A__Berggren_25_02,N,151-151,Agneta_Berg,A__Berggren_25_02
+233JTGLT4,7,P37869_1008,P37869_1008,Other (- -),TCTAGGAG,,A__Berggren_25_02,N,151-151,Agneta_Berg,A__Berggren_25_02
+233JTGLT4,7,P37869_1009,P37869_1009,Other (- -),CGCAACTA,,A__Berggren_25_02,N,151-151,Agneta_Berg,A__Berggren_25_02
+233JTGLT4,7,P37869_1010,P37869_1010,Other (- -),CGTATCTC,,A__Berggren_25_02,N,151-151,Agneta_Berg,A__Berggren_25_02
+233JTGLT4,7,P37869_1011,P37869_1011,Other (- -),GTACACCT,,A__Berggren_25_02,N,151-151,Agneta_Berg,A__Berggren_25_02
+233JTGLT4,7,P37869_1012,P37869_1012,Other (- -),CGGCATTA,,A__Berggren_25_02,N,151-151,Agneta_Berg,A__Berggren_25_02
+233JTGLT4,7,P37869_1013,P37869_1013,Other (- -),TCGTCTGA,,A__Berggren_25_02,N,151-151,Agneta_Berg,A__Berggren_25_02
+233JTGLT4,7,P37869_1014,P37869_1014,Other (- -),AGCCTATC,,A__Berggren_25_02,N,151-151,Agneta_Berg,A__Berggren_25_02
+233JTGLT4,7,P37869_1015,P37869_1015,Other (- -),CTGTACCA,,A__Berggren_25_02,N,151-151,Agneta_Berg,A__Berggren_25_02
+233JTGLT4,7,P37869_1016,P37869_1016,Other (- -),AGACCTTG,,A__Berggren_25_02,N,151-151,Agneta_Berg,A__Berggren_25_02
+233JTGLT4,7,P37869_1017,P37869_1017,Other (- -),AGGATAGC,,A__Berggren_25_02,N,151-151,Agneta_Berg,A__Berggren_25_02
+233JTGLT4,7,P37869_1018,P37869_1018,Other (- -),CCTTCCAT,,A__Berggren_25_02,N,151-151,Agneta_Berg,A__Berggren_25_02
+233JTGLT4,7,P37869_1019,P37869_1019,Other (- -),GTCCTTGA,,A__Berggren_25_02,N,151-151,Agneta_Berg,A__Berggren_25_02
+233JTGLT4,7,P37869_1020,P37869_1020,Other (- -),TGCGTAAC,,A__Berggren_25_02,N,151-151,Agneta_Berg,A__Berggren_25_02
+233JTGLT4,7,P37869_1021,P37869_1021,Other (- -),CACAGACT,,A__Berggren_25_02,N,151-151,Agneta_Berg,A__Berggren_25_02
+233JTGLT4,7,P37869_1022,P37869_1022,Other (- -),TTACGTGC,,A__Berggren_25_02,N,151-151,Agneta_Berg,A__Berggren_25_02
+233JTGLT4,7,P37869_1023,P37869_1023,Other (- -),CCAAGGTT,,A__Berggren_25_02,N,151-151,Agneta_Berg,A__Berggren_25_02
+233JTGLT4,7,P37869_1024,P37869_1024,Other (- -),CACGCAAT,,A__Berggren_25_02,N,151-151,Agneta_Berg,A__Berggren_25_02
+233JTGLT4,7,P37869_1025,P37869_1025,Other (- -),TTCCAGGT,,A__Berggren_25_02,N,151-151,Agneta_Berg,A__Berggren_25_02
+233JTGLT4,7,P37869_1026,P37869_1026,Other (- -),TCATCTCC,,A__Berggren_25_02,N,151-151,Agneta_Berg,A__Berggren_25_02
+233JTGLT4,7,P37869_1027,P37869_1027,Other (- -),GAGAGTAC,,A__Berggren_25_02,N,151-151,Agneta_Berg,A__Berggren_25_02
+233JTGLT4,7,P37869_1028,P37869_1028,Other (- -),GTCGTTAC,,A__Berggren_25_02,N,151-151,Agneta_Berg,A__Berggren_25_02
+233JTGLT4,7,P37869_1029,P37869_1029,Other (- -),GGAGGAAT,,A__Berggren_25_02,N,151-151,Agneta_Berg,A__Berggren_25_02
+233JTGLT4,7,P37869_1030,P37869_1030,Other (- -),AGGAACAC,,A__Berggren_25_02,N,151-151,Agneta_Berg,A__Berggren_25_02
+...
+```
+
+SampleSheet_2.csv
+
+```bash
+[Header]
+[Data]
+FCID,Lane,Sample_ID,Sample_Name,Sample_Ref,index,index2,Description,Control,Recipe,Operator,Sample_Project
+233JTGLT4,7,Sample_P37869_1001,P37869_1001,Other (- -),TTACCGAC,,A__Berggren_25_02,N,151-151,Agneta_Berg,A__Berggren_25_02
+233JTGLT4,7,Sample_P37869_1002,P37869_1002,Other (- -),AGTGACCT,,A__Berggren_25_02,N,151-151,Agneta_Berg,A__Berggren_25_02
+233JTGLT4,7,Sample_P37869_1003,P37869_1003,Other (- -),TCGGATTC,,A__Berggren_25_02,N,151-151,Agneta_Berg,A__Berggren_25_02
+233JTGLT4,7,Sample_P37869_1004,P37869_1004,Other (- -),CAAGGTAC,,A__Berggren_25_02,N,151-151,Agneta_Berg,A__Berggren_25_02
+233JTGLT4,7,Sample_P37869_1005,P37869_1005,Other (- -),TCCTCATG,,A__Berggren_25_02,N,151-151,Agneta_Berg,A__Berggren_25_02
+233JTGLT4,7,Sample_P37869_1006,P37869_1006,Other (- -),GTCAGTCA,,A__Berggren_25_02,N,151-151,Agneta_Berg,A__Berggren_25_02
+233JTGLT4,7,Sample_P37869_1007,P37869_1007,Other (- -),CGAATACG,,A__Berggren_25_02,N,151-151,Agneta_Berg,A__Berggren_25_02
+233JTGLT4,7,Sample_P37869_1008,P37869_1008,Other (- -),TCTAGGAG,,A__Berggren_25_02,N,151-151,Agneta_Berg,A__Berggren_25_02
+233JTGLT4,7,Sample_P37869_1009,P37869_1009,Other (- -),CGCAACTA,,A__Berggren_25_02,N,151-151,Agneta_Berg,A__Berggren_25_02
+233JTGLT4,7,Sample_P37869_1010,P37869_1010,Other (- -),CGTATCTC,,A__Berggren_25_02,N,151-151,Agneta_Berg,A__Berggren_25_02
+233JTGLT4,7,Sample_P37869_1011,P37869_1011,Other (- -),GTACACCT,,A__Berggren_25_02,N,151-151,Agneta_Berg,A__Berggren_25_02
+233JTGLT4,7,Sample_P37869_1012,P37869_1012,Other (- -),CGGCATTA,,A__Berggren_25_02,N,151-151,Agneta_Berg,A__Berggren_25_02
+233JTGLT4,7,Sample_P37869_1013,P37869_1013,Other (- -),TCGTCTGA,,A__Berggren_25_02,N,151-151,Agneta_Berg,A__Berggren_25_02
+233JTGLT4,7,Sample_P37869_1014,P37869_1014,Other (- -),AGCCTATC,,A__Berggren_25_02,N,151-151,Agneta_Berg,A__Berggren_25_02
+233JTGLT4,7,Sample_P37869_1015,P37869_1015,Other (- -),CTGTACCA,,A__Berggren_25_02,N,151-151,Agneta_Berg,A__Berggren_25_02
+233JTGLT4,7,Sample_P37869_1016,P37869_1016,Other (- -),AGACCTTG,,A__Berggren_25_02,N,151-151,Agneta_Berg,A__Berggren_25_02
+233JTGLT4,7,Sample_P37869_1017,P37869_1017,Other (- -),AGGATAGC,,A__Berggren_25_02,N,151-151,Agneta_Berg,A__Berggren_25_02
+233JTGLT4,7,Sample_P37869_1018,P37869_1018,Other (- -),CCTTCCAT,,A__Berggren_25_02,N,151-151,Agneta_Berg,A__Berggren_25_02
+233JTGLT4,7,Sample_P37869_1019,P37869_1019,Other (- -),GTCCTTGA,,A__Berggren_25_02,N,151-151,Agneta_Berg,A__Berggren_25_02
+233JTGLT4,7,Sample_P37869_1020,P37869_1020,Other (- -),TGCGTAAC,,A__Berggren_25_02,N,151-151,Agneta_Berg,A__Berggren_25_02
+233JTGLT4,7,Sample_P37869_1021,P37869_1021,Other (- -),CACAGACT,,A__Berggren_25_02,N,151-151,Agneta_Berg,A__Berggren_25_02
+233JTGLT4,7,Sample_P37869_1022,P37869_1022,Other (- -),TTACGTGC,,A__Berggren_25_02,N,151-151,Agneta_Berg,A__Berggren_25_02
+233JTGLT4,7,Sample_P37869_1023,P37869_1023,Other (- -),CCAAGGTT,,A__Berggren_25_02,N,151-151,Agneta_Berg,A__Berggren_25_02
+233JTGLT4,7,Sample_P37869_1024,P37869_1024,Other (- -),CACGCAAT,,A__Berggren_25_02,N,151-151,Agneta_Berg,A__Berggren_25_02
+233JTGLT4,7,Sample_P37869_1025,P37869_1025,Other (- -),TTCCAGGT,,A__Berggren_25_02,N,151-151,Agneta_Berg,A__Berggren_25_02
+233JTGLT4,7,Sample_P37869_1026,P37869_1026,Other (- -),TCATCTCC,,A__Berggren_25_02,N,151-151,Agneta_Berg,A__Berggren_25_02
+233JTGLT4,7,Sample_P37869_1027,P37869_1027,Other (- -),GAGAGTAC,,A__Berggren_25_02,N,151-151,Agneta_Berg,A__Berggren_25_02
+233JTGLT4,7,Sample_P37869_1028,P37869_1028,Other (- -),GTCGTTAC,,A__Berggren_25_02,N,151-151,Agneta_Berg,A__Berggren_25_02
+233JTGLT4,7,Sample_P37869_1029,P37869_1029,Other (- -),GGAGGAAT,,A__Berggren_25_02,N,151-151,Agneta_Berg,A__Berggren_25_02
+233JTGLT4,7,Sample_P37869_1030,P37869_1030,Other (- -),AGGAACAC,,A__Berggren_25_02,N,151-151,Agneta_Berg,A__Berggren_25_02
+```
+
+bcl2fastq command:
+
+```bash
+bcl2fastq --use-bases-mask 1:Y151,I8N2,N10,Y151 \
+--use-bases-mask 7:Y151,I8N2,N10,Y151 \
+--output-dir /srv/ngi_data/sequencing/NovaSeqXPlus/20251118_LH00202_0299_B233JTGLT4/Demultiplexing_2 \
+--sample-sheet /srv/ngi_data/sequencing/NovaSeqXPlus/20251118_LH00202_0299_B233JTGLT4/SampleSheet_2.csv \
+--loading-threads 2 \
+--processing-threads 12 \
+--writing-threads 2 \
+--minimum-trimmed-read-length 0 \
+--mask-short-adapter-reads 0 \
+--ignore-missing-positions \
+--ignore-missing-controls \
+--ignore-missing-filter \
+--ignore-missing-bcls \
+--barcode-mismatches 0
+```
+
+## Suggestions
+
+### bclconvert command
+
+```bash
+bcl-convert \
+  --bcl-input-directory /path/to/RunFolder \
+  --output-directory Demux_lane7_sub0 \
+  --sample-sheet SampleSheet_lane_7_sub0.csv \
+  --bcl-sampleproject-subdirectories true \
+  --sample-name-column-enabled true \
+  --bcl-only-lane 7
+```
+
+### Sample sheet
+
+```bash
+[Header]
+FileFormatVersion,2
+RunName,Run_001
+InstrumentID,MYSEQ
+Date,2025-11-04
+
+[BCLConvert_Settings]
+SoftwareVersion,4.4.6
+MinimumTrimmedReadLength,0
+MaskShortReads,0
+**BarcodeMismatchesIndex1,0**
+
+[BCLConvert_Data]
+Lane,Sample_ID,Sample_Name,index,index2,Sample_Project,OverrideCycles
+7,Sample_P37869_1001,P37869_1001,TTACCGAC,,A__Berggren_25_02,R1:Y151;I1:I8N2;I2:N10;R2:Y151
+7,Sample_P37869_1002,P37869_1002,AGTGACCT,,A__Berggren_25_02,R1:Y151;I1:I8N2;I2:N10;R2:Y151
+7,Sample_P37869_1003,P37869_1003,TCGGATTC,,A__Berggren_25_02,R1:Y151;I1:I8N2;I2:N10;R2:Y151
+7,Sample_P37869_1004,P37869_1004,CAAGGTAC,,A__Berggren_25_02,R1:Y151;I1:I8N2;I2:N10;R2:Y151
+7,Sample_P37869_1005,P37869_1005,TCCTCATG,,A__Berggren_25_02,R1:Y151;I1:I8N2;I2:N10;R2:Y151
+7,Sample_P37869_1006,P37869_1006,GTCAGTCA,,A__Berggren_25_02,R1:Y151;I1:I8N2;I2:N10;R2:Y151
+7,Sample_P37869_1007,P37869_1007,CGAATACG,,A__Berggren_25_02,R1:Y151;I1:I8N2;I2:N10;R2:Y151
+7,Sample_P37869_1008,P37869_1008,TCTAGGAG,,A__Berggren_25_02,R1:Y151;I1:I8N2;I2:N10;R2:Y151
+7,Sample_P37869_1009,P37869_1009,CGCAACTA,,A__Berggren_25_02,R1:Y151;I1:I8N2;I2:N10;R2:Y151
+7,Sample_P37869_1010,P37869_1010,CGTATCTC,,A__Berggren_25_02,R1:Y151;I1:I8N2;I2:N10;R2:Y151
+7,Sample_P37869_1011,P37869_1011,GTACACCT,,A__Berggren_25_02,R1:Y151;I1:I8N2;I2:N10;R2:Y151
+7,Sample_P37869_1012,P37869_1012,CGGCATTA,,A__Berggren_25_02,R1:Y151;I1:I8N2;I2:N10;R2:Y151
+7,Sample_P37869_1013,P37869_1013,TCGTCTGA,,A__Berggren_25_02,R1:Y151;I1:I8N2;I2:N10;R2:Y151
+7,Sample_P37869_1014,P37869_1014,AGCCTATC,,A__Berggren_25_02,R1:Y151;I1:I8N2;I2:N10;R2:Y151
+7,Sample_P37869_1015,P37869_1015,CTGTACCA,,A__Berggren_25_02,R1:Y151;I1:I8N2;I2:N10;R2:Y151
+7,Sample_P37869_1016,P37869_1016,AGACCTTG,,A__Berggren_25_02,R1:Y151;I1:I8N2;I2:N10;R2:Y151
+7,Sample_P37869_1017,P37869_1017,AGGATAGC,,A__Berggren_25_02,R1:Y151;I1:I8N2;I2:N10;R2:Y151
+7,Sample_P37869_1018,P37869_1018,CCTTCCAT,,A__Berggren_25_02,R1:Y151;I1:I8N2;I2:N10;R2:Y151
+7,Sample_P37869_1019,P37869_1019,GTCCTTGA,,A__Berggren_25_02,R1:Y151;I1:I8N2;I2:N10;R2:Y151
+7,Sample_P37869_1020,P37869_1020,TGCGTAAC,,A__Berggren_25_02,R1:Y151;I1:I8N2;I2:N10;R2:Y151
+7,Sample_P37869_1021,P37869_1021,CACAGACT,,A__Berggren_25_02,R1:Y151;I1:I8N2;I2:N10;R2:Y151
+7,Sample_P37869_1022,P37869_1022,TTACGTGC,,A__Berggren_25_02,R1:Y151;I1:I8N2;I2:N10;R2:Y151
+7,Sample_P37869_1023,P37869_1023,CCAAGGTT,,A__Berggren_25_02,R1:Y151;I1:I8N2;I2:N10;R2:Y151
+7,Sample_P37869_1024,P37869_1024,CACGCAAT,,A__Berggren_25_02,R1:Y151;I1:I8N2;I2:N10;R2:Y151
+7,Sample_P37869_1025,P37869_1025,TTCCAGGT,,A__Berggren_25_02,R1:Y151;I1:I8N2;I2:N10;R2:Y151
+7,Sample_P37869_1026,P37869_1026,TCATCTCC,,A__Berggren_25_02,R1:Y151;I1:I8N2;I2:N10;R2:Y151
+7,Sample_P37869_1027,P37869_1027,GAGAGTAC,,A__Berggren_25_02,R1:Y151;I1:I8N2;I2:N10;R2:Y151
+7,Sample_P37869_1028,P37869_1028,GTCGTTAC,,A__Berggren_25_02,R1:Y151;I1:I8N2;I2:N10;R2:Y151
+7,Sample_P37869_1029,P37869_1029,GGAGGAAT,,A__Berggren_25_02,R1:Y151;I1:I8N2;I2:N10;R2:Y151
+7,Sample_P37869_1030,P37869_1030,AGGAACAC,,A__Berggren_25_02,R1:Y151;I1:I8N2;I2:N10;R2:Y151
 ```
