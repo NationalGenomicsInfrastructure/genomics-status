@@ -999,118 +999,10 @@ Lane,Sample_ID,Sample_Name,index,index2,Sample_Project,**OverrideCycles**
 ...
 ```
 
-# Test case 9 - Dual index: standard demux
-## Description
-
-- Standard dual index demux (sequencing setup = project setup), one or more projects per lane.
-- One demux
-
-## Example data
-
-**Run: [20251223_LH00188_0343_A23FNTJLT3](https://genomics-status.scilifelab.se/flowcells/20251223_LH00188_0343_A23FNTJLT3)**
-**Run Setup (Recipe):** 151-10-10-151
+# Test case 9 - UMIs: Samples with and without UMIs in the same lane [SKIP]
 
 
-**Project(s) and setup: [A.Bergren_25_03](https://genomics-status.scilifelab.se/project/P38454)** (151-10-10-151)
-
-**Current bcl2fastq settings:**
-
-LIMS sample sheet:
-
-```bash
-[Data]
-FCID,Lane,Sample_ID,Sample_Name,Sample_Ref,index,index2,Description,Control,Recipe,Operator,Sample_Project
-...
-23FNTJLT3,4,P38454_1001,P38454_1001,Other (- -),GAACTGAGCG,CGCTCCACGA,A__Bergren_25_03,N,151-151,Agneta_Berg,A__Bergren_25_03
-23FNTJLT3,4,P38454_1002,P38454_1002,Other (- -),AGGTCAGATA,TATCTTGTAG,A__Bergren_25_03,N,151-151,Agneta_Berg,A__Bergren_25_03
-23FNTJLT3,4,P38454_1003,P38454_1003,Other (- -),CGTCTCATAT,AGCTACTATA,A__Bergren_25_03,N,151-151,Agneta_Berg,A__Bergren_25_03
-23FNTJLT3,4,P38454_1004,P38454_1004,Other (- -),ATTCCATAAG,CCACCAGGCA,A__Bergren_25_03,N,151-151,Agneta_Berg,A__Bergren_25_03
-23FNTJLT3,4,P38454_1005,P38454_1005,Other (- -),GACGAGATTA,AGGATAATGT,A__Bergren_25_03,N,151-151,Agneta_Berg,A__Bergren_25_03
-23FNTJLT3,4,P38454_1006,P38454_1006,Other (- -),AACATCGCGC,ACAAGTGGAC,A__Bergren_25_03,N,151-151,Agneta_Berg,A__Bergren_25_03
-23FNTJLT3,4,P38454_1007,P38454_1007,Other (- -),CTAGTGCTCT,TACTGTTCCA,A__Bergren_25_03,N,151-151,Agneta_Berg,A__Bergren_25_03
-23FNTJLT3,4,P38454_1008,P38454_1008,Other (- -),GATCAAGGCA,ATTAACAAGG,A__Bergren_25_03,N,151-151,Agneta_Berg,A__Bergren_25_03
-...
-```
-
-SampleSheet_1.csv
-
-```bash
-[Header]
-[Data]
-FCID,Lane,Sample_ID,Sample_Name,Sample_Ref,index,index2,Description,Control,Recipe,Operator,Sample_Project
-...
-23FNTJLT3,4,Sample_P38454_1001,P38454_1001,Other (- -),GAACTGAGCG,CGCTCCACGA,A__Bergren_25_03,N,151-151,Agneta_Berg,A__Bergren_25_03
-23FNTJLT3,4,Sample_P38454_1002,P38454_1002,Other (- -),AGGTCAGATA,TATCTTGTAG,A__Bergren_25_03,N,151-151,Agneta_Berg,A__Bergren_25_03
-23FNTJLT3,4,Sample_P38454_1003,P38454_1003,Other (- -),CGTCTCATAT,AGCTACTATA,A__Bergren_25_03,N,151-151,Agneta_Berg,A__Bergren_25_03
-23FNTJLT3,4,Sample_P38454_1004,P38454_1004,Other (- -),ATTCCATAAG,CCACCAGGCA,A__Bergren_25_03,N,151-151,Agneta_Berg,A__Bergren_25_03
-23FNTJLT3,4,Sample_P38454_1005,P38454_1005,Other (- -),GACGAGATTA,AGGATAATGT,A__Bergren_25_03,N,151-151,Agneta_Berg,A__Bergren_25_03
-23FNTJLT3,4,Sample_P38454_1006,P38454_1006,Other (- -),AACATCGCGC,ACAAGTGGAC,A__Bergren_25_03,N,151-151,Agneta_Berg,A__Bergren_25_03
-23FNTJLT3,4,Sample_P38454_1007,P38454_1007,Other (- -),CTAGTGCTCT,TACTGTTCCA,A__Bergren_25_03,N,151-151,Agneta_Berg,A__Bergren_25_03
-23FNTJLT3,4,Sample_P38454_1008,P38454_1008,Other (- -),GATCAAGGCA,ATTAACAAGG,A__Bergren_25_03,N,151-151,Agneta_Berg,A__Bergren_25_03
-...
-```
-
-bcl2fastq command:
-
-```bash
-bcl2fastq \
---use-bases-mask 2:Y28N123,I8N2,I8N2,Y28N123 \
---use-bases-mask 3:Y28N123,I8N2,I8N2,Y28N123 \
---use-bases-mask 4:Y151,I10,I10,Y151 \
---use-bases-mask 7:Y151,I7N3,I7N3,Y151 \
---use-bases-mask 8:Y151,I10,I10,Y151 \
---output-dir /srv/ngi_data/sequencing/NovaSeqXPlus/20251223_LH00188_0343_A23FNTJLT3/Demultiplexing_2 \
---sample-sheet /srv/ngi_data/sequencing/NovaSeqXPlus/20251223_LH00188_0343_A23FNTJLT3/SampleSheet_2.csv \
---loading-threads 2 \
---processing-threads 12 \
---writing-threads 2 \
---minimum-trimmed-read-length 0 \
---mask-short-adapter-reads 0 \
---ignore-missing-positions \
---ignore-missing-controls \
---ignore-missing-filter \
---ignore-missing-bcls
-```
-
-## Suggestions
-
-### bclconvert command
-
-```bash
-bcl-convert \
-  --bcl-input-directory /path/to/RunFolder \
-  --output-directory Demux_lane1_sub0 \
-  --sample-sheet SampleSheet_lane_1_sub0.csv \
-  --bcl-sampleproject-subdirectories true \
-  --sample-name-column-enabled true \
-  --bcl-only-lane 1
-```
-
-### Sample sheet
-
-```bash
-[Header]
-FileFormatVersion,2
-RunName,Run_001
-InstrumentID,MYSEQ
-Date,2025-11-04
-
-[BCLConvert_Settings]
-SoftwareVersion,4.4.6
-MinimumTrimmedReadLength,0
-MaskShortReads,0
-
-[BCLConvert_Data]
-Lane,Sample_ID,Sample_Name,index,index2,Sample_Project,OverrideCycles
-4,Sample_P38454_1001,P38454_1001,GAACTGAGCG,CGCTCCACGA,A__Bergren_25_03,R1:151Y;I1:10I;I2:10I;R2:151Y
-4,Sample_P38454_1002,P38454_1002,AGGTCAGATA,TATCTTGTAG,A__Bergren_25_03,R1:151Y;I1:10I;I2:10I;R2:151Y
-4,Sample_P38454_1003,P38454_1003,CGTCTCATAT,AGCTACTATA,A__Bergren_25_03,R1:151Y;I1:10I;I2:10I;R2:151Y
-4,Sample_P38454_1004,P38454_1004,ATTCCATAAG,CCACCAGGCA,A__Bergren_25_03,R1:151Y;I1:10I;I2:10I;R2:151Y
-4,Sample_P38454_1005,P38454_1005,GACGAGATTA,AGGATAATGT,A__Bergren_25_03,R1:151Y;I1:10I;I2:10I;R2:151Y
-4,Sample_P38454_1006,P38454_1006,AACATCGCGC,ACAAGTGGAC,A__Bergren_25_03,R1:151Y;I1:10I;I2:10I;R2:151Y
-4,Sample_P38454_1007,P38454_1007,CTAGTGCTCT,TACTGTTCCA,A__Bergren_25_03,R1:151Y;I1:10I;I2:10I;R2:151Y
-4,Sample_P38454_1008,P38454_1008,GATCAAGGCA,ATTAACAAGG,A__Bergren_25_03,R1:151Y;I1:10I;I2:10I;R2:151Y
-```
+# Test case 10 - UMIs: output in header [SKIP]
 
 
 # Test case 11 - UMIs: output to file
@@ -1243,5 +1135,129 @@ Lane,Sample_ID,Sample_Name,index,index2,Sample_Project,**OverrideCycles**
 4,Sample_P36052_201,P36052_201,AGGCTGGT,,A__Berggren_25_03,R1:Y50N101;I1:I8N2;I2:U24;R2:Y49N102
 4,Sample_P36052_201,P36052_201,CACAACTA,,A__Berggren_25_03,R1:Y50N101;I1:I8N2;I2:U24;R2:Y49N102
 4,Sample_P36052_201,P36052_201,GTTGGTCC,,A__Berggren_25_03,R1:Y50N101;I1:I8N2;I2:U24;R2:Y49N102
+
+```
+
+# Test case 12 - UMIs: in read [SKIP]
+
+# Test case 13 - UMIs: in index [SKIP]
+
+# Test case 14 - Special and standard indexes on the same lane [SKIP]
+
+# Test case 15 - Single index: index 2 (R3) needs to be reported in fastq file [SKIP]
+
+# Test case 16 - Single index: mixed index length
+## Description
+
+- Mixed index length on one lane
+- One or multiple projects on the same lane
+- No example of this in the last 6 months but it should be similar to “[Mixed dual and single on one lane](https://www.notion.so/Mixed-dual-and-single-on-one-lane-2a7274e6d5168009800ac373d70f4a39?pvs=21)”
+
+## Example data
+
+**Run:** No example found
+**Run setup (Recipe):** 151-10-10-151
+
+**Current bcl2fastq settings:**
+
+## LIMS sample sheet
+(made up)
+
+```bash
+FCID,Lane,Sample_ID,Sample_Name,Sample_Ref,index,index2,Description,Control,Recipe,Operator,Sample_Project
+233JTGLT4,1,P36705_101,P36705_101,Human (Homo sapiens GRCh38),GCGCGGTTAA,,A__Bergren_25_01,N,151-151,Agneta_Berg,A__Bergren_25_01
+233JTGLT4,1,P36705_102,P36705_102,Human (Homo sapiens GRCh38),TTCCTTGAGG,,A__Bergren_25_01,N,151-151,Agneta_Berg,A__Bergren_25_01
+233JTGLT4,1,P37004_1001,P37004_1001,Human (Homo sapiens GRCh38),TCAGCGAA,,A__Bergman_25_01,N,151-151,Agneta_Berg,A__Bergman_25_01
+233JTGLT4,1,P37004_1002,P37004_1002,Human (Homo sapiens GRCh38),CCATTGTT,,A__Bergman_25_01,N,151-151,Agneta_Berg,A__Bergman_25_01
+
+```
+
+SampleSheet_0.csv (made up)
+
+```bash
+[Header]
+[Data]
+FCID,Lane,Sample_ID,Sample_Name,Sample_Ref,index,index2,Description,Control,Recipe,Operator,Sample_Project
+233JTGLT4,1,P36705_101,P36705_101,Human (Homo sapiens GRCh38),GCGCGGTTAA,,A__Bergren_25_01,N,151-151,Agneta_Berg,A__Bergren_25_01
+233JTGLT4,1,P36705_102,P36705_102,Human (Homo sapiens GRCh38),TTCCTTGAGG,,A__Bergren_25_01,N,151-151,Agneta_Berg,A__Bergren_25_01
+```
+
+SampleSheet_1.csv (made up)
+
+```bash
+[Header]
+[Data]
+FCID,Lane,Sample_ID,Sample_Name,Sample_Ref,index,index2,Description,Control,Recipe,Operator,Sample_Project
+233JTGLT4,1,P37004_1001,P37004_1001,Human (Homo sapiens GRCh38),TCAGCGAA,,A__Bergman_25_01,N,151-151,Agneta_Berg,A__Bergman_25_01
+233JTGLT4,1,P37004_1002,P37004_1002,Human (Homo sapiens GRCh38),CCATTGTT,,A__Bergman_25_01,N,151-151,Agneta_Berg,A__Bergman_25_01
+
+```
+
+bcl2fastq commands (made up):
+
+```bash
+bcl2fastq --output-dir /srv/ngi_data/sequencing/NovaSeqXPlus/20251118_LH00202_0299_B233JTGLT4/Demultiplexing_0 \
+--sample-sheet /srv/ngi_data/sequencing/NovaSeqXPlus/20251118_LH00202_0299_B233JTGLT4/SampleSheet_0.csv \
+--loading-threads 2 \
+--processing-threads 12 \
+--writing-threads 2 \
+--minimum-trimmed-read-length 0 \
+--mask-short-adapter-reads 0 \
+--ignore-missing-positions \
+--ignore-missing-controls \
+--ignore-missing-filter \
+--ignore-missing-bcls \
+**--barcode-mismatches 0**
+
+bcl2fastq **--use-bases-mask 1:Y151,I8N2,N10,Y151** \
+--output-dir /srv/ngi_data/sequencing/NovaSeqXPlus/20251118_LH00202_0299_B233JTGLT4/Demultiplexing_1 \
+--sample-sheet /srv/ngi_data/sequencing/NovaSeqXPlus/20251118_LH00202_0299_B233JTGLT4/SampleSheet_1.csv \
+--loading-threads 2 \
+--processing-threads 12 \
+--writing-threads 2 \
+--minimum-trimmed-read-length 0 \
+--mask-short-adapter-reads 0 \
+--ignore-missing-positions \
+--ignore-missing-controls \
+--ignore-missing-filter \
+--ignore-missing-bcls \
+**--barcode-mismatches 0**
+```
+
+## Suggestions
+
+### bclconvert command
+
+```bash
+bcl-convert \
+  --bcl-input-directory /path/to/RunFolder \
+  --output-directory Demux_lane1_sub0 \
+  --sample-sheet SampleSheet_lane_1_sub0.csv \
+  --bcl-sampleproject-subdirectories true \
+  --sample-name-column-enabled true \
+  --bcl-only-lane 1
+```
+
+### Sample sheet
+
+```bash
+[Header]
+FileFormatVersion,2
+RunName,Run_001
+InstrumentID,MYSEQ
+Date,2025-11-04
+
+[BCLConvert_Settings]
+SoftwareVersion,4.4.6
+MinimumTrimmedReadLength,0
+MaskShortReads,0
+**BarcodeMismatchesIndex1,0**
+
+[BCLConvert_Data]
+Lane,Sample_ID,Sample_Name,index,index2,Sample_Project,**OverrideCycles**
+1,Sample_P36705_101,P36705_101,GCGCGGTTAA,,A__Bergren_25_01,R1:Y151;I1:I10;I2:N10;R2:Y151
+1,Sample_P36705_102,P36705_102,TTCCTTGAGG,,A__Bergren_25_01,R1:Y151;I1:I10;I2:N10;R2:Y151
+1,Sample_P37004_1001,P37004_1001,TCAGCGAA,,A__Bergman_25_01,R1:Y151;I1:I8N2;I2:N10;R2:Y151
+1,Sample_P37004_1002,P37004_1002,CCATTGTT,,A__Bergman_25_01,R1:Y151;I1:I8N2;I2:N10;R2:Y151
 
 ```
