@@ -83,7 +83,8 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                     self._project_library_methods[project_name] = library_method
                 except ApiException as e:
                     # If we can't fetch the project, log and continue
-                    logging.warning(
+                    # This is expected for projects without library methods or temporary DB issues
+                    logging.info(
                         "Could not fetch library method for project %s: %s",
                         project_name,
                         e,
@@ -236,7 +237,7 @@ class DemuxSampleInfoDataHandler(SafeHandler):
             config = self.application.sample_classification_config
             patterns = {}
             # Load regex-based patterns
-            for key, pattern_config in config["patterns"].items():
+            for key, pattern_config in config.get("patterns", {}).items():
                 patterns[key] = {"config": pattern_config}
                 if "regex" in pattern_config:
                     patterns[key]["pattern"] = re.compile(pattern_config["regex"])
@@ -303,8 +304,8 @@ class DemuxSampleInfoDataHandler(SafeHandler):
             or recipe_i2 > run_i2
             or recipe_r2 > run_r2
         ):
-            # Recipe requires more cycles than available in run - this is an error
-            logging.warning(
+            # Recipe requires more cycles than available in run - this is a configuration error
+            logging.error(
                 f"Recipe requirements exceed run setup: recipe={recipe}, "
                 f"run_setup={run_setup}"
             )
@@ -518,25 +519,26 @@ class DemuxSampleInfoDataHandler(SafeHandler):
         patterns_to_check = [
             (
                 "tenx_single",
-                lambda: sample_patterns["tenx_single"]["pattern"].match(index1),
+                lambda: "tenx_single" in sample_patterns and "pattern" in sample_patterns["tenx_single"] and sample_patterns["tenx_single"]["pattern"].match(index1),
             ),
             (
                 "tenx_dual",
-                lambda: sample_patterns["tenx_dual"]["pattern"].match(index1),
+                lambda: "tenx_dual" in sample_patterns and "pattern" in sample_patterns["tenx_dual"] and sample_patterns["tenx_dual"]["pattern"].match(index1),
             ),
             (
                 "idt_umi",
                 lambda: (
-                    sample_patterns["idt_umi"]["pattern"].match(index1)
-                    or sample_patterns["idt_umi"]["pattern"].match(index2)
+                    "idt_umi" in sample_patterns and "pattern" in sample_patterns["idt_umi"] and
+                    (sample_patterns["idt_umi"]["pattern"].match(index1)
+                    or sample_patterns["idt_umi"]["pattern"].match(index2))
                 ),
             ),
-            ("smartseq", lambda: sample_patterns["smartseq"]["pattern"].match(index1)),
+            ("smartseq", lambda: "smartseq" in sample_patterns and "pattern" in sample_patterns["smartseq"] and sample_patterns["smartseq"]["pattern"].match(index1)),
         ]
 
         for pattern_name, match_func in patterns_to_check:
             if not pattern_matched and match_func():
-                pattern_config = sample_patterns[pattern_name]["config"]
+                pattern_config = sample_patterns.get(pattern_name, {}).get("config", {})
                 result["sample_type"] = pattern_config.get("sample_type")
 
                 # Special handling for idt_umi - calculate UMI lengths from N positions
@@ -586,7 +588,7 @@ class DemuxSampleInfoDataHandler(SafeHandler):
         if not pattern_matched:
             # Check noindex — covers both explicit "NOINDEX" and an absent index sequence
             if not index1 or index1.upper() == "NOINDEX":
-                noindex_config = sample_patterns["noindex"]["config"]
+                noindex_config = sample_patterns.get("noindex", {}).get("config", {})
                 result["sample_type"] = noindex_config.get("sample_type")
                 result["index_length"] = [0, 0]  # No index for NOINDEX samples
                 if noindex_config.get("umi_config") is not None:
@@ -601,7 +603,7 @@ class DemuxSampleInfoDataHandler(SafeHandler):
 
             else:
                 # Use standard as default
-                standard_config = sample_patterns["standard"]["config"]
+                standard_config = sample_patterns.get("standard", {}).get("config", {})
                 result["sample_type"] = standard_config.get("sample_type", "STANDARD")
                 if standard_config.get("raw_samplesheet_settings"):
                     result["raw_samplesheet_settings"].update(
