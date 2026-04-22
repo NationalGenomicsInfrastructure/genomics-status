@@ -1,0 +1,56 @@
+[
+  {
+    "lane": "5",
+    "projects": ["A__Bergren_25_01"],
+    "settings_index": 0,
+    "sample_count": 4,
+    "filename": "Lane5_A__Bergren_25_01_0.csv",
+    "Header": {
+      "FileFormatVersion": "2",
+      "RunName": "233JTGLT4"
+    },
+    "raw_samplesheet_settings": {
+      "CreateFastqForIndexReads": false,
+      "MinimumTrimmedReadLength": 0,
+      "MaskShortReads": 0
+    },
+    "BCLConvert_Data": [
+      {
+        "Lane": "5",
+        "Sample_ID": "Sample_P36705_101",
+        "Sample_Name": "P36705_101",
+        "index": "GCGCGGTTAA",
+        "index2": "",
+        "Sample_Project": "A__Bergren_25_01",
+        "OverrideCycles": "R1:Y151;I1:I10;I2:N10;R2:Y151"
+      },
+      {
+        "Lane": "5",
+        "Sample_ID": "Sample_P36705_102",
+        "Sample_Name": "P36705_102",
+        "index": "TTCCTTGAGG",
+        "index2": "",
+        "Sample_Project": "A__Bergren_25_01",
+        "OverrideCycles": "R1:Y151;I1:I10;I2:N10;R2:Y151"
+      },
+      {
+        "Lane": "5",
+        "Sample_ID": "Sample_P36705_103",
+        "Sample_Name": "P36705_103",
+        "index": "GAGTCGCTTC",
+        "index2": "",
+        "Sample_Project": "A__Bergren_25_01",
+        "OverrideCycles": "R1:Y151;I1:I10;I2:N10;R2:Y151"
+      },
+      {
+        "Lane": "5",
+        "Sample_ID": "Sample_P36705_104",
+        "Sample_Name": "P36705_104",
+        "index": "GCATAAGATC",
+        "index2": "",
+        "Sample_Project": "A__Bergren_25_01",
+        "OverrideCycles": "R1:Y151;I1:I10;I2:N10;R2:Y151"
+      }
+    ]
+  }
+]
