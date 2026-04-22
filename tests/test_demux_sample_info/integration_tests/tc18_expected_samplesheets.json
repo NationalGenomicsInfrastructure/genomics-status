@@ -1,7 +1,9 @@
 [
   {
     "lane": "7",
-    "projects": ["A__Berggren_25_02"],
+    "projects": [
+      "A__Berggren_25_02"
+    ],
     "settings_index": 0,
     "sample_count": 30,
     "filename": "Lane7_A__Berggren_25_02_0.csv",
@@ -10,7 +12,6 @@
       "RunName": "233JTGLT4"
     },
     "raw_samplesheet_settings": {
-      "BarcodeMismatchesIndex1": 0,
       "CreateFastqForIndexReads": false,
       "MinimumTrimmedReadLength": 0,
       "MaskShortReads": 0
@@ -23,7 +24,8 @@
         "index": "TTACCGAC",
         "index2": "",
         "Sample_Project": "A__Berggren_25_02",
-        "OverrideCycles": "R1:Y151;I1:I8N2;I2:N10;R2:Y151"
+        "OverrideCycles": "R1:Y151;I1:I8N2;I2:N10;R2:Y151",
+        "BarcodeMismatchesIndex1": 0
       },
       {
         "Lane": "7",
@@ -32,7 +34,8 @@
         "index": "AGTGACCT",
         "index2": "",
         "Sample_Project": "A__Berggren_25_02",
-        "OverrideCycles": "R1:Y151;I1:I8N2;I2:N10;R2:Y151"
+        "OverrideCycles": "R1:Y151;I1:I8N2;I2:N10;R2:Y151",
+        "BarcodeMismatchesIndex1": 0
       },
       {
         "Lane": "7",
@@ -41,7 +44,8 @@
         "index": "TCGGATTC",
         "index2": "",
         "Sample_Project": "A__Berggren_25_02",
-        "OverrideCycles": "R1:Y151;I1:I8N2;I2:N10;R2:Y151"
+        "OverrideCycles": "R1:Y151;I1:I8N2;I2:N10;R2:Y151",
+        "BarcodeMismatchesIndex1": 0
       },
       {
         "Lane": "7",
@@ -50,7 +54,8 @@
         "index": "CAAGGTAC",
         "index2": "",
         "Sample_Project": "A__Berggren_25_02",
-        "OverrideCycles": "R1:Y151;I1:I8N2;I2:N10;R2:Y151"
+        "OverrideCycles": "R1:Y151;I1:I8N2;I2:N10;R2:Y151",
+        "BarcodeMismatchesIndex1": 0
       },
       {
         "Lane": "7",
@@ -59,7 +64,8 @@
         "index": "TCCTCATG",
         "index2": "",
         "Sample_Project": "A__Berggren_25_02",
-        "OverrideCycles": "R1:Y151;I1:I8N2;I2:N10;R2:Y151"
+        "OverrideCycles": "R1:Y151;I1:I8N2;I2:N10;R2:Y151",
+        "BarcodeMismatchesIndex1": 0
       },
       {
         "Lane": "7",
@@ -68,7 +74,8 @@
         "index": "GTCAGTCA",
         "index2": "",
         "Sample_Project": "A__Berggren_25_02",
-        "OverrideCycles": "R1:Y151;I1:I8N2;I2:N10;R2:Y151"
+        "OverrideCycles": "R1:Y151;I1:I8N2;I2:N10;R2:Y151",
+        "BarcodeMismatchesIndex1": 0
       },
       {
         "Lane": "7",
@@ -77,7 +84,8 @@
         "index": "CGAATACG",
         "index2": "",
         "Sample_Project": "A__Berggren_25_02",
-        "OverrideCycles": "R1:Y151;I1:I8N2;I2:N10;R2:Y151"
+        "OverrideCycles": "R1:Y151;I1:I8N2;I2:N10;R2:Y151",
+        "BarcodeMismatchesIndex1": 0
       },
       {
         "Lane": "7",
@@ -86,7 +94,8 @@
         "index": "TCTAGGAG",
         "index2": "",
         "Sample_Project": "A__Berggren_25_02",
-        "OverrideCycles": "R1:Y151;I1:I8N2;I2:N10;R2:Y151"
+        "OverrideCycles": "R1:Y151;I1:I8N2;I2:N10;R2:Y151",
+        "BarcodeMismatchesIndex1": 0
       },
       {
         "Lane": "7",
@@ -95,7 +104,8 @@
         "index": "CGCAACTA",
         "index2": "",
         "Sample_Project": "A__Berggren_25_02",
-        "OverrideCycles": "R1:Y151;I1:I8N2;I2:N10;R2:Y151"
+        "OverrideCycles": "R1:Y151;I1:I8N2;I2:N10;R2:Y151",
+        "BarcodeMismatchesIndex1": 0
       },
       {
         "Lane": "7",
@@ -104,7 +114,8 @@
         "index": "CGTATCTC",
         "index2": "",
         "Sample_Project": "A__Berggren_25_02",
-        "OverrideCycles": "R1:Y151;I1:I8N2;I2:N10;R2:Y151"
+        "OverrideCycles": "R1:Y151;I1:I8N2;I2:N10;R2:Y151",
+        "BarcodeMismatchesIndex1": 0
       },
       {
         "Lane": "7",
@@ -113,7 +124,8 @@
         "index": "GTACACCT",
         "index2": "",
         "Sample_Project": "A__Berggren_25_02",
-        "OverrideCycles": "R1:Y151;I1:I8N2;I2:N10;R2:Y151"
+        "OverrideCycles": "R1:Y151;I1:I8N2;I2:N10;R2:Y151",
+        "BarcodeMismatchesIndex1": 0
       },
       {
         "Lane": "7",
@@ -122,7 +134,8 @@
         "index": "CGGCATTA",
         "index2": "",
         "Sample_Project": "A__Berggren_25_02",
-        "OverrideCycles": "R1:Y151;I1:I8N2;I2:N10;R2:Y151"
+        "OverrideCycles": "R1:Y151;I1:I8N2;I2:N10;R2:Y151",
+        "BarcodeMismatchesIndex1": 0
       },
       {
         "Lane": "7",
@@ -131,7 +144,8 @@
         "index": "TCGTCTGA",
         "index2": "",
         "Sample_Project": "A__Berggren_25_02",
-        "OverrideCycles": "R1:Y151;I1:I8N2;I2:N10;R2:Y151"
+        "OverrideCycles": "R1:Y151;I1:I8N2;I2:N10;R2:Y151",
+        "BarcodeMismatchesIndex1": 0
       },
       {
         "Lane": "7",
@@ -140,7 +154,8 @@
         "index": "AGCCTATC",
         "index2": "",
         "Sample_Project": "A__Berggren_25_02",
-        "OverrideCycles": "R1:Y151;I1:I8N2;I2:N10;R2:Y151"
+        "OverrideCycles": "R1:Y151;I1:I8N2;I2:N10;R2:Y151",
+        "BarcodeMismatchesIndex1": 0
       },
       {
         "Lane": "7",
@@ -149,7 +164,8 @@
         "index": "CTGTACCA",
         "index2": "",
         "Sample_Project": "A__Berggren_25_02",
-        "OverrideCycles": "R1:Y151;I1:I8N2;I2:N10;R2:Y151"
+        "OverrideCycles": "R1:Y151;I1:I8N2;I2:N10;R2:Y151",
+        "BarcodeMismatchesIndex1": 0
       },
       {
         "Lane": "7",
@@ -158,7 +174,8 @@
         "index": "AGACCTTG",
         "index2": "",
         "Sample_Project": "A__Berggren_25_02",
-        "OverrideCycles": "R1:Y151;I1:I8N2;I2:N10;R2:Y151"
+        "OverrideCycles": "R1:Y151;I1:I8N2;I2:N10;R2:Y151",
+        "BarcodeMismatchesIndex1": 0
       },
       {
         "Lane": "7",
@@ -167,7 +184,8 @@
         "index": "AGGATAGC",
         "index2": "",
         "Sample_Project": "A__Berggren_25_02",
-        "OverrideCycles": "R1:Y151;I1:I8N2;I2:N10;R2:Y151"
+        "OverrideCycles": "R1:Y151;I1:I8N2;I2:N10;R2:Y151",
+        "BarcodeMismatchesIndex1": 0
       },
       {
         "Lane": "7",
@@ -176,7 +194,8 @@
         "index": "CCTTCCAT",
         "index2": "",
         "Sample_Project": "A__Berggren_25_02",
-        "OverrideCycles": "R1:Y151;I1:I8N2;I2:N10;R2:Y151"
+        "OverrideCycles": "R1:Y151;I1:I8N2;I2:N10;R2:Y151",
+        "BarcodeMismatchesIndex1": 0
       },
       {
         "Lane": "7",
@@ -185,7 +204,8 @@
         "index": "GTCCTTGA",
         "index2": "",
         "Sample_Project": "A__Berggren_25_02",
-        "OverrideCycles": "R1:Y151;I1:I8N2;I2:N10;R2:Y151"
+        "OverrideCycles": "R1:Y151;I1:I8N2;I2:N10;R2:Y151",
+        "BarcodeMismatchesIndex1": 0
       },
       {
         "Lane": "7",
@@ -194,7 +214,8 @@
         "index": "TGCGTAAC",
         "index2": "",
         "Sample_Project": "A__Berggren_25_02",
-        "OverrideCycles": "R1:Y151;I1:I8N2;I2:N10;R2:Y151"
+        "OverrideCycles": "R1:Y151;I1:I8N2;I2:N10;R2:Y151",
+        "BarcodeMismatchesIndex1": 0
       },
       {
         "Lane": "7",
@@ -203,7 +224,8 @@
         "index": "CACAGACT",
         "index2": "",
         "Sample_Project": "A__Berggren_25_02",
-        "OverrideCycles": "R1:Y151;I1:I8N2;I2:N10;R2:Y151"
+        "OverrideCycles": "R1:Y151;I1:I8N2;I2:N10;R2:Y151",
+        "BarcodeMismatchesIndex1": 0
       },
       {
         "Lane": "7",
@@ -212,7 +234,8 @@
         "index": "TTACGTGC",
         "index2": "",
         "Sample_Project": "A__Berggren_25_02",
-        "OverrideCycles": "R1:Y151;I1:I8N2;I2:N10;R2:Y151"
+        "OverrideCycles": "R1:Y151;I1:I8N2;I2:N10;R2:Y151",
+        "BarcodeMismatchesIndex1": 0
       },
       {
         "Lane": "7",
@@ -221,7 +244,8 @@
         "index": "CCAAGGTT",
         "index2": "",
         "Sample_Project": "A__Berggren_25_02",
-        "OverrideCycles": "R1:Y151;I1:I8N2;I2:N10;R2:Y151"
+        "OverrideCycles": "R1:Y151;I1:I8N2;I2:N10;R2:Y151",
+        "BarcodeMismatchesIndex1": 0
       },
       {
         "Lane": "7",
@@ -230,7 +254,8 @@
         "index": "CACGCAAT",
         "index2": "",
         "Sample_Project": "A__Berggren_25_02",
-        "OverrideCycles": "R1:Y151;I1:I8N2;I2:N10;R2:Y151"
+        "OverrideCycles": "R1:Y151;I1:I8N2;I2:N10;R2:Y151",
+        "BarcodeMismatchesIndex1": 0
       },
       {
         "Lane": "7",
@@ -239,7 +264,8 @@
         "index": "TTCCAGGT",
         "index2": "",
         "Sample_Project": "A__Berggren_25_02",
-        "OverrideCycles": "R1:Y151;I1:I8N2;I2:N10;R2:Y151"
+        "OverrideCycles": "R1:Y151;I1:I8N2;I2:N10;R2:Y151",
+        "BarcodeMismatchesIndex1": 0
       },
       {
         "Lane": "7",
@@ -248,7 +274,8 @@
         "index": "TCATCTCC",
         "index2": "",
         "Sample_Project": "A__Berggren_25_02",
-        "OverrideCycles": "R1:Y151;I1:I8N2;I2:N10;R2:Y151"
+        "OverrideCycles": "R1:Y151;I1:I8N2;I2:N10;R2:Y151",
+        "BarcodeMismatchesIndex1": 0
       },
       {
         "Lane": "7",
@@ -257,7 +284,8 @@
         "index": "GAGAGTAC",
         "index2": "",
         "Sample_Project": "A__Berggren_25_02",
-        "OverrideCycles": "R1:Y151;I1:I8N2;I2:N10;R2:Y151"
+        "OverrideCycles": "R1:Y151;I1:I8N2;I2:N10;R2:Y151",
+        "BarcodeMismatchesIndex1": 0
       },
       {
         "Lane": "7",
@@ -266,7 +294,8 @@
         "index": "GTCGTTAC",
         "index2": "",
         "Sample_Project": "A__Berggren_25_02",
-        "OverrideCycles": "R1:Y151;I1:I8N2;I2:N10;R2:Y151"
+        "OverrideCycles": "R1:Y151;I1:I8N2;I2:N10;R2:Y151",
+        "BarcodeMismatchesIndex1": 0
       },
       {
         "Lane": "7",
@@ -275,7 +304,8 @@
         "index": "GGAGGAAT",
         "index2": "",
         "Sample_Project": "A__Berggren_25_02",
-        "OverrideCycles": "R1:Y151;I1:I8N2;I2:N10;R2:Y151"
+        "OverrideCycles": "R1:Y151;I1:I8N2;I2:N10;R2:Y151",
+        "BarcodeMismatchesIndex1": 0
       },
       {
         "Lane": "7",
@@ -284,7 +314,8 @@
         "index": "AGGAACAC",
         "index2": "",
         "Sample_Project": "A__Berggren_25_02",
-        "OverrideCycles": "R1:Y151;I1:I8N2;I2:N10;R2:Y151"
+        "OverrideCycles": "R1:Y151;I1:I8N2;I2:N10;R2:Y151",
+        "BarcodeMismatchesIndex1": 0
       }
     ]
   }

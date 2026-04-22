@@ -1204,6 +1204,29 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                     latest_settings.get("per_sample_fields", {}),
                 )
 
+                # Extract per-sample barcode mismatch settings before grouping
+                # These should not affect which samplesheet a sample goes into
+                per_sample_mismatches = {}
+                if "BarcodeMismatchesIndex1" in bcl_settings_filtered:
+                    per_sample_mismatches["BarcodeMismatchesIndex1"] = (
+                        bcl_settings_filtered.pop("BarcodeMismatchesIndex1")
+                    )
+                if "BarcodeMismatchesIndex2" in bcl_settings_filtered:
+                    per_sample_mismatches["BarcodeMismatchesIndex2"] = (
+                        bcl_settings_filtered.pop("BarcodeMismatchesIndex2")
+                    )
+
+                # Also check per_sample_fields for values set via API edit
+                fields = latest_settings.get("per_sample_fields", {})
+                if "BarcodeMismatchesIndex1" in fields:
+                    per_sample_mismatches["BarcodeMismatchesIndex1"] = fields[
+                        "BarcodeMismatchesIndex1"
+                    ]
+                if "BarcodeMismatchesIndex2" in fields:
+                    per_sample_mismatches["BarcodeMismatchesIndex2"] = fields[
+                        "BarcodeMismatchesIndex2"
+                    ]
+
                 settings_key = json.dumps(bcl_settings_filtered, sort_keys=True)
 
                 if settings_key not in settings_groups:
@@ -1213,8 +1236,6 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                     }
 
                 # Build sample data for samplesheet
-                fields = latest_settings.get("per_sample_fields", {})
-
                 sample_data = {
                     "Lane": lane,
                     "Sample_ID": fields.get("Sample_ID", ""),
@@ -1226,6 +1247,19 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                     "Sample_Project": fields.get("Sample_Project", ""),
                     "OverrideCycles": fields.get("OverrideCycles", ""),
                 }
+
+                # Add per-sample barcode mismatch settings (only when index is present)
+                # Per BCLConvert spec: these can only be specified when index 1/2 is present
+                if "BarcodeMismatchesIndex1" in per_sample_mismatches:
+                    if fields.get("index", ""):
+                        sample_data["BarcodeMismatchesIndex1"] = per_sample_mismatches[
+                            "BarcodeMismatchesIndex1"
+                        ]
+                if "BarcodeMismatchesIndex2" in per_sample_mismatches:
+                    if fields.get("index2", ""):
+                        sample_data["BarcodeMismatchesIndex2"] = per_sample_mismatches[
+                            "BarcodeMismatchesIndex2"
+                        ]
 
                 settings_groups[settings_key]["samples"].append(sample_data)
 
@@ -1498,12 +1532,13 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                     "raw_samplesheet_settings",
                     "CreateFastqForIndexReads",
                 ),
+                # BarcodeMismatchesIndex1/2 are now per-sample fields
                 "barcode_mismatches_index1": (
-                    "raw_samplesheet_settings",
+                    "per_sample_fields",
                     "BarcodeMismatchesIndex1",
                 ),
                 "barcode_mismatches_index2": (
-                    "raw_samplesheet_settings",
+                    "per_sample_fields",
                     "BarcodeMismatchesIndex2",
                 ),
                 # sample_row level (top level of sample, not in settings)

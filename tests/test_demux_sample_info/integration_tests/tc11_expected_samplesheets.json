@@ -1,7 +1,9 @@
 [
   {
     "lane": "4",
-    "projects": ["A__Berggren_25_03"],
+    "projects": [
+      "A__Berggren_25_03"
+    ],
     "settings_index": 0,
     "sample_count": 20,
     "filename": "Lane4_A__Berggren_25_03_0.csv",
@@ -13,8 +15,7 @@
       "TrimUMI": false,
       "CreateFastqForIndexReads": true,
       "MinimumTrimmedReadLength": 0,
-      "MaskShortReads": 0,
-      "BarcodeMismatchesIndex1": 0
+      "MaskShortReads": 0
     },
     "BCLConvert_Data": [
       {
@@ -24,7 +25,8 @@
         "index": "TCTTAGGC",
         "index2": "",
         "Sample_Project": "A__Berggren_25_03",
-        "OverrideCycles": "R1:Y50N101;I1:I8N2;I2:U24;R2:Y49N102"
+        "OverrideCycles": "R1:Y50N101;I1:I8N2;I2:U24;R2:Y49N102",
+        "BarcodeMismatchesIndex1": 0
       },
       {
         "Lane": "4",
@@ -33,7 +35,8 @@
         "index": "AGCCCTTT",
         "index2": "",
         "Sample_Project": "A__Berggren_25_03",
-        "OverrideCycles": "R1:Y50N101;I1:I8N2;I2:U24;R2:Y49N102"
+        "OverrideCycles": "R1:Y50N101;I1:I8N2;I2:U24;R2:Y49N102",
+        "BarcodeMismatchesIndex1": 0
       },
       {
         "Lane": "4",
@@ -42,7 +45,8 @@
         "index": "CAAGTCCA",
         "index2": "",
         "Sample_Project": "A__Berggren_25_03",
-        "OverrideCycles": "R1:Y50N101;I1:I8N2;I2:U24;R2:Y49N102"
+        "OverrideCycles": "R1:Y50N101;I1:I8N2;I2:U24;R2:Y49N102",
+        "BarcodeMismatchesIndex1": 0
       },
       {
         "Lane": "4",
@@ -51,7 +55,8 @@
         "index": "GTGAGAAG",
         "index2": "",
         "Sample_Project": "A__Berggren_25_03",
-        "OverrideCycles": "R1:Y50N101;I1:I8N2;I2:U24;R2:Y49N102"
+        "OverrideCycles": "R1:Y50N101;I1:I8N2;I2:U24;R2:Y49N102",
+        "BarcodeMismatchesIndex1": 0
       },
       {
         "Lane": "4",
@@ -60,7 +65,8 @@
         "index": "TGCTCTGT",
         "index2": "",
         "Sample_Project": "A__Berggren_25_03",
-        "OverrideCycles": "R1:Y50N101;I1:I8N2;I2:U24;R2:Y49N102"
+        "OverrideCycles": "R1:Y50N101;I1:I8N2;I2:U24;R2:Y49N102",
+        "BarcodeMismatchesIndex1": 0
       },
       {
         "Lane": "4",
@@ -69,7 +75,8 @@
         "index": "AATCACTA",
         "index2": "",
         "Sample_Project": "A__Berggren_25_03",
-        "OverrideCycles": "R1:Y50N101;I1:I8N2;I2:U24;R2:Y49N102"
+        "OverrideCycles": "R1:Y50N101;I1:I8N2;I2:U24;R2:Y49N102",
+        "BarcodeMismatchesIndex1": 0
       },
       {
         "Lane": "4",
@@ -78,7 +85,8 @@
         "index": "CCGAGAAC",
         "index2": "",
         "Sample_Project": "A__Berggren_25_03",
-        "OverrideCycles": "R1:Y50N101;I1:I8N2;I2:U24;R2:Y49N102"
+        "OverrideCycles": "R1:Y50N101;I1:I8N2;I2:U24;R2:Y49N102",
+        "BarcodeMismatchesIndex1": 0
       },
       {
         "Lane": "4",
@@ -87,7 +95,8 @@
         "index": "GTAGTGCG",
         "index2": "",
         "Sample_Project": "A__Berggren_25_03",
-        "OverrideCycles": "R1:Y50N101;I1:I8N2;I2:U24;R2:Y49N102"
+        "OverrideCycles": "R1:Y50N101;I1:I8N2;I2:U24;R2:Y49N102",
+        "BarcodeMismatchesIndex1": 0
       },
       {
         "Lane": "4",
@@ -96,7 +105,8 @@
         "index": "TTAGATTG",
         "index2": "",
         "Sample_Project": "A__Berggren_25_03",
-        "OverrideCycles": "R1:Y50N101;I1:I8N2;I2:U24;R2:Y49N102"
+        "OverrideCycles": "R1:Y50N101;I1:I8N2;I2:U24;R2:Y49N102",
+        "BarcodeMismatchesIndex1": 0
       },
       {
         "Lane": "4",
@@ -105,7 +115,8 @@
         "index": "AAGTTGAT",
         "index2": "",
         "Sample_Project": "A__Berggren_25_03",
-        "OverrideCycles": "R1:Y50N101;I1:I8N2;I2:U24;R2:Y49N102"
+        "OverrideCycles": "R1:Y50N101;I1:I8N2;I2:U24;R2:Y49N102",
+        "BarcodeMismatchesIndex1": 0
       },
       {
         "Lane": "4",
@@ -114,7 +125,8 @@
         "index": "CCCACCCA",
         "index2": "",
         "Sample_Project": "A__Berggren_25_03",
-        "OverrideCycles": "R1:Y50N101;I1:I8N2;I2:U24;R2:Y49N102"
+        "OverrideCycles": "R1:Y50N101;I1:I8N2;I2:U24;R2:Y49N102",
+        "BarcodeMismatchesIndex1": 0
       },
       {
         "Lane": "4",
@@ -123,7 +135,8 @@
         "index": "GGTCGAGC",
         "index2": "",
         "Sample_Project": "A__Berggren_25_03",
-        "OverrideCycles": "R1:Y50N101;I1:I8N2;I2:U24;R2:Y49N102"
+        "OverrideCycles": "R1:Y50N101;I1:I8N2;I2:U24;R2:Y49N102",
+        "BarcodeMismatchesIndex1": 0
       },
       {
         "Lane": "4",
@@ -132,7 +145,8 @@
         "index": "TGTGATGC",
         "index2": "",
         "Sample_Project": "A__Berggren_25_03",
-        "OverrideCycles": "R1:Y50N101;I1:I8N2;I2:U24;R2:Y49N102"
+        "OverrideCycles": "R1:Y50N101;I1:I8N2;I2:U24;R2:Y49N102",
+        "BarcodeMismatchesIndex1": 0
       },
       {
         "Lane": "4",
@@ -141,7 +155,8 @@
         "index": "ACATTCCG",
         "index2": "",
         "Sample_Project": "A__Berggren_25_03",
-        "OverrideCycles": "R1:Y50N101;I1:I8N2;I2:U24;R2:Y49N102"
+        "OverrideCycles": "R1:Y50N101;I1:I8N2;I2:U24;R2:Y49N102",
+        "BarcodeMismatchesIndex1": 0
       },
       {
         "Lane": "4",
@@ -150,7 +165,8 @@
         "index": "CTGCGGTA",
         "index2": "",
         "Sample_Project": "A__Berggren_25_03",
-        "OverrideCycles": "R1:Y50N101;I1:I8N2;I2:U24;R2:Y49N102"
+        "OverrideCycles": "R1:Y50N101;I1:I8N2;I2:U24;R2:Y49N102",
+        "BarcodeMismatchesIndex1": 0
       },
       {
         "Lane": "4",
@@ -159,7 +175,8 @@
         "index": "GACACAAT",
         "index2": "",
         "Sample_Project": "A__Berggren_25_03",
-        "OverrideCycles": "R1:Y50N101;I1:I8N2;I2:U24;R2:Y49N102"
+        "OverrideCycles": "R1:Y50N101;I1:I8N2;I2:U24;R2:Y49N102",
+        "BarcodeMismatchesIndex1": 0
       },
       {
         "Lane": "4",
@@ -168,7 +185,8 @@
         "index": "TCATCAAG",
         "index2": "",
         "Sample_Project": "A__Berggren_25_03",
-        "OverrideCycles": "R1:Y50N101;I1:I8N2;I2:U24;R2:Y49N102"
+        "OverrideCycles": "R1:Y50N101;I1:I8N2;I2:U24;R2:Y49N102",
+        "BarcodeMismatchesIndex1": 0
       },
       {
         "Lane": "4",
@@ -177,7 +195,8 @@
         "index": "AGGCTGGT",
         "index2": "",
         "Sample_Project": "A__Berggren_25_03",
-        "OverrideCycles": "R1:Y50N101;I1:I8N2;I2:U24;R2:Y49N102"
+        "OverrideCycles": "R1:Y50N101;I1:I8N2;I2:U24;R2:Y49N102",
+        "BarcodeMismatchesIndex1": 0
       },
       {
         "Lane": "4",
@@ -186,7 +205,8 @@
         "index": "CACAACTA",
         "index2": "",
         "Sample_Project": "A__Berggren_25_03",
-        "OverrideCycles": "R1:Y50N101;I1:I8N2;I2:U24;R2:Y49N102"
+        "OverrideCycles": "R1:Y50N101;I1:I8N2;I2:U24;R2:Y49N102",
+        "BarcodeMismatchesIndex1": 0
       },
       {
         "Lane": "4",
@@ -195,7 +215,8 @@
         "index": "GTTGGTCC",
         "index2": "",
         "Sample_Project": "A__Berggren_25_03",
-        "OverrideCycles": "R1:Y50N101;I1:I8N2;I2:U24;R2:Y49N102"
+        "OverrideCycles": "R1:Y50N101;I1:I8N2;I2:U24;R2:Y49N102",
+        "BarcodeMismatchesIndex1": 0
       }
     ]
   }

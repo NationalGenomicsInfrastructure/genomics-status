@@ -229,24 +229,24 @@ class TestGenerateSamplesheets(unittest.TestCase):
             flowcell_id, calculated_lanes, metadata
         )
 
-        # Should have two samplesheets (different settings)
-        self.assertEqual(len(result), 2)
+        # Should have one samplesheet (BarcodeMismatchesIndex is now per-sample)
+        self.assertEqual(len(result), 1)
 
-        # Check first samplesheet
+        # Check samplesheet
         self.assertEqual(result[0]["lane"], "1")
-        self.assertEqual(result[0]["sample_count"], 1)
+        self.assertEqual(result[0]["sample_count"], 2)
         self.assertEqual(result[0]["settings_index"], 0)
 
-        # Check second samplesheet
-        self.assertEqual(result[1]["lane"], "1")
-        self.assertEqual(result[1]["sample_count"], 1)
-        self.assertEqual(result[1]["settings_index"], 1)
-
-        # Verify settings differ
-        self.assertNotEqual(
-            result[0]["raw_samplesheet_settings"],
-            result[1]["raw_samplesheet_settings"],
+        # Check that raw_samplesheet_settings does NOT have BarcodeMismatchesIndex1
+        self.assertNotIn(
+            "BarcodeMismatchesIndex1", result[0].get("raw_samplesheet_settings", {})
         )
+
+        # Check that each sample has its own BarcodeMismatchesIndex1
+        samples = result[0]["BCLConvert_Data"]
+        self.assertEqual(len(samples), 2)
+        self.assertEqual(samples[0]["BarcodeMismatchesIndex1"], "0")
+        self.assertEqual(samples[1]["BarcodeMismatchesIndex1"], "1")
 
     def test_multiple_lanes(self):
         """Test multiple lanes with different projects and settings."""

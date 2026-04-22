@@ -1,10 +1,13 @@
 [
   {
     "lane": "1",
-    "projects": ["A__Berggren_25_01"],
+    "projects": [
+        "A__Berggren_25_01",
+        "A__Bergman_25_01"
+    ],
     "settings_index": 0,
-    "sample_count": 2,
-    "filename": "Lane1_A__Berggren_25_01_0.csv",
+    "sample_count": 4,
+    "filename": "Lane1_A__Berggren_25_01_A__Bergman_25_01_0.csv",
     "Header": {
       "FileFormatVersion": "2",
       "RunName": "233JTGLT4"

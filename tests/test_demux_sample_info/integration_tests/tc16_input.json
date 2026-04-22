@@ -2,7 +2,8 @@
   "metadata": {
     "num_lanes": 8,
     "run_setup": "151-10-10-151",
-    "setup_lims_step_id": "24-TC16"
+    "setup_lims_step_id": "24-TC16",
+    "instrument_type": "NovaSeqXPlus"
   },
   "uploaded_lims_info": [
     {
