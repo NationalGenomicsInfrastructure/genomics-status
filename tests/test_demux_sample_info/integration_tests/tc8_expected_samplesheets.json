@@ -11,7 +11,7 @@
       "FileFormatVersion": "2",
       "RunName": "22YMHFLT3"
     },
-    "raw_samplesheet_settings": {
+    "BCLConvert_Settings": {
       "TrimUMI": true,
       "CreateFastqForIndexReads": false,
       "MinimumTrimmedReadLength": 0,

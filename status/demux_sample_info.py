@@ -1289,7 +1289,7 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                             "%Y-%m-%d"
                         ),
                     },
-                    "raw_samplesheet_settings": group["bcl_settings"],
+                    "BCLConvert_Settings": group["bcl_settings"],
                     "BCLConvert_Data": group["samples"],
                 }
 

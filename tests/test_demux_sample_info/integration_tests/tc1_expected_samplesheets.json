@@ -9,7 +9,7 @@
       "FileFormatVersion": "2",
       "RunName": "22GC2NLT1"
     },
-    "raw_samplesheet_settings": {
+    "BCLConvert_Settings": {
       "CreateFastqForIndexReads": false,
       "MinimumTrimmedReadLength": 0,
       "MaskShortReads": 0
@@ -54,7 +54,7 @@
       "FileFormatVersion": "2",
       "RunName": "22GC2NLT1"
     },
-    "raw_samplesheet_settings": {
+    "BCLConvert_Settings": {
       "CreateFastqForIndexReads": false,
       "MinimumTrimmedReadLength": 0,
       "MaskShortReads": 0

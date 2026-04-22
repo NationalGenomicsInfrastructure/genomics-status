@@ -9,7 +9,7 @@
       "FileFormatVersion": "2",
       "RunName": "GV85B"
     },
-    "raw_samplesheet_settings": {
+    "BCLConvert_Settings": {
       "MinimumTrimmedReadLength": 0,
       "MaskShortReads": 0
     },

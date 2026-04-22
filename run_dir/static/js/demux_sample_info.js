@@ -3206,12 +3206,12 @@ const vDemuxSampleInfoEditor = {
             // Add BCLConvert settings in standard order
             const settingsOrder = ['SoftwareVersion', 'MinimumTrimmedReadLength', 'MaskShortReads'];
             for (const key of settingsOrder) {
-                if (samplesheet.raw_samplesheet_settings[key] !== undefined) {
-                    lines.push(`${key},${samplesheet.raw_samplesheet_settings[key]}`);
+                if (samplesheet.BCLConvert_Settings[key] !== undefined) {
+                    lines.push(`${key},${samplesheet.BCLConvert_Settings[key]}`);
                 }
             }
             // Add remaining settings
-            for (const [key, value] of Object.entries(samplesheet.raw_samplesheet_settings)) {
+            for (const [key, value] of Object.entries(samplesheet.BCLConvert_Settings)) {
                 if (!settingsOrder.includes(key)) {
                     lines.push(`${key},${value}`);
                 }

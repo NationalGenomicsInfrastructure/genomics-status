@@ -9,7 +9,7 @@
       "FileFormatVersion": "2",
       "RunName": "233KCWLT4"
     },
-    "raw_samplesheet_settings": {
+    "BCLConvert_Settings": {
       "TrimUMI": true,
       "CreateFastqForIndexReads": false,
       "MinimumTrimmedReadLength": 0,
@@ -64,7 +64,7 @@
       "FileFormatVersion": "2",
       "RunName": "233KCWLT4"
     },
-    "raw_samplesheet_settings": {
+    "BCLConvert_Settings": {
       "CreateFastqForIndexReads": false,
       "MinimumTrimmedReadLength": 0,
       "MaskShortReads": 0

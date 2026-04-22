@@ -98,12 +98,10 @@ class TestGenerateSamplesheets(unittest.TestCase):
         self.assertEqual(samplesheet["Header"]["RunName"], "TEST123")
         self.assertIn("Date", samplesheet["Header"])
 
-        # Check raw_samplesheet_settings
+        # Check BCLConvert_Settings
+        self.assertEqual(samplesheet["BCLConvert_Settings"]["SoftwareVersion"], "4.0.3")
         self.assertEqual(
-            samplesheet["raw_samplesheet_settings"]["SoftwareVersion"], "4.0.3"
-        )
-        self.assertEqual(
-            samplesheet["raw_samplesheet_settings"]["FastqCompressionFormat"], "gzip"
+            samplesheet["BCLConvert_Settings"]["FastqCompressionFormat"], "gzip"
         )
 
         # Check BCLConvert_Data
@@ -237,9 +235,9 @@ class TestGenerateSamplesheets(unittest.TestCase):
         self.assertEqual(result[0]["sample_count"], 2)
         self.assertEqual(result[0]["settings_index"], 0)
 
-        # Check that raw_samplesheet_settings does NOT have BarcodeMismatchesIndex1
+        # Check that BCLConvert_Settings does NOT have BarcodeMismatchesIndex1
         self.assertNotIn(
-            "BarcodeMismatchesIndex1", result[0].get("raw_samplesheet_settings", {})
+            "BarcodeMismatchesIndex1", result[0].get("BCLConvert_Settings", {})
         )
 
         # Check that each sample has its own BarcodeMismatchesIndex1
@@ -434,7 +432,7 @@ class TestGenerateSamplesheets(unittest.TestCase):
         # Should use the newer version
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0]["BCLConvert_Data"][0]["Sample_ID"], "S1_NEW")
-        self.assertEqual(result[0]["raw_samplesheet_settings"]["Version"], "New")
+        self.assertEqual(result[0]["BCLConvert_Settings"]["Version"], "New")
 
     def test_empty_lanes(self):
         """Test handling of empty calculated_lanes."""
