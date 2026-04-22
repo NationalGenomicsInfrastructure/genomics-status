@@ -8,6 +8,7 @@ import re
 import uuid
 
 import tornado.web
+from ibm_cloud_sdk_core.api_exception import ApiException
 
 from status.util import SafeHandler
 
@@ -29,7 +30,10 @@ class DemuxSampleInfoDataHandler(SafeHandler):
     """Serves demux sample info data via API."""
 
     def _get_project_id_by_name(self, project_name):
-        """Look up project ID (P-number) from project name."""
+        """Look up project ID (P-number) from project name.
+
+        Since this may be called once per row in a samplesheet, we implement a simple caching mechanism to avoid redundant database queries for the same project name.
+        """
         if not hasattr(self, "_project_names"):
             self._project_names = {}
         if project_name not in self._project_names:
@@ -51,6 +55,8 @@ class DemuxSampleInfoDataHandler(SafeHandler):
 
     def _get_project_library_method(self, project_name):
         """Look up library construction method for a project.
+
+        Since this may be called once per row in a samplesheet, we implement a simple caching mechanism to avoid redundant database queries for the same project name.
 
         Args:
             project_name: Project name (e.g., "A.Usersson_23_01")
@@ -75,7 +81,7 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                         "library_construction_method", ""
                     )
                     self._project_library_methods[project_name] = library_method
-                except Exception as e:
+                except ApiException as e:
                     # If we can't fetch the project, log and continue
                     logging.warning(
                         "Could not fetch library method for project %s: %s",
@@ -132,9 +138,9 @@ class DemuxSampleInfoDataHandler(SafeHandler):
             # Return the complete document structure
             self.write(json.dumps(document))
 
-        except Exception as e:
+        except ApiException as e:
             # Check if it's a 404 (document not found)
-            if hasattr(e, "status_code") and e.status_code == 404:
+            if e.status_code == 404:
                 self.set_status(404)
                 self.write(
                     json.dumps(
@@ -1458,7 +1464,7 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                     )
                 )
 
-            except Exception as db_error:
+            except ApiException as db_error:
                 self.set_status(500)
                 self.write(json.dumps({"error": f"Database error: {str(db_error)}"}))
                 return
@@ -1466,7 +1472,7 @@ class DemuxSampleInfoDataHandler(SafeHandler):
         except json.JSONDecodeError as e:
             self.set_status(400)
             self.write(json.dumps({"error": f"Invalid JSON in request body: {str(e)}"}))
-        except Exception as e:
+        except (ApiException, KeyError, AttributeError, TypeError, ValueError) as e:
             self.set_status(500)
             self.write(json.dumps({"error": f"Internal server error: {str(e)}"}))
 
@@ -1579,7 +1585,7 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                 # Store the original revision for conflict detection
                 original_rev = document.get("_rev")
 
-            except Exception as db_error:
+            except ApiException as db_error:
                 self.set_status(500)
                 self.write(
                     json.dumps(
@@ -1879,9 +1885,9 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                 self.set_header("Content-type", "application/json")
                 self.write(json.dumps(updated_doc))
 
-            except Exception as db_error:
+            except ApiException as db_error:
                 # Check if it's a CouchDB conflict error (status 409)
-                if hasattr(db_error, "status_code") and db_error.status_code == 409:
+                if db_error.status_code == 409:
                     self.set_status(409)
                     self.write(
                         json.dumps(
@@ -1909,7 +1915,7 @@ class DemuxSampleInfoDataHandler(SafeHandler):
             # Validation errors (e.g., invalid raw_samplesheet_settings values)
             self.set_status(400)
             self.write(json.dumps({"error": f"Validation error: {str(e)}"}))
-        except Exception as e:
+        except (ApiException, KeyError, AttributeError, TypeError) as e:
             self.set_status(500)
             self.write(json.dumps({"error": f"Internal server error: {str(e)}"}))
 
@@ -1957,7 +1963,7 @@ class SampleDeleteHandler(DemuxSampleInfoDataHandler):
                     db="demux_sample_info", doc_id=doc_id
                 ).get_result()
 
-            except Exception as db_error:
+            except ApiException as db_error:
                 self.set_status(500)
                 self.write(
                     json.dumps(
@@ -2082,7 +2088,7 @@ class SampleDeleteHandler(DemuxSampleInfoDataHandler):
                 self.set_header("Content-type", "application/json")
                 self.write(json.dumps(updated_doc))
 
-            except Exception as db_error:
+            except ApiException as db_error:
                 self.set_status(500)
                 self.write(
                     json.dumps(
@@ -2091,6 +2097,6 @@ class SampleDeleteHandler(DemuxSampleInfoDataHandler):
                 )
                 return
 
-        except Exception as e:
+        except (ApiException, KeyError, AttributeError, TypeError) as e:
             self.set_status(500)
             self.write(json.dumps({"error": f"Internal server error: {str(e)}"}))
