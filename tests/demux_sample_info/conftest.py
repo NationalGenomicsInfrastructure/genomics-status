@@ -21,7 +21,7 @@ def get_classification_config():
     """Fetch the latest active sample classification config from CouchDB.
 
     Result is cached in memory for the duration of the test run.
-    
+
     Returns:
         dict: The active sample classification configuration from CouchDB.
     """

@@ -273,9 +273,13 @@ class TestDemuxSampleInfoIntegration(AsyncHTTPTestCase):
             raise
 
     def _run_tc_test(self, flowcell_id, tc_name):
-        post_body = json.loads((_HERE / ".." / "fixtures" / f"{tc_name}_input.json").read_text())
+        post_body = json.loads(
+            (_HERE / ".." / "fixtures" / f"{tc_name}_input.json").read_text()
+        )
         expected = json.loads(
-            (_HERE / ".." / "fixtures" / f"{tc_name}_expected_samplesheets.json").read_text()
+            (
+                _HERE / ".." / "fixtures" / f"{tc_name}_expected_samplesheets.json"
+            ).read_text()
         )
         document = self._post_and_capture(flowcell_id, post_body)
         actual = _strip_date(document["samplesheets"])

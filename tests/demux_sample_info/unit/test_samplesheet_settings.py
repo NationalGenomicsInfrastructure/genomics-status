@@ -211,7 +211,9 @@ class TestSamplesheetSettings(unittest.TestCase):
 
         # Mock methods
         self.handler._get_project_library_method = MagicMock(return_value=None)
-        self.handler._get_project_id_by_name = MagicMock(return_value={"project_id": "", "doc_id": None})
+        self.handler._get_project_id_by_name = MagicMock(
+            return_value={"project_id": "", "doc_id": None}
+        )
         self.handler._classify_sample_type = MagicMock(
             return_value={
                 "sample_type": "standard",
