@@ -33,6 +33,9 @@ class DemuxSampleInfoDataHandler(SafeHandler):
         """Look up project ID (P-number) from project name.
 
         Since this may be called once per row in a samplesheet, we implement a simple caching mechanism to avoid redundant database queries for the same project name.
+
+        Returns:
+            dict: Dictionary with 'project_id' and 'doc_id' keys, or empty dict if not found
         """
         if not hasattr(self, "_project_names"):
             self._project_names = {}
@@ -49,9 +52,7 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                     "doc_id": row["id"],
                     "project_id": row["value"],
                 }
-        return self._project_names.get(project_name, {}).get(
-            "project_id"
-        ), self._project_names.get(project_name, {}).get("doc_id")
+        return self._project_names.get(project_name, {})
 
     def _get_project_library_method(self, project_name):
         """Look up library construction method for a project.
@@ -68,7 +69,9 @@ class DemuxSampleInfoDataHandler(SafeHandler):
             self._project_library_methods = {}
 
         if project_name not in self._project_library_methods:
-            project_id, doc_id = self._get_project_id_by_name(project_name)
+            project_info = self._get_project_id_by_name(project_name)
+            project_id = project_info.get("project_id")
+            doc_id = project_info.get("doc_id")
             if project_id and doc_id:
                 try:
                     # Fetch the project document
@@ -519,21 +522,39 @@ class DemuxSampleInfoDataHandler(SafeHandler):
         patterns_to_check = [
             (
                 "tenx_single",
-                lambda: "tenx_single" in sample_patterns and "pattern" in sample_patterns["tenx_single"] and sample_patterns["tenx_single"]["pattern"].match(index1),
+                lambda: (
+                    "tenx_single" in sample_patterns
+                    and "pattern" in sample_patterns["tenx_single"]
+                    and sample_patterns["tenx_single"]["pattern"].match(index1)
+                ),
             ),
             (
                 "tenx_dual",
-                lambda: "tenx_dual" in sample_patterns and "pattern" in sample_patterns["tenx_dual"] and sample_patterns["tenx_dual"]["pattern"].match(index1),
+                lambda: (
+                    "tenx_dual" in sample_patterns
+                    and "pattern" in sample_patterns["tenx_dual"]
+                    and sample_patterns["tenx_dual"]["pattern"].match(index1)
+                ),
             ),
             (
                 "idt_umi",
                 lambda: (
-                    "idt_umi" in sample_patterns and "pattern" in sample_patterns["idt_umi"] and
-                    (sample_patterns["idt_umi"]["pattern"].match(index1)
-                    or sample_patterns["idt_umi"]["pattern"].match(index2))
+                    "idt_umi" in sample_patterns
+                    and "pattern" in sample_patterns["idt_umi"]
+                    and (
+                        sample_patterns["idt_umi"]["pattern"].match(index1)
+                        or sample_patterns["idt_umi"]["pattern"].match(index2)
+                    )
                 ),
             ),
-            ("smartseq", lambda: "smartseq" in sample_patterns and "pattern" in sample_patterns["smartseq"] and sample_patterns["smartseq"]["pattern"].match(index1)),
+            (
+                "smartseq",
+                lambda: (
+                    "smartseq" in sample_patterns
+                    and "pattern" in sample_patterns["smartseq"]
+                    and sample_patterns["smartseq"]["pattern"].match(index1)
+                ),
+            ),
         ]
 
         for pattern_name, match_func in patterns_to_check:
@@ -845,7 +866,8 @@ class DemuxSampleInfoDataHandler(SafeHandler):
         project_name = sample_project.replace("__", ".", 1) if sample_project else ""
         if project_name:
             library_method = self._get_project_library_method(project_name)
-            project_id, _ = self._get_project_id_by_name(project_name)
+            project_info = self._get_project_id_by_name(project_name)
+            project_id = project_info.get("project_id", "")
         else:
             library_method = None
             project_id = ""
@@ -995,8 +1017,6 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                         "Sample_ID": f"Sample_{sample_in_lane['sample_id']}",
                         "index": index_1,
                         "index2": index_2,
-                        "MaskShortReads": 0,
-                        "MinimumTrimmedReadLength": 0,
                         "OverrideCycles": override_cycles,
                         "Sample_Name": sample_in_lane["sample_name"],
                         "Sample_Project": sample_in_lane["sample_project"],
@@ -1621,7 +1641,7 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                     "barcode_mismatches_index1",
                     "barcode_mismatches_index2",
                 ]:
-                    # Integer fields with 0-2 range
+                    # Integer fields with barcode mismatch range (0-2 per BCLConvert spec)
                     if not isinstance(value, int):
                         raise ValueError(f"{field_key} must be an integer")
                     if value < 0 or value > 2:
@@ -1678,8 +1698,6 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                                 "Sample_Project": "",
                                 "index": "",
                                 "index2": "",
-                                "MaskShortReads": 0,
-                                "MinimumTrimmedReadLength": 0,
                                 "OverrideCycles": "",
                             },
                             "other_details": {

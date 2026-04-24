@@ -147,7 +147,7 @@ def _build_mock_project_lookup_helpers(
     def project_lookup(project_name):
         project_id = project_name_to_id.get(project_name, "")
         doc_id = f"mock-{project_id}" if project_id else None
-        return project_id, doc_id
+        return {"project_id": project_id, "doc_id": doc_id}
 
     def library_method_lookup(project_name):
         project_id = project_name_to_id.get(project_name, "")
