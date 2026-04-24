@@ -307,7 +307,7 @@ def _main() -> int:
     parser.add_argument(
         "markdown_path",
         nargs="?",
-        default=str(Path(__file__).parent / "test_cases.md"),
+        default=str(Path(__file__).parent / ".." / "fixtures" / "test_cases.md"),
         help="Path to markdown file containing test cases",
     )
     parser.add_argument(

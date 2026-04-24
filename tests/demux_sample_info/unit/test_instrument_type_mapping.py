@@ -10,7 +10,7 @@ import unittest
 from unittest.mock import MagicMock
 
 from status.demux_sample_info import DemuxSampleInfoDataHandler
-from tests.conftest import get_classification_config
+from tests.demux_sample_info.conftest import get_classification_config
 
 
 class TestInstrumentTypeMapping(unittest.TestCase):

@@ -6,7 +6,7 @@ import json
 import re
 from pathlib import Path
 
-from tests.test_demux_sample_info.integration_tests.case_contract import (
+from tests.demux_sample_info.integration.case_contract import (
     extract_expected_samplesheets_from_case,
     extract_lims_sample_data_from_case,
     extract_run_setup_from_case,
@@ -15,7 +15,8 @@ from tests.test_demux_sample_info.integration_tests.case_contract import (
 )
 
 _HERE = Path(__file__).parent
-_MARKDOWN_PATH = _HERE / "test_cases.md"
+_FIXTURES_DIR = _HERE / ".." / "fixtures"
+_MARKDOWN_PATH = _FIXTURES_DIR / "test_cases.md"
 _INTEGRATION_TEST_FILE = _HERE / "test_integration_post.py"
 _INPUT_GLOB = "tc*_input.json"
 _EXPECTED_GLOB = "tc*_expected_samplesheets.json"
@@ -23,7 +24,7 @@ _EXPECTED_GLOB = "tc*_expected_samplesheets.json"
 
 def _fixture_case_ids(pattern: str, suffix: str) -> set[str]:
     ids: set[str] = set()
-    for path in _HERE.glob(pattern):
+    for path in _FIXTURES_DIR.glob(pattern):
         case_id = path.name.removesuffix(suffix)
         if re.match(r"^tc[0-9]+$", case_id):
             ids.add(case_id)
@@ -107,7 +108,7 @@ def test_lims_sample_data_matches_input_fixtures():
             continue  # Skip validation for skipped test cases
         case_id = case["case_id"]
         test_case_number = case["test_case_number"]
-        input_fixture_path = _HERE / case["input_fixture"]
+        input_fixture_path = _FIXTURES_DIR / case["input_fixture"]
 
         lims_rows = extract_lims_sample_data_from_case(markdown_text, test_case_number)
         markdown_lims = translate_lims_csv_to_fixture_format(lims_rows)
@@ -131,7 +132,7 @@ def test_run_setup_matches_input_fixtures():
             continue  # Skip validation for skipped test cases
         case_id = case["case_id"]
         test_case_number = case["test_case_number"]
-        input_fixture_path = _HERE / case["input_fixture"]
+        input_fixture_path = _FIXTURES_DIR / case["input_fixture"]
 
         markdown_run_setup = extract_run_setup_from_case(
             markdown_text, test_case_number
@@ -160,7 +161,7 @@ def test_expected_samplesheets_match_expected_fixtures():
             continue  # Skip validation for skipped test cases
         case_id = case["case_id"]
         test_case_number = case["test_case_number"]
-        expected_fixture_path = _HERE / case["expected_fixture"]
+        expected_fixture_path = _FIXTURES_DIR / case["expected_fixture"]
 
         # Extract expected samplesheets from markdown
         markdown_sheets = extract_expected_samplesheets_from_case(

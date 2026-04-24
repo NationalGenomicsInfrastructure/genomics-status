@@ -18,7 +18,7 @@ import tornado.web
 from tornado.testing import AsyncHTTPTestCase
 
 from status.demux_sample_info import DemuxSampleInfoDataHandler
-from tests.conftest import get_classification_config
+from tests.demux_sample_info.conftest import get_classification_config
 
 
 class TestDemuxSampleInfoPost(AsyncHTTPTestCase):
@@ -68,7 +68,7 @@ class TestDemuxSampleInfoPost(AsyncHTTPTestCase):
 
         # Load test data (which is just the samples list)
         test_data_path = os.path.join(
-            os.path.dirname(__file__), "test_data", "demux_sample_info_1.json"
+            os.path.dirname(__file__), "..", "..", "shared_fixtures", "demux_sample_info_1.json"
         )
         with open(test_data_path) as f:
             samples_list = json.load(f)

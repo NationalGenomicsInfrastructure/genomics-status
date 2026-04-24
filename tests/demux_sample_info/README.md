@@ -2,6 +2,28 @@
 
 Tests for `status/demux_sample_info.py`, the handler that classifies samples and generates BCLConvert samplesheets.
 
+## Directory Structure
+
+```
+tests/demux_sample_info/
+├── conftest.py            # Module-specific fixtures (CouchDB config)
+├── unit/                  # Unit tests
+│   ├── test_api_post.py
+│   ├── test_generate_samplesheets.py
+│   ├── test_instrument_type_mapping.py
+│   ├── test_override_cycles.py
+│   └── test_samplesheet_settings.py
+├── integration/           # Integration tests
+│   ├── conftest.py
+│   ├── test_integration_post.py
+│   ├── test_case_contract_sync.py
+│   └── case_contract.py
+└── fixtures/              # Test data files
+    ├── tc*_input.json
+    ├── tc*_expected_samplesheets.json
+    └── test_cases.md
+```
+
 ## Prerequisites
 
 Tests fetch the active sample classification configuration directly from CouchDB at runtime. A valid `run_dir/settings/settings_dev.yaml` (relative to the repo root) with CouchDB credentials is required:
@@ -21,19 +43,25 @@ All commands should be run from the repo root.
 **Run all demux_sample_info tests:**
 
 ```bash
-python -m pytest tests/test_demux_sample_info/ tests/test_demux_sample_info_post.py
+python -m pytest tests/demux_sample_info/
+```
+
+**Run only unit tests:**
+
+```bash
+python -m pytest tests/demux_sample_info/unit/
 ```
 
 **Run only the integration tests:**
 
 ```bash
-python -m pytest tests/test_demux_sample_info/integration_tests/
+python -m pytest tests/demux_sample_info/integration/
 ```
 
 **Run a single test file:**
 
 ```bash
-python -m pytest tests/test_demux_sample_info/test_generate_samplesheets.py
+python -m pytest tests/demux_sample_info/unit/test_generate_samplesheets.py
 ```
 
 ## Running with a coverage report
@@ -41,7 +69,7 @@ python -m pytest tests/test_demux_sample_info/test_generate_samplesheets.py
 **Generate coverage and print a summary:**
 
 ```bash
-python -m coverage run --source=status.demux_sample_info -m pytest tests/test_demux_sample_info/ tests/test_demux_sample_info_post.py
+python -m coverage run --source=status.demux_sample_info -m pytest tests/demux_sample_info/
 python -m coverage report --include=status/demux_sample_info.py
 ```
 
