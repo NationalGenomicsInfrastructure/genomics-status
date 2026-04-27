@@ -1235,7 +1235,7 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                 # Update the stored samplesheet_settings
                 latest_settings["samplesheet_settings"] = samplesheet_settings
 
-    def _generate_samplesheets(self, flowcell_id, calculated_lanes, metadata):
+    def _generate_samplesheets(self, flowcell_id, calculated_lanes):
         """Generate Illumina v2 samplesheets grouped by lane and BCLConvert settings.
 
         Stage 3: Samplesheet Assembly - Groups samples by their samplesheet_settings
@@ -1245,7 +1245,6 @@ class DemuxSampleInfoDataHandler(SafeHandler):
         Args:
             flowcell_id: Flowcell identifier
             calculated_lanes: Dictionary of calculated lanes with sample data
-            metadata: Metadata dictionary with run information
 
         Returns:
             list: List of samplesheet dictionaries as structured JSON
@@ -1393,9 +1392,7 @@ class DemuxSampleInfoDataHandler(SafeHandler):
         )
 
         # Generate samplesheets
-        samplesheets = self._generate_samplesheets(
-            flowcell_id, calculated_lanes, metadata
-        )
+        samplesheets = self._generate_samplesheets(flowcell_id, calculated_lanes)
 
         # Add first_generated timestamp to metadata
         metadata["first_generated"] = timestamp
@@ -1893,9 +1890,7 @@ class DemuxSampleInfoDataHandler(SafeHandler):
             # Recalculate samplesheet_settings for all samples
             self._recalculate_all_samplesheet_settings(calculated_lanes)
 
-            samplesheets = self._generate_samplesheets(
-                flowcell_id, calculated_lanes, metadata
-            )
+            samplesheets = self._generate_samplesheets(flowcell_id, calculated_lanes)
             document["samplesheets"] = samplesheets
 
             # Save the updated document back to the database
@@ -2098,11 +2093,8 @@ class SampleDeleteHandler(DemuxSampleInfoDataHandler):
 
             # Regenerate samplesheets without the deleted sample
             calculated_lanes = document.get("calculated", {}).get("lanes", {})
-            metadata = document.get("metadata", {})
 
-            samplesheets = self._generate_samplesheets(
-                flowcell_id, calculated_lanes, metadata
-            )
+            samplesheets = self._generate_samplesheets(flowcell_id, calculated_lanes)
             document["samplesheets"] = samplesheets
 
             # Save the updated document back to the database

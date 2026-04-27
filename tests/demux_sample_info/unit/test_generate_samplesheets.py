@@ -88,9 +88,7 @@ class TestGenerateSamplesheets(unittest.TestCase):
         }
         metadata = {}
 
-        result = self.handler._generate_samplesheets(
-            flowcell_id, calculated_lanes, metadata
-        )
+        result = self.handler._generate_samplesheets(flowcell_id, calculated_lanes)
 
         # Should have exactly one samplesheet
         self.assertEqual(len(result), 1)
@@ -169,9 +167,7 @@ class TestGenerateSamplesheets(unittest.TestCase):
         }
         metadata = {}
 
-        result = self.handler._generate_samplesheets(
-            flowcell_id, calculated_lanes, metadata
-        )
+        result = self.handler._generate_samplesheets(flowcell_id, calculated_lanes)
 
         # Should have one samplesheet (same settings)
         self.assertEqual(len(result), 1)
@@ -232,9 +228,7 @@ class TestGenerateSamplesheets(unittest.TestCase):
         }
         metadata = {}
 
-        result = self.handler._generate_samplesheets(
-            flowcell_id, calculated_lanes, metadata
-        )
+        result = self.handler._generate_samplesheets(flowcell_id, calculated_lanes)
 
         # Should have one samplesheet (BarcodeMismatchesIndex is now per-sample)
         self.assertEqual(len(result), 1)
@@ -304,9 +298,7 @@ class TestGenerateSamplesheets(unittest.TestCase):
         }
         metadata = {}
 
-        result = self.handler._generate_samplesheets(
-            flowcell_id, calculated_lanes, metadata
-        )
+        result = self.handler._generate_samplesheets(flowcell_id, calculated_lanes)
 
         # Should have two samplesheets (one per lane)
         self.assertEqual(len(result), 2)
@@ -348,9 +340,7 @@ class TestGenerateSamplesheets(unittest.TestCase):
         }
         metadata = {}
 
-        result = self.handler._generate_samplesheets(
-            flowcell_id, calculated_lanes, metadata
-        )
+        result = self.handler._generate_samplesheets(flowcell_id, calculated_lanes)
 
         # Check that OverrideCycles from per_sample_fields is used
         self.assertEqual(
@@ -384,9 +374,7 @@ class TestGenerateSamplesheets(unittest.TestCase):
         }
         metadata = {}
 
-        result = self.handler._generate_samplesheets(
-            flowcell_id, calculated_lanes, metadata
-        )
+        result = self.handler._generate_samplesheets(flowcell_id, calculated_lanes)
 
         # Should handle empty project gracefully
         self.assertEqual(len(result), 1)
@@ -434,9 +422,7 @@ class TestGenerateSamplesheets(unittest.TestCase):
         }
         metadata = {}
 
-        result = self.handler._generate_samplesheets(
-            flowcell_id, calculated_lanes, metadata
-        )
+        result = self.handler._generate_samplesheets(flowcell_id, calculated_lanes)
 
         # Should use the newer version
         self.assertEqual(len(result), 1)
@@ -449,9 +435,7 @@ class TestGenerateSamplesheets(unittest.TestCase):
         calculated_lanes = {}
         metadata = {}
 
-        result = self.handler._generate_samplesheets(
-            flowcell_id, calculated_lanes, metadata
-        )
+        result = self.handler._generate_samplesheets(flowcell_id, calculated_lanes)
 
         # Should return empty list
         self.assertEqual(len(result), 0)
@@ -484,9 +468,7 @@ class TestGenerateSamplesheets(unittest.TestCase):
         }
         metadata = {}
 
-        result = self.handler._generate_samplesheets(
-            flowcell_id, calculated_lanes, metadata
-        )
+        result = self.handler._generate_samplesheets(flowcell_id, calculated_lanes)
 
         # Should skip sample without settings, include sample2
         self.assertEqual(len(result), 1)
@@ -567,9 +549,7 @@ class TestGenerateSamplesheets(unittest.TestCase):
         }
         metadata = {}
 
-        result = self.handler._generate_samplesheets(
-            flowcell_id, calculated_lanes, metadata
-        )
+        result = self.handler._generate_samplesheets(flowcell_id, calculated_lanes)
 
         # Should have two samplesheets
         self.assertEqual(len(result), 2)
@@ -647,9 +627,7 @@ class TestGenerateSamplesheets(unittest.TestCase):
         }
         metadata = {}
 
-        result = self.handler._generate_samplesheets(
-            flowcell_id, calculated_lanes, metadata
-        )
+        result = self.handler._generate_samplesheets(flowcell_id, calculated_lanes)
 
         # Should be sorted: Lane 1 first, then Lane 3 (with 2 settings groups)
         self.assertEqual(len(result), 3)
@@ -782,9 +760,7 @@ class TestGenerateSamplesheets(unittest.TestCase):
         }
         metadata = {}
 
-        result = self.handler._generate_samplesheets(
-            flowcell_id, calculated_lanes, metadata
-        )
+        result = self.handler._generate_samplesheets(flowcell_id, calculated_lanes)
 
         # Should have 3 samplesheets - one per lane, even though it's the same project
         self.assertEqual(len(result), 3)
