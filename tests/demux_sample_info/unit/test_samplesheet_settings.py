@@ -12,6 +12,7 @@ import unittest
 from unittest.mock import MagicMock
 
 from status.demux_sample_info import DemuxSampleInfoDataHandler
+from tests.demux_sample_info.conftest import setup_mock_demux_config
 
 
 class TestSamplesheetSettings(unittest.TestCase):
@@ -22,12 +23,13 @@ class TestSamplesheetSettings(unittest.TestCase):
         # Create a handler instance with mock application
         self.handler = DemuxSampleInfoDataHandler(MagicMock(), MagicMock())
         self.handler.application = MagicMock()
+        self.handler.application.cloudant = MagicMock()
 
         # Base timestamp for testing
         self.timestamp = "2024-01-15T10:30:00"
 
-        # Mock sample classification config with samplesheet_generation_rules
-        self.handler.application.sample_classification_config = {
+        # Mock cloudant to return sample classification config with samplesheet_generation_rules
+        test_config = {
             "samplesheet_generation_rules": {
                 "TrimUMI": [
                     {
@@ -41,6 +43,7 @@ class TestSamplesheetSettings(unittest.TestCase):
                 ]
             }
         }
+        setup_mock_demux_config(self.handler.application.cloudant, config=test_config)
 
     def test_calculate_samplesheet_settings_basic(self):
         """Test basic calculation of samplesheet_settings."""
@@ -194,7 +197,7 @@ class TestSamplesheetSettings(unittest.TestCase):
         # We'll create a minimal test case
 
         # Set up mock config for _create_calculated_lanes
-        self.handler.application.sample_classification_config = {
+        test_config = {
             "bcl_convert_settings": {
                 "raw_samplesheet_settings": {
                     "SoftwareVersion": {"default": "4.0.3"},
@@ -203,28 +206,14 @@ class TestSamplesheetSettings(unittest.TestCase):
             "patterns": {},
             "samplesheet_generation_rules": {},
         }
-        self.handler.application.sample_patterns = {}
-        self.handler.application.control_patterns = []
-        self.handler.application.short_index_threshold = 8
-        self.handler.application.library_method_mapping = {}
+        setup_mock_demux_config(self.handler.application.cloudant, config=test_config)
+
         self.handler.application.named_indices = {}
 
         # Mock methods
         self.handler._get_project_library_method = MagicMock(return_value=None)
         self.handler._get_project_id_by_name = MagicMock(
             return_value={"project_id": "", "doc_id": None}
-        )
-        self.handler._classify_sample_type = MagicMock(
-            return_value={
-                "sample_type": "standard",
-                "index_length": [8, 8],
-                "umi_config": None,
-                "config_sources": [],
-                "raw_samplesheet_settings": {},
-            }
-        )
-        self.handler._generate_override_cycles = MagicMock(
-            return_value="Y151;I8;I8;Y151"
         )
 
         lanes_with_samples = {

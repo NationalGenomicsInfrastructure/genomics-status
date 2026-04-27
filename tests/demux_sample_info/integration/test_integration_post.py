@@ -50,7 +50,10 @@ import tornado.web
 from tornado.testing import AsyncHTTPTestCase
 
 from status.demux_sample_info import DemuxSampleInfoDataHandler
-from tests.demux_sample_info.conftest import get_classification_config
+from tests.demux_sample_info.conftest import (
+    get_classification_config,
+    setup_mock_demux_config,
+)
 
 _HERE = Path(__file__).parent
 _SAVE_ACTUAL = "--save-actual" in sys.argv
@@ -212,20 +215,12 @@ class TestDemuxSampleInfoIntegration(AsyncHTTPTestCase):
         app.mock_project_lookup = None
         app.mock_library_method_lookup = None
 
-        config = get_classification_config()
+        # Set up mock to return demux configuration from CouchDB
+        # This configures the mock cloudant client to respond to
+        # load_active_demux_config() queries
+        setup_mock_demux_config(app.cloudant)
 
-        patterns = {}
-        for key, pattern_config in config["patterns"].items():
-            patterns[key] = {"config": pattern_config}
-            if "regex" in pattern_config:
-                patterns[key]["pattern"] = re.compile(pattern_config["regex"])
-
-        app.sample_classification_config = config
-        app.classification_config = config
-        app.sample_patterns = patterns
-        app.control_patterns = config.get("control_patterns", [])
-        app.short_index_threshold = config.get("short_single_index_threshold", 8)
-        app.library_method_mapping = config.get("library_method_mapping", {})
+        # Load named indices (still needed for named index expansion)
         app.named_indices = {
             "Chromium_10X_indexes": _CHROMIUM_10X_NAMED_INDICES,
             "Smart-seq3": _SMARTSEQ3_NAMED_INDICES,

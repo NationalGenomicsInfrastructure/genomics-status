@@ -14,6 +14,7 @@ import unittest
 from unittest.mock import MagicMock
 
 from status.demux_sample_info import DemuxSampleInfoDataHandler
+from tests.demux_sample_info.conftest import setup_mock_demux_config
 
 
 class TestGenerateSamplesheets(unittest.TestCase):
@@ -24,6 +25,14 @@ class TestGenerateSamplesheets(unittest.TestCase):
         # Create a handler instance with mock application
         self.handler = DemuxSampleInfoDataHandler(MagicMock(), MagicMock())
         self.handler.application = MagicMock()
+        self.handler.application.cloudant = MagicMock()
+
+        # Set up mock to return demux configuration
+        # Use minimal config since _generate_samplesheets uses pre-calculated data
+        setup_mock_demux_config(
+            self.handler.application.cloudant,
+            config={"samplesheet_generation_rules": {}},
+        )
 
         # Base timestamp for testing
         self.timestamp = "2024-01-15T10:30:00"

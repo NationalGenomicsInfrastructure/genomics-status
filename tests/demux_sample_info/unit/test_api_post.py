@@ -18,7 +18,10 @@ import tornado.web
 from tornado.testing import AsyncHTTPTestCase
 
 from status.demux_sample_info import DemuxSampleInfoDataHandler
-from tests.demux_sample_info.conftest import get_classification_config
+from tests.demux_sample_info.conftest import (
+    get_classification_config,
+    setup_mock_demux_config,
+)
 
 
 class TestDemuxSampleInfoPost(AsyncHTTPTestCase):
@@ -38,29 +41,15 @@ class TestDemuxSampleInfoPost(AsyncHTTPTestCase):
         app.gs_globals = {}
         app.test_mode = True  # Enable test mode to bypass authentication
 
-        # Load sample classification patterns (same as real Application does)
-        self._load_sample_patterns_for_test(app)
+        # Set up mock to return demux configuration from CouchDB
+        # This configures the mock cloudant client to respond to
+        # load_active_demux_config() queries
+        setup_mock_demux_config(app.cloudant)
+
+        # Load named indices (still needed for named index expansion)
+        app.named_indices = {}
 
         return app
-
-    def _load_sample_patterns_for_test(self, app):
-        """Load sample classification patterns for testing."""
-        config = get_classification_config()
-
-        # Compile regex patterns
-        patterns = {}
-        for key, pattern_config in config["patterns"].items():
-            patterns[key] = {"config": pattern_config}
-            if "regex" in pattern_config:
-                patterns[key]["pattern"] = re.compile(pattern_config["regex"])
-
-        app.sample_patterns = patterns
-        app.sample_classification_config = config
-        app.classification_config = config
-        app.control_patterns = config.get("control_patterns", [])
-        app.short_index_threshold = config.get("short_single_index_threshold", 8)
-        app.library_method_mapping = config.get("library_method_mapping", {})
-        app.named_indices = {}
 
     def setUp(self):
         """Set up test fixtures."""
@@ -435,13 +424,31 @@ class TestDemuxSampleInfoPost(AsyncHTTPTestCase):
     def test_post_endpoint_already_exists(self):
         """Test POST request when document already exists."""
 
-        # Route post_view calls: return existing doc for the duplicate check,
-        # empty rows for internal project-lookup calls
+        # Route post_view calls:
+        # - return existing doc for the duplicate check in demux_sample_info
+        # - return config for demux_configuration queries
+        # - return empty rows for internal project-lookup calls
+        from tests.demux_sample_info.conftest import get_classification_config_doc
+
+        config_doc = get_classification_config_doc()
+
         def post_view_side_effect(*args, **kwargs):
             mock_result = MagicMock()
             if kwargs.get("db") == "demux_sample_info":
                 mock_result.get_result.return_value = {
                     "rows": [{"id": "existing_doc_id"}]
+                }
+            elif kwargs.get("db") == "demux_configuration":
+                # Return active config
+                mock_result.get_result.return_value = {
+                    "rows": [
+                        {
+                            "id": config_doc.get("_id"),
+                            "key": [True, config_doc.get("created_at")],
+                            "value": config_doc.get("version"),
+                            "doc": config_doc,
+                        }
+                    ]
                 }
             else:
                 mock_result.get_result.return_value = {"rows": []}

@@ -10,7 +10,7 @@ import unittest
 from unittest.mock import MagicMock
 
 from status.demux_sample_info import DemuxSampleInfoDataHandler
-from tests.demux_sample_info.conftest import get_classification_config
+from tests.demux_sample_info.conftest import setup_mock_demux_config
 
 
 class TestInstrumentTypeMapping(unittest.TestCase):
@@ -21,10 +21,10 @@ class TestInstrumentTypeMapping(unittest.TestCase):
         # Create a handler instance with mock application
         self.handler = DemuxSampleInfoDataHandler(MagicMock(), MagicMock())
         self.handler.application = MagicMock()
+        self.handler.application.cloudant = MagicMock()
 
-        self.handler.application.sample_classification_config = (
-            get_classification_config()
-        )
+        # Set up mock to return demux configuration from CouchDB
+        setup_mock_demux_config(self.handler.application.cloudant)
 
     def test_instrument_type_only(self):
         """Test configuration with instrument type but no run mode."""
