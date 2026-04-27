@@ -13,6 +13,43 @@ from ibm_cloud_sdk_core.api_exception import ApiException
 from status.util import SafeHandler
 
 
+def load_active_demux_config(cloudant_client):
+    """Load the active demux configuration from CouchDB.
+
+    Args:
+        cloudant_client: IBM Cloudant client instance
+
+    Returns:
+        tuple: (config_dict, version_string, config_id) or (None, None, None) if no active config found
+    """
+    try:
+        result = cloudant_client.post_view(
+            db="demux_configuration",
+            ddoc="summary",
+            view="active_created_at",
+            descending=True,
+            limit=1,
+            include_docs=True,
+        ).get_result()
+
+        if result.get("rows") and len(result["rows"]) > 0:
+            doc = result["rows"][0]["doc"]
+
+            if doc.get("active", False):
+                return (
+                    doc.get("configuration", {}),
+                    doc.get("version", "unknown"),
+                    doc.get("_id"),
+                )
+
+        logging.warning("No active demux configuration found in database")
+        return (None, None, None)
+
+    except ApiException as e:
+        logging.exception(f"Failed to load active demux configuration: {e}")
+        return (None, None, None)
+
+
 class DemuxSampleInfoEditorHandler(SafeHandler):
     """Serves the demux sample info editor page."""
 
@@ -98,6 +135,37 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                 self._project_library_methods[project_name] = ""
 
         return self._project_library_methods[project_name]
+
+    def _get_sample_classification_config(self):
+        """Get sample classification config with per-request caching.
+
+        Loads the active configuration from CouchDB on first call within a request,
+        then caches it for subsequent calls within the same request.
+
+        Returns:
+            tuple: (config_dict, version_string, config_id)
+
+        Raises:
+            tornado.web.HTTPError: 500 if no active configuration is available
+        """
+        if not hasattr(self, "_config"):
+            # Load config from CouchDB
+            config, version, config_id = load_active_demux_config(
+                self.application.cloudant
+            )
+
+            if config is None:
+                raise tornado.web.HTTPError(
+                    500,
+                    reason="No active demux configuration found. Please ensure an active configuration exists in the database.",
+                )
+
+            # Cache for this request
+            self._config = config
+            self._config_version = version
+            self._config_id = config_id
+
+        return self._config, self._config_version, self._config_id
 
     def get(self, flowcell_id):
         """Retrieve demux sample info document for a specific flowcell."""
@@ -237,7 +305,7 @@ class DemuxSampleInfoDataHandler(SafeHandler):
     def _get_sample_patterns(self):
         """Get compiled sample patterns with caching."""
         if not hasattr(self, "_compiled_patterns"):
-            config = self.application.sample_classification_config
+            config, _, _ = self._get_sample_classification_config()
             patterns = {}
             # Load regex-based patterns
             for key, pattern_config in config.get("patterns", {}).items():
@@ -491,8 +559,8 @@ class DemuxSampleInfoDataHandler(SafeHandler):
         Returns:
             dict: Contains sample_type, index_length, umi_config, config_sources, named_indices, raw_samplesheet_settings
         """
-        # Get configuration from application
-        config = self.application.sample_classification_config
+        # Get configuration from per-request cache
+        config, _, _ = self._get_sample_classification_config()
         sample_patterns = self._get_sample_patterns()
         control_patterns = config.get("control_patterns", [])
         library_method_mapping = config.get("library_method_mapping", {})
@@ -880,7 +948,7 @@ class DemuxSampleInfoDataHandler(SafeHandler):
         Returns:
             tuple: (bcl_convert_settings dict, config_sources list)
         """
-        config = self.application.sample_classification_config
+        config, _, _ = self._get_sample_classification_config()
         bcl_settings_defaults = config.get("bcl_convert_settings", {}).get(
             "raw_samplesheet_settings", {}
         )
@@ -1139,9 +1207,7 @@ class DemuxSampleInfoDataHandler(SafeHandler):
         }
 
         # Get global samplesheet generation rules from config (Stage 2)
-        config = getattr(self.application, "sample_classification_config", None)
-        if not isinstance(config, dict):
-            config = {}
+        config, _, _ = self._get_sample_classification_config()
         global_samplesheet_rules = config.get("samplesheet_generation_rules", {})
 
         # STAGE 2: Apply global samplesheet generation rules
@@ -1370,19 +1436,13 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                         "autogenerated": True,
                         "comment": "Uploaded from LIMS",
                         "auto_run": True,
-                        "config_version": getattr(
-                            self.application,
-                            "sample_classification_config_version",
-                            "unknown",
-                        ),
+                        "config_version": self._config_version,
                     }
                 },
                 "lanes": calculated_lanes,
             },
             "samplesheets": samplesheets,
-            "config_version": getattr(
-                self.application, "sample_classification_config_version", "unknown"
-            ),
+            "config_version": self._config_version,
         }
 
         return document
@@ -1842,15 +1902,11 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                 "autogenerated": False,
                 "comment": comment,
                 "auto_run": False,
-                "config_version": getattr(
-                    self.application, "sample_classification_config_version", "unknown"
-                ),
+                "config_version": self._config_version,
             }
 
             # Update top-level config_version to track latest version used
-            document["config_version"] = getattr(
-                self.application, "sample_classification_config_version", "unknown"
-            )
+            document["config_version"] = self._config_version
 
             # Regenerate samplesheets after updates, applying Stage 2 rules then Stage 3 assembly
             calculated_lanes = document.get("calculated", {}).get("lanes", {})
@@ -2056,15 +2112,11 @@ class SampleDeleteHandler(DemuxSampleInfoDataHandler):
                 "autogenerated": False,
                 "comment": f"Deleted sample: {sample_id} (Lane {lane}, UUID: {sample_uuid})",
                 "auto_run": False,
-                "config_version": getattr(
-                    self.application, "sample_classification_config_version", "unknown"
-                ),
+                "config_version": self._config_version,
             }
 
             # Update top-level config_version to track latest version used
-            document["config_version"] = getattr(
-                self.application, "sample_classification_config_version", "unknown"
-            )
+            document["config_version"] = self._config_version
 
             # Regenerate samplesheets without the deleted sample
             calculated_lanes = document.get("calculated", {}).get("lanes", {})
@@ -2120,3 +2172,110 @@ class SampleDeleteHandler(DemuxSampleInfoDataHandler):
         except (ApiException, KeyError, AttributeError, TypeError) as e:
             self.set_status(500)
             self.write(json.dumps({"error": f"Internal server error: {str(e)}"}))
+
+
+class DemuxConfigurationHandler(SafeHandler):
+    """Handler for viewing demux configuration metadata and versions."""
+
+    def get(self):
+        """Get current configuration info and list of all versions.
+
+        Query Parameters:
+            active (str): If 'true', returns only the active configuration document
+        """
+        # Check if user wants just the active configuration
+        get_active_only = self.get_argument("active", "false").lower() == "true"
+
+        if get_active_only:
+            # Use the shared utility function to get active config
+            config, version, config_id = load_active_demux_config(
+                self.application.cloudant
+            )
+
+            if config is None:
+                self.set_status(404)
+                self.write(json.dumps({"error": "No active configuration found"}))
+                return
+
+            # Return the configuration section
+            self.set_status(200)
+            self.write(json.dumps(config, indent=2))
+            return
+
+        # Original behavior: return summary of all versions
+        try:
+            result = self.application.cloudant.post_view(
+                db="demux_configuration",
+                ddoc="summary",
+                view="active_created_at",
+                descending=True,
+                include_docs=False,
+            ).get_result()
+
+            versions = []
+            active_version = None
+
+            for row in result.get("rows", []):
+                version_info = {
+                    "id": row["value"]["id"],
+                    "version": row["value"]["version"],
+                    "created_at": row["value"].get("created_at"),
+                    "created_by": row["value"].get("created_by"),
+                    "comment": row["value"].get("comment"),
+                    "active": row["value"].get("active", False),
+                }
+
+                versions.append(version_info)
+
+                if row["value"].get("active"):
+                    active_version = version_info
+
+            # Get truly active version from database (not stale cache)
+            config, version, config_id = load_active_demux_config(
+                self.application.cloudant
+            )
+            current_loaded = {
+                "version": version if version else "unknown",
+                "id": config_id,
+            }
+
+            response = {
+                "current_loaded": current_loaded,
+                "active_in_database": active_version,
+                "all_versions": versions,
+            }
+
+            self.set_status(200)
+            self.write(json.dumps(response, indent=2))
+
+        except ApiException as e:
+            self.set_status(500)
+            self.write(json.dumps({"error": f"Database error: {str(e)}"}))
+
+
+class DemuxConfigurationDetailHandler(SafeHandler):
+    """Handler for viewing a specific configuration version."""
+
+    def get(self, config_id):
+        """Get a specific configuration version by ID."""
+        try:
+            doc = self.application.cloudant.get_document(
+                db="demux_configuration", doc_id=config_id
+            ).get_result()
+
+            if not doc:
+                self.set_status(404)
+                self.write(json.dumps({"error": "Configuration version not found"}))
+                return
+
+            # Return full document including configuration
+            self.set_status(200)
+            self.write(json.dumps(doc, indent=2))
+
+        except ApiException as e:
+            if e.status_code == 404:
+                self.set_status(404)
+                self.write(json.dumps({"error": "Configuration version not found"}))
+            else:
+                self.set_status(500)
+                self.write(json.dumps({"error": f"Database error: {str(e)}"}))

@@ -34,11 +34,9 @@ from status.config_handler import ConfigDataHandler
 from status.controls import ControlsHandler
 from status.data_deliveries_plot import DataDeliveryHandler, DeliveryPlotHandler
 from status.deliveries import DeliveriesPageHandler
-from status.demux_configuration import (
+from status.demux_sample_info import (
     DemuxConfigurationDetailHandler,
     DemuxConfigurationHandler,
-)
-from status.demux_sample_info import (
     DemuxSampleInfoDataHandler,
     DemuxSampleInfoEditorHandler,
     SampleDeleteHandler,
@@ -519,9 +517,6 @@ class Application(tornado.web.Application):
         # to display instruments in the server status
         self.server_status = settings.get("server_status")
 
-        # Load sample classification patterns for demux sample info
-        self._load_sample_classification_patterns()
-
         # Load named indices from config directory
         self.named_indices = self._load_named_indices(settings.get("config_dir", "."))
 
@@ -616,48 +611,6 @@ class Application(tornado.web.Application):
             tornado.autoreload.watch("design/worksets.html")
 
         tornado.web.Application.__init__(self, handlers, **settings)
-
-    def _load_sample_classification_patterns(self):
-        """Load sample classification patterns from CouchDB demux_configuration database.
-
-        This method fetches the active configuration version from the demux_configuration
-        database.
-        """
-        database_name = "demux_configuration"
-
-        # Try to load from CouchDB using view for better performance
-        # Query for all configurations sorted by [active, created_at] descending
-        # Active configs (true) come first, so limit=1 gives us the most recent active config
-        result = self.cloudant.post_view(
-            db=database_name,
-            ddoc="summary",
-            view="active_created_at",
-            descending=True,
-            limit=1,
-            include_docs=True,
-        ).get_result()
-
-        if result.get("rows") and len(result["rows"]) > 0:
-            doc = result["rows"][0]["doc"]
-
-            # Verify this is an active configuration
-            if not doc.get("active", False):
-                logging.warning(f"No active configuration found in {database_name}")
-            else:
-                config = doc["configuration"]
-
-                # Store both the configuration and metadata
-                self.sample_classification_config = config
-                self.sample_classification_config_version = doc["version"]
-                self.sample_classification_config_id = doc["_id"]
-
-                logging.info(
-                    f"Loaded demux configuration version {doc['version']} from CouchDB "
-                    f"(created: {doc.get('created_at', 'unknown')})"
-                )
-                return
-        else:
-            logging.warning(f"No active configuration found in {database_name}")
 
     def _load_named_indices(self, config_dir):
         """Load named indices from CSV files in the named_indices directory.
