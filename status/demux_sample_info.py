@@ -586,48 +586,26 @@ class DemuxSampleInfoDataHandler(SafeHandler):
         # STEP 2: Apply regex-based pattern configurations
         pattern_matched = False
 
-        # Define patterns to check in order
-        patterns_to_check = [
-            (
-                "tenx_single",
-                lambda: (
-                    "tenx_single" in sample_patterns
-                    and "pattern" in sample_patterns["tenx_single"]
-                    and sample_patterns["tenx_single"]["pattern"].match(index1)
-                ),
-            ),
-            (
-                "tenx_dual",
-                lambda: (
-                    "tenx_dual" in sample_patterns
-                    and "pattern" in sample_patterns["tenx_dual"]
-                    and sample_patterns["tenx_dual"]["pattern"].match(index1)
-                ),
-            ),
-            (
-                "idt_umi",
-                lambda: (
-                    "idt_umi" in sample_patterns
-                    and "pattern" in sample_patterns["idt_umi"]
-                    and (
-                        sample_patterns["idt_umi"]["pattern"].match(index1)
-                        or sample_patterns["idt_umi"]["pattern"].match(index2)
-                    )
-                ),
-            ),
-            (
-                "smartseq",
-                lambda: (
-                    "smartseq" in sample_patterns
-                    and "pattern" in sample_patterns["smartseq"]
-                    and sample_patterns["smartseq"]["pattern"].match(index1)
-                ),
-            ),
-        ]
+        # Dynamically check all regex-based patterns from config
+        for pattern_name, pattern_info in sample_patterns.items():
+            if pattern_matched:
+                break
 
-        for pattern_name, match_func in patterns_to_check:
-            if not pattern_matched and match_func():
-                pattern_config = sample_patterns.get(pattern_name, {}).get("config", {})
+            # Only process patterns with compiled regex (from config.patterns)
+            if "pattern" not in pattern_info:
+                continue
+
+            pattern_config = pattern_info.get("config", {})
+            compiled_pattern = pattern_info["pattern"]
+
+            # Check if pattern matches index1 or index2
+            # Most patterns only check index1, but some (like idt_umi) can match either
+            index1_match = compiled_pattern.match(index1) if index1 else None
+            index2_match = compiled_pattern.match(index2) if index2 else None
+
+            matched = index1_match or index2_match
+
+            if matched:
                 result["sample_type"] = pattern_config.get("sample_type")
 
                 # Special handling for idt_umi - calculate UMI lengths from N positions
