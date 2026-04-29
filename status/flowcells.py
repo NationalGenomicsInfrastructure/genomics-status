@@ -55,6 +55,7 @@ class FlowcellsHandler(SafeHandler):
                 end_key=half_a_year_ago,
             ).get_result()["rows"]
         note_keys = []
+        x_flowcells_rundirs = set()
         for row in xfc_view:
             try:
                 row["value"]["startdate"] = datetime.datetime.strptime(
@@ -83,6 +84,9 @@ class FlowcellsHandler(SafeHandler):
             row["value"]["in_x_flowcells"] = True
             row["value"]["in_flowcell_status"] = False
             temp_flowcells[row["key"]] = row["value"]
+            # Collect run id for deduplication with flowcell_status
+            if row["value"].get("run id"):
+                x_flowcells_rundirs.add(row["value"]["run id"])
 
         # Query flowcell_status database and merge entries that don't exist in x_flowcells
         try:
@@ -107,11 +111,6 @@ class FlowcellsHandler(SafeHandler):
                 .get_result()
                 .get("rows", [])
             )
-
-            # Collect all rundir IDs from x_flowcells for deduplication
-            x_flowcells_rundirs = {
-                fc.get("run id") for fc in temp_flowcells.values() if fc.get("run id")
-            }
 
             # Process flowcell_status entries
             for row in flowcell_status_rows:
