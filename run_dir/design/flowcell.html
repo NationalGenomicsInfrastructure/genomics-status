@@ -42,7 +42,12 @@
       <tr class="darkth">
         <th>External Links:</th>
           <td>
-            <a id="statusdb_link" href="{{ statusdb_url }}/_utils/index.html?flowcells#/database/x_flowcells/{{ statusdb_id }}" data-toggle="tooltip" title="Opens flowcell page in StatusDB" class="btn btn-light btn-xs float-left" target="_blank">StatusDB</a>
+            <a id="statusdb_link" href="{{ statusdb_url }}/_utils/index.html?flowcells#/database/x_flowcells/{{ statusdb_id }}"
+              data-toggle="tooltip" title="Opens flowcell page in StatusDB" class="btn btn-light btn-xs float-left ml-2"
+              target="_blank"><i class="fa fa-database"></i>StatusDB</a>
+            <a href="/demux_sample_info_editor?flowcell={{ flowcell.get('short_name') }}" data-toggle="tooltip"
+              title="Opens demux sample info editor" class="btn btn-light btn-xs float-left ml-2"><i class="fa fa-edit"></i> Sample
+              Info Editor</a>
           </td>
       </tr>
     </table>

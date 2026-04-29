@@ -84,21 +84,8 @@ Description: Shows a table with all flow cells.
                             {% for onefc in flowcells %}
                                 <tr>
                                     <td class="run_id">
-                                        {% if flowcells[onefc].get('source') == 'flowcell_status' %}
-                                        {% comment flowcell_status link to demux sample info editor %}
-                                        {% set fc_id = flowcells[onefc].get('flowcell_id', onefc) %}
-                                        {% if fc_id.startswith('A') %}
-                                        {% set fc_id = fc_id[1:] %}
-                                        {% end %}
-                                        <a class="text-decoration-none" href="/demux_sample_info_editor?flowcell={{ fc_id }}">{{ flowcells[onefc]["run id"]
-                                            }}</a>
-                                            {% if flowcells[onefc].get('sequencing_finished') %}
-                                                <abbr title="Sequencing completed"><span class="fa fa-check-circle ml-2"></span></abbr>
-                                            {% elif flowcells[onefc].get('sequencing_started') %}
-                                                <abbr title="Sequencing in progress"><span class="fa fa-hourglass-half ml-2"></span></abbr>
-                                            {% end %}
-                                        {% else %}
-                                            {% comment X_flowcells - link varies by run mode %}
+                                        {% if flowcells[onefc].get('in_x_flowcells', False) %}
+                                            {% comment X_flowcells exists - link to QC page %}
                                             {% if 'NovaSeqXPlus' in flowcells[onefc].get('run_mode', '') %}
                                                 <a class="text-decoration-none" href="/flowcells/{{ flowcells[onefc]['run id'] }}">{{ flowcells[onefc]["run id"] }}</a>
                                             {% else %}
@@ -108,6 +95,18 @@ Description: Shows a table with all flow cells.
                                                 <abbr title="Demultiplexing completed"><span class="fa fa-check-circle ml-2"></span></abbr>
                                             {% else %}
                                                 <abbr title="Ongoing"><span class="fa fa-hourglass-half ml-2"></span></abbr>
+                                            {% end %}
+                                        {% else %}
+                                            {% comment No x_flowcells data - link to demux sample info editor %}
+                                            {% set fc_id = flowcells[onefc].get('flowcell_id', onefc) %}
+                                            {% if fc_id.startswith('A') %}
+                                                {% set fc_id = fc_id[1:] %}
+                                            {% end %}
+                                            <a class="text-decoration-none" href="/demux_sample_info_editor?flowcell={{ fc_id }}">{{ flowcells[onefc]["run id"]}}</a>
+                                            {% if flowcells[onefc].get('sequencing_finished') %}
+                                                <abbr title="Sequencing completed"><span class="fa fa-check-circle ml-2"></span></abbr>
+                                            {% elif flowcells[onefc].get('sequencing_started') %}
+                                                <abbr title="Sequencing in progress"><span class="fa fa-hourglass-half ml-2"></span></abbr>
                                             {% end %}
                                         {% end %}
                                     </td>
@@ -136,7 +135,7 @@ Description: Shows a table with all flow cells.
                                         {% end %}
                                     </td>
                                     <td class="pf_clusters" class="text-center">
-                                        {% if flowcells[onefc].get('source') == 'flowcell_status' %}
+                                        {% if not flowcells[onefc].get('in_x_flowcells', False) %}
                                             <samp style="max-width:50px;">N/A</samp>
                                         {% elif 'lane_info' in flowcells[onefc] %}
                                             {% for lane_id, lane in flowcells[onefc]['lane_info'].items() %}
@@ -159,7 +158,7 @@ Description: Shows a table with all flow cells.
                                         {% end %}
                                     </td>
                                     <td class="q30_bases" class="text-center">
-                                        {% if flowcells[onefc].get('source') == 'flowcell_status' %}
+                                        {% if not flowcells[onefc].get('in_x_flowcells', False) %}
                                             <samp style="max-width:50px;">N/A</samp>
                                         {% elif 'lane_info' in flowcells[onefc] %}
                                             {% for onelane in flowcells[onefc]['lane_info'] %}
@@ -179,7 +178,7 @@ Description: Shows a table with all flow cells.
                                         {% end %}
                                     </td>
                                     <td class="er_rate" class="text-center">
-                                        {% if flowcells[onefc].get('source') == 'flowcell_status' %}
+                                        {% if not flowcells[onefc].get('in_x_flowcells', False) %}
                                             <samp style="max-width:50px;">N/A</samp>
                                         {% elif 'lane_info' in flowcells[onefc] %}
                                             {% for onelane in flowcells[onefc]['lane_info'] %}
@@ -202,11 +201,7 @@ Description: Shows a table with all flow cells.
                                         {% end %}
                                     </td>
                                     <td class="pdc_archived">
-                                        {% if flowcells[onefc].get('source') == 'flowcell_status' %}
-                                            N/A
-                                        {% else %}
-                                            {{ flowcells[onefc].get('pdc_archived', '-') }}
-                                        {% end %}
+                                        {{ flowcells[onefc].get('pdc_archived', '-') }}
                                     </td>
                                     <td class="latest_running_note" class="text-center">
                                         {% if flowcells[onefc].get('latest_running_note') %}

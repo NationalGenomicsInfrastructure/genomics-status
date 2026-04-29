@@ -3344,6 +3344,9 @@ const vDemuxSampleInfoEditor = {
                             <button class="btn btn-outline-secondary" @click="backToList">
                                 <i class="fa fa-arrow-left mr-2"></i>Back to Flowcell List
                             </button>
+                            <a :href="'/flowcells/' + demux_data.flowcell_id" class="btn btn-outline-primary ml-2" data-toggle="tooltip" title="View flowcell QC page (may not exist for new runs)">
+                                <i class="fa fa-chart-bar mr-2"></i>Flowcell QC Page
+                            </a>
                         </div>
                         <h2>Flowcell: {{ demux_data.flowcell_id }}</h2>
                         <!-- Metadata Card -->

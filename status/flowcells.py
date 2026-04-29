@@ -79,6 +79,9 @@ class FlowcellsHandler(SafeHandler):
             if "LH" in row["value"]["instrument"]:
                 note_key = f"{row['value']['run id'].split('_')[0]}_{row['value']['run id'].split('_')[-1]}"
             note_keys.append(note_key)
+            # Mark that this flowcell was found in x_flowcells
+            row["value"]["in_x_flowcells"] = True
+            row["value"]["in_flowcell_status"] = False
             temp_flowcells[row["key"]] = row["value"]
 
         # Query flowcell_status database and merge entries that don't exist in x_flowcells
@@ -175,10 +178,21 @@ class FlowcellsHandler(SafeHandler):
                     "sequencing_started": value.get("sequencing_started", False),
                     "sequencing_finished": value.get("sequencing_finished", False),
                     "demultiplexing": None,  # Not available for flowcell_status
+                    "in_flowcell_status": True,
+                    "in_x_flowcells": False,  # Will be updated if merged
                 }
 
                 # Use flowcell_id as key for flowcell_status entries
-                temp_flowcells[flowcell_id] = fc_status_entry
+                if flowcell_id in temp_flowcells:
+                    # Merge existing entry with flowcell_status data, giving precedence to x_flowcells data
+                    existing_entry = temp_flowcells[flowcell_id]
+                    merged_entry = {**fc_status_entry, **existing_entry}
+                    # This flowcell exists in both databases
+                    merged_entry["in_flowcell_status"] = True
+                    merged_entry["in_x_flowcells"] = True
+                    temp_flowcells[flowcell_id] = merged_entry
+                else:
+                    temp_flowcells[flowcell_id] = fc_status_entry
 
                 # Add to note_keys for running notes lookup
                 note_key = runfolder_id or flowcell_id
