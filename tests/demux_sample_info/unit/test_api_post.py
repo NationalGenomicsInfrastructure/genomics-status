@@ -10,7 +10,6 @@ Tests the demultiplexing sample info POST endpoint including:
 
 import json
 import os
-import re
 import unittest
 from unittest.mock import MagicMock, patch
 
@@ -19,7 +18,6 @@ from tornado.testing import AsyncHTTPTestCase
 
 from status.demux_sample_info import DemuxSampleInfoDataHandler
 from tests.demux_sample_info.conftest import (
-    get_classification_config,
     setup_mock_demux_config,
 )
 

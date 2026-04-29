@@ -1885,7 +1885,7 @@ class DemuxSampleInfoDataHandler(SafeHandler):
 
             # Regenerate samplesheets after updates, applying Stage 2 rules then Stage 3 assembly
             calculated_lanes = document.get("calculated", {}).get("lanes", {})
-            metadata = document.get("metadata", {})
+            document.get("metadata", {})
 
             # Recalculate samplesheet_settings for all samples
             self._recalculate_all_samplesheet_settings(calculated_lanes)

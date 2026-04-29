@@ -39,7 +39,6 @@ usage in get_app() accordingly.
 """
 
 import json
-import re
 import sys
 import tempfile
 import unittest
@@ -51,7 +50,6 @@ from tornado.testing import AsyncHTTPTestCase
 
 from status.demux_sample_info import DemuxSampleInfoDataHandler
 from tests.demux_sample_info.conftest import (
-    get_classification_config,
     setup_mock_demux_config,
 )
 

@@ -86,7 +86,6 @@ class TestGenerateSamplesheets(unittest.TestCase):
                 }
             }
         }
-        metadata = {}
 
         result = self.handler._generate_samplesheets(flowcell_id, calculated_lanes)
 
@@ -165,7 +164,6 @@ class TestGenerateSamplesheets(unittest.TestCase):
                 }
             }
         }
-        metadata = {}
 
         result = self.handler._generate_samplesheets(flowcell_id, calculated_lanes)
 
@@ -226,7 +224,6 @@ class TestGenerateSamplesheets(unittest.TestCase):
                 }
             }
         }
-        metadata = {}
 
         result = self.handler._generate_samplesheets(flowcell_id, calculated_lanes)
 
@@ -296,7 +293,6 @@ class TestGenerateSamplesheets(unittest.TestCase):
                 }
             },
         }
-        metadata = {}
 
         result = self.handler._generate_samplesheets(flowcell_id, calculated_lanes)
 
@@ -338,7 +334,6 @@ class TestGenerateSamplesheets(unittest.TestCase):
                 }
             }
         }
-        metadata = {}
 
         result = self.handler._generate_samplesheets(flowcell_id, calculated_lanes)
 
@@ -372,7 +367,6 @@ class TestGenerateSamplesheets(unittest.TestCase):
                 }
             }
         }
-        metadata = {}
 
         result = self.handler._generate_samplesheets(flowcell_id, calculated_lanes)
 
@@ -420,7 +414,6 @@ class TestGenerateSamplesheets(unittest.TestCase):
                 }
             }
         }
-        metadata = {}
 
         result = self.handler._generate_samplesheets(flowcell_id, calculated_lanes)
 
@@ -433,7 +426,6 @@ class TestGenerateSamplesheets(unittest.TestCase):
         """Test handling of empty calculated_lanes."""
         flowcell_id = "EMPTY_TEST"
         calculated_lanes = {}
-        metadata = {}
 
         result = self.handler._generate_samplesheets(flowcell_id, calculated_lanes)
 
@@ -466,7 +458,6 @@ class TestGenerateSamplesheets(unittest.TestCase):
                 }
             }
         }
-        metadata = {}
 
         result = self.handler._generate_samplesheets(flowcell_id, calculated_lanes)
 
@@ -547,7 +538,6 @@ class TestGenerateSamplesheets(unittest.TestCase):
                 }
             }
         }
-        metadata = {}
 
         result = self.handler._generate_samplesheets(flowcell_id, calculated_lanes)
 
@@ -625,7 +615,6 @@ class TestGenerateSamplesheets(unittest.TestCase):
                 }
             },
         }
-        metadata = {}
 
         result = self.handler._generate_samplesheets(flowcell_id, calculated_lanes)
 
@@ -758,7 +747,6 @@ class TestGenerateSamplesheets(unittest.TestCase):
                 }
             },
         }
-        metadata = {}
 
         result = self.handler._generate_samplesheets(flowcell_id, calculated_lanes)
 
