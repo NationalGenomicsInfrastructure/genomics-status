@@ -1,0 +1,280 @@
+{
+    "flowcell_id": "",
+    "metadata": {
+        "num_samples": 0,
+        "num_lanes": 0,
+        "full_name": "",
+        "position": "",
+        "instrument": "",
+        "run_setup": "",
+        "projects": []
+    },
+    "samplesheets": {
+        "timestamp1": {
+            "LIMS_Original": [
+                {
+                    "FCID": "233KCWLT4",
+                    "Lane": "3",
+                    "Sample_ID": "P71234_501",
+                    "Sample_Name": "P71234_501",
+                    "Sample_Ref": "Human (Homo sapiens GRCh38)",
+                    "index": "SI-TS-A7",
+                    "index2": "",
+                    "Description": "Y__Andersson_01_45",
+                    "Control": "N",
+                    "Recipe": "43-50",
+                    "Operator": "Lars_Eriksson",
+                    "Sample_Project": "Y__Andersson_01_45"
+                },
+                {
+                    "FCID": "233KCWLT4",
+                    "Lane": "3",
+                    "Sample_ID": "P71234_502",
+                    "Sample_Name": "P71234_502",
+                    "Sample_Ref": "Human (Homo sapiens GRCh38)",
+                    "index": "SI-TS-B7",
+                    "index2": "",
+                    "Description": "Y__Andersson_01_45",
+                    "Control": "N",
+                    "Recipe": "43-50",
+                    "Operator": "Lars_Eriksson",
+                    "Sample_Project": "Y__Andersson_01_45"
+                },
+                {
+                    "FCID": "233KCWLT4",
+                    "Lane": "3",
+                    "Sample_ID": "P71234_503",
+                    "Sample_Name": "P71234_503",
+                    "Sample_Ref": "Human (Homo sapiens GRCh38)",
+                    "index": "SI-TS-C7",
+                    "index2": "",
+                    "Description": "Y__Andersson_01_45",
+                    "Control": "N",
+                    "Recipe": "43-50",
+                    "Operator": "Lars_Eriksson",
+                    "Sample_Project": "Y__Andersson_01_45"
+                },
+                {
+                    "FCID": "233KCWLT4",
+                    "Lane": "3",
+                    "Sample_ID": "P71234_504",
+                    "Sample_Name": "P71234_504",
+                    "Sample_Ref": "Human (Homo sapiens GRCh38)",
+                    "index": "SI-TS-D7",
+                    "index2": "",
+                    "Description": "Y__Andersson_01_45",
+                    "Control": "N",
+                    "Recipe": "43-50",
+                    "Operator": "Lars_Eriksson",
+                    "Sample_Project": "Y__Andersson_01_45"
+                },
+                {
+                    "FCID": "233KCWLT4",
+                    "Lane": "6",
+                    "Sample_ID": "P89101_2001",
+                    "Sample_Name": "P89101_2001",
+                    "Sample_Ref": "Human (Homo sapiens GRCh38)",
+                    "index": "CGCCTCT",
+                    "index2": "CGTTCCT",
+                    "Description": "B__Svensson_12_34",
+                    "Control": "N",
+                    "Recipe": "151-151",
+                    "Operator": "Mikael_Johansson",
+                    "Sample_Project": "B__Svensson_12_34"
+                },
+                {
+                    "FCID": "233KCWLT4",
+                    "Lane": "6",
+                    "Sample_ID": "P89101_2002",
+                    "Sample_Name": "P89101_2002",
+                    "Sample_Ref": "Human (Homo sapiens GRCh38)",
+                    "index": "CTTGCGG",
+                    "index2": "CGCCTCA",
+                    "Description": "B__Svensson_12_34",
+                    "Control": "N",
+                    "Recipe": "151-151",
+                    "Operator": "Mikael_Johansson",
+                    "Sample_Project": "B__Svensson_12_34"
+                },
+                {
+                    "FCID": "233KCWLT4",
+                    "Lane": "6",
+                    "Sample_ID": "P89101_2003",
+                    "Sample_Name": "P89101_2003",
+                    "Sample_Ref": "Human (Homo sapiens GRCh38)",
+                    "index": "TGGACGT",
+                    "index2": "CAATCGA",
+                    "Description": "B__Svensson_12_34",
+                    "Control": "N",
+                    "Recipe": "151-151",
+                    "Operator": "Mikael_Johansson",
+                    "Sample_Project": "B__Svensson_12_34"
+                },
+                {
+                    "FCID": "233KCWLT4",
+                    "Lane": "6",
+                    "Sample_ID": "P89101_2004",
+                    "Sample_Name": "P89101_2004",
+                    "Sample_Ref": "Human (Homo sapiens GRCh38)",
+                    "index": "ATACTGA",
+                    "index2": "CCTTCGC",
+                    "Description": "B__Svensson_12_34",
+                    "Control": "N",
+                    "Recipe": "151-151",
+                    "Operator": "Mikael_Johansson",
+                    "Sample_Project": "B__Svensson_12_34"
+                },
+                {
+                    "FCID": "233KCWLT4",
+                    "Lane": "6",
+                    "Sample_ID": "P89101_2005",
+                    "Sample_Name": "P89101_2005",
+                    "Sample_Ref": "Human (Homo sapiens GRCh38)",
+                    "index": "CAGGAAG",
+                    "index2": "CAGGCAA",
+                    "Description": "B__Svensson_12_34",
+                    "Control": "N",
+                    "Recipe": "151-151",
+                    "Operator": "Mikael_Johansson",
+                    "Sample_Project": "B__Svensson_12_34"
+                },
+                {
+                    "FCID": "233KCWLT4",
+                    "Lane": "6",
+                    "Sample_ID": "P89101_2006",
+                    "Sample_Name": "P89101_2006",
+                    "Sample_Ref": "Human (Homo sapiens GRCh38)",
+                    "index": "CAATTAC",
+                    "index2": "GCTCCGT",
+                    "Description": "B__Svensson_12_34",
+                    "Control": "N",
+                    "Recipe": "151-151",
+                    "Operator": "Mikael_Johansson",
+                    "Sample_Project": "B__Svensson_12_34"
+                },
+                {
+                    "FCID": "233KCWLT4",
+                    "Lane": "6",
+                    "Sample_ID": "P89101_2007",
+                    "Sample_Name": "P89101_2007",
+                    "Sample_Ref": "Human (Homo sapiens GRCh38)",
+                    "index": "CATACCT",
+                    "index2": "AGAGACT",
+                    "Description": "B__Svensson_12_34",
+                    "Control": "N",
+                    "Recipe": "151-151",
+                    "Operator": "Mikael_Johansson",
+                    "Sample_Project": "B__Svensson_12_34"
+                },
+                {
+                    "FCID": "233KCWLT4",
+                    "Lane": "6",
+                    "Sample_ID": "P89101_2008",
+                    "Sample_Name": "P89101_2008",
+                    "Sample_Ref": "Human (Homo sapiens GRCh38)",
+                    "index": "TACTTAG",
+                    "index2": "CTGGCCT",
+                    "Description": "B__Svensson_12_34",
+                    "Control": "N",
+                    "Recipe": "151-151",
+                    "Operator": "Mikael_Johansson",
+                    "Sample_Project": "B__Svensson_12_34"
+                },
+                {
+                    "FCID": "233KCWLT4",
+                    "Lane": "6",
+                    "Sample_ID": "P89101_2009",
+                    "Sample_Name": "P89101_2009",
+                    "Sample_Ref": "Human (Homo sapiens GRCh38)",
+                    "index": "AAGCTAA",
+                    "index2": "CGCAAGG",
+                    "Description": "B__Svensson_12_34",
+                    "Control": "N",
+                    "Recipe": "151-151",
+                    "Operator": "Mikael_Johansson",
+                    "Sample_Project": "B__Svensson_12_34"
+                }
+            ],
+            "per_lane": {
+                "1": {
+                    "subdemux_0": {
+                        "options": {
+                            "command_line": {},
+                            "in_samplesheet": {}
+                        },
+                        "samples": [
+                            {
+                                "FCID": "233KCWLT4",
+                                "Lane": "1",
+                                "Sample_ID": "P71234_501",
+                                "Sample_Name": "P71234_501",
+                                "Sample_Ref": "Human (Homo sapiens GRCh38)",
+                                "index": "SI-TS-A7",
+                                "index2": "",
+                                "Description": "Y__Andersson_01_45",
+                                "Control": "N",
+                                "Recipe": "43-50",
+                                "Operator": "Lars_Eriksson",
+                                "Sample_Project": "Y__Andersson_01_45"
+                            },
+                            {
+                                "FCID": "233KCWLT4",
+                                "Lane": "1",
+                                "Sample_ID": "P71234_502",
+                                "Sample_Name": "P71234_502",
+                                "Sample_Ref": "Human (Homo sapiens GRCh38)",
+                                "index": "SI-TS-B7",
+                                "index2": "",
+                                "Description": "Y__Andersson_01_45",
+                                "Control": "N",
+                                "Recipe": "43-50",
+                                "Operator": "Lars_Eriksson",
+                                "Sample_Project": "Y__Andersson_01_45"
+                            },
+                            {
+                                "FCID": "233KCWLT4",
+                                "Lane": "1",
+                                "Sample_ID": "P71234_503",
+                                "Sample_Name": "P71234_503",
+                                "Sample_Ref": "Human (Homo sapiens GRCh38)",
+                                "index": "SI-TS-C7",
+                                "index2": "",
+                                "Description": "Y__Andersson_01_45",
+                                "Control": "N",
+                                "Recipe": "43-50",
+                                "Operator": "Lars_Eriksson",
+                                "Sample_Project": "Y__Andersson_01_45"
+                            }
+                        ]
+                    }
+                },
+                "2": "..."
+            },
+            "changes_made": [
+                {
+                    "sheet_level": "subdemux", // "subdemux_full_detail", "LIMS_Original"
+                    "scope": , // A project, lane, individual samples
+                    "target": , // command_line_option, header_option, samplerow
+                    "type": update, // or action
+                    "key": key, 
+                    "new_value": new_value
+                },
+                {
+                    "sheet_level": "subdemux", // "subdemux_full_detail", "LIMS_Original"
+                    "scope": , // A project, lane, individual samples
+                    "target": , // command_line_option, header_option, samplerow
+                    "type": action, // or update
+                    "key": index1, 
+                    "named_action": RC1
+                }
+            ]
+        },
+        "timestamp2": {
+            "LIMS_Original": "...",
+            "per_lane": {
+                "1": "...",
+                "2": "..."
+            }
+        }
+    }
+}

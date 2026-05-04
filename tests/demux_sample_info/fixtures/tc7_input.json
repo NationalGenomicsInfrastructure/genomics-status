@@ -1,0 +1,121 @@
+{
+  "metadata": {
+    "num_lanes": 8,
+    "run_setup": "151-10-10-151",
+    "setup_lims_step_id": "24-TC7"
+  },
+  "uploaded_lims_info": [
+    {
+      "flowcell_id": "23FNTJLT3",
+      "lane": "4",
+      "sample_id": "P38454_1001",
+      "sample_name": "P38454_1001",
+      "sample_ref": "Other (- -)",
+      "index": "GAACTGAGCG",
+      "index2": "CGCTCCACGA",
+      "description": "A__Berggren_25_03",
+      "control": "N",
+      "recipe": "151-151",
+      "operator": "Agneta_Berg",
+      "sample_project": "A__Berggren_25_03"
+    },
+    {
+      "flowcell_id": "23FNTJLT3",
+      "lane": "4",
+      "sample_id": "P38454_1002",
+      "sample_name": "P38454_1002",
+      "sample_ref": "Other (- -)",
+      "index": "AGGTCAGATA",
+      "index2": "TATCTTGTAG",
+      "description": "A__Berggren_25_03",
+      "control": "N",
+      "recipe": "151-151",
+      "operator": "Agneta_Berg",
+      "sample_project": "A__Berggren_25_03"
+    },
+    {
+      "flowcell_id": "23FNTJLT3",
+      "lane": "4",
+      "sample_id": "P38454_1003",
+      "sample_name": "P38454_1003",
+      "sample_ref": "Other (- -)",
+      "index": "CGTCTCATAT",
+      "index2": "AGCTACTATA",
+      "description": "A__Berggren_25_03",
+      "control": "N",
+      "recipe": "151-151",
+      "operator": "Agneta_Berg",
+      "sample_project": "A__Berggren_25_03"
+    },
+    {
+      "flowcell_id": "23FNTJLT3",
+      "lane": "4",
+      "sample_id": "P38454_1004",
+      "sample_name": "P38454_1004",
+      "sample_ref": "Other (- -)",
+      "index": "ATTCCATAAG",
+      "index2": "CCACCAGGCA",
+      "description": "A__Berggren_25_03",
+      "control": "N",
+      "recipe": "151-151",
+      "operator": "Agneta_Berg",
+      "sample_project": "A__Berggren_25_03"
+    },
+    {
+      "flowcell_id": "23FNTJLT3",
+      "lane": "4",
+      "sample_id": "P38454_1005",
+      "sample_name": "P38454_1005",
+      "sample_ref": "Other (- -)",
+      "index": "GACGAGATTA",
+      "index2": "AGGATAATGT",
+      "description": "A__Berggren_25_03",
+      "control": "N",
+      "recipe": "151-151",
+      "operator": "Agneta_Berg",
+      "sample_project": "A__Berggren_25_03"
+    },
+    {
+      "flowcell_id": "23FNTJLT3",
+      "lane": "4",
+      "sample_id": "P38454_1006",
+      "sample_name": "P38454_1006",
+      "sample_ref": "Other (- -)",
+      "index": "AACATCGCGC",
+      "index2": "ACAAGTGGAC",
+      "description": "A__Berggren_25_03",
+      "control": "N",
+      "recipe": "151-151",
+      "operator": "Agneta_Berg",
+      "sample_project": "A__Berggren_25_03"
+    },
+    {
+      "flowcell_id": "23FNTJLT3",
+      "lane": "4",
+      "sample_id": "P38454_1007",
+      "sample_name": "P38454_1007",
+      "sample_ref": "Other (- -)",
+      "index": "CTAGTGCTCT",
+      "index2": "TACTGTTCCA",
+      "description": "A__Berggren_25_03",
+      "control": "N",
+      "recipe": "151-151",
+      "operator": "Agneta_Berg",
+      "sample_project": "A__Berggren_25_03"
+    },
+    {
+      "flowcell_id": "23FNTJLT3",
+      "lane": "4",
+      "sample_id": "P38454_1008",
+      "sample_name": "P38454_1008",
+      "sample_ref": "Other (- -)",
+      "index": "GATCAAGGCA",
+      "index2": "ATTAACAAGG",
+      "description": "A__Berggren_25_03",
+      "control": "N",
+      "recipe": "151-151",
+      "operator": "Agneta_Berg",
+      "sample_project": "A__Berggren_25_03"
+    }
+  ]
+}

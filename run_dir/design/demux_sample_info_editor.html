@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block stuff %}
+
+<div class="container-fluid" id="demux_sample_info_editor_main">
+  <v-demux-sample-info-editor/>
+</div>
+
+{% end %}
+
+{% block js %}
+
+<script>
+  // Expose configuration to Vue component
+  window.STATUS_CONFIG = {
+    lims_url: "{{ gs_globals.get('lims_url', '') }}"
+  };
+</script>
+<script src="/static/js/vue.v3.2.47.global.prod.js"></script>
+<script src="/static/js/axios.v1.11.0.min.js"></script>
+<script src="/static/js/demux_sample_info.js?v={{ gs_globals['git_commit'] }}"></script>
+
+{% end %}

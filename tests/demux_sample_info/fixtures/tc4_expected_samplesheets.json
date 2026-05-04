@@ -1,0 +1,248 @@
+[
+  {
+    "lane": "1",
+    "projects": [
+      "A__Berggren_25_01",
+      "B__Bergman_25_01",
+      "C__Bergkvist_25_01"
+    ],
+    "settings_index": 0,
+    "sample_count": 21,
+    "filename": "Lane1_A__Berggren_25_01_B__Bergman_25_01_C__Bergkvist_25_01_0.csv",
+    "Header": {
+      "FileFormatVersion": "2",
+      "RunName": "233JTGLT4"
+    },
+    "BCLConvert_Settings": {
+      "CreateFastqForIndexReads": false,
+      "MinimumTrimmedReadLength": 0,
+      "MaskShortReads": 0
+    },
+    "BCLConvert_Data": [
+      {
+        "Lane": "1",
+        "Sample_ID": "Sample_P36203_103",
+        "Sample_Name": "P36203_103",
+        "index": "ACTCTCGA",
+        "index2": "CTGTACCA",
+        "Sample_Project": "A__Berggren_25_01",
+        "OverrideCycles": "R1:Y151;I1:I8N2;I2:I8N2;R2:Y151",
+        "BarcodeMismatchesIndex1": 1,
+        "BarcodeMismatchesIndex2": 1
+      },
+      {
+        "Lane": "1",
+        "Sample_ID": "Sample_P36203_303",
+        "Sample_Name": "P36203_303",
+        "index": "TGAGCTAG",
+        "index2": "GAACGGTT",
+        "Sample_Project": "A__Berggren_25_01",
+        "OverrideCycles": "R1:Y151;I1:I8N2;I2:I8N2;R2:Y151",
+        "BarcodeMismatchesIndex1": 1,
+        "BarcodeMismatchesIndex2": 1
+      },
+      {
+        "Lane": "1",
+        "Sample_ID": "Sample_P36705_101",
+        "Sample_Name": "P36705_101",
+        "index": "GCGCGGTTAA",
+        "index2": "AAGCTATAGC",
+        "Sample_Project": "B__Bergman_25_01",
+        "OverrideCycles": "R1:Y151;I1:I10;I2:I10;R2:Y151",
+        "BarcodeMismatchesIndex1": 1,
+        "BarcodeMismatchesIndex2": 1
+      },
+      {
+        "Lane": "1",
+        "Sample_ID": "Sample_P36705_102",
+        "Sample_Name": "P36705_102",
+        "index": "TTCCTTGAGG",
+        "index2": "TAAGACAGCA",
+        "Sample_Project": "B__Bergman_25_01",
+        "OverrideCycles": "R1:Y151;I1:I10;I2:I10;R2:Y151",
+        "BarcodeMismatchesIndex1": 1,
+        "BarcodeMismatchesIndex2": 1
+      },
+      {
+        "Lane": "1",
+        "Sample_ID": "Sample_P36705_103",
+        "Sample_Name": "P36705_103",
+        "index": "GAGTCGCTTC",
+        "index2": "AGCGAAGATT",
+        "Sample_Project": "B__Bergman_25_01",
+        "OverrideCycles": "R1:Y151;I1:I10;I2:I10;R2:Y151",
+        "BarcodeMismatchesIndex1": 1,
+        "BarcodeMismatchesIndex2": 1
+      },
+      {
+        "Lane": "1",
+        "Sample_ID": "Sample_P36705_104",
+        "Sample_Name": "P36705_104",
+        "index": "GCATAAGATC",
+        "index2": "GAGAACTGGA",
+        "Sample_Project": "B__Bergman_25_01",
+        "OverrideCycles": "R1:Y151;I1:I10;I2:I10;R2:Y151",
+        "BarcodeMismatchesIndex1": 1,
+        "BarcodeMismatchesIndex2": 1
+      },
+      {
+        "Lane": "1",
+        "Sample_ID": "Sample_P36705_105",
+        "Sample_Name": "P36705_105",
+        "index": "TAGAAGATCG",
+        "index2": "CGACCAGTGT",
+        "Sample_Project": "B__Bergman_25_01",
+        "OverrideCycles": "R1:Y151;I1:I10;I2:I10;R2:Y151",
+        "BarcodeMismatchesIndex1": 1,
+        "BarcodeMismatchesIndex2": 1
+      },
+      {
+        "Lane": "1",
+        "Sample_ID": "Sample_P36705_106",
+        "Sample_Name": "P36705_106",
+        "index": "AACCTAGTGC",
+        "index2": "TACAGGTCCT",
+        "Sample_Project": "B__Bergman_25_01",
+        "OverrideCycles": "R1:Y151;I1:I10;I2:I10;R2:Y151",
+        "BarcodeMismatchesIndex1": 1,
+        "BarcodeMismatchesIndex2": 1
+      },
+      {
+        "Lane": "1",
+        "Sample_ID": "Sample_P36705_107",
+        "Sample_Name": "P36705_107",
+        "index": "CGTGTATGTC",
+        "index2": "GCATCTCTAT",
+        "Sample_Project": "B__Bergman_25_01",
+        "OverrideCycles": "R1:Y151;I1:I10;I2:I10;R2:Y151",
+        "BarcodeMismatchesIndex1": 1,
+        "BarcodeMismatchesIndex2": 1
+      },
+      {
+        "Lane": "1",
+        "Sample_ID": "Sample_P36705_108",
+        "Sample_Name": "P36705_108",
+        "index": "TTCAGATCCA",
+        "index2": "TGGCATTGGA",
+        "Sample_Project": "B__Bergman_25_01",
+        "OverrideCycles": "R1:Y151;I1:I10;I2:I10;R2:Y151",
+        "BarcodeMismatchesIndex1": 1,
+        "BarcodeMismatchesIndex2": 1
+      },
+      {
+        "Lane": "1",
+        "Sample_ID": "Sample_P36705_109",
+        "Sample_Name": "P36705_109",
+        "index": "CTCACCAGTT",
+        "index2": "TTGGTGTGTC",
+        "Sample_Project": "B__Bergman_25_01",
+        "OverrideCycles": "R1:Y151;I1:I10;I2:I10;R2:Y151",
+        "BarcodeMismatchesIndex1": 1,
+        "BarcodeMismatchesIndex2": 1
+      },
+      {
+        "Lane": "1",
+        "Sample_ID": "Sample_P36705_110",
+        "Sample_Name": "P36705_110",
+        "index": "ACTAGTAGTC",
+        "index2": "ACGTACACTC",
+        "Sample_Project": "B__Bergman_25_01",
+        "OverrideCycles": "R1:Y151;I1:I10;I2:I10;R2:Y151",
+        "BarcodeMismatchesIndex1": 1,
+        "BarcodeMismatchesIndex2": 1
+      },
+      {
+        "Lane": "1",
+        "Sample_ID": "Sample_P36705_111",
+        "Sample_Name": "P36705_111",
+        "index": "AATAGACTGC",
+        "index2": "TCAAGGTCGC",
+        "Sample_Project": "B__Bergman_25_01",
+        "OverrideCycles": "R1:Y151;I1:I10;I2:I10;R2:Y151",
+        "BarcodeMismatchesIndex1": 1,
+        "BarcodeMismatchesIndex2": 1
+      },
+      {
+        "Lane": "1",
+        "Sample_ID": "Sample_P36705_112",
+        "Sample_Name": "P36705_112",
+        "index": "ATGATCAACG",
+        "index2": "GTATAGCGTC",
+        "Sample_Project": "B__Bergman_25_01",
+        "OverrideCycles": "R1:Y151;I1:I10;I2:I10;R2:Y151",
+        "BarcodeMismatchesIndex1": 1,
+        "BarcodeMismatchesIndex2": 1
+      },
+      {
+        "Lane": "1",
+        "Sample_ID": "Sample_P37004_1001",
+        "Sample_Name": "P37004_1001",
+        "index": "TCAGCGAA",
+        "index2": "",
+        "Sample_Project": "C__Bergkvist_25_01",
+        "OverrideCycles": "R1:Y151;I1:I8N2;I2:N10;R2:Y151",
+        "BarcodeMismatchesIndex1": 0
+      },
+      {
+        "Lane": "1",
+        "Sample_ID": "Sample_P37004_1002",
+        "Sample_Name": "P37004_1002",
+        "index": "CCATTGTT",
+        "index2": "",
+        "Sample_Project": "C__Bergkvist_25_01",
+        "OverrideCycles": "R1:Y151;I1:I8N2;I2:N10;R2:Y151",
+        "BarcodeMismatchesIndex1": 0
+      },
+      {
+        "Lane": "1",
+        "Sample_ID": "Sample_P37004_1003",
+        "Sample_Name": "P37004_1003",
+        "index": "AGAGGAAT",
+        "index2": "",
+        "Sample_Project": "C__Bergkvist_25_01",
+        "OverrideCycles": "R1:Y151;I1:I8N2;I2:N10;R2:Y151",
+        "BarcodeMismatchesIndex1": 0
+      },
+      {
+        "Lane": "1",
+        "Sample_ID": "Sample_P37004_1004",
+        "Sample_Name": "P37004_1004",
+        "index": "CTTCCTTC",
+        "index2": "",
+        "Sample_Project": "C__Bergkvist_25_01",
+        "OverrideCycles": "R1:Y151;I1:I8N2;I2:N10;R2:Y151",
+        "BarcodeMismatchesIndex1": 0
+      },
+      {
+        "Lane": "1",
+        "Sample_ID": "Sample_P37004_1005",
+        "Sample_Name": "P37004_1005",
+        "index": "CTTGCAGA",
+        "index2": "",
+        "Sample_Project": "C__Bergkvist_25_01",
+        "OverrideCycles": "R1:Y151;I1:I8N2;I2:N10;R2:Y151",
+        "BarcodeMismatchesIndex1": 0
+      },
+      {
+        "Lane": "1",
+        "Sample_ID": "Sample_P37004_1006",
+        "Sample_Name": "P37004_1006",
+        "index": "TCTAGCGA",
+        "index2": "",
+        "Sample_Project": "C__Bergkvist_25_01",
+        "OverrideCycles": "R1:Y151;I1:I8N2;I2:N10;R2:Y151",
+        "BarcodeMismatchesIndex1": 0
+      },
+      {
+        "Lane": "1",
+        "Sample_ID": "Sample_P37004_1007",
+        "Sample_Name": "P37004_1007",
+        "index": "TCAACTGT",
+        "index2": "",
+        "Sample_Project": "C__Bergkvist_25_01",
+        "OverrideCycles": "R1:Y151;I1:I8N2;I2:N10;R2:Y151",
+        "BarcodeMismatchesIndex1": 0
+      }
+    ]
+  }
+]
