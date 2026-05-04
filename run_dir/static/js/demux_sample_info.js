@@ -115,6 +115,21 @@ const FIELD_CONFIG = {
             columnWidth: 6
         }
     },
+    description: {
+        key: 'description',
+        label: 'Description',
+        backendKey: 'description',
+        settingsPath: ['_sample', 'description'],
+        bulkEditable: true,
+        historyDisplayName: 'Description',
+        topLevel: true,
+        formField: {
+            inputType: 'text',
+            showInForm: true,
+            order: 5,
+            columnWidth: 6
+        }
+    },
     project_id: {
         key: 'project_id',
         label: 'Project ID',
@@ -126,7 +141,7 @@ const FIELD_CONFIG = {
         formField: {
             inputType: 'text',
             showInForm: true,
-            order: 5,
+            order: 6,
             columnWidth: 6
         }
     },
@@ -141,7 +156,7 @@ const FIELD_CONFIG = {
         formField: {
             inputType: 'text',
             showInForm: true,
-            order: 6,
+            order: 7,
             columnWidth: 6
         }
     },
@@ -174,7 +189,7 @@ const FIELD_CONFIG = {
         formField: {
             inputType: 'index',
             showInForm: true,
-            order: 7,
+            order: 8,
             columnWidth: 6,
             pattern: '[ACGT]*',
             title: 'Only ACGT characters are allowed'
@@ -191,7 +206,7 @@ const FIELD_CONFIG = {
         formField: {
             inputType: 'index',
             showInForm: true,
-            order: 8,
+            order: 9,
             columnWidth: 6,
             pattern: '[ACGT]*',
             title: 'Only ACGT characters are allowed'
@@ -236,7 +251,7 @@ const FIELD_CONFIG = {
         formField: {
             inputType: 'text',
             showInForm: true,
-            order: 9,
+            order: 10,
             columnWidth: 6
         }
     },
@@ -251,7 +266,7 @@ const FIELD_CONFIG = {
         formField: {
             inputType: 'text',
             showInForm: true,
-            order: 10,
+            order: 11,
             columnWidth: 6
         }
     },
@@ -266,26 +281,11 @@ const FIELD_CONFIG = {
         formField: {
             inputType: 'text',
             showInForm: true,
-            order: 11,
+            order: 12,
             columnWidth: 6
         }
     },
-    description: {
-        key: 'description',
-        label: 'Description',
-        backendKey: 'description',
-        settingsPath: ['_sample', 'description'],
-        bulkEditable: true,
-        historyDisplayName: 'Description',
-        topLevel: true,
-        formField: {
-            inputType: 'textarea',
-            showInForm: true,
-            order: 13,
-            columnWidth: 12,
-            rows: 2
-        }
-    },
+
     control: {
         key: 'control',
         label: 'Control',
@@ -297,7 +297,7 @@ const FIELD_CONFIG = {
         formField: {
             inputType: 'select',
             showInForm: true,
-            order: 12,
+            order: 13,
             columnWidth: 6,
             options: [
                 { value: 'N', label: 'N' },
@@ -439,8 +439,7 @@ const FIELD_CONFIG = {
 const CONSTANTS = {
     VIEW_MODES: {
         UPLOADED: 'uploaded',
-        CALCULATED: 'calculated',
-        GROUPED_NAMED_INDEX: 'grouped_named_index'
+        CALCULATED: 'calculated'
     },
     MODAL_TABS: {
         EDIT: 'edit',
@@ -454,7 +453,9 @@ const UTILS = {
     /**
      * Sort lanes numerically instead of alphabetically
      * @param {Array<string>} lanes - Array of lane identifiers
-     * @returns {Array<string>} Sorted lanes
+    * @returns {
+    Array<string>
+} - Sorted lanes
      */
     sortLanesNumerically(lanes) {
         return lanes.sort((a, b) => parseInt(a) - parseInt(b));
@@ -462,11 +463,10 @@ const UTILS = {
     /**
      * Sort object keys as lanes and return new object with sorted keys
      * @param {Object} obj - Object with lane keys
-     * @returns {Object} New object with lanes sorted numerically
+     * @returns {Object} - New object with lanes sorted numerically
      */
     sortLaneObject(obj) {
-        return Object.keys(obj)
-            .sort((a, b) => parseInt(a) - parseInt(b))
+        return this.sortLanesNumerically(Object.keys(obj))
             .reduce((acc, lane) => {
                 acc[lane] = obj[lane];
                 return acc;
@@ -837,7 +837,7 @@ const SampleFormFields = {
         mode: {
             type: String,
             default: 'edit',
-            validator: (value) => ['edit', 'add'].includes(value)
+            validator: (value) => ['edit', 'add', 'bulk'].includes(value)
         },
         isNewSample: {
             type: Boolean,
@@ -855,9 +855,16 @@ const SampleFormFields = {
         },
         // Get all fields with formField config, sorted by order
         orderedFormFields() {
-            return Object.values(FIELD_CONFIG)
-                .filter(field => field.formField?.showInForm)
-                .sort((a, b) => a.formField.order - b.formField.order);
+            const fields = Object.values(FIELD_CONFIG)
+                .filter(field => field.formField?.showInForm);
+
+            // In bulk mode, only show bulk-editable fields
+            if (this.mode === 'bulk') {
+                return fields.filter(field => field.bulkEditable)
+                    .sort((a, b) => a.formField.order - b.formField.order);
+            }
+
+            return fields.sort((a, b) => a.formField.order - b.formField.order);
         },
         // Separate BCLConvert fields for section rendering
         regularFields() {
@@ -896,6 +903,46 @@ const SampleFormFields = {
             return this.mode === 'edit'
                 ? '(auto-calculated from recipe and UMI config)'
                 : '(leave empty - will be calculated after saving)';
+        },
+        getFieldPlaceholder(field) {
+            if (this.mode === 'bulk') {
+                return 'Leave empty to keep existing';
+            }
+            return field.formField.placeholder || '';
+        },
+        getRadioLabel(type) {
+            if (this.mode === 'bulk' && type === 'default') {
+                return 'Keep existing';
+            }
+            if (type === 'default') {
+                return 'Do not override';
+            }
+            if (type === 'yes') {
+                return 'Yes';
+            }
+            if (type === 'no') {
+                return 'No';
+            }
+            return type;
+        },
+        getRadioOptions() {
+            // Returns radio options in the correct order based on mode
+            const options = [
+                { value: true, type: 'yes' },
+                { value: false, type: 'no' },
+                { value: null, type: 'default' }
+            ];
+
+            // In bulk mode, put "Keep existing" (default) first
+            if (this.mode === 'bulk') {
+                return [options[2], options[0], options[1]];
+            }
+
+            // In edit/add mode, keep yes/no/default order
+            return options;
+        },
+        getRadioCheckClass() {
+            return this.mode === 'bulk' ? 'form-check form-check-inline' : 'form-check';
         }
     },
     template: /*html*/`
@@ -914,7 +961,8 @@ const SampleFormFields = {
                         @input="field.formField.inputType === 'index' ? onIndexInput(field.key, $event) : updateField(field.key, $event.target.value)"
                         :readonly="isFieldReadonly(field)"
                         :pattern="field.formField.pattern"
-                        :title="field.formField.title">
+                        :title="field.formField.title"
+                        :placeholder="getFieldPlaceholder(field)">
                     <small v-if="getHelpText(field)" class="form-text text-muted">{{ getHelpText(field) }}</small>
                     <span v-if="field.key === 'override_cycles'" class="text-muted small">{{ getOverrideCyclesLabel() }}</span>
                 </div>
@@ -928,7 +976,8 @@ const SampleFormFields = {
                         :id="mode + '_' + field.key"
                         :value="formData[field.key]"
                         @input="updateField(field.key, $event.target.value)"
-                        :rows="field.formField.rows || 3"></textarea>
+                        :rows="field.formField.rows || 3"
+                        :placeholder="getFieldPlaceholder(field)"></textarea>
                     <small v-if="getHelpText(field)" class="form-text text-muted">{{ getHelpText(field) }}</small>
                 </div>
 
@@ -941,6 +990,7 @@ const SampleFormFields = {
                         :id="mode + '_' + field.key"
                         :value="formData[field.key]"
                         @input="updateField(field.key, $event.target.value)">
+                        <option v-if="mode === 'bulk'" value="">-- Keep existing --</option>
                         <option v-for="option in field.formField.options" :key="option.value" :value="option.value">
                             {{ option.label }}
                         </option>
@@ -964,41 +1014,20 @@ const SampleFormFields = {
                 <div v-if="field.formField.inputType === 'radio-boolean-nullable'"
                      :class="'col-md-' + field.formField.columnWidth + ' mb-3'">
                     <label class="form-label">{{ field.label }}:</label>
-                    <div class="form-check">
-                        <input
-                            type="radio"
-                            class="form-check-input"
-                            :id="mode + '_' + field.key + '_yes'"
-                            :name="mode + '_' + field.key"
-                            :checked="formData[field.key] === true"
-                            @change="updateField(field.key, true)">
-                        <label class="form-check-label" :for="mode + '_' + field.key + '_yes'">
-                            Yes
-                        </label>
-                    </div>
-                    <div class="form-check">
-                        <input
-                            type="radio"
-                            class="form-check-input"
-                            :id="mode + '_' + field.key + '_no'"
-                            :name="mode + '_' + field.key"
-                            :checked="formData[field.key] === false"
-                            @change="updateField(field.key, false)">
-                        <label class="form-check-label" :for="mode + '_' + field.key + '_no'">
-                            No
-                        </label>
-                    </div>
-                    <div class="form-check">
-                        <input
-                            type="radio"
-                            class="form-check-input"
-                            :id="mode + '_' + field.key + '_default'"
-                            :name="mode + '_' + field.key"
-                            :checked="formData[field.key] === null"
-                            @change="updateField(field.key, null)">
-                        <label class="form-check-label" :for="mode + '_' + field.key + '_default'">
-                            Do not override
-                        </label>
+                    <div>
+                        <div v-for="option in getRadioOptions()" :key="option.type" :class="getRadioCheckClass()">
+                            <input
+                                type="radio"
+                                class="form-check-input"
+                                :id="mode + '_' + field.key + '_' + option.type"
+                                :name="mode + '_' + field.key"
+                                :value="option.value"
+                                :checked="formData[field.key] === option.value"
+                                @change="updateField(field.key, option.value)">
+                            <label class="form-check-label" :for="mode + '_' + field.key + '_' + option.type">
+                                {{ getRadioLabel(option.type) }}
+                            </label>
+                        </div>
                     </div>
                 </div>
 
@@ -1014,7 +1043,7 @@ const SampleFormFields = {
                         @input="updateField(field.key, $event.target.value ? Number($event.target.value) : null)"
                         :min="field.formField.min"
                         :max="field.formField.max"
-                        :placeholder="field.formField.placeholder">
+                        :placeholder="mode === 'bulk' ? getFieldPlaceholder(field) : field.formField.placeholder">
                     <small v-if="getHelpText(field)" class="form-text text-muted">{{ getHelpText(field) }}</small>
                 </div>
             </template>
@@ -4007,77 +4036,9 @@ const vDemuxSampleInfoEditor = {
                                         <div class="alert alert-info">
                                             <i class="fa fa-info-circle"></i> Only fields with values entered below will be updated. Leave fields empty to keep existing values.
                                         </div>
-                                        <div class="row">
-                                            <!-- Iterate through bulk editable fields -->
-                                            <template v-for="field in bulkEditableFields" :key="field.key">
-                                                <!-- Text and Index inputs -->
-                                                <div v-if="field.formField.inputType === 'text' || field.formField.inputType === 'index'"
-                                                     :class="'col-md-' + field.formField.columnWidth + ' mb-3'">
-                                                    <label :for="'bulk_' + field.key" class="form-label">{{ field.label }}:</label>
-                                                    <input
-                                                        :type="'text'"
-                                                        :class="'form-control' + (field.formField.inputType === 'index' ? ' font-monospace' : '')"
-                                                        :id="'bulk_' + field.key"
-                                                        v-model="bulkEditFormData[field.key]"
-                                                        :placeholder="'Leave empty to keep existing'">
-                                                </div>
-                                                <!-- Textarea -->
-                                                <div v-else-if="field.formField.inputType === 'textarea'"
-                                                     :class="'col-md-' + field.formField.columnWidth + ' mb-3'">
-                                                    <label :for="'bulk_' + field.key" class="form-label">{{ field.label }}:</label>
-                                                    <textarea
-                                                        class="form-control"
-                                                        :id="'bulk_' + field.key"
-                                                        v-model="bulkEditFormData[field.key]"
-                                                        :rows="field.formField.rows || 3"
-                                                        :placeholder="'Leave empty to keep existing'"></textarea>
-                                                </div>
-                                                <!-- Select dropdown -->
-                                                <div v-else-if="field.formField.inputType === 'select'"
-                                                     :class="'col-md-' + field.formField.columnWidth + ' mb-3'">
-                                                    <label :for="'bulk_' + field.key" class="form-label">{{ field.label }}:</label>
-                                                    <select class="form-select" :id="'bulk_' + field.key" v-model="bulkEditFormData[field.key]">
-                                                        <option value="">-- Keep existing --</option>
-                                                        <option v-for="opt in field.formField.options" :key="opt.value" :value="opt.value">
-                                                            {{ opt.label }}
-                                                        </option>
-                                                    </select>
-                                                </div>
-                                                <!-- Radio boolean nullable -->
-                                                <div v-else-if="field.formField.inputType === 'radio-boolean-nullable'"
-                                                     :class="'col-md-' + field.formField.columnWidth + ' mb-3'">
-                                                    <label class="form-label">{{ field.label }}:</label>
-                                                    <div>
-                                                        <div class="form-check form-check-inline">
-                                                            <input class="form-check-input" type="radio" :name="'bulk_' + field.key" :id="'bulk_' + field.key + '_null'" :value="null" v-model="bulkEditFormData[field.key]" checked>
-                                                            <label class="form-check-label" :for="'bulk_' + field.key + '_null'">Keep existing</label>
-                                                        </div>
-                                                        <div class="form-check form-check-inline">
-                                                            <input class="form-check-input" type="radio" :name="'bulk_' + field.key" :id="'bulk_' + field.key + '_true'" :value="true" v-model="bulkEditFormData[field.key]">
-                                                            <label class="form-check-label" :for="'bulk_' + field.key + '_true'">True</label>
-                                                        </div>
-                                                        <div class="form-check form-check-inline">
-                                                            <input class="form-check-input" type="radio" :name="'bulk_' + field.key" :id="'bulk_' + field.key + '_false'" :value="false" v-model="bulkEditFormData[field.key]">
-                                                            <label class="form-check-label" :for="'bulk_' + field.key + '_false'">False</label>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <!-- Number input -->
-                                                <div v-else-if="field.formField.inputType === 'number'"
-                                                     :class="'col-md-' + field.formField.columnWidth + ' mb-3'">
-                                                    <label :for="'bulk_' + field.key" class="form-label">{{ field.label }}:</label>
-                                                    <input
-                                                        type="number"
-                                                        class="form-control"
-                                                        :id="'bulk_' + field.key"
-                                                        v-model.number="bulkEditFormData[field.key]"
-                                                        :min="field.formField.min"
-                                                        :max="field.formField.max"
-                                                        :placeholder="field.formField.placeholder || 'Leave empty to keep existing'">
-                                                    <small v-if="field.formField.helpText" class="form-text text-muted">{{ field.formField.helpText.edit || field.formField.helpText.add }}</small>
-                                                </div>
-                                            </template>
-                                        </div>
+                                        <SampleFormFields
+                                            v-model="bulkEditFormData"
+                                            mode="bulk" />
                                     </div>
                                 </div>
                                 <div class="modal-footer">
