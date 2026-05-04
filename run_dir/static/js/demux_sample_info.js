@@ -1,3 +1,40 @@
+/**
+ * 
+ * Each field in FIELD_CONFIG has the following structure:
+ * 
+ * {
+ *   key: string,                    // Field identifier used in frontend
+ *   label: string,                  // Display label in UI
+ *   backendKey: string,             // Key used when sending to backend API
+ *   settingsPath: [string],         // Path in settings object (e.g., ['per_sample_fields', 'Sample_ID'])
+ *   bulkEditable: boolean,          // Whether field can be bulk edited
+ *   historyDisplayName: string,     // Display name in edit history
+ *   topLevel: boolean,              // Whether field is at top level in settings structure
+ *   type?: string,                  // Optional: Data type (e.g., 'number')
+ *   
+ *   formField?: {                   // Optional: Form rendering configuration
+ *     inputType: string,            // 'text' | 'select' | 'index' | 'number' | etc.
+ *     showInForm: boolean,          // Whether to show in add/edit forms
+ *     order: number,                // Display order in forms
+ *     columnWidth: number,          // Bootstrap column width (1-12)
+ *     pattern?: string,             // Regex pattern for validation
+ *     title?: string,               // Tooltip/validation message
+ *     options?: [                   // For select inputs
+ *       { value: string, label: string }
+ *     ],
+ *     helpText?: {                  // Context-specific help text
+ *       add?: string,               // Help text for add mode
+ *       edit?: string               // Help text for edit mode
+ *     }
+ *   }
+ * }
+ * 
+ * Notes:
+ * - settingsPath determines where the field is stored in the settings object hierarchy
+ * - topLevel indicates if the field is at root level (vs nested in per_sample_fields or _sample)
+ * - formField is only needed for fields that appear in add/edit forms
+ */
+
 // Centralized field configuration - single source of truth for all field metadata
 const FIELD_CONFIG = {
     lane: {
@@ -74,7 +111,7 @@ const FIELD_CONFIG = {
         formField: {
             inputType: 'text',
             showInForm: true,
-            order: 3.1,
+            order: 4,
             columnWidth: 6
         }
     },
@@ -89,7 +126,7 @@ const FIELD_CONFIG = {
         formField: {
             inputType: 'text',
             showInForm: true,
-            order: 3.2,
+            order: 5,
             columnWidth: 6
         }
     },
@@ -104,7 +141,7 @@ const FIELD_CONFIG = {
         formField: {
             inputType: 'text',
             showInForm: true,
-            order: 4,
+            order: 6,
             columnWidth: 6
         }
     },
@@ -137,7 +174,7 @@ const FIELD_CONFIG = {
         formField: {
             inputType: 'index',
             showInForm: true,
-            order: 5,
+            order: 7,
             columnWidth: 6,
             pattern: '[ACGT]*',
             title: 'Only ACGT characters are allowed'
@@ -154,7 +191,7 @@ const FIELD_CONFIG = {
         formField: {
             inputType: 'index',
             showInForm: true,
-            order: 6,
+            order: 8,
             columnWidth: 6,
             pattern: '[ACGT]*',
             title: 'Only ACGT characters are allowed'
@@ -199,7 +236,7 @@ const FIELD_CONFIG = {
         formField: {
             inputType: 'text',
             showInForm: true,
-            order: 7,
+            order: 9,
             columnWidth: 6
         }
     },
@@ -214,7 +251,7 @@ const FIELD_CONFIG = {
         formField: {
             inputType: 'text',
             showInForm: true,
-            order: 8,
+            order: 10,
             columnWidth: 6
         }
     },
@@ -229,7 +266,7 @@ const FIELD_CONFIG = {
         formField: {
             inputType: 'text',
             showInForm: true,
-            order: 9,
+            order: 11,
             columnWidth: 6
         }
     },
@@ -244,7 +281,7 @@ const FIELD_CONFIG = {
         formField: {
             inputType: 'textarea',
             showInForm: true,
-            order: 11,
+            order: 13,
             columnWidth: 12,
             rows: 2
         }
@@ -260,7 +297,7 @@ const FIELD_CONFIG = {
         formField: {
             inputType: 'select',
             showInForm: true,
-            order: 10,
+            order: 12,
             columnWidth: 6,
             options: [
                 { value: 'N', label: 'N' },
@@ -299,7 +336,7 @@ const FIELD_CONFIG = {
         formField: {
             inputType: 'text',
             showInForm: true,
-            order: 12,
+            order: 14,
             columnWidth: 12,
             readonly: true,
             cssClass: 'font-monospace bg-light'
@@ -326,7 +363,7 @@ const FIELD_CONFIG = {
         formField: {
             inputType: 'radio-boolean-nullable',
             showInForm: true,
-            order: 14,
+            order: 15,
             columnWidth: 6,
             section: 'bclconvert'
         }
@@ -343,7 +380,7 @@ const FIELD_CONFIG = {
         formField: {
             inputType: 'radio-boolean-nullable',
             showInForm: true,
-            order: 15,
+            order: 16,
             columnWidth: 6,
             section: 'bclconvert'
         }
@@ -360,7 +397,7 @@ const FIELD_CONFIG = {
         formField: {
             inputType: 'number',
             showInForm: true,
-            order: 16,
+            order: 17,
             columnWidth: 6,
             section: 'bclconvert',
             min: 0,
@@ -384,7 +421,7 @@ const FIELD_CONFIG = {
         formField: {
             inputType: 'number',
             showInForm: true,
-            order: 17,
+            order: 18,
             columnWidth: 6,
             section: 'bclconvert',
             min: 0,
