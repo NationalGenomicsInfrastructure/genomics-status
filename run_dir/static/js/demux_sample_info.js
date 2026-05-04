@@ -995,20 +995,6 @@ const SampleFormFields = {
                     <span v-if="field.key === 'override_cycles'" class="text-muted small">{{ getOverrideCyclesLabel() }}</span>
                 </div>
 
-                <!-- Textarea -->
-                <div v-else-if="field.formField.inputType === 'textarea'"
-                     :class="'col-md-' + field.formField.columnWidth + ' mb-3'">
-                    <label :for="mode + '_' + field.key" class="form-label">{{ field.label }}:</label>
-                    <textarea
-                        class="form-control"
-                        :id="mode + '_' + field.key"
-                        :value="formData[field.key]"
-                        @input="updateField(field.key, $event.target.value)"
-                        :rows="field.formField.rows || 3"
-                        :placeholder="getFieldPlaceholder(field)"></textarea>
-                    <small v-if="getHelpText(field)" class="form-text text-muted">{{ getHelpText(field) }}</small>
-                </div>
-
                 <!-- Select dropdown -->
                 <div v-else-if="field.formField.inputType === 'select'"
                      :class="'col-md-' + field.formField.columnWidth + ' mb-3'">
