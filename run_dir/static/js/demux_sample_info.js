@@ -10,6 +10,7 @@
  *   bulkEditable: boolean,          // Whether field can be bulk edited
  *   historyDisplayName: string,     // Display name in edit history
  *   topLevel: boolean,              // Whether field is at top level in settings structure
+ *   category: string,               // UI category: 'Sample Info' | 'Project Info' | 'Indices' | 'Metadata' | 'BCLConvert Settings'
  *   type?: string,                  // Optional: Data type (e.g., 'number')
  *   
  *   formField?: {                   // Optional: Form rendering configuration
@@ -44,7 +45,8 @@ const FIELD_CONFIG = {
         settingsPath: ['per_sample_fields', 'Lane'],
         bulkEditable: false,
         historyDisplayName: 'Lane',
-        topLevel: false
+        topLevel: false,
+        category: 'Metadata'
     },
     sample_id: {
         key: 'sample_id',
@@ -54,6 +56,7 @@ const FIELD_CONFIG = {
         bulkEditable: false,
         historyDisplayName: 'Sample ID',
         topLevel: false,
+        category: 'Sample Info',
         formField: {
             inputType: 'text',
             showInForm: true,
@@ -73,6 +76,7 @@ const FIELD_CONFIG = {
         bulkEditable: false,
         historyDisplayName: 'Sample Name',
         topLevel: false,
+        category: 'Sample Info',
         formField: {
             inputType: 'text',
             showInForm: true,
@@ -92,6 +96,7 @@ const FIELD_CONFIG = {
         bulkEditable: true,
         historyDisplayName: 'Sample Project',
         topLevel: false,
+        category: 'Project Info',
         formField: {
             inputType: 'text',
             showInForm: true,
@@ -108,6 +113,7 @@ const FIELD_CONFIG = {
         bulkEditable: true,
         historyDisplayName: 'Project Name',
         topLevel: true,
+        category: 'Project Info',
         formField: {
             inputType: 'text',
             showInForm: true,
@@ -123,6 +129,7 @@ const FIELD_CONFIG = {
         bulkEditable: true,
         historyDisplayName: 'Description',
         topLevel: true,
+        category: 'Metadata',
         formField: {
             inputType: 'text',
             showInForm: true,
@@ -138,6 +145,7 @@ const FIELD_CONFIG = {
         bulkEditable: true,
         historyDisplayName: 'Project ID',
         topLevel: true,
+        category: 'Project Info',
         formField: {
             inputType: 'text',
             showInForm: true,
@@ -153,6 +161,7 @@ const FIELD_CONFIG = {
         bulkEditable: true,
         historyDisplayName: 'Sample Ref',
         topLevel: false,
+        category: 'Sample Info',
         formField: {
             inputType: 'text',
             showInForm: true,
@@ -167,7 +176,8 @@ const FIELD_CONFIG = {
         settingsPath: ['other_details', 'sample_type'],
         bulkEditable: false,
         historyDisplayName: 'Sample Type',
-        topLevel: false
+        topLevel: false,
+        category: 'Sample Info'
     },
     config_sources: {
         key: 'config_sources',
@@ -176,7 +186,8 @@ const FIELD_CONFIG = {
         settingsPath: ['other_details', 'config_sources'],
         bulkEditable: false,
         historyDisplayName: 'Config Sources',
-        topLevel: false
+        topLevel: false,
+        category: 'Sample Info'
     },
     index_1: {
         key: 'index_1',
@@ -186,6 +197,7 @@ const FIELD_CONFIG = {
         bulkEditable: false,
         historyDisplayName: 'Index 1',
         topLevel: false,
+        category: 'Indices',
         formField: {
             inputType: 'index',
             showInForm: true,
@@ -203,6 +215,7 @@ const FIELD_CONFIG = {
         bulkEditable: false,
         historyDisplayName: 'Index 2',
         topLevel: false,
+        category: 'Indices',
         formField: {
             inputType: 'index',
             showInForm: true,
@@ -219,7 +232,8 @@ const FIELD_CONFIG = {
         settingsPath: ['other_details', 'index_length'],
         bulkEditable: false,
         historyDisplayName: 'Index Length',
-        topLevel: false
+        topLevel: false,
+        category: 'Indices'
     },
     umi_length: {
         key: 'umi_length',
@@ -228,7 +242,8 @@ const FIELD_CONFIG = {
         settingsPath: ['other_details', 'umi_length'],
         bulkEditable: true,
         historyDisplayName: 'UMI Length',
-        topLevel: false
+        topLevel: false,
+        category: 'Indices'
     },
     umi_config: {
         key: 'umi_config',
@@ -238,6 +253,7 @@ const FIELD_CONFIG = {
         bulkEditable: true,
         historyDisplayName: 'UMI Config',
         topLevel: false,
+        category: 'Indices',
         type: 'object'
     },
     named_index: {
@@ -248,6 +264,7 @@ const FIELD_CONFIG = {
         bulkEditable: false,
         historyDisplayName: 'Named Index',
         topLevel: false,
+        category: 'Indices',
         formField: {
             inputType: 'text',
             showInForm: true,
@@ -263,6 +280,7 @@ const FIELD_CONFIG = {
         bulkEditable: true,
         historyDisplayName: 'Recipe',
         topLevel: false,
+        category: 'Metadata',
         formField: {
             inputType: 'text',
             showInForm: true,
@@ -278,6 +296,7 @@ const FIELD_CONFIG = {
         bulkEditable: true,
         historyDisplayName: 'Operator',
         topLevel: false,
+        category: 'Metadata',
         formField: {
             inputType: 'text',
             showInForm: true,
@@ -285,7 +304,6 @@ const FIELD_CONFIG = {
             columnWidth: 6
         }
     },
-
     control: {
         key: 'control',
         label: 'Control',
@@ -294,6 +312,7 @@ const FIELD_CONFIG = {
         bulkEditable: true,
         historyDisplayName: 'Control',
         topLevel: true,
+        category: 'Metadata',
         formField: {
             inputType: 'select',
             showInForm: true,
@@ -313,6 +332,7 @@ const FIELD_CONFIG = {
         bulkEditable: true,
         historyDisplayName: 'Mask Short Reads',
         topLevel: false,
+        category: 'Metadata',
         type: 'number'
     },
     minimum_trimmed_read_length: {
@@ -323,6 +343,7 @@ const FIELD_CONFIG = {
         bulkEditable: true,
         historyDisplayName: 'Minimum Trimmed Read Length',
         topLevel: false,
+        category: 'Metadata',
         type: 'number'
     },
     override_cycles: {
@@ -333,10 +354,11 @@ const FIELD_CONFIG = {
         bulkEditable: false,
         historyDisplayName: 'Override Cycles',
         topLevel: false,
+        category: 'Metadata',
         formField: {
             inputType: 'text',
             showInForm: true,
-            order: 14,
+            order: 999,
             columnWidth: 12,
             readonly: true,
             cssClass: 'font-monospace bg-light'
@@ -349,7 +371,8 @@ const FIELD_CONFIG = {
         settingsPath: ['_sample', 'last_modified'],
         bulkEditable: false,
         historyDisplayName: 'Last Modified',
-        topLevel: true
+        topLevel: true,
+        category: 'Metadata'
     },
     trim_umi: {
         key: 'trim_umi',
@@ -359,11 +382,12 @@ const FIELD_CONFIG = {
         bulkEditable: true,
         historyDisplayName: 'Trim UMI',
         topLevel: false,
+        category: 'BCLConvert Settings',
         type: 'boolean',
         formField: {
             inputType: 'radio-boolean-nullable',
             showInForm: true,
-            order: 15,
+            order: 14,
             columnWidth: 6,
             section: 'bclconvert'
         }
@@ -376,11 +400,12 @@ const FIELD_CONFIG = {
         bulkEditable: true,
         historyDisplayName: 'Create FASTQ for Index Reads',
         topLevel: false,
+        category: 'BCLConvert Settings',
         type: 'boolean',
         formField: {
             inputType: 'radio-boolean-nullable',
             showInForm: true,
-            order: 16,
+            order: 15,
             columnWidth: 6,
             section: 'bclconvert'
         }
@@ -393,11 +418,12 @@ const FIELD_CONFIG = {
         bulkEditable: true,
         historyDisplayName: 'Barcode Mismatches Index 1',
         topLevel: false,
+        category: 'BCLConvert Settings',
         type: 'number',
         formField: {
             inputType: 'number',
             showInForm: true,
-            order: 17,
+            order: 16,
             columnWidth: 6,
             section: 'bclconvert',
             min: 0,
@@ -417,11 +443,12 @@ const FIELD_CONFIG = {
         bulkEditable: true,
         historyDisplayName: 'Barcode Mismatches Index 2',
         topLevel: false,
+        category: 'BCLConvert Settings',
         type: 'number',
         formField: {
             inputType: 'number',
             showInForm: true,
-            order: 18,
+            order: 17,
             columnWidth: 6,
             section: 'bclconvert',
             min: 0,
@@ -818,6 +845,7 @@ const ConfigInspectModal = {
         </div>
     `
 };
+
 /**
  * SampleFormFields Component
  * 
@@ -1050,6 +1078,7 @@ const SampleFormFields = {
         </div>
     `
 };
+
 /**
  * SampleTable Component
  * 
@@ -1357,7 +1386,7 @@ const vDemuxSampleInfoEditor = {
     },
     computed: {
         columnsByCategory() {
-            // Group columns by category: Sample Info, Project Info, Indices, Metadata, BCLConvert Settings
+            // Group columns by their category property
             const categories = {
                 'Sample Info': [],
                 'Project Info': [],
@@ -1368,23 +1397,8 @@ const vDemuxSampleInfoEditor = {
 
             this.availableColumns.forEach(column => {
                 const fieldConfig = this.fieldConfig[column.key];
-                if (!fieldConfig) {
-                    categories['Metadata'].push(column);
-                    return;
-                }
-
-                // Categorize based on field properties
-                if (fieldConfig.settingsPath && fieldConfig.settingsPath[0] === 'raw_samplesheet_settings') {
-                    categories['BCLConvert Settings'].push(column);
-                } else if (['sample_id', 'sample_name', 'sample_ref', 'sample_type', 'config_sources'].includes(column.key)) {
-                    categories['Sample Info'].push(column);
-                } else if (['sample_project', 'project_name', 'project_id'].includes(column.key)) {
-                    categories['Project Info'].push(column);
-                } else if (['index_1', 'index_2', 'index_length', 'named_index', 'umi_config', 'umi_length'].includes(column.key)) {
-                    categories['Indices'].push(column);
-                } else {
-                    categories['Metadata'].push(column);
-                }
+                const category = fieldConfig?.category || 'Metadata';
+                categories[category].push(column);
             });
 
             return categories;
