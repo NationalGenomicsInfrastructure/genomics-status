@@ -1901,48 +1901,51 @@ const vDemuxSampleInfoEditor = {
          */
         buildSampleObject(lane, uuid, sample, latestSettings) {
             const editedSettings = this.editedData[lane]?.[uuid] || {};
-            const per_sample_fields = latestSettings.per_sample_fields || {};
-            const other_details = latestSettings.other_details || {};
-            // Helper to get value from either edited or original
-            const getValue = (editedKey, originalValue) => {
-                return editedSettings[editedKey] !== undefined 
-                    ? editedSettings[editedKey] 
-                    : originalValue;
+
+            // Helper to navigate settingsPath and get original value
+            const getOriginalValue = (fieldConfig) => {
+                const path = fieldConfig.settingsPath;
+                let value = latestSettings;
+
+                // Navigate the path
+                for (const key of path) {
+                    if (key === '_sample') {
+                        value = sample;
+                    } else {
+                        value = value?.[key];
+                    }
+                }
+                return value;
             };
-            // Build the complete sample object
-            return {
+
+            // Helper to get value from either edited or original
+            const getValue = (fieldKey, fieldConfig) => {
+                if (editedSettings[fieldKey] !== undefined) {
+                    return editedSettings[fieldKey];
+                }
+                return getOriginalValue(fieldConfig);
+            };
+
+            // Build the complete sample object dynamically from FIELD_CONFIG
+            const result = {
                 uuid: uuid,
-                lane: per_sample_fields.Lane,
-                sample_id: getValue('sample_id', per_sample_fields.Sample_ID),
-                sample_name: getValue('sample_name', per_sample_fields.Sample_Name),
-                sample_project: getValue('sample_project', per_sample_fields.Sample_Project),
-                project_name: sample.project_name,
-                project_id: sample.project_id,
-                last_modified: sample.last_modified,
-                sample_ref: getValue('sample_ref', other_details.sample_ref),
-                sample_type: other_details.sample_type,
-                config_sources: other_details.config_sources,
-                index_1: getValue('index_1', per_sample_fields.index),
-                index_2: getValue('index_2', per_sample_fields.index2),
-                index_length: other_details.index_length,
-                umi_config: other_details.umi_config,
-                umi_length: other_details.umi_length,
-                named_index: getValue('named_index', other_details.named_index),
-                recipe: getValue('recipe', other_details.recipe),
-                operator: getValue('operator', other_details.operator),
-                description: getValue('description', sample.description),
-                control: getValue('control', sample.control),
-                mask_short_reads: per_sample_fields.MaskShortReads,
-                minimum_trimmed_read_length: per_sample_fields.MinimumTrimmedReadLength,
-                override_cycles: getValue('override_cycles', per_sample_fields.OverrideCycles),
-                trim_umi: getValue('trim_umi', latestSettings.raw_samplesheet_settings?.TrimUMI),
-                create_fastq_for_index_reads: getValue('create_fastq_for_index_reads', latestSettings.raw_samplesheet_settings?.CreateFastqForIndexReads),
-                barcode_mismatches_index1: getValue('barcode_mismatches_index1', latestSettings.raw_samplesheet_settings?.BarcodeMismatchesIndex1),
-                barcode_mismatches_index2: getValue('barcode_mismatches_index2', latestSettings.raw_samplesheet_settings?.BarcodeMismatchesIndex2),
                 deleted: sample.deleted || false,
                 deleted_at: sample.deleted_at,
                 deleted_by: sample.deleted_by
             };
+
+            // Add all fields from FIELD_CONFIG
+            for (const [key, fieldConfig] of Object.entries(FIELD_CONFIG)) {
+                // If field has formField, it can be edited, so check editedSettings
+                if (fieldConfig.formField) {
+                    result[key] = getValue(key, fieldConfig);
+                } else {
+                    // Read-only field, just get the original value
+                    result[key] = getOriginalValue(fieldConfig);
+                }
+            }
+
+            return result;
         },
         // ===== End Helper Methods =====
         // ===== Template Helper Methods (Refactoring #6) =====
@@ -2441,6 +2444,7 @@ const vDemuxSampleInfoEditor = {
         formatConfigSourceLabel(source) {
             // Format config source string into readable label
             if (!source) return null;
+
             // Handle conditional rules specially
             if (source.includes('.conditional_rule.')) {
                 const conditionalRuleParts = source.split('.conditional_rule.');
@@ -2450,29 +2454,30 @@ const vDemuxSampleInfoEditor = {
                     return `Conditional rule: ${settingName} (${ruleName})`;
                 }
             }
+
             const parts = source.split('.');
             const category = parts[0];
-            if (category === 'patterns') {
-                return `Pattern: ${parts[1]}`;
-            } else if (category === 'library_method_mapping') {
-                return `Library method: ${parts.slice(1).join('.')}`;
-            } else if (category === 'instrument_type_mapping') {
-                if (parts.length === 2) {
-                    return `Instrument type: ${parts[1]}`;
-                } else if (parts.length === 4 && parts[2] === 'run_modes') {
-                    return `Run mode: ${parts[3]}`;
-                }
-                return `Instrument: ${parts.slice(1).join('.')}`;
-            } else if (category === 'other_general_sample_types') {
-                return `General type: ${parts[1]}`;
-            } else if (category === 'control_patterns') {
-                return 'Control pattern';
-            } else if (category === 'custom_config') {
-                return `Custom: ${parts.slice(1).join('.')}`;
-            } else if (category === 'bcl_convert_settings') {
-                return `Default: ${parts.slice(1).join('.')}`;
-            }
-            return source;
+
+            // Category-specific formatters
+            const categoryFormatters = {
+                'patterns': () => `Pattern: ${parts[1]}`,
+                'library_method_mapping': () => `Library method: ${parts.slice(1).join('.')}`,
+                'instrument_type_mapping': () => {
+                    if (parts.length === 2) {
+                        return `Instrument type: ${parts[1]}`;
+                    } else if (parts.length === 4 && parts[2] === 'run_modes') {
+                        return `Run mode: ${parts[3]}`;
+                    }
+                    return `Instrument: ${parts.slice(1).join('.')}`;
+                },
+                'other_general_sample_types': () => `General type: ${parts[1]}`,
+                'control_patterns': () => 'Control pattern',
+                'custom_config': () => `Custom: ${parts.slice(1).join('.')}`,
+                'bcl_convert_settings': () => `Default: ${parts.slice(1).join('.')}`
+            };
+
+            // Use formatter if available, otherwise return raw source
+            return categoryFormatters[category]?.() || source;
         },
         fetchDemuxInfo(updateHistory = true) {
             // Clear previous errors
@@ -2584,10 +2589,8 @@ const vDemuxSampleInfoEditor = {
             return value;
         },
         isFieldEditable(columnKey) {
-            // Determine which fields should be editable
-            // Start with index fields, can expand to others later
-            const editableFields = ['index_1', 'index_2', 'sample_name', 'sample_ref', 'named_index', 'description', 'operator', 'override_cycles'];
-            return editableFields.includes(columnKey);
+            // Check if field has a form field configuration (indicates it's editable)
+            return FIELD_CONFIG[columnKey]?.formField?.showInForm || false;
         },
         isFieldEdited(lane, uuid, field) {
             // Check if a specific field has been edited
@@ -2630,47 +2633,35 @@ const vDemuxSampleInfoEditor = {
             if (!this.editedData[lane][uuid]) {
                 this.editedData[lane][uuid] = {};
             }
-            // Map frontend field names to backend storage locations
-            const fieldMapping = {
-                'sample_id': ['per_sample_fields', 'Sample_ID'],
-                'sample_name': ['per_sample_fields', 'Sample_Name'],
-                'sample_project': ['per_sample_fields', 'Sample_Project'],
-                'project_id': ['sample_row', 'project_id'],
-                'project_name': ['sample_row', 'project_name'],
-                'index_1': ['per_sample_fields', 'index'],
-                'index_2': ['per_sample_fields', 'index2'],
-                'sample_ref': ['other_details', 'sample_ref'],
-                'named_index': ['other_details', 'named_index'],
-                'recipe': ['other_details', 'recipe'],
-                'operator': ['other_details', 'operator'],
-                'override_cycles': ['per_sample_fields', 'OverrideCycles'],
-                'trim_umi': ['raw_samplesheet_settings', 'TrimUMI'],
-                'create_fastq_for_index_reads': ['raw_samplesheet_settings', 'CreateFastqForIndexReads'],
-                'barcode_mismatches_index1': ['raw_samplesheet_settings', 'BarcodeMismatchesIndex1'],
-                'barcode_mismatches_index2': ['raw_samplesheet_settings', 'BarcodeMismatchesIndex2'],
-                'control': ['sample_row', 'control'],
-                'description': ['sample_row', 'description']
-            };
+
             // Get original value to compare
             const originalSample = this.calculatedLanes[lane]?.sample_rows[uuid];
             if (originalSample) {
                 const settingsVersions = Object.keys(originalSample.settings).sort().reverse();
                 const latestSettings = originalSample.settings[settingsVersions[0]];
                 let originalValue;
-                // Get the original value from the correct location
-                if (fieldMapping[field]) {
-                    const [section, key] = fieldMapping[field];
-                    if (section === 'sample_row') {
-                        // Top-level sample field
-                        originalValue = originalSample[key];
-                    } else {
-                        // Settings field
-                        originalValue = latestSettings[section]?.[key];
+
+                // Get the original value using FIELD_CONFIG settingsPath
+                const fieldConfig = FIELD_CONFIG[field];
+                if (fieldConfig?.settingsPath) {
+                    const path = fieldConfig.settingsPath;
+                    let value = latestSettings;
+
+                    // Navigate the settingsPath
+                    for (const key of path) {
+                        if (key === '_sample') {
+                // Top-level sample field
+                            value = originalSample;
+                        } else {
+                            value = value?.[key];
+                        }
                     }
+                    originalValue = value;
                 } else {
-                    // Fallback for unmapped fields
+                    // Fallback for fields without config
                     originalValue = latestSettings[field];
                 }
+
                 // Normalize null/undefined/empty string for comparison
                 // For raw_samplesheet_settings numeric fields, null, undefined, and empty string all mean "not set"
                 let normalizedOriginal = originalValue === undefined ? null : originalValue;
@@ -3356,7 +3347,7 @@ const vDemuxSampleInfoEditor = {
         <div class="container">
             <div class="row">
                 <div class="col-12">
-                    <h1>Y Flowcells</h1>
+                    <h1>Demux Sample Info</h1>
                     <!-- Input form (shown when no flowcell loaded) -->
                     <div v-if="!demux_data" class="card mt-4 mb-4">
                         <div class="card-body">
@@ -3407,9 +3398,9 @@ const vDemuxSampleInfoEditor = {
                     <template v-if="demux_data">
                         <!-- Back button -->
                         <div class="mb-3">
-                            <button class="btn btn-outline-secondary" @click="backToList">
+                            <a href="/flowcells" class="btn btn-outline-secondary" data-toggle="tooltip" title="Back to flowcell list">
                                 <i class="fa fa-arrow-left mr-2"></i>Back to Flowcell List
-                            </button>
+                            </a>
                             <a :href="'/flowcells/' + demux_data.flowcell_id" class="btn btn-outline-primary ml-2" data-toggle="tooltip" title="View flowcell QC page (may not exist for new runs)">
                                 <i class="fa fa-chart-bar mr-2"></i>Flowcell QC Page
                             </a>
