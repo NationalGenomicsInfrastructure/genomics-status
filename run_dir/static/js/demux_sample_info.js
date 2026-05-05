@@ -3719,7 +3719,7 @@ const vDemuxSampleInfoEditor = {
                         </div>
                         <h2>Flowcell: {{ demux_data.flowcell_id }}</h2>
                         <!-- Metadata Card -->
-                        <div class="card mt-4" v-if="demux_data.metadata">
+                        <div class="card px-0 mt-4" v-if="demux_data.metadata">
                             <div class="card-header">
                                 <h5 class="mb-0">Metadata</h5>
                             </div>
