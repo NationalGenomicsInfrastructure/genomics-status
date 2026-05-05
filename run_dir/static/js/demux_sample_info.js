@@ -1303,11 +1303,460 @@ const ProjectLaneCard = {
     `
 };
 
+// ===== Edit Sample Modal Component =====
+const EditSampleModal = {
+    props: {
+        show: Boolean,
+        sample: Object,
+        lane: String,
+        uuid: String,
+        fieldHistory: Object,
+        formData: Object
+    },
+    emits: ['close', 'save', 'delete', 'update:formData'],
+    data() {
+        return {
+            showFieldHistory: false
+        };
+    },
+    computed: {
+        localFormData: {
+            get() {
+                return this.formData;
+            },
+            set(value) {
+                this.$emit('update:formData', value);
+            }
+        }
+    },
+    methods: {
+        handleSave() {
+            this.$emit('save');
+        },
+        handleDelete() {
+            this.$emit('delete', { lane: this.lane, uuid: this.uuid });
+        },
+        handleClose() {
+            this.$emit('close');
+        }
+    },
+    template: `
+        <div v-if="show" class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5); overflow-y: auto;">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Edit Sample</h5>
+                        <div class="ms-auto me-2">
+                            <button
+                                v-if="Object.keys(fieldHistory).length > 0"
+                                type="button"
+                                class="btn btn-sm btn-outline-secondary"
+                                @click="showFieldHistory = !showFieldHistory">
+                                <i class="fa" :class="showFieldHistory ? 'fa-eye-slash' : 'fa-history'"></i>
+                                {{ showFieldHistory ? 'Hide History' : 'Show Field History' }}
+                            </button>
+                        </div>
+                        <button type="button" class="btn-close" @click="handleClose"></button>
+                    </div>
+                    <div class="modal-body">
+                        <!-- Config Sources Info -->
+                        <div v-if="sample" class="row mb-3">
+                            <div class="col-12">
+                                <div class="card bg-light border-info">
+                                    <div class="card-body">
+                                        <h6 class="card-title text-info">
+                                            <i class="fa fa-info-circle"></i> Configuration Sources Applied
+                                        </h6>
+                                        <p class="mb-2 small text-muted">The following configurations were applied to generate this sample's current settings:</p>
+                                        <ol class="mb-0">
+                                            <li v-for="(source, index) in (sample.config_sources || [])" :key="index" class="font-monospace small">
+                                                {{ source }}
+                                            </li>
+                                        </ol>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Field History -->
+                        <div v-if="showFieldHistory && Object.keys(fieldHistory).length > 0" class="row mb-3">
+                            <div class="col-12">
+                                <div class="card border-warning">
+                                    <div class="card-body">
+                                        <h6 class="card-title text-warning">
+                                            <i class="fa fa-history"></i> Field History
+                                        </h6>
+                                        <p class="mb-3 small text-muted">Historical changes to individual fields for this sample:</p>
+                                        <div v-for="(changes, fieldName) in fieldHistory" :key="fieldName" class="mb-3">
+                                            <div class="d-flex align-items-center mb-2">
+                                                <strong class="text-primary">{{ fieldName }}:</strong>
+                                                <span class="badge bg-secondary ms-2">{{ changes.length }} change{{ changes.length !== 1 ? 's' : '' }}</span>
+                                            </div>
+                                            <div class="border-start border-2 border-primary ps-3">
+                                                <div v-for="(change, idx) in changes" :key="idx" class="mb-2">
+                                                    <div class="d-flex align-items-start">
+                                                        <span class="badge bg-light text-dark me-2" style="min-width: 180px;">
+                                                            <i class="fa fa-clock"></i>
+                                                            {{ $parent.formatTimestamp(change.timestamp) }}
+                                                        </span>
+                                                        <span class="font-monospace flex-grow-1">
+                                                            <span v-if="change.value === null || change.value === undefined || change.value === ''" class="text-muted fst-italic">
+                                                                (empty)
+                                                            </span>
+                                                            <span v-else-if="typeof change.value === 'boolean'">
+                                                                <span :class="change.value ? 'text-success' : 'text-danger'">
+                                                                    {{ change.value ? 'Yes' : 'No' }}
+                                                                </span>
+                                                            </span>
+                                                            <span v-else>
+                                                                {{ change.value }}
+                                                            </span>
+                                                            <span v-if="idx === changes.length - 1" class="badge bg-success ms-2">Current</span>
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Sample Form Fields -->
+                        <SampleFormFields
+                            v-model="localFormData"
+                            :is-new-sample="false"
+                            mode="edit" />
+                    </div>
+                    <div class="modal-footer">
+                        <button
+                            type="button"
+                            class="btn btn-sm btn-outline-danger me-auto"
+                            @click="handleDelete"
+                            title="Delete this sample (will be traceable in database)">
+                            <i class="fa fa-trash"></i> Delete Sample
+                        </button>
+                        <button type="button" class="btn btn-secondary" @click="handleClose">Cancel</button>
+                        <button type="button" class="btn btn-primary" @click="handleSave">Apply Changes</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `
+};
+
+// ===== Add Sample Modal Component =====
+const AddSampleModal = {
+    props: {
+        show: Boolean,
+        availableLanes: Array,
+        availableProjects: Array,
+        targetLanes: Array,
+        targetProject: String,
+        projectWarnings: Array,
+        formData: Object
+    },
+    emits: ['close', 'save', 'update:targetLanes', 'update:targetProject', 'update:formData'],
+    computed: {
+        localTargetLanes: {
+            get() {
+                return this.targetLanes;
+            },
+            set(value) {
+                this.$emit('update:targetLanes', value);
+            }
+        },
+        localTargetProject: {
+            get() {
+                return this.targetProject;
+            },
+            set(value) {
+                this.$emit('update:targetProject', value);
+            }
+        },
+        localFormData: {
+            get() {
+                return this.formData;
+            },
+            set(value) {
+                this.$emit('update:formData', value);
+            }
+        }
+    },
+    methods: {
+        handleSave() {
+            this.$emit('save');
+        },
+        handleClose() {
+            this.$emit('close');
+        },
+        toggleAllLanes(checked) {
+            this.localTargetLanes = checked ? this.availableLanes.slice() : [];
+        }
+    },
+    template: `
+        <div v-if="show" class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5); overflow-y: auto;">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title"><i class="fa fa-plus"></i> Add New Sample</h5>
+                        <button type="button" class="btn-close" @click="handleClose"></button>
+                    </div>
+                    <div class="modal-body">
+                        <!-- Target Selection -->
+                        <div class="card border-primary mb-3">
+                            <div class="card-header bg-primary text-white">
+                                <h6 class="mb-0"><i class="fa fa-crosshairs"></i> Where to add the sample?</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Lane(s): <span class="text-danger">*</span></label>
+                                        <div class="border rounded p-2" style="max-height: 200px; overflow-y: auto;">
+                                            <div class="form-check">
+                                                <input type="checkbox" class="form-check-input" id="addSample_allLanes"
+                                                    :checked="localTargetLanes.length === availableLanes.length"
+                                                    @change="toggleAllLanes($event.target.checked)">
+                                                <label class="form-check-label" for="addSample_allLanes">
+                                                    <strong>All Lanes</strong>
+                                                </label>
+                                            </div>
+                                            <hr class="my-1">
+                                            <div v-for="lane in availableLanes" :key="lane" class="form-check">
+                                                <input type="checkbox" class="form-check-input" :id="'addSample_lane_' + lane"
+                                                    :value="lane" v-model="localTargetLanes">
+                                                <label class="form-check-label" :for="'addSample_lane_' + lane">
+                                                    Lane {{ lane }}
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <small class="form-text text-muted">Select at least one lane (required)</small>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="addSample_project" class="form-label">Project:</label>
+                                        <select class="form-select" id="addSample_project" v-model="localTargetProject">
+                                            <option value="">-- None --</option>
+                                            <option v-for="project in availableProjects" :key="project.id || project.name" :value="project.id || project.name">
+                                                {{ project.displayName }}
+                                            </option>
+                                        </select>
+                                        <small class="form-text text-muted">Optional: select if sample belongs to a project</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Sample form fields -->
+                        <div v-if="localTargetLanes.length > 0 && projectWarnings.length > 0" class="alert alert-warning">
+                            <strong><i class="fa fa-info-circle"></i> Inconsistent Field Values Detected:</strong>
+                            <p class="mb-1 mt-2">The following fields have different values across samples in this project. The form has been pre-filled with values from the first sample, but you may want to review these fields:</p>
+                            <ul class="mb-0 mt-2">
+                                <li v-for="(warning, idx) in projectWarnings" :key="idx">{{ warning }}</li>
+                            </ul>
+                        </div>
+                        <div v-if="localTargetLanes.length > 0" class="alert alert-info">
+                            <strong><i class="fa fa-info-circle"></i> Note:</strong>
+                            Manually added samples require you to fill in all fields. Unlike LIMS-uploaded samples, Stage 1 processing rules will not be applied.
+                        </div>
+                        <div v-else-if="localTargetLanes.length === 0" class="alert alert-warning">
+                            <i class="fa fa-exclamation-triangle"></i> Please select at least one lane above to continue
+                        </div>
+                        <div v-if="localTargetLanes.length > 0">
+                            <SampleFormFields
+                                v-model="localFormData"
+                                :is-new-sample="true"
+                                mode="add" />
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" @click="handleClose">Cancel</button>
+                        <button type="button" class="btn btn-success" @click="handleSave"
+                            :disabled="localTargetLanes.length === 0">
+                            <i class="fa fa-plus"></i> Add Sample
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `
+};
+
+// ===== Bulk Edit Modal Component =====
+const BulkEditModal = {
+    props: {
+        show: Boolean,
+        availableProjects: Array,
+        action: String,
+        project: String,
+        lane: String,
+        projectLanes: Array,
+        isSingleLaneProject: Boolean,
+        availableSamples: Array,
+        targetSamples: Array,
+        projectWarnings: Array,
+        formData: Object
+    },
+    emits: ['close', 'apply', 'update:action', 'update:project', 'update:lane', 'update:targetSamples', 'update:formData'],
+    computed: {
+        localAction: {
+            get() {
+                return this.action;
+            },
+            set(value) {
+                this.$emit('update:action', value);
+            }
+        },
+        localProject: {
+            get() {
+                return this.project;
+            },
+            set(value) {
+                this.$emit('update:project', value);
+            }
+        },
+        localLane: {
+            get() {
+                return this.lane;
+            },
+            set(value) {
+                this.$emit('update:lane', value);
+            }
+        },
+        localTargetSamples: {
+            get() {
+                return this.targetSamples;
+            },
+            set(value) {
+                this.$emit('update:targetSamples', value);
+            }
+        },
+        localFormData: {
+            get() {
+                return this.formData;
+            },
+            set(value) {
+                this.$emit('update:formData', value);
+            }
+        }
+    },
+    methods: {
+        handleApply() {
+            this.$emit('apply');
+        },
+        handleClose() {
+            this.$emit('close');
+        },
+        toggleAllSamples(checked) {
+            this.localTargetSamples = checked ? this.availableSamples.map(s => s.uuid) : [];
+        }
+    },
+    template: `
+        <div v-if="show" class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5); overflow-y: auto;">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title"><i class="fa fa-cogs"></i> Bulk Operations</h5>
+                        <button type="button" class="btn-close" @click="handleClose"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="bulkEditAction" class="form-label">Action:</label>
+                            <select class="form-select" id="bulkEditAction" v-model="localAction">
+                                <option value="reverse_complement_index1">Reverse Complement Index 1</option>
+                                <option value="reverse_complement_index2">Reverse Complement Index 2</option>
+                                <option value="edit_fields">Edit Fields</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="bulkEditProject" class="form-label">Project:</label>
+                            <select class="form-select" id="bulkEditProject" v-model="localProject" required>
+                                <option value="">-- Select Project --</option>
+                                <option v-for="project in availableProjects" :key="project.id || project.name" :value="project.id || project.name">
+                                    {{ project.displayName }}
+                                </option>
+                            </select>
+                        </div>
+                        <div class="mb-3" v-if="localProject">
+                            <label for="bulkEditLane" class="form-label">Lane:</label>
+                            <select class="form-select" id="bulkEditLane" v-model="localLane" :disabled="isSingleLaneProject">
+                                <option v-if="!isSingleLaneProject" value="all">All Lanes</option>
+                                <option v-for="lane in projectLanes" :key="lane" :value="lane">
+                                    Lane {{ lane }}
+                                </option>
+                            </select>
+                            <small v-if="isSingleLaneProject" class="form-text text-muted">
+                                This project is only present in one lane.
+                            </small>
+                        </div>
+                        <!-- Sample Selection -->
+                        <div class="mb-3" v-if="localProject && availableSamples.length > 0">
+                            <label class="form-label">Samples to Edit (optional):</label>
+                            <div class="border rounded p-2" style="max-height: 250px; overflow-y: auto;">
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input" id="bulkEdit_allSamples"
+                                        :checked="localTargetSamples.length === availableSamples.length"
+                                        @change="toggleAllSamples($event.target.checked)">
+                                    <label class="form-check-label" for="bulkEdit_allSamples">
+                                        <strong>All Samples ({{ availableSamples.length }})</strong>
+                                    </label>
+                                </div>
+                                <hr class="my-1">
+                                <div v-for="sampleInfo in availableSamples" :key="sampleInfo.uuid" class="form-check">
+                                    <input type="checkbox" class="form-check-input" :id="'bulkEdit_sample_' + sampleInfo.uuid"
+                                        :value="sampleInfo.uuid" v-model="localTargetSamples">
+                                    <label class="form-check-label" :for="'bulkEdit_sample_' + sampleInfo.uuid">
+                                        <span class="badge bg-secondary me-1">L{{ sampleInfo.lane }}</span>
+                                        <span class="font-monospace">{{ sampleInfo.sampleId }}</span>
+                                        <span class="text-muted ms-1">({{ sampleInfo.sampleName }})</span>
+                                    </label>
+                                </div>
+                            </div>
+                            <small class="form-text text-muted">
+                                Click "All Samples" to select all, or manually select specific samples below
+                            </small>
+                        </div>
+                        <!-- Warning for inconsistent field values -->
+                        <div v-if="localAction === 'edit_fields' && localProject && projectWarnings.length > 0" class="alert alert-warning">
+                            <strong><i class="fa fa-info-circle"></i> Inconsistent Field Values Detected:</strong>
+                            <p class="mb-1 mt-2">The following fields have different values across samples in this project. The form has been pre-filled with values from the majority of samples, but you may want to review these fields:</p>
+                            <ul class="mb-0 mt-2">
+                                <li v-for="(warning, idx) in projectWarnings" :key="idx">{{ warning }}</li>
+                            </ul>
+                        </div>
+                        <!-- Bulk Edit Fields Form -->
+                        <div v-if="localAction === 'edit_fields' && localProject" class="mt-4">
+                            <h6 class="mb-3">
+                                Edit Fields
+                                <span v-if="localTargetSamples.length > 0" class="text-muted">
+                                    (applied to {{ localTargetSamples.length }} selected sample{{ localTargetSamples.length !== 1 ? 's' : '' }})
+                                </span>
+                                <span v-else class="text-muted">
+                                    (applied to all {{ availableSamples.length }} sample{{ availableSamples.length !== 1 ? 's' : '' }})
+                                </span>
+                            </h6>
+                            <div class="alert alert-info">
+                                <i class="fa fa-info-circle"></i> Only fields with values entered below will be updated. Leave fields empty to keep existing values.
+                            </div>
+                            <SampleFormFields
+                                v-model="localFormData"
+                                mode="bulk" />
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" @click="handleClose">Cancel</button>
+                        <button type="button" class="btn btn-primary" @click="handleApply">Apply</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `
+};
+
 const vDemuxSampleInfoEditor = {
     // Register child components
     components: {
         ConfigInspectModal,
         SampleFormFields,
+        EditSampleModal,
+        AddSampleModal,
+        BulkEditModal,
         SampleTable,
         ProjectLaneCard
     },
@@ -1683,14 +2132,20 @@ const vDemuxSampleInfoEditor = {
         bulkEditProject(newProject) {
             // Pre-fill bulk edit form when project changes
             if (this.showBulkEditModal) {
-                // Clear sample selection when project changes
-                this.bulkEditTargetSamples = [];
+                // Update lane selection and clear sample selection
+                this.updateProjectLaneSelection();
                 if (newProject) {
                     this.populateFormWithProjectDefaults(newProject, this.bulkEditFormData, this.bulkEditProjectWarnings);
                 } else {
                     // Clear warnings and reset form when no project selected
                     this.populateFormWithProjectDefaults(null, this.bulkEditFormData, this.bulkEditProjectWarnings);
                 }
+            }
+        },
+        bulkEditAction(newAction) {
+            // Update project/lane selection when action changes
+            if (this.showBulkEditModal) {
+                this.updateProjectLaneSelection();
             }
         },
         bulkEditLane(newLane) {
@@ -2880,6 +3335,10 @@ const vDemuxSampleInfoEditor = {
                     this.bulkEditFormData[field.key] = '';
                 });
         },
+        handleDeleteSample(payload) {
+            // Handle delete event from EditSampleModal
+            this.deleteSample(payload.lane, payload.uuid);
+        },
         updateProjectLaneSelection() {
             // When project changes, update lane selection
             if (this.isSingleLaneProject) {
@@ -3758,287 +4217,42 @@ const vDemuxSampleInfoEditor = {
                         </div> <!-- end tab-content -->
                     </template>
                 <!-- Edit Sample Modal -->
-                    <div v-if="showEditModal" class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5); overflow-y: auto;">
-                        <div class="modal-dialog modal-lg">
-                            <div class="modal-content">
-                                <div class="modal-header">
-                                    <h5 class="modal-title">Edit Sample</h5>
-                                    <div class="ms-auto me-2">
-                                        <button
-                                            v-if="Object.keys(fieldHistory).length > 0"
-                                            type="button"
-                                            class="btn btn-sm btn-outline-secondary"
-                                            @click="showFieldHistory = !showFieldHistory">
-                                            <i class="fa" :class="showFieldHistory ? 'fa-eye-slash' : 'fa-history'"></i>
-                                            {{ showFieldHistory ? 'Hide History' : 'Show Field History' }}
-                                        </button>
-                                    </div>
-                                    <button type="button" class="btn-close" @click="closeEditModal"></button>
-                                </div>
-                                <div class="modal-body">
-                                    <!-- Config Sources Info -->
-                                    <div v-if="editModalSample" class="row mb-3">
-                                        <div class="col-12">
-                                            <div class="card bg-light border-info">
-                                                <div class="card-body">
-                                                    <h6 class="card-title text-info">
-                                                        <i class="fa fa-info-circle"></i> Configuration Sources Applied
-                                                    </h6>
-                                                    <p class="mb-2 small text-muted">The following configurations were applied to generate this sample's current settings:</p>
-                                                    <ol class="mb-0">
-                                                        <li v-for="(source, index) in getConfigSources(editModalSample)" :key="index" class="font-monospace small">
-                                                            {{ source }}
-                                                        </li>
-                                                    </ol>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <!-- Field History -->
-                                    <div v-if="showFieldHistory && Object.keys(fieldHistory).length > 0" class="row mb-3">
-                                        <div class="col-12">
-                                            <div class="card border-warning">
-                                                <div class="card-body">
-                                                    <h6 class="card-title text-warning">
-                                                        <i class="fa fa-history"></i> Field History
-                                                    </h6>
-                                                    <p class="mb-3 small text-muted">Historical changes to individual fields for this sample:</p>
-                                                    <div v-for="(changes, fieldName) in fieldHistory" :key="fieldName" class="mb-3">
-                                                        <div class="d-flex align-items-center mb-2">
-                                                            <strong class="text-primary">{{ fieldName }}:</strong>
-                                                            <span class="badge bg-secondary ms-2">{{ changes.length }} change{{ changes.length !== 1 ? 's' : '' }}</span>
-                                                        </div>
-                                                        <div class="border-start border-2 border-primary ps-3">
-                                                            <div v-for="(change, idx) in changes" :key="idx" class="mb-2">
-                                                                <div class="d-flex align-items-start">
-                                                                    <span class="badge bg-light text-dark me-2" style="min-width: 180px;">
-                                                                        <i class="fa fa-clock"></i>
-                                                                        {{ formatTimestamp(change.timestamp) }}
-                                                                    </span>
-                                                                    <span class="font-monospace flex-grow-1">
-                                                                        <span v-if="change.value === null || change.value === undefined || change.value === ''" class="text-muted fst-italic">
-                                                                            (empty)
-                                                                        </span>
-                                                                        <span v-else-if="typeof change.value === 'boolean'">
-                                                                            <span :class="change.value ? 'text-success' : 'text-danger'">
-                                                                                {{ change.value ? 'Yes' : 'No' }}
-                                                                            </span>
-                                                                        </span>
-                                                                        <span v-else>
-                                                                            {{ change.value }}
-                                                                        </span>
-                                                                        <span v-if="idx === changes.length - 1" class="badge bg-success ms-2">Current</span>
-                                                                    </span>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <!-- Sample Form Fields -->
-                                    <SampleFormFields
-                                        v-model="editFormData"
-                                        :is-new-sample="false"
-                                        mode="edit" />
-                                </div>
-                                <div class="modal-footer">
-                                    <button
-                                        type="button"
-                                        class="btn btn-sm btn-outline-danger me-auto"
-                                        @click="deleteSample(editModalLane, editModalUuid)"
-                                        title="Delete this sample (will be traceable in database)">
-                                        <i class="fa fa-trash"></i> Delete Sample
-                                    </button>
-                                    <button type="button" class="btn btn-secondary" @click="closeEditModal">Cancel</button>
-                                    <button type="button" class="btn btn-primary" @click="saveEditedSample">Apply Changes</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    <EditSampleModal
+                        :show="showEditModal"
+                        :sample="editModalSample"
+                        :lane="editModalLane"
+                        :uuid="editModalUuid"
+                        :field-history="fieldHistory"
+                        v-model:form-data="editFormData"
+                        @close="closeEditModal"
+                        @save="saveEditedSample"
+                        @delete="handleDeleteSample" />
                     <!-- Add Sample Modal -->
-                    <div v-if="showAddModal" class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5); overflow-y: auto;">
-                        <div class="modal-dialog modal-lg">
-                            <div class="modal-content">
-                                <div class="modal-header">
-                                    <h5 class="modal-title"><i class="fa fa-plus"></i> Add New Sample</h5>
-                                    <button type="button" class="btn-close" @click="closeAddModal"></button>
-                                </div>
-                                <div class="modal-body">
-                                    <!-- Target Selection -->
-                                    <div class="card border-primary mb-3">
-                                        <div class="card-header bg-primary text-white">
-                                            <h6 class="mb-0"><i class="fa fa-crosshairs"></i> Where to add the sample?</h6>
-                                        </div>
-                                        <div class="card-body">
-                                            <div class="row">
-                                                <div class="col-md-6 mb-3">
-                                                    <label class="form-label">Lane(s): <span class="text-danger">*</span></label>
-                                                    <div class="border rounded p-2" style="max-height: 200px; overflow-y: auto;">
-                                                        <div class="form-check">
-                                                            <input type="checkbox" class="form-check-input" id="addSample_allLanes"
-                                                                :checked="addSampleTargetLanes.length === availableLanes.length"
-                                                                @change="addSampleTargetLanes = $event.target.checked ? availableLanes.slice() : []">
-                                                            <label class="form-check-label" for="addSample_allLanes">
-                                                                <strong>All Lanes</strong>
-                                                            </label>
-                                                        </div>
-                                                        <hr class="my-1">
-                                                        <div v-for="lane in availableLanes" :key="lane" class="form-check">
-                                                            <input type="checkbox" class="form-check-input" :id="'addSample_lane_' + lane"
-                                                                :value="lane" v-model="addSampleTargetLanes">
-                                                            <label class="form-check-label" :for="'addSample_lane_' + lane">
-                                                                Lane {{ lane }}
-                                                            </label>
-                                                        </div>
-                                                    </div>
-                                                    <small class="form-text text-muted">Select at least one lane (required)</small>
-                                                </div>
-                                                <div class="col-md-6 mb-3">
-                                                    <label for="addSample_project" class="form-label">Project:</label>
-                                                    <select class="form-select" id="addSample_project" v-model="addSampleTargetProject">
-                                                        <option value="">-- None --</option>
-                                                        <option v-for="project in availableProjects" :key="project.id || project.name" :value="project.id || project.name">
-                                                            {{ project.displayName }}
-                                                        </option>
-                                                    </select>
-                                                    <small class="form-text text-muted">Optional: select if sample belongs to a project</small>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <!-- Sample form fields -->
-                                    <div v-if="addSampleTargetLanes.length > 0 && addSampleProjectWarnings.length > 0" class="alert alert-warning">
-                                        <strong><i class="fa fa-info-circle"></i> Inconsistent Field Values Detected:</strong>
-                                        <p class="mb-1 mt-2">The following fields have different values across samples in this project. The form has been pre-filled with values from the first sample, but you may want to review these fields:</p>
-                                        <ul class="mb-0 mt-2">
-                                            <li v-for="(warning, idx) in addSampleProjectWarnings" :key="idx">{{ warning }}</li>
-                                        </ul>
-                                    </div>
-                                    <div v-if="addSampleTargetLanes.length > 0" class="alert alert-info">
-                                        <strong><i class="fa fa-info-circle"></i> Note:</strong>
-                                        Manually added samples require you to fill in all fields. Unlike LIMS-uploaded samples, Stage 1 processing rules will not be applied.
-                                    </div>
-                                    <div v-else-if="addSampleTargetLanes.length === 0" class="alert alert-warning">
-                                        <i class="fa fa-exclamation-triangle"></i> Please select at least one lane above to continue
-                                    </div>
-                                    <div v-if="addSampleTargetLanes.length > 0">
-                                        <SampleFormFields
-                                            v-model="editFormData"
-                                            :is-new-sample="true"
-                                            mode="add" />
-                                    </div>
-                                </div>
-                                <div class="modal-footer">
-                                    <button type="button" class="btn btn-secondary" @click="closeAddModal">Cancel</button>
-                                    <button type="button" class="btn btn-success" @click="saveAddedSample"
-                                        :disabled="addSampleTargetLanes.length === 0">
-                                        <i class="fa fa-plus"></i> Add Sample
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    <AddSampleModal
+                        :show="showAddModal"
+                        :available-lanes="availableLanes"
+                        :available-projects="availableProjects"
+                        v-model:target-lanes="addSampleTargetLanes"
+                        v-model:target-project="addSampleTargetProject"
+                        :project-warnings="addSampleProjectWarnings"
+                        v-model:form-data="editFormData"
+                        @close="closeAddModal"
+                        @save="saveAddedSample" />
                     <!-- Bulk Operations Modal -->
-                    <div v-if="showBulkEditModal" class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5); overflow-y: auto;">
-                        <div class="modal-dialog modal-lg">
-                            <div class="modal-content">
-                                <div class="modal-header">
-                                    <h5 class="modal-title"><i class="fa fa-cogs"></i> Bulk Operations</h5>
-                                    <button type="button" class="btn-close" @click="closeBulkEditModal"></button>
-                                </div>
-                                <div class="modal-body">
-                                    <div class="mb-3">
-                                        <label for="bulkEditAction" class="form-label">Action:</label>
-                                        <select class="form-select" id="bulkEditAction" v-model="bulkEditAction" @change="updateProjectLaneSelection">
-                                            <option value="reverse_complement_index1">Reverse Complement Index 1</option>
-                                            <option value="reverse_complement_index2">Reverse Complement Index 2</option>
-                                            <option value="edit_fields">Edit Fields</option>
-                                        </select>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label for="bulkEditProject" class="form-label">Project:</label>
-                                        <select class="form-select" id="bulkEditProject" v-model="bulkEditProject" @change="updateProjectLaneSelection" required>
-                                            <option value="">-- Select Project --</option>
-                                            <option v-for="project in availableProjects" :key="project.id || project.name" :value="project.id || project.name">
-                                                {{ project.displayName }}
-                                            </option>
-                                        </select>
-                                    </div>
-                                    <div class="mb-3" v-if="bulkEditProject">
-                                        <label for="bulkEditLane" class="form-label">Lane:</label>
-                                        <select class="form-select" id="bulkEditLane" v-model="bulkEditLane" :disabled="isSingleLaneProject">
-                                            <option v-if="!isSingleLaneProject" value="all">All Lanes</option>
-                                            <option v-for="lane in projectLanes" :key="lane" :value="lane">
-                                                Lane {{ lane }}
-                                            </option>
-                                        </select>
-                                        <small v-if="isSingleLaneProject" class="form-text text-muted">
-                                            This project is only present in one lane.
-                                        </small>
-                                    </div>
-                                    <!-- Sample Selection -->
-                                    <div class="mb-3" v-if="bulkEditProject && bulkEditAvailableSamples.length > 0">
-                                        <label class="form-label">Samples to Edit (optional):</label>
-                                        <div class="border rounded p-2" style="max-height: 250px; overflow-y: auto;">
-                                            <div class="form-check">
-                                                <input type="checkbox" class="form-check-input" id="bulkEdit_allSamples"
-                                                    :checked="bulkEditTargetSamples.length === bulkEditAvailableSamples.length"
-                                                    @change="bulkEditTargetSamples = $event.target.checked ? bulkEditAvailableSamples.map(s => s.uuid) : []">
-                                                <label class="form-check-label" for="bulkEdit_allSamples">
-                                                    <strong>All Samples ({{ bulkEditAvailableSamples.length }})</strong>
-                                                </label>
-                                            </div>
-                                            <hr class="my-1">
-                                            <div v-for="sampleInfo in bulkEditAvailableSamples" :key="sampleInfo.uuid" class="form-check">
-                                                <input type="checkbox" class="form-check-input" :id="'bulkEdit_sample_' + sampleInfo.uuid"
-                                                    :value="sampleInfo.uuid" v-model="bulkEditTargetSamples">
-                                                <label class="form-check-label" :for="'bulkEdit_sample_' + sampleInfo.uuid">
-                                                    <span class="badge bg-secondary me-1">L{{ sampleInfo.lane }}</span>
-                                                    <span class="font-monospace">{{ sampleInfo.sampleId }}</span>
-                                                    <span class="text-muted ms-1">({{ sampleInfo.sampleName }})</span>
-                                                </label>
-                                            </div>
-                                        </div>
-                                        <small class="form-text text-muted">
-                                            Click "All Samples" to select all, or manually select specific samples below
-                                        </small>
-                                    </div>
-                                    <!-- Warning for inconsistent field values -->
-                                    <div v-if="bulkEditAction === 'edit_fields' && bulkEditProject && bulkEditProjectWarnings.length > 0" class="alert alert-warning">
-                                        <strong><i class="fa fa-info-circle"></i> Inconsistent Field Values Detected:</strong>
-                                        <p class="mb-1 mt-2">The following fields have different values across samples in this project. The form has been pre-filled with values from the majority of samples, but you may want to review these fields:</p>
-                                        <ul class="mb-0 mt-2">
-                                            <li v-for="(warning, idx) in bulkEditProjectWarnings" :key="idx">{{ warning }}</li>
-                                        </ul>
-                                    </div>
-                                    <!-- Bulk Edit Fields Form -->
-                                    <div v-if="bulkEditAction === 'edit_fields' && bulkEditProject" class="mt-4">
-                                        <h6 class="mb-3">
-                                            Edit Fields
-                                            <span v-if="bulkEditTargetSamples.length > 0" class="text-muted">
-                                                (applied to {{ bulkEditTargetSamples.length }} selected sample{{ bulkEditTargetSamples.length !== 1 ? 's' : '' }})
-                                            </span>
-                                            <span v-else class="text-muted">
-                                                (applied to all {{ bulkEditAvailableSamples.length }} sample{{ bulkEditAvailableSamples.length !== 1 ? 's' : '' }})
-                                            </span>
-                                        </h6>
-                                        <div class="alert alert-info">
-                                            <i class="fa fa-info-circle"></i> Only fields with values entered below will be updated. Leave fields empty to keep existing values.
-                                        </div>
-                                        <SampleFormFields
-                                            v-model="bulkEditFormData"
-                                            mode="bulk" />
-                                    </div>
-                                </div>
-                                <div class="modal-footer">
-                                    <button type="button" class="btn btn-secondary" @click="closeBulkEditModal">Cancel</button>
-                                    <button type="button" class="btn btn-primary" @click="applyBulkEdit">Apply</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    <BulkEditModal
+                        :show="showBulkEditModal"
+                        :available-projects="availableProjects"
+                        v-model:action="bulkEditAction"
+                        v-model:project="bulkEditProject"
+                        v-model:lane="bulkEditLane"
+                        :project-lanes="projectLanes"
+                        :is-single-lane-project="isSingleLaneProject"
+                        :available-samples="bulkEditAvailableSamples"
+                        v-model:target-samples="bulkEditTargetSamples"
+                        :project-warnings="bulkEditProjectWarnings"
+                        v-model:form-data="bulkEditFormData"
+                        @close="closeBulkEditModal"
+                        @apply="applyBulkEdit" />
                     <!-- Configuration Details Modal Component -->
                     <ConfigInspectModal
                         :show="showConfigModal"
