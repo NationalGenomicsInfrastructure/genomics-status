@@ -1340,7 +1340,7 @@ const EditSampleModal = {
             this.$emit('close');
         }
     },
-    template: `
+    template: /*html*/`
         <div v-if="show" class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5); overflow-y: auto;">
             <div class="modal-dialog modal-lg">
                 <div class="modal-content">
@@ -1492,7 +1492,7 @@ const AddSampleModal = {
             this.localTargetLanes = checked ? this.availableLanes.slice() : [];
         }
     },
-    template: `
+    template: /*html*/`
         <div v-if="show" class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5); overflow-y: auto;">
             <div class="modal-dialog modal-lg">
                 <div class="modal-content">
@@ -1647,7 +1647,7 @@ const BulkEditModal = {
             this.localTargetSamples = checked ? this.availableSamples.map(s => s.uuid) : [];
         }
     },
-    template: `
+    template: /*html*/`
         <div v-if="show" class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5); overflow-y: auto;">
             <div class="modal-dialog modal-lg">
                 <div class="modal-content">
@@ -1871,45 +1871,11 @@ const vDemuxSampleInfoEditor = {
             }
             return this.demux_data.calculated.version_history[this.currentVersion];
         },
-        calculatedData() {
-            if (!this.demux_data || !this.demux_data.calculated) {
-                return {};
-            }
-        },
         calculatedLanes() {
             if (!this.demux_data || !this.demux_data.calculated || !this.demux_data.calculated.lanes) {
                 return {};
             }
             return this.demux_data.calculated.lanes;
-        },
-        calculatedSamplesFlat() {
-            // Flatten calculated sample_rows with their latest settings for table display
-            // If there are edits, merge them with original data
-            const result = {};
-            Object.entries(this.calculatedLanes).forEach(([lane, laneData]) => {
-                result[lane] = [];
-                Object.entries(laneData.sample_rows).forEach(([uuid, sample]) => {
-                    const latestSettings = this.getLatestSettings(sample);
-                    result[lane].push(this.buildSampleObject(lane, uuid, sample, latestSettings));
-                });
-            });
-            return result;
-        },
-        calculatedSamplesByLaneAndProject() {
-            // Group samples by lane and then by project
-            const result = {};
-            Object.entries(this.calculatedLanes).forEach(([lane, laneData]) => {
-                result[lane] = {};
-                Object.entries(laneData.sample_rows).forEach(([uuid, sample]) => {
-                    const latestSettings = this.getLatestSettings(sample);
-                    const projectName = sample.project_name || 'Unknown Project';
-                    if (!result[lane][projectName]) {
-                        result[lane][projectName] = [];
-                    }
-                    result[lane][projectName].push(this.buildSampleObject(lane, uuid, sample, latestSettings));
-                });
-            });
-            return result;
         },
         calculatedSamplesByLaneProjectAndNamedIndex() {
         // Group samples by lane, then by project, then optionally by named index
@@ -2074,12 +2040,6 @@ const vDemuxSampleInfoEditor = {
             }
             return Object.entries(this.configModalSample.settings)
                 .sort((a, b) => b[0].localeCompare(a[0])); // ISO timestamps sort lexicographically
-        },
-        bulkEditableFields() {
-            // Get all fields that are bulkEditable and have formField config, sorted by order
-            return Object.values(FIELD_CONFIG)
-                .filter(field => field.bulkEditable && field.formField?.showInForm)
-                .sort((a, b) => a.formField.order - b.formField.order);
         },
         bulkEditAvailableSamples() {
             // Get samples in the selected project/lane for bulk edit
@@ -2459,10 +2419,6 @@ const vDemuxSampleInfoEditor = {
          * @param {number} count - Number of samples
          * @returns {string} Formatted count text
          */
-        getSampleCountText(count) {
-            return `${count} sample${count !== 1 ? 's' : ''}`;
-        },
-
         /**
          * Check if a sample row should be highlighted
          * @param {string} lane - The lane number
@@ -2626,10 +2582,6 @@ const vDemuxSampleInfoEditor = {
             } else {
                 this.expandedConfigSources.push(index);
             }
-        },
-        isConfigSourceExpanded(index) {
-            // Check if a config source is expanded
-            return this.expandedConfigSources.includes(index);
         },
         // ===== Config Source Parsing Helpers (Refactoring #5) =====
         /**
@@ -2841,16 +2793,6 @@ const vDemuxSampleInfoEditor = {
             }
             return lastSource;
         },
-        getValueWithSource(configKey, value, path = null) {
-            // Get a formatted display of value with its source
-            const source = this.traceConfigValueSource(configKey, path);
-            const sourceIndex = source ? this.configModalSources.indexOf(source) + 1 : null;
-            return {
-                value: value,
-                source: source,
-                sourceIndex: sourceIndex
-            };
-        },
         getAllBCLConvertSettings(sampleSettings) {
             // Get all BCLConvert settings including defaults from schema
             const allSettings = {};
@@ -2869,7 +2811,7 @@ const vDemuxSampleInfoEditor = {
             }
             return allSettings;
         },
-        isSettingsManuallyEdited(timestamp) {
+        formatConfigSourceLabel(source) {
             // Check if the settings at the given timestamp were manually edited
             if (!this.demux_data?.calculated?.version_history) return false;
             const versionInfo = this.demux_data.calculated.version_history[timestamp];
@@ -2892,11 +2834,7 @@ const vDemuxSampleInfoEditor = {
             // If current value differs from original, it was manually edited
             return currentValue !== originalValue;
         },
-        getSamplesheetBCLSettings(settings) {
-            // Helper method to get BCLConvert settings for samplesheet display
-            return this.getAllBCLConvertSettings(settings);
-        },
-        formatConfigSourceLabel(source) {
+        isSettingsManuallyEdited(timestamp) {
             // Format config source string into readable label
             if (!source) return null;
 
@@ -2964,23 +2902,6 @@ const vDemuxSampleInfoEditor = {
                     console.error(error);
                     this.loading = false;
                 });
-        },
-        backToList() {
-            // Return to the flowcell list page
-            window.location.href = '/flowcells';
-        },
-        formatTimestamp(timestamp) {
-            if (!timestamp) return '';
-            return new Date(timestamp).toLocaleString();
-        },
-        getSampleSettings(sampleUuid, lane) {
-            if (!this.calculatedLanes[lane] || !this.calculatedLanes[lane].sample_rows[sampleUuid]) {
-                return null;
-            }
-            const sample = this.calculatedLanes[lane].sample_rows[sampleUuid];
-            // Get settings for the current version or the latest
-            const settingsVersions = Object.keys(sample.settings).sort().reverse();
-            return sample.settings[settingsVersions[0]];
         },
         toggleColumn(columnKey) {
             // Prevent toggling off mandatory columns
@@ -3638,74 +3559,6 @@ const vDemuxSampleInfoEditor = {
                 ? `${editCount} selected sample(s)`
                 : `${editCount} sample(s)`;
             alert(`Applied ${actionLabel} to ${sampleCountLabel} in project ${this.bulkEditProject}`);
-            this.closeBulkEditModal();
-        },
-        addNewSample() {
-            const newSampleId = this.nextSampleId;
-            const lane = this.bulkEditLane;
-            // Generate a new UUID for the sample
-            const uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
-                const r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
-                return v.toString(16);
-            });
-            // Get template settings from an existing sample in the same project
-            let templateSettings = null;
-            Object.values(this.calculatedLanes).some(laneData => {
-                return Object.values(laneData.sample_rows).some(sample => {
-                    const settingsVersions = Object.keys(sample.settings).sort().reverse();
-                    const latestSettings = sample.settings[settingsVersions[0]];
-                    const sampleProject = latestSettings.per_sample_fields?.Sample_Project;
-                    const projectId = sample.project_id;
-                    const projectName = sample.project_name;
-                    // Match against Sample_Project, project_id, or project_name
-                    if (sampleProject === this.bulkEditProject || projectId === this.bulkEditProject || projectName === this.bulkEditProject) {
-                        templateSettings = { ...latestSettings };
-                        return true;
-                    }
-                });
-            });
-            // Create new sample settings
-            const timestamp = new Date().toISOString();
-            const newSettings = templateSettings ? {
-                ...templateSettings,
-                sample_id: newSampleId,
-                sample_name: newSampleId,
-                lane: lane
-            } : {
-                sample_id: newSampleId,
-                sample_name: newSampleId,
-                    sample_project: this.bulkEditProject,
-                sample_ref: '',
-                index_1: '',
-                index_2: '',
-                named_index: '',
-                recipe: '',
-                operator: '',
-                description: '',
-                control: 'N',
-                mask_short_reads: 0,
-                minimum_trimmed_read_length: 0,
-                override_cycles: '',
-                lane: lane,
-                flowcell_id: this.flowcell_id
-            };
-            // Add to editedData (which will be sent to backend on save)
-            if (!this.editedData[lane]) {
-                this.editedData[lane] = {};
-            }
-            this.editedData[lane][uuid] = newSettings;
-            // Also add to the actual data structure for immediate display
-            if (!this.demux_data.calculated.lanes[lane]) {
-                this.demux_data.calculated.lanes[lane] = { sample_rows: {} };
-            }
-            this.demux_data.calculated.lanes[lane].sample_rows[uuid] = {
-                sample_id: newSampleId,
-                last_modified: timestamp,
-                settings: {
-                    [timestamp]: newSettings
-                }
-            };
-            alert(`Added new sample ${newSampleId} to lane ${lane}`);
             this.closeBulkEditModal();
         },
         generateSamplesheetContent(samplesheet) {
