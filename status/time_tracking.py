@@ -46,25 +46,14 @@ class TimeTrackingDataHandler(SafeHandler):
         selected_method = self.get_argument("method", None)
         selected_project_type = self.get_argument("project_type", None)
 
-        # Enforce maximum 2-year range to prevent excessive memory usage
+        # Validate date format
         try:
-            start_dt = datetime.datetime.strptime(start_date, "%Y-%m-%d")
-            end_dt = datetime.datetime.strptime(end_date, "%Y-%m-%d")
-
-            max_range_days = 730  # 2 years
-            if (end_dt - start_dt).days > max_range_days:
-                application_log.warning(
-                    f"Time tracking query range too large: {(end_dt - start_dt).days} days. "
-                    f"Limiting to {max_range_days} days."
-                )
-                start_dt = end_dt - datetime.timedelta(days=max_range_days)
-                start_date = start_dt.strftime("%Y-%m-%d")
+            datetime.datetime.strptime(start_date, "%Y-%m-%d")
+            datetime.datetime.strptime(end_date, "%Y-%m-%d")
         except ValueError as e:
             application_log.error(f"Invalid date format: {e}")
             start_date = default_start
             end_date = default_end
-            start_dt = datetime.datetime.strptime(start_date, "%Y-%m-%d")
-            end_dt = datetime.datetime.strptime(end_date, "%Y-%m-%d")
 
         # Initialize result structure
         result = {
