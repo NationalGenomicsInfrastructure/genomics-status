@@ -57,34 +57,19 @@ const vTimeTrackingMain = ({
         }
     },
     methods: {
-        destroyChart(chartName) {
-            // Safely destroy a chart instance
-            if (this[chartName]) {
-                try {
-                    this[chartName].destroy();
-                } catch (e) {
-                    console.warn(`Failed to destroy chart ${chartName}:`, e);
-                }
-                this[chartName] = null;
-            }
-        },
-        getStageColor(stage) {
-            // Get consistent color for a stage based on its position in stage_order
-            const stageIndex = this.stage_order.indexOf(stage);
-            const colorIndex = stageIndex >= 0 ? stageIndex : this.stage_order.length;
-            return CHART_COLORS[colorIndex % CHART_COLORS.length];
-        },
-        sortStages(stages) {
-            // Sort stages according to the defined order (non-mutating)
-            return [...stages].sort((a, b) => {
-                const indexA = this.stage_order.indexOf(a);
-                const indexB = this.stage_order.indexOf(b);
-                // If stage not in order list, put it at the end
-                if (indexA === -1 && indexB === -1) return 0;
-                if (indexA === -1) return 1;
-                if (indexB === -1) return -1;
-                return indexA - indexB;
-            });
+        // ====================
+        // Lifecycle & Initialization
+        // ====================
+        setDefaults() {
+            // Set default date range to last 6 months
+            const end = new Date();
+            const start = new Date();
+            start.setDate(start.getDate() - 180);
+
+            this.end_date = end.toISOString().split('T')[0];
+            this.start_date = start.toISOString().split('T')[0];
+
+            this.fetchData();
         },
         async fetchData() {
             this.loading = true;
@@ -123,16 +108,16 @@ const vTimeTrackingMain = ({
                 this.loading = false;
             }
         },
-        setDefaults() {
-            // Set default date range to last 6 months
-            const end = new Date();
-            const start = new Date();
-            start.setDate(start.getDate() - 180);
-            
-            this.end_date = end.toISOString().split('T')[0];
-            this.start_date = start.toISOString().split('T')[0];
-            
-            this.fetchData();
+        // ====================
+        // UI Event Handlers
+        // ====================
+        changePlotMode(mode) {
+            this.plot_mode = mode;
+            this.updateChart();
+        },
+        changePlotStyle(style) {
+            this.plot_style = style;
+            this.updateChart();
         },
         updateChart() {
             if (this.plot_mode === 'methods') {
@@ -141,542 +126,188 @@ const vTimeTrackingMain = ({
                 this.renderStagesChart();
             }
         },
+        // ====================
+        // Chart Rendering
+        // ====================
         renderMethodsChart() {
-            // Render Production - Finished library chart
-            const prodFinishedCtx = document.getElementById('productionFinishedChart');
-            if (prodFinishedCtx) {
-                this.destroyChart('production_finished_chart');
-                this.renderMethodsChartForType(prodFinishedCtx, this.production_finished_data, 'production_finished_chart', 'Production - Finished library (by user)');
-            }
-            
-            // Render Production - Other chart
-            const prodOtherCtx = document.getElementById('productionOtherChart');
-            if (prodOtherCtx) {
-                this.destroyChart('production_other_chart');
-                this.renderMethodsChartForType(prodOtherCtx, this.production_other_data, 'production_other_chart', 'Production - Other library methods');
-            }
-            
-            // Render Application - Finished library chart
-            const appFinishedCtx = document.getElementById('applicationFinishedChart');
-            if (appFinishedCtx) {
-                this.destroyChart('application_finished_chart');
-                this.renderMethodsChartForType(appFinishedCtx, this.application_finished_data, 'application_finished_chart', 'Application - Finished library (by user)');
-            }
-            
-            // Render Application - Other chart
-            const appOtherCtx = document.getElementById('applicationOtherChart');
-            if (appOtherCtx) {
-                this.destroyChart('application_other_chart');
-                this.renderMethodsChartForType(appOtherCtx, this.application_other_data, 'application_other_chart', 'Application - Other library methods');
-            }
-        },
-        renderMethodsChartForType(ctx, dataSubset, chartInstanceName, typeLabel) {
-            const availableMethods = Object.keys(dataSubset).sort();
-            
-            if (this.plot_style === 'merged') {
-                this[chartInstanceName] = this.renderMergedMethodsChart(ctx, dataSubset, availableMethods, typeLabel);
-            } else {
-                this[chartInstanceName] = this.renderGroupedMethodsChart(ctx, dataSubset, availableMethods, typeLabel);
-            }
-        },
-        renderMergedMethodsChart(ctx, dataSubset, labels, typeLabel) {
-            // Show only Total Time for each method
-            const datasets = [];
-            
-            // Collect only "Total Time" durations for each method
-            const methodDurations = {};
-            const methodProjects = {};
-            for (const method of labels) {
-                methodDurations[method] = [];
-                methodProjects[method] = [];
-                const stages = dataSubset[method];
-                
-                // Only use Total Time data
-                if (stages['Total Time']) {
-                    const totalTimeData = stages['Total Time'];
-                    if (totalTimeData.durations) {
-                        methodDurations[method] = totalTimeData.durations;
-                        methodProjects[method] = totalTimeData.projects;
-                    }
-                }
-            }
-            
-            // Create labels with counts
-            const labelsWithCounts = labels.map(method => {
-                const count = methodDurations[method].filter(d => typeof d === 'number' && !isNaN(d)).length;
-                return `${method} (N=${count})`;
-            });
-            
-            // Create boxplot data
-            const boxplotData = labels.map(method => {
-                const values = methodDurations[method].filter(d => typeof d === 'number' && !isNaN(d));
-                if (values.length === 0) return null;
-                
-                values.sort((a, b) => a - b);
-                const q1 = this.percentile(values, 25);
-                const median = this.percentile(values, 50);
-                const q3 = this.percentile(values, 75);
-                const mean = values.length > 0 ? values.reduce((a, b) => a + b, 0) / values.length : 0;
-                
-                const { outliers, whiskerMin, whiskerMax } = this.calculateOutliers(values, q1, q3);
-                
-                return {
-                    min: whiskerMin,
-                    q1: q1,
-                    median: median,
-                    mean: mean,
-                    q3: q3,
-                    max: whiskerMax,
-                    outliers: outliers,
-                    method: method,
-                    projects: methodProjects[method]
-                };
-            });
-            
-            const self = this;
-            return new Chart(ctx, {
-                type: 'boxplot',
-                data: {
-                    labels: labelsWithCounts,
-                    datasets: [{
-                        label: 'Duration (days)',
-                        data: boxplotData,
-                        backgroundColor: 'rgba(54, 162, 235, 0.5)',
-                        borderColor: 'rgba(54, 162, 235, 1)',
-                        borderWidth: 1,
-                        meanRadius: 0,  // Hide mean point in plot
-                        outlierRadius: 2,
-                        outlierBackgroundColor: 'rgba(54, 162, 235, 0.7)',
-                        outlierBorderColor: 'rgba(54, 162, 235, 1)',
-                        outlierBorderWidth: 1.5
-                    }]
-                },
-                options: {
-                    animation: false,
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    onClick: function(event, elements) {
-                        if (elements.length > 0) {
-                            const index = elements[0].index;
-                            const method = labels[index];
-                            const projects = methodProjects[method];
-                            self.selected_projects = projects.sort((a, b) => (b.duration ?? 0) - (a.duration ?? 0));
-                            self.modal_title = `${typeLabel} - ${method} - Total Time`;
-                            self.modal_stage = 'Total Time';
-                            self.show_projects_modal = true;
-                        }
-                    },
-                    plugins: {
-                        title: {
-                            display: true,
-                            text: `${typeLabel} Projects: Duration by Method (Total Time)`
-                        },
-                        legend: {
-                            display: false
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    const dataPoint = context.parsed;
-                                    return [
-                                        `Min: ${dataPoint.min}`,
-                                        `Q1: ${dataPoint.q1}`,
-                                        `Median: ${dataPoint.median}`,
-                                        `Mean: ${dataPoint.mean?.toFixed(1)}`,
-                                        `Q3: ${dataPoint.q3}`,
-                                        `Max: ${dataPoint.max}`
-                                    ];
-                                },
-                                footer: function() {
-                                    return 'Click to view projects';
-                                }
-                            }
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            suggestedMax: this.calculateYAxisMax(dataSubset),
-                            title: {
-                                display: true,
-                                text: 'Duration (days)'
-                            }
-                        },
-                        x: {
-                            title: {
-                                display: true,
-                                text: 'Method'
-                            }
-                        }
-                    }
-                }
-            });
-        },
-        renderGroupedMethodsChart(ctx, dataSubset, labels, typeLabel) {
-            // Show separate boxplot for each stage, grouped by method
-            const allStages = new Set();
-            for (const method in dataSubset) {
-                for (const stage in dataSubset[method]) {
-                    allStages.add(stage);
-                }
-            }
-            const stages = this.sortStages(Array.from(allStages));
-            
-            // Create labels without counts (since counts vary by stage in grouped view)
-            const methodLabels = labels;
-            
-            const datasets = stages.map((stage, idx) => {
-                
-                const boxplotData = labels.map(method => {
-                    const stageData = dataSubset[method] && dataSubset[method][stage];
-                    if (!stageData || !stageData.durations || stageData.durations.length === 0) return null;
-                    
-                    const values = stageData.durations.filter(d => typeof d === 'number' && !isNaN(d));
-                    if (values.length === 0) return null;
-                    const sorted = [...values].sort((a, b) => a - b);
-                    const q1 = this.percentile(sorted, 25);
-                    const q3 = this.percentile(sorted, 75);
-                    const mean = values.reduce((a, b) => a + b, 0) / values.length;
-                    
-                    const { outliers, whiskerMin, whiskerMax } = this.calculateOutliers(sorted, q1, q3);
-                    
-                    return {
-                        min: whiskerMin,
-                        q1: q1,
-                        median: this.percentile(sorted, 50),
-                        mean: mean,
-                        q3: q3,
-                        max: whiskerMax,
-                        outliers: outliers,
-                        method: method,
-                        stage: stage,
-                        items: values.length  // Store count for tooltip
-                    };
-                });
-                
-                const stageColor = this.getStageColor(stage);
-                return {
-                    label: stage,
-                    data: boxplotData,
-                    backgroundColor: stageColor,
-                    borderColor: stageColor.replace('0.5', '1'),
-                    borderWidth: 1,
-                    meanRadius: 0,  // Hide mean point in plot
-                    outlierRadius: 2,
-                    outlierBackgroundColor: stageColor.replace('0.5', '0.7'),
-                    outlierBorderColor: stageColor.replace('0.5', '1'),
-                    outlierBorderWidth: 1.5
-                };
-            });
-            
-            const self = this;
-            return new Chart(ctx, {
-                type: 'boxplot',
-                data: {
-                    labels: methodLabels,
-                    datasets: datasets
-                },
-                options: {
-                    animation: false,
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    onClick: function(event, elements) {
-                        if (elements.length > 0) {
-                            const element = elements[0];
-                            const datasetIndex = element.datasetIndex;
-                            const index = element.index;
-                            const stage = stages[datasetIndex];
-                            const method = labels[index];
-                            self.showProjectsForBox(method, stage, dataSubset);
-                        }
-                    },
-                    plugins: {
-                        title: {
-                            display: true,
-                            text: `${typeLabel} Projects: Duration by Method (Grouped by Stage)`
-                        },
-                        legend: {
-                            display: true,
-                            position: 'top'
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    const dataPoint = context.parsed;
-                                    const rawData = context.dataset.data[context.dataIndex];
-                                    const stage = context.dataset.label;
-                                    const count = rawData?.items || 0;
-                                    return [
-                                        `${stage} (N=${count})`,
-                                        `Min: ${dataPoint.min}`,
-                                        `Q1: ${dataPoint.q1}`,
-                                        `Median: ${dataPoint.median}`,
-                                        `Mean: ${dataPoint.mean?.toFixed(1)}`,
-                                        `Q3: ${dataPoint.q3}`,
-                                        `Max: ${dataPoint.max}`
-                                    ];
-                                },
-                                footer: function() {
-                                    return 'Click to view projects';
-                                }
-                            }
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            suggestedMax: this.calculateYAxisMax(dataSubset),
-                            title: {
-                                display: true,
-                                text: 'Duration (days)'
-                            }
-                        },
-                        x: {
-                            title: {
-                                display: true,
-                                text: 'Method'
-                            }
-                        }
-                    }
-                }
-            });
+            this.renderAllCharts((ctx, data, name, label) =>
+                this.renderChartForType(ctx, data, name, label, 'methods'));
         },
         renderStagesChart() {
-            // Render Production - Finished library chart
-            const prodFinishedCtx = document.getElementById('productionFinishedChart');
-            if (prodFinishedCtx) {
-                this.destroyChart('production_finished_chart');
-                this.renderStagesChartForType(prodFinishedCtx, this.production_finished_data, 'production_finished_chart', 'Production - Finished library (by user)');
-            }
-            
-            // Render Production - Other chart
-            const prodOtherCtx = document.getElementById('productionOtherChart');
-            if (prodOtherCtx) {
-                this.destroyChart('production_other_chart');
-                this.renderStagesChartForType(prodOtherCtx, this.production_other_data, 'production_other_chart', 'Production - Other library methods');
-            }
-            
-            // Render Application - Finished library chart
-            const appFinishedCtx = document.getElementById('applicationFinishedChart');
-            if (appFinishedCtx) {
-                this.destroyChart('application_finished_chart');
-                this.renderStagesChartForType(appFinishedCtx, this.application_finished_data, 'application_finished_chart', 'Application - Finished library (by user)');
-            }
-            
-            // Render Application - Other chart
-            const appOtherCtx = document.getElementById('applicationOtherChart');
-            if (appOtherCtx) {
-                this.destroyChart('application_other_chart');
-                this.renderStagesChartForType(appOtherCtx, this.application_other_data, 'application_other_chart', 'Application - Other library methods');
-            }
+            this.renderAllCharts((ctx, data, name, label) =>
+                this.renderChartForType(ctx, data, name, label, 'stages'));
         },
-        renderStagesChartForType(ctx, dataSubset, chartInstanceName, typeLabel) {
-            if (this.plot_style === 'merged') {
-                this[chartInstanceName] = this.renderMergedStagesChart(ctx, dataSubset, typeLabel);
-            } else {
-                this[chartInstanceName] = this.renderGroupedStagesChart(ctx, dataSubset, typeLabel);
-            }
-        },
-        renderMergedStagesChart(ctx, dataSubset, typeLabel) {
-            // Merge all methods for each stage
-            const allStages = new Set();
-            for (const method in dataSubset) {
-                for (const stage in dataSubset[method]) {
-                    allStages.add(stage);
+        renderAllCharts(renderFunction) {
+            const charts = [
+                {
+                    canvasId: 'productionFinishedChart',
+                    chartName: 'production_finished_chart',
+                    data: this.production_finished_data,
+                    label: 'Production - Finished library (by user)'
+                },
+                {
+                    canvasId: 'productionOtherChart',
+                    chartName: 'production_other_chart',
+                    data: this.production_other_data,
+                    label: 'Production - Other library methods'
+                },
+                {
+                    canvasId: 'applicationFinishedChart',
+                    chartName: 'application_finished_chart',
+                    data: this.application_finished_data,
+                    label: 'Application - Finished library (by user)'
+                },
+                {
+                    canvasId: 'applicationOtherChart',
+                    chartName: 'application_other_chart',
+                    data: this.application_other_data,
+                    label: 'Application - Other library methods'
                 }
-            }
-            const stages = this.sortStages(Array.from(allStages));
-            
-            // Collect all durations for each stage across all methods
-            const stageDurations = {};
-            const stageProjects = {};
-            for (const stage of stages) {
-                stageDurations[stage] = [];
-                stageProjects[stage] = [];
+            ];
+
+            charts.forEach(chart => {
+                const ctx = document.getElementById(chart.canvasId);
+                if (ctx) {
+                    this.destroyChart(chart.chartName);
+                    renderFunction.call(this, ctx, chart.data, chart.chartName, chart.label);
+                }
+            });
+
+            this.charts_loading = false;
+        },
+        renderChartForType(ctx, dataSubset, chartInstanceName, typeLabel, plotBy) {
+            const isMerged = this.plot_style === 'merged';
+            const self = this;
+
+            // Extract appropriate labels and axis info based on plotBy
+            const isMethodView = plotBy === 'methods';
+            const axisLabel = isMethodView ? 'Method' : 'Stage';
+
+            let labels, chartLabels, datasets;
+
+            // Determine labels based on view type
+            if (isMethodView) {
+                labels = Object.keys(dataSubset).sort();
+            } else {
+                const allStages = new Set();
                 for (const method in dataSubset) {
-                    if (dataSubset[method][stage]) {
-                        const stageData = dataSubset[method][stage];
-                        if (stageData.durations) {
-                            stageDurations[stage].push(...stageData.durations);
-                            stageProjects[stage].push(...stageData.projects);
-                        }
+                    for (const stage in dataSubset[method]) {
+                        allStages.add(stage);
                     }
                 }
+                labels = this.sortStages(Array.from(allStages));
             }
-            
-            // Create labels with counts
-            const labelsWithCounts = stages.map(stage => {
-                const count = stageDurations[stage].filter(d => typeof d === 'number' && !isNaN(d)).length;
-                return `${stage} (N=${count})`;
-            });
-            
-            // Create boxplot data
-            const boxplotData = stages.map(stage => {
-                const values = stageDurations[stage].filter(d => typeof d === 'number' && !isNaN(d));
-                if (values.length === 0) return null;
-                
-                values.sort((a, b) => a - b);
-                const q1 = this.percentile(values, 25);
-                const q3 = this.percentile(values, 75);
-                const mean = values.reduce((a, b) => a + b, 0) / values.length;
-                
-                const { outliers, whiskerMin, whiskerMax } = this.calculateOutliers(values, q1, q3);
-                
-                return {
-                    min: whiskerMin,
-                    q1: q1,
-                    median: this.percentile(values, 50),
-                    mean: mean,
-                    q3: q3,
-                    max: whiskerMax,
-                    outliers: outliers,
-                    stage: stage,
-                    projects: stageProjects[stage]
-                };
-            });
-            
-            const self = this;
-            return new Chart(ctx, {
-                type: 'boxplot',
-                data: {
-                    labels: labelsWithCounts,
-                    datasets: [{
-                        label: 'Duration (days)',
-                        data: boxplotData,
-                        backgroundColor: 'rgba(75, 192, 192, 0.5)',
-                        borderColor: 'rgba(75, 192, 192, 1)',
-                        borderWidth: 1,
-                        meanRadius: 0,  // Hide mean point in plot
-                        outlierRadius: 2,
-                        outlierBackgroundColor: 'rgba(75, 192, 192, 0.7)',
-                        outlierBorderColor: 'rgba(75, 192, 192, 1)',
-                        outlierBorderWidth: 1.5
-                    }]
-                },
-                options: {
-                    animation: false,
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    onClick: function(event, elements) {
-                        if (elements.length > 0) {
-                            const index = elements[0].index;
-                            const stage = stages[index];
-                            const projects = stageProjects[stage];
-                            self.selected_projects = projects.sort((a, b) => (b.duration ?? 0) - (a.duration ?? 0));
-                            self.modal_title = `${typeLabel} - ${stage} - All Methods Combined`;
-                            self.modal_stage = stage;
-                            self.show_projects_modal = true;
+
+            if (isMerged) {
+                // Merged mode: Aggregate data across dimension
+                const itemDurations = {};
+                const itemProjects = {};
+
+                if (isMethodView) {
+                    // Methods view: Show only Total Time for each method
+                    for (const method of labels) {
+                        itemDurations[method] = [];
+                        itemProjects[method] = [];
+                        const stages = dataSubset[method];
+
+                        if (stages['Total Time'] && stages['Total Time'].durations) {
+                            itemDurations[method] = stages['Total Time'].durations;
+                            itemProjects[method] = stages['Total Time'].projects;
                         }
-                    },
-                    plugins: {
-                        title: {
-                            display: true,
-                            text: `${typeLabel} Projects: Duration by Stage (All Methods Merged)`
-                        },
-                        legend: {
-                            display: false
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    const dataPoint = context.parsed;
-                                    return [
-                                        `Min: ${dataPoint.min}`,
-                                        `Q1: ${dataPoint.q1}`,
-                                        `Median: ${dataPoint.median}`,
-                                        `Mean: ${dataPoint.mean?.toFixed(1)}`,
-                                        `Q3: ${dataPoint.q3}`,
-                                        `Max: ${dataPoint.max}`
-                                    ];
-                                },
-                                footer: function() {
-                                    return 'Click to view projects';
+                    }
+                } else {
+                    // Stages view: Collect all durations for each stage across all methods
+                    for (const stage of labels) {
+                        itemDurations[stage] = [];
+                        itemProjects[stage] = [];
+                        for (const method in dataSubset) {
+                            if (dataSubset[method][stage]) {
+                                const stageData = dataSubset[method][stage];
+                                if (stageData.durations) {
+                                    itemDurations[stage].push(...stageData.durations);
+                                    itemProjects[stage].push(...stageData.projects);
                                 }
                             }
                         }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            suggestedMax: this.calculateYAxisMax(dataSubset),
-                            title: {
-                                display: true,
-                                text: 'Duration (days)'
-                            }
-                        },
-                        x: {
-                            title: {
-                                display: true,
-                                text: 'Stage'
-                            }
-                        }
                     }
                 }
-            });
-        },
-        renderGroupedStagesChart(ctx, dataSubset, typeLabel) {
-            // Show separate boxplot for each method, grouped by stage
-            const allStages = new Set();
-            for (const method in dataSubset) {
-                for (const stage in dataSubset[method]) {
-                    allStages.add(stage);
-                }
-            }
-            const stages = this.sortStages(Array.from(allStages));
-            const availableMethods = Object.keys(dataSubset).sort();
-            
-            // Create labels without counts (since counts vary by method in grouped view)
-            const labels = stages;
-            
-            const datasets = availableMethods.map((method, idx) => {
-                
-                const boxplotData = stages.map(stage => {
-                    const stageData = dataSubset[method] && dataSubset[method][stage];
-                    if (!stageData || !stageData.durations || stageData.durations.length === 0) return null;
-                    
-                    const values = stageData.durations.filter(d => typeof d === 'number' && !isNaN(d));
+
+                chartLabels = labels.map(item => {
+                    const count = itemDurations[item].filter(d => typeof d === 'number' && !isNaN(d)).length;
+                    return `${item} (N=${count})`;
+                });
+
+                const boxplotData = labels.map(item => {
+                    const values = itemDurations[item].filter(d => typeof d === 'number' && !isNaN(d));
                     if (values.length === 0) return null;
-                    const sorted = [...values].sort((a, b) => a - b);
-                    const q1 = this.percentile(sorted, 25);
-                    const q3 = this.percentile(sorted, 75);
+
+                    values.sort((a, b) => a - b);
+                    const q1 = this.percentile(values, 25);
+                    const q3 = this.percentile(values, 75);
                     const mean = values.reduce((a, b) => a + b, 0) / values.length;
-                    
-                    const { outliers, whiskerMin, whiskerMax } = this.calculateOutliers(sorted, q1, q3);
-                    
-                    return {
+                    const { outliers, whiskerMin, whiskerMax } = this.calculateOutliers(values, q1, q3);
+
+                    const result = {
                         min: whiskerMin,
                         q1: q1,
-                        median: this.percentile(sorted, 50),
+                        median: this.percentile(values, 50),
                         mean: mean,
                         q3: q3,
                         max: whiskerMax,
                         outliers: outliers,
-                        method: method,
-                        stage: stage,
-                        items: values.length  // Store count for tooltip
+                        projects: itemProjects[item]
                     };
+
+                    if (isMethodView) {
+                        result.method = item;
+                    } else {
+                        result.stage = item;
+                    }
+
+                    return result;
                 });
-                
-                const methodColor = CHART_COLORS[idx % CHART_COLORS.length];
-                return {
-                    label: method,
+
+                const colors = isMethodView
+                    ? ['rgba(54, 162, 235, 0.5)', 'rgba(54, 162, 235, 1)', 'rgba(54, 162, 235, 0.7)']
+                    : ['rgba(75, 192, 192, 0.5)', 'rgba(75, 192, 192, 1)', 'rgba(75, 192, 192, 0.7)'];
+
+                datasets = [{
+                    label: 'Duration (days)',
                     data: boxplotData,
-                    backgroundColor: methodColor,
-                    borderColor: methodColor.replace('0.5', '1'),
+                    backgroundColor: colors[0],
+                    borderColor: colors[1],
                     borderWidth: 1,
-                    meanRadius: 0,  // Hide mean point in plot
+                    meanRadius: 0,
                     outlierRadius: 2,
-                    outlierBackgroundColor: methodColor.replace('0.5', '0.7'),
-                    outlierBorderColor: methodColor.replace('0.5', '1'),
+                    outlierBackgroundColor: colors[2],
+                    outlierBorderColor: colors[1],
                     outlierBorderWidth: 1.5
-                };
-            });
-            
-            const self = this;
-            return new Chart(ctx, {
+                }];
+            } else {
+                // Grouped mode: Show separate datasets for cross-dimension
+                chartLabels = labels;
+
+                if (isMethodView) {
+                    // Methods view: Show separate boxplot for each stage
+                    const allStages = new Set();
+                    for (const method in dataSubset) {
+                        for (const stage in dataSubset[method]) {
+                            allStages.add(stage);
+                        }
+                    }
+                    const stages = this.sortStages(Array.from(allStages));
+                    datasets = this.createGroupedDatasets(stages, labels, dataSubset, true);
+                } else {
+                    // Stages view: Show separate boxplot for each method
+                    const availableMethods = Object.keys(dataSubset).sort();
+                    datasets = this.createGroupedDatasets(availableMethods, labels, dataSubset, false);
+                }
+            }
+
+            this[chartInstanceName] = new Chart(ctx, {
                 type: 'boxplot',
                 data: {
-                    labels: labels,
+                    labels: chartLabels,
                     datasets: datasets
                 },
                 options: {
@@ -685,32 +316,58 @@ const vTimeTrackingMain = ({
                     maintainAspectRatio: false,
                     onClick: function(event, elements) {
                         if (elements.length > 0) {
-                            const element = elements[0];
-                            const datasetIndex = element.datasetIndex;
-                            const index = element.index;
-                            const method = availableMethods[datasetIndex];
-                            const stage = stages[index];
-                            self.showProjectsForBox(method, stage, dataSubset);
+                            if (isMerged) {
+                                const index = elements[0].index;
+                                const item = labels[index];
+                                const boxData = datasets[0].data[index];
+                                self.selected_projects = boxData.projects.sort((a, b) => (b.duration ?? 0) - (a.duration ?? 0));
+
+                                if (isMethodView) {
+                                    self.modal_title = `${typeLabel} - ${item} - Total Time`;
+                                    self.modal_stage = 'Total Time';
+                                } else {
+                                    self.modal_title = `${typeLabel} - ${item} - All Methods Combined`;
+                                    self.modal_stage = item;
+                                }
+                                self.show_projects_modal = true;
+                            } else {
+                                const element = elements[0];
+                                if (isMethodView) {
+                                    const stages = self.sortStages(Array.from(new Set(
+                                        Object.values(dataSubset).flatMap(m => Object.keys(m))
+                                    )));
+                                    const stage = stages[element.datasetIndex];
+                                    const method = labels[element.index];
+                                    self.showProjectsForBox(method, stage, dataSubset);
+                                } else {
+                                    const availableMethods = Object.keys(dataSubset).sort();
+                                    const method = availableMethods[element.datasetIndex];
+                                    const stage = labels[element.index];
+                                    self.showProjectsForBox(method, stage, dataSubset);
+                                }
+                            }
                         }
                     },
                     plugins: {
                         title: {
                             display: true,
-                            text: `${typeLabel} Projects: Duration by Stage (Grouped by Method)`
+                            text: isMerged
+                                ? (isMethodView
+                                    ? `${typeLabel} Projects: Duration by Method (Total Time)`
+                                    : `${typeLabel} Projects: Duration by Stage (All Methods Merged)`)
+                                : (isMethodView
+                                    ? `${typeLabel} Projects: Duration by Method (Grouped by Stage)`
+                                    : `${typeLabel} Projects: Duration by Stage (Grouped by Method)`)
                         },
                         legend: {
-                            display: true,
+                            display: !isMerged,
                             position: 'top'
                         },
                         tooltip: {
                             callbacks: {
                                 label: function(context) {
                                     const dataPoint = context.parsed;
-                                    const rawData = context.dataset.data[context.dataIndex];
-                                    const method = context.dataset.label;
-                                    const count = rawData?.items || 0;
-                                    return [
-                                        `${method} (N=${count})`,
+                                    const lines = [
                                         `Min: ${dataPoint.min}`,
                                         `Q1: ${dataPoint.q1}`,
                                         `Median: ${dataPoint.median}`,
@@ -718,6 +375,15 @@ const vTimeTrackingMain = ({
                                         `Q3: ${dataPoint.q3}`,
                                         `Max: ${dataPoint.max}`
                                     ];
+
+                                    if (!isMerged) {
+                                        const rawData = context.dataset.data[context.dataIndex];
+                                        const label = context.dataset.label;
+                                        const count = rawData?.items || 0;
+                                        lines.unshift(`${label} (N=${count})`);
+                                    }
+
+                                    return lines;
                                 },
                                 footer: function() {
                                     return 'Click to view projects';
@@ -737,13 +403,82 @@ const vTimeTrackingMain = ({
                         x: {
                             title: {
                                 display: true,
-                                text: 'Stage'
+                                text: axisLabel
                             }
                         }
                     }
                 }
             });
         },
+        createGroupedDatasets(items, labels, dataSubset, isMethodView) {
+            // Create datasets for grouped view by iterating over items (stages or methods)
+            // and creating boxplot data for each label (methods or stages)
+            return items.map((item, idx) => {
+                const boxplotData = labels.map(label => {
+                    // Get data based on view type
+                    const stageData = isMethodView
+                        ? dataSubset[label] && dataSubset[label][item]  // method is label, stage is item
+                        : dataSubset[item] && dataSubset[item][label];  // method is item, stage is label
+
+                    if (!stageData || !stageData.durations || stageData.durations.length === 0) return null;
+
+                    const values = stageData.durations.filter(d => typeof d === 'number' && !isNaN(d));
+                    if (values.length === 0) return null;
+
+                    const sorted = [...values].sort((a, b) => a - b);
+                    const q1 = this.percentile(sorted, 25);
+                    const median = this.percentile(sorted, 50);
+                    const q3 = this.percentile(sorted, 75);
+                    const mean = values.reduce((a, b) => a + b, 0) / values.length;
+                    const { outliers, whiskerMin, whiskerMax } = this.calculateOutliers(sorted, q1, q3);
+
+                    return {
+                        min: whiskerMin,
+                        q1: q1,
+                        median: median,
+                        mean: mean,
+                        q3: q3,
+                        max: whiskerMax,
+                        outliers: outliers,
+                        method: isMethodView ? label : item,
+                        stage: isMethodView ? item : label,
+                        items: values.length
+                    };
+                });
+
+                // Choose color based on view type
+                const color = isMethodView
+                    ? this.getStageColor(item)
+                    : CHART_COLORS[idx % CHART_COLORS.length];
+
+                return {
+                    label: item,
+                    data: boxplotData,
+                    backgroundColor: color,
+                    borderColor: color.replace('0.5', '1'),
+                    borderWidth: 1,
+                    meanRadius: 0,
+                    outlierRadius: 2,
+                    outlierBackgroundColor: color.replace('0.5', '0.7'),
+                    outlierBorderColor: color.replace('0.5', '1'),
+                    outlierBorderWidth: 1.5
+                };
+            });
+        },
+        destroyChart(chartName) {
+            // Safely destroy a chart instance
+            if (this[chartName]) {
+                try {
+                    this[chartName].destroy();
+                } catch (e) {
+                    console.warn(`Failed to destroy chart ${chartName}:`, e);
+                }
+                this[chartName] = null;
+            }
+        },
+        // ====================
+        // Statistical & Calculation Utilities
+        // ====================
         calculateOutliers(values, q1, q3) {
             // Calculate outliers using IQR method
             const iqr = q3 - q1;
@@ -767,6 +502,19 @@ const vTimeTrackingMain = ({
             
             return { outliers, whiskerMin, whiskerMax };
         },
+        percentile(arr, p) {
+            if (arr.length === 0) return 0;
+            const sorted = [...arr].sort((a, b) => a - b);
+            const index = (p / 100) * (sorted.length - 1);
+            const lower = Math.floor(index);
+            const upper = Math.ceil(index);
+            const weight = index - lower;
+
+            if (lower === upper) {
+                return sorted[lower];
+            }
+            return sorted[lower] * (1 - weight) + sorted[upper] * weight;
+        },
         calculateYAxisMax(dataSubset) {
             // Calculate the maximum value for this specific dataset to set a reasonable y-axis scale
             let maxValue = 0;
@@ -786,36 +534,26 @@ const vTimeTrackingMain = ({
             // Add 15% padding for visual breathing room
             return maxValue > 0 ? Math.ceil(maxValue * 1.15) : 100;
         },
-        percentile(arr, p) {
-            if (arr.length === 0) return 0;
-            const sorted = [...arr].sort((a, b) => a - b);
-            const index = (p / 100) * (sorted.length - 1);
-            const lower = Math.floor(index);
-            const upper = Math.ceil(index);
-            const weight = index - lower;
-            
-            if (lower === upper) {
-                return sorted[lower];
-            }
-            return sorted[lower] * (1 - weight) + sorted[upper] * weight;
+        // ====================
+        // Data Utilities
+        // ====================
+        getStageColor(stage) {
+            // Get consistent color for a stage based on its position in stage_order
+            const stageIndex = this.stage_order.indexOf(stage);
+            const colorIndex = stageIndex >= 0 ? stageIndex : this.stage_order.length;
+            return CHART_COLORS[colorIndex % CHART_COLORS.length];
         },
-        changePlotMode(mode) {
-            this.plot_mode = mode;
-            this.updateChart();
-        },
-        changePlotStyle(style) {
-            this.plot_style = style;
-            this.updateChart();
-        },
-        showProjectsForBox(method, stage, dataSubset) {
-            // Get projects for the clicked box
-            const stageData = dataSubset[method]?.[stage];
-            if (stageData && stageData.projects) {
-                this.selected_projects = stageData.projects.sort((a, b) => (b.duration ?? 0) - (a.duration ?? 0));
-                this.modal_title = `${method} - ${stage}`;
-                this.modal_stage = stage;
-                this.show_projects_modal = true;
-            }
+        sortStages(stages) {
+            // Sort stages according to the defined order (non-mutating)
+            return [...stages].sort((a, b) => {
+                const indexA = this.stage_order.indexOf(a);
+                const indexB = this.stage_order.indexOf(b);
+                // If stage not in order list, put it at the end
+                if (indexA === -1 && indexB === -1) return 0;
+                if (indexA === -1) return 1;
+                if (indexB === -1) return -1;
+                return indexA - indexB;
+            });
         },
         calculateStageDuration(project, stage) {
             // Calculate duration for any stage given a project
@@ -845,23 +583,31 @@ const vTimeTrackingMain = ({
             const [startField, endField] = stageDef;
             return project[endField] || null;
         },
+        // ====================
+        // Modal Handlers
+        // ====================
+        showProjectsForBox(method, stage, dataSubset) {
+            // Get projects for the clicked box
+            const stageData = dataSubset[method]?.[stage];
+            if (stageData && stageData.projects) {
+                this.selected_projects = stageData.projects.sort((a, b) => (b.duration ?? 0) - (a.duration ?? 0));
+                this.modal_title = `${method} - ${stage}`;
+                this.modal_stage = stage;
+                this.show_projects_modal = true;
+            }
+        },
         closeProjectsModal() {
             this.show_projects_modal = false;
             this.selected_projects = [];
         }
-    }
-});
-
-const app = Vue.createApp(vTimeTrackingMain);
-
-app.component('v-time-tracking', {
-    mounted: function() {
-        this.$root.setDefaults();
+    },
+    mounted() {
+        this.setDefaults();
     },
     template:
         /*html*/`
         <h1>Time Tracking</h1>
-        
+
         <div class="row mb-4">
             <div class="col-md-12">
                 <p>
@@ -904,7 +650,7 @@ app.component('v-time-tracking', {
                     </div>
                 </div>
                 <p>
-                    <strong>Stages include:</strong> Reception Control, Library Prep Start, Library Prep, Sequencing Start, 
+                    <strong>Stages include:</strong> Reception Control, Library Prep Start, Library Prep, Sequencing Start,
                     Sequencing, Data Delivery, Analysis, Processing Time, and Total Time.
                 </p>
                 <p>
@@ -912,7 +658,7 @@ app.component('v-time-tracking', {
                 </p>
             </div>
         </div>
-        
+
         <div class="row mb-4">
             <div class="col-md-12">
                 <div class="card">
@@ -923,23 +669,23 @@ app.component('v-time-tracking', {
                         <div class="row">
                             <div class="col-md-3">
                                 <label for="start_date">Start Date <small class="text-muted">(Delivery Date)</small>:</label>
-                                <input type="date" 
-                                       id="start_date" 
-                                       class="form-control" 
-                                       v-model="this.$root.start_date">
+                                <input type="date"
+                                       id="start_date"
+                                       class="form-control"
+                                       v-model="start_date">
                             </div>
                             <div class="col-md-3">
                                 <label for="end_date">End Date <small class="text-muted">(Delivery Date)</small>:</label>
-                                <input type="date" 
-                                       id="end_date" 
-                                       class="form-control" 
-                                       v-model="this.$root.end_date">
+                                <input type="date"
+                                       id="end_date"
+                                       class="form-control"
+                                       v-model="end_date">
                             </div>
                             <div class="col-md-3 d-flex align-items-end">
-                                <button class="btn btn-primary" 
-                                        @click="this.$root.fetchData()" 
-                                        :disabled="this.$root.loading">
-                                    <span v-if="this.$root.loading">Loading...</span>
+                                <button class="btn btn-primary"
+                                        @click="fetchData()"
+                                        :disabled="loading">
+                                    <span v-if="loading">Loading...</span>
                                     <span v-else>Update</span>
                                 </button>
                             </div>
@@ -948,7 +694,7 @@ app.component('v-time-tracking', {
                 </div>
             </div>
         </div>
-        
+
         <div class="row mb-4">
             <div class="col-md-12">
                 <div class="card">
@@ -960,25 +706,25 @@ app.component('v-time-tracking', {
                             <div class="col-md-6">
                                 <label class="fw-bold">Plot Type:</label>
                                 <div class="form-check">
-                                    <input class="form-check-input" 
-                                           type="radio" 
-                                           name="plotMode" 
-                                           id="plotMethods" 
-                                           value="methods" 
-                                           :checked="this.$root.plot_mode === 'methods'"
-                                           @change="this.$root.changePlotMode('methods')">
+                                    <input class="form-check-input"
+                                           type="radio"
+                                           name="plotMode"
+                                           id="plotMethods"
+                                           value="methods"
+                                           :checked="plot_mode === 'methods'"
+                                           @change="changePlotMode('methods')">
                                     <label class="form-check-label" for="plotMethods">
                                         Show Methods
                                     </label>
                                 </div>
                                 <div class="form-check">
-                                    <input class="form-check-input" 
-                                           type="radio" 
-                                           name="plotMode" 
-                                           id="plotStages" 
-                                           value="stages" 
-                                           :checked="this.$root.plot_mode === 'stages'"
-                                           @change="this.$root.changePlotMode('stages')">
+                                    <input class="form-check-input"
+                                           type="radio"
+                                           name="plotMode"
+                                           id="plotStages"
+                                           value="stages"
+                                           :checked="plot_mode === 'stages'"
+                                           @change="changePlotMode('stages')">
                                     <label class="form-check-label" for="plotStages">
                                         Show Stages
                                     </label>
@@ -987,25 +733,25 @@ app.component('v-time-tracking', {
                             <div class="col-md-6">
                                 <label class="fw-bold">Plot Style:</label>
                                 <div class="form-check">
-                                    <input class="form-check-input" 
-                                           type="radio" 
-                                           name="plotStyle" 
-                                           id="plotMerged" 
-                                           value="merged" 
-                                           :checked="this.$root.plot_style === 'merged'"
-                                           @change="this.$root.changePlotStyle('merged')">
+                                    <input class="form-check-input"
+                                           type="radio"
+                                           name="plotStyle"
+                                           id="plotMerged"
+                                           value="merged"
+                                           :checked="plot_style === 'merged'"
+                                           @change="changePlotStyle('merged')">
                                     <label class="form-check-label" for="plotMerged">
                                         Merged
                                     </label>
                                 </div>
                                 <div class="form-check">
-                                    <input class="form-check-input" 
-                                           type="radio" 
-                                           name="plotStyle" 
-                                           id="plotGrouped" 
-                                           value="grouped" 
-                                           :checked="this.$root.plot_style === 'grouped'"
-                                           @change="this.$root.changePlotStyle('grouped')">
+                                    <input class="form-check-input"
+                                           type="radio"
+                                           name="plotStyle"
+                                           id="plotGrouped"
+                                           value="grouped"
+                                           :checked="plot_style === 'grouped'"
+                                           @change="changePlotStyle('grouped')">
                                     <label class="form-check-label" for="plotGrouped">
                                         Grouped
                                     </label>
@@ -1016,7 +762,7 @@ app.component('v-time-tracking', {
                 </div>
             </div>
         </div>
-        
+
         <div class="row mb-4">
             <div class="col-md-12">
                 <div class="card">
@@ -1031,7 +777,7 @@ app.component('v-time-tracking', {
                 </div>
             </div>
         </div>
-        
+
         <div class="row mb-4">
             <div class="col-md-12">
                 <div class="card">
@@ -1046,7 +792,7 @@ app.component('v-time-tracking', {
                 </div>
             </div>
         </div>
-        
+
         <div class="row mb-4">
             <div class="col-md-12">
                 <div class="card">
@@ -1061,7 +807,7 @@ app.component('v-time-tracking', {
                 </div>
             </div>
         </div>
-        
+
         <div class="row mb-4">
             <div class="col-md-12">
                 <div class="card">
@@ -1076,27 +822,27 @@ app.component('v-time-tracking', {
                 </div>
             </div>
         </div>
-        
+
         <!-- Projects Modal -->
-        <div v-if="this.$root.show_projects_modal" class="modal fade show" style="display: block; background-color: rgba(0,0,0,0.5);">
+        <div v-if="show_projects_modal" class="modal fade show" style="display: block; background-color: rgba(0,0,0,0.5);">
             <div class="modal-dialog modal-xl">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title">Projects: {{ this.$root.modal_title }}</h5>
-                        <button type="button" class="btn-close" @click="this.$root.closeProjectsModal()"></button>
+                        <h5 class="modal-title">Projects: {{ modal_title }}</h5>
+                        <button type="button" class="btn-close" @click="closeProjectsModal()"></button>
                     </div>
                     <div class="modal-body">
                         <div class="d-flex justify-content-between align-items-center mb-3">
                             <p class="text-muted mb-0">
-                                Showing {{ this.$root.selected_projects.length }} project(s) in this selection
+                                Showing {{ selected_projects.length }} project(s) in this selection
                             </p>
                             <div class="btn-group btn-group-sm" role="group">
-                                <input type="radio" class="btn-check" id="modal_view_durations" value="durations" 
-                                    v-model="this.$root.modal_view_mode" autocomplete="off">
+                                <input type="radio" class="btn-check" id="modal_view_durations" value="durations"
+                                    v-model="modal_view_mode" autocomplete="off">
                                 <label class="btn btn-outline-primary" for="modal_view_durations">Days Taken</label>
-                                
-                                <input type="radio" class="btn-check" id="modal_view_dates" value="dates" 
-                                    v-model="this.$root.modal_view_mode" autocomplete="off">
+
+                                <input type="radio" class="btn-check" id="modal_view_dates" value="dates"
+                                    v-model="modal_view_mode" autocomplete="off">
                                 <label class="btn btn-outline-primary" for="modal_view_dates">Dates</label>
                             </div>
                         </div>
@@ -1109,14 +855,14 @@ app.component('v-time-tracking', {
                                         <th>Library Construction</th>
                                         <th>Sequencing Platform</th>
                                         <th>Units Ordered</th>
-                                        <th v-for="stage in this.$root.stage_order" :key="stage" 
-                                            :class="{'fw-bold': stage === this.$root.modal_stage}">
+                                        <th v-for="stage in stage_order" :key="stage"
+                                            :class="{'fw-bold': stage === modal_stage}">
                                             {{ stage }}
                                         </th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr v-for="project in this.$root.selected_projects" :key="project.project_id">
+                                    <tr v-for="project in selected_projects" :key="project.project_id">
                                         <td>
                                             <a :href="'/project/' + project.project_id" target="_blank">
                                                 {{ project.project_id }}
@@ -1126,14 +872,14 @@ app.component('v-time-tracking', {
                                         <td><small>{{ project.library_construction }}</small></td>
                                         <td><small>{{ project.sequencing_platform }}</small></td>
                                         <td class="text-center">{{ project.sequence_units_ordered }}</td>
-                                        <td v-for="stage in this.$root.stage_order" :key="stage" 
+                                        <td v-for="stage in stage_order" :key="stage"
                                             class="text-end"
-                                            :class="{'fw-bold': stage === this.$root.modal_stage}">
-                                            <span v-if="this.$root.modal_view_mode === 'durations'">
-                                                {{ this.$root.calculateStageDuration(project, stage) ?? '-' }}
+                                            :class="{'fw-bold': stage === modal_stage}">
+                                            <span v-if="modal_view_mode === 'durations'">
+                                                {{ calculateStageDuration(project, stage) ?? '-' }}
                                             </span>
                                             <span v-else>
-                                                <small>{{ this.$root.getStageEndDate(project, stage) || '-' }}</small>
+                                                <small>{{ getStageEndDate(project, stage) || '-' }}</small>
                                             </span>
                                         </td>
                                     </tr>
@@ -1142,7 +888,7 @@ app.component('v-time-tracking', {
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" @click="this.$root.closeProjectsModal()">
+                        <button type="button" class="btn btn-secondary" @click="closeProjectsModal()">
                             Close
                         </button>
                     </div>
@@ -1152,4 +898,5 @@ app.component('v-time-tracking', {
         `
 });
 
+const app = Vue.createApp(vTimeTrackingMain);
 app.mount('#time_tracking_main');
