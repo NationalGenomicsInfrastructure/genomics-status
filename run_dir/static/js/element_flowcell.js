@@ -162,6 +162,14 @@ const vElementApp = {
             }
             return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
         }
+    },
+    watch: {
+        flowcell(newVal) {
+            // Update page title when flowcell data is loaded
+            if (newVal && newVal["NGI_run_id"] && document.title === "Genomics Status") {
+                document.title = newVal["NGI_run_id"] + " : Genomics Status";
+            }
+        }
     }
 }
 
