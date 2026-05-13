@@ -252,6 +252,7 @@ const vTimeTrackingMain = ({
                     }]
                 },
                 options: {
+                    animation: false,
                     responsive: true,
                     maintainAspectRatio: false,
                     onClick: function(event, elements) {
@@ -376,6 +377,7 @@ const vTimeTrackingMain = ({
                     datasets: datasets
                 },
                 options: {
+                    animation: false,
                     responsive: true,
                     maintainAspectRatio: false,
                     onClick: function(event, elements) {
@@ -552,6 +554,7 @@ const vTimeTrackingMain = ({
                     }]
                 },
                 options: {
+                    animation: false,
                     responsive: true,
                     maintainAspectRatio: false,
                     onClick: function(event, elements) {
@@ -677,6 +680,7 @@ const vTimeTrackingMain = ({
                     datasets: datasets
                 },
                 options: {
+                    animation: false,
                     responsive: true,
                     maintainAspectRatio: false,
                     onClick: function(event, elements) {
