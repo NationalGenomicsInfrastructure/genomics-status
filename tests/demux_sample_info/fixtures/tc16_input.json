@@ -1,0 +1,66 @@
+{
+  "metadata": {
+    "num_lanes": 8,
+    "run_setup": "151-10-10-151",
+    "setup_lims_step_id": "24-TC16",
+    "instrument_type": "NovaSeqXPlus"
+  },
+  "uploaded_lims_info": [
+    {
+      "flowcell_id": "233JTGLT4",
+      "lane": "1",
+      "sample_id": "P36705_101",
+      "sample_name": "P36705_101",
+      "sample_ref": "Human (Homo sapiens GRCh38)",
+      "index": "GCGCGGTTAA",
+      "index2": "",
+      "description": "A__Berggren_25_01",
+      "control": "N",
+      "recipe": "151-151",
+      "operator": "Agneta_Berg",
+      "sample_project": "A__Berggren_25_01"
+    },
+    {
+      "flowcell_id": "233JTGLT4",
+      "lane": "1",
+      "sample_id": "P36705_102",
+      "sample_name": "P36705_102",
+      "sample_ref": "Human (Homo sapiens GRCh38)",
+      "index": "TTCCTTGAGG",
+      "index2": "",
+      "description": "A__Berggren_25_01",
+      "control": "N",
+      "recipe": "151-151",
+      "operator": "Agneta_Berg",
+      "sample_project": "A__Berggren_25_01"
+    },
+    {
+      "flowcell_id": "233JTGLT4",
+      "lane": "1",
+      "sample_id": "P37004_1001",
+      "sample_name": "P37004_1001",
+      "sample_ref": "Human (Homo sapiens GRCh38)",
+      "index": "TCAGCGAA",
+      "index2": "",
+      "description": "A__Bergman_25_01",
+      "control": "N",
+      "recipe": "151-151",
+      "operator": "Agneta_Berg",
+      "sample_project": "A__Bergman_25_01"
+    },
+    {
+      "flowcell_id": "233JTGLT4",
+      "lane": "1",
+      "sample_id": "P37004_1002",
+      "sample_name": "P37004_1002",
+      "sample_ref": "Human (Homo sapiens GRCh38)",
+      "index": "CCATTGTT",
+      "index2": "",
+      "description": "A__Bergman_25_01",
+      "control": "N",
+      "recipe": "151-151",
+      "operator": "Agneta_Berg",
+      "sample_project": "A__Bergman_25_01"
+    }
+  ]
+}

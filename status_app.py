@@ -1,6 +1,7 @@
 """Main genomics-status web application."""
 
 import base64
+import csv
 import logging
 import subprocess
 import uuid
@@ -33,6 +34,13 @@ from status.config_handler import ConfigDataHandler
 from status.controls import ControlsHandler
 from status.data_deliveries_plot import DataDeliveryHandler, DeliveryPlotHandler
 from status.deliveries import DeliveriesPageHandler
+from status.demux_sample_info import (
+    DemuxConfigurationDetailHandler,
+    DemuxConfigurationHandler,
+    DemuxSampleInfoDataHandler,
+    DemuxSampleInfoEditorHandler,
+    SampleDeleteHandler,
+)
 from status.flowcell import (
     ElementFlowcellDataHandler,
     ElementFlowcellHandler,
@@ -372,6 +380,13 @@ class Application(tornado.web.Application):
             ("/api/v1/workset_links/([^/]*)$", WorksetLinksHandler),
             ("/api/v1/workset_queues", WorksetQueuesDataHandler),
             ("/api/v1/closed_worksets", ClosedWorksetsHandler),
+            ("/api/v1/demux_sample_info/([^/]*)$", DemuxSampleInfoDataHandler),
+            (
+                "/api/v1/demux_sample_info/([^/]*)/sample/([^/]*)/([^/]*)$",
+                SampleDeleteHandler,
+            ),
+            ("/api/v1/demux_configuration", DemuxConfigurationHandler),
+            ("/api/v1/demux_configuration/([^/]*)$", DemuxConfigurationDetailHandler),
             ("/barcode", BarcodeHandler),
             ("/controls", ControlsHandler),
             ("/applications", ApplicationsHandler),
@@ -421,6 +436,7 @@ class Application(tornado.web.Application):
             ("/sample_requirements", SampleRequirementsViewHandler),
             ("/sample_requirements_preview", SampleRequirementsPreviewHandler),
             ("/sample_requirements_update", SampleRequirementsUpdateHandler),
+            ("/demux_sample_info_editor", DemuxSampleInfoEditorHandler),
             ("/sensorpush", SensorpushHandler),
             ("/sequencing_queues", SequencingQueuesHandler),
             ("/yield_calculator", YieldCalculatorHandler),
@@ -501,6 +517,9 @@ class Application(tornado.web.Application):
         # to display instruments in the server status
         self.server_status = settings.get("server_status")
 
+        # Load named indices from config directory
+        self.named_indices = self._load_named_indices(settings.get("config_dir", "."))
+
         # project summary - reports tab
         # Structure of the reports folder:
         # <reports_path>/
@@ -532,6 +551,9 @@ class Application(tornado.web.Application):
         ).expanduser()
         with order_portal_cred_loc.open() as cred_file:
             self.order_portal_conf = yaml.safe_load(cred_file)["order_portal"]
+
+        # Add LIMS URL to globals for templates
+        self.gs_globals["lims_url"] = self.lims_conf.get("url", "")
 
         # Setup the Tornado Application
 
@@ -590,6 +612,61 @@ class Application(tornado.web.Application):
 
         tornado.web.Application.__init__(self, handlers, **settings)
 
+    def _load_named_indices(self, config_dir):
+        """Load named indices from CSV files in the named_indices directory.
+
+        Args:
+            config_dir: Path to the configuration directory
+
+        Returns:
+            Dictionary mapping file names to dictionaries of named index to list of sequence lists.
+            Each sequence list contains 1-2 items in order (i7, optionally i5).
+        """
+        named_indices = {}
+        named_indices_dir = Path(config_dir) / "named_indices"
+
+        if not named_indices_dir.exists():
+            logging.warning(f"Named indices directory not found: {named_indices_dir}")
+            return named_indices
+
+        # Read all CSV files in the directory
+        for csv_file in named_indices_dir.glob("*.csv"):
+            try:
+                file_key = csv_file.stem  # Get filename without extension
+                file_indices = {}
+
+                with csv_file.open("r") as f:
+                    reader = csv.reader(f)
+                    for row in reader:
+                        if row:  # Skip empty rows
+                            named_index = row[0]
+                            sequences = row[1:]
+
+                            # Validate sequence count (max 2: i7 and i5)
+                            if len(sequences) > 2:
+                                logging.warning(
+                                    f"Row for '{named_index}' in {csv_file.name} has {len(sequences)} sequences, "
+                                    f"expected max 2 (i7 and i5). Using only first 2."
+                                )
+                                sequences = sequences[:2]
+
+                            # Add to file_indices (named index can appear multiple times)
+                            if named_index in file_indices:
+                                file_indices[named_index].append(sequences)
+                            else:
+                                file_indices[named_index] = [sequences]
+
+                named_indices[file_key] = file_indices
+                logging.info(f"Loaded indices from {csv_file.name}")
+            except Exception as e:
+                logging.error(f"Error loading named indices from {csv_file}: {e}")
+
+        logging.info(
+            f"Loaded {len(named_indices)} named index files from {named_indices_dir}"
+        )
+
+        return named_indices
+
 
 if __name__ == "__main__":
     # Tornado built-in command line parsing. Auto configures logging
@@ -614,17 +691,28 @@ if __name__ == "__main__":
     define(
         "port", default=9761, type=int, help="The port that the server will listen to."
     )
+
+    define(
+        "config_dir",
+        default="~/conf",
+        type=str,
+        help="Path to the directory containing configuration files",
+    )
     # After parsing the command line, the command line flags are stored in tornado.options
     tornado.options.parse_command_line()
     logging_format = f"%(color)s[%(levelname)1.1s %(asctime)s %(module)s:%(lineno)d] [port:{options['port']}]%(end_color)s %(message)s"
     log_formatter = LogFormatter(fmt=logging_format, color=True)
     logging.getLogger().handlers[0].setFormatter(log_formatter)
 
+    # Configuration directory path from command line
+    config_dir = Path(options["config_dir"]).expanduser()
+
     # Load configuration file
     with open("settings.yaml") as settings_file:
         server_settings = yaml.full_load(settings_file)
 
     server_settings["Testing mode"] = options["testing_mode"]
+    server_settings["config_dir"] = config_dir
 
     if "cookie_secret" not in server_settings:
         cookie_secret = base64.b64encode(uuid.uuid4().bytes + uuid.uuid4().bytes)
