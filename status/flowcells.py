@@ -89,6 +89,7 @@ class FlowcellsHandler(SafeHandler):
                 x_flowcells_rundirs.add(row["value"]["run id"])
 
         # Query flowcell_status database and merge entries that don't exist in x_flowcells
+        has_flowcell_status_entries = False
         try:
             six_months_ago = (
                 datetime.datetime.now() - relativedelta(months=6)
@@ -193,6 +194,9 @@ class FlowcellsHandler(SafeHandler):
                 else:
                     temp_flowcells[flowcell_id] = fc_status_entry
 
+                # Track that we have at least one flowcell_status entry
+                has_flowcell_status_entries = True
+
                 # Add to note_keys for running notes lookup
                 note_key = runfolder_id or flowcell_id
                 note_keys.append(note_key)
@@ -202,7 +206,7 @@ class FlowcellsHandler(SafeHandler):
 
         # Query demux_sample_info to get run_setup for flowcell_status entries
         # Only query if there are flowcell_status entries
-        if any(fc.get("source") == "flowcell_status" for fc in temp_flowcells.values()):
+        if has_flowcell_status_entries:
             try:
                 demux_view_params = {
                     "db": "demux_sample_info",
