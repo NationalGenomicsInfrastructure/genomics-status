@@ -22,6 +22,7 @@ thresholds = {
     "NovaSeqXPlus 10B": 1200,
     "NovaSeqXPlus 1.5B": 750,
     "NovaSeqXPlus 25B": 3000,
+    "NovaSeqXPlus Olink_NovaSeqX_1.5B_1Lib_V4": 562.5,
     "NextSeq Mid": 25,
     "NextSeq High": 75,
     "NextSeq 2000 P1": 100,
