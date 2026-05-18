@@ -943,8 +943,7 @@ class DemuxSampleInfoDataHandler(SafeHandler):
         # Apply default raw_samplesheet_settings
         if bcl_settings_defaults:
             for setting_name, setting_config in bcl_settings_defaults.items():
-                default_value = setting_config.get("default")
-                bcl_convert_settings[setting_name] = default_value
+                bcl_convert_settings[setting_name] = setting_config.get("default")
             config_sources.append("bcl_convert_settings.raw_samplesheet_settings")
 
         return bcl_convert_settings, config_sources
