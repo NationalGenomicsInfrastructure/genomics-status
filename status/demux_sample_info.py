@@ -446,26 +446,20 @@ class DemuxSampleInfoDataHandler(SafeHandler):
         parts = []
         remaining_cycles_from_recipe = recipe_cycles
 
-        # Check for UMI at start
-        if umi_config and umi_key and umi_key in umi_config:
-            umi_info = umi_config[umi_key]
-            umi_length = umi_info.get("length", 0)
-            umi_position = umi_info.get("position", "")
-
-            if umi_length > 0 and umi_position == "start":
-                parts.append(f"U{umi_length}")
-                remaining_cycles_from_recipe -= umi_length
-
-        # Check for UMI at end
         umi_at_end = 0
+        # Check for UMI at start or End
         if umi_config and umi_key and umi_key in umi_config:
             umi_info = umi_config[umi_key]
             umi_length = umi_info.get("length", 0)
             umi_position = umi_info.get("position", "")
 
-            if umi_length > 0 and umi_position == "end":
-                remaining_cycles_from_recipe -= umi_length
-                umi_at_end = umi_length
+            if umi_length > 0:
+                if umi_position == "start":
+                    parts.append(f"U{umi_length}")
+                    remaining_cycles_from_recipe -= umi_length
+                elif umi_position == "end":
+                    umi_at_end = umi_length
+                    remaining_cycles_from_recipe -= umi_length
 
         # Add valid sequence bases (what's left in recipe after UMIs)
         if remaining_cycles_from_recipe > 0:
