@@ -8,6 +8,7 @@ import re
 import uuid
 
 import tornado.web
+from genologics.config import BASEURI
 from ibm_cloud_sdk_core.api_exception import ApiException
 
 from status.util import SafeHandler
@@ -59,6 +60,7 @@ class DemuxSampleInfoEditorHandler(SafeHandler):
             t.generate(
                 user=self.get_current_user(),
                 gs_globals=self.application.gs_globals,
+                lims_uri=BASEURI,
             )
         )
 
