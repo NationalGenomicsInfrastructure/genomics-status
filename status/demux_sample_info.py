@@ -1209,6 +1209,29 @@ class DemuxSampleInfoDataHandler(SafeHandler):
 
         return bcl_settings_filtered
 
+    def _update_sample_samplesheet_settings(self, sample, latest_settings_key):
+        """Update samplesheet_settings for a single sample.
+
+        This mutates the sample dict in place by recalculating and updating
+        the samplesheet_settings field.
+
+        Args:
+            sample: Sample dict from calculated_lanes
+            latest_settings_key: The timestamp key for the latest settings version
+        """
+        latest_settings = sample["settings"][latest_settings_key]
+
+        samplesheet_settings = self._calculate_samplesheet_settings(
+            latest_settings.get("raw_samplesheet_settings", {}),
+            latest_settings.get("other_details", {}),
+            latest_settings.get("per_sample_fields", {}),
+        )
+
+        # Direct mutation - update the sample dict
+        sample["settings"][latest_settings_key]["samplesheet_settings"] = (
+            samplesheet_settings
+        )
+
     def _recalculate_all_samplesheet_settings(self, calculated_lanes):
         """Recalculate samplesheet_settings for all samples in all lanes.
 
@@ -1221,25 +1244,14 @@ class DemuxSampleInfoDataHandler(SafeHandler):
         Returns:
             None (modifies calculated_lanes in place)
         """
-        for lane, lane_data in calculated_lanes.items():
-            for sample_uuid, sample in lane_data["sample_rows"].items():
+        for lane_data in calculated_lanes.values():
+            for sample in lane_data["sample_rows"].values():
                 # Get the latest settings version
                 settings_versions = sorted(sample["settings"].keys(), reverse=True)
-                if not settings_versions:
-                    continue
-
-                latest_settings_key = settings_versions[0]
-                latest_settings = sample["settings"][latest_settings_key]
-
-                # Recalculate samplesheet_settings
-                samplesheet_settings = self._calculate_samplesheet_settings(
-                    latest_settings.get("raw_samplesheet_settings", {}),
-                    latest_settings.get("other_details", {}),
-                    latest_settings.get("per_sample_fields", {}),
-                )
-
-                # Update the stored samplesheet_settings
-                latest_settings["samplesheet_settings"] = samplesheet_settings
+                if settings_versions:
+                    self._update_sample_samplesheet_settings(
+                        sample, settings_versions[0]
+                    )
 
     def _generate_samplesheets(self, flowcell_id, calculated_lanes):
         """Generate Illumina v2 samplesheets grouped by lane and BCLConvert settings.
