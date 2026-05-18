@@ -68,8 +68,8 @@ class DemuxSampleInfoEditorHandler(SafeHandler):
 class DemuxSampleInfoDataHandler(SafeHandler):
     """Serves demux sample info data via API."""
 
-    def _get_project_id_by_name(self, project_name):
-        """Look up project ID (P-number) from project name.
+    def _get_project_info_by_name(self, project_name):
+        """Look up project information (ID and doc_id) by project name.
 
         Since this may be called once per row in a samplesheet, we implement a simple caching mechanism to avoid redundant database queries for the same project name.
 
@@ -108,10 +108,9 @@ class DemuxSampleInfoDataHandler(SafeHandler):
             self._project_library_methods = {}
 
         if project_name not in self._project_library_methods:
-            project_info = self._get_project_id_by_name(project_name)
-            project_id = project_info.get("project_id")
+            project_info = self._get_project_info_by_name(project_name)
             doc_id = project_info.get("doc_id")
-            if project_id and doc_id:
+            if doc_id:
                 try:
                     # Fetch the project document
                     project_doc = self.application.cloudant.get_document(
@@ -914,7 +913,7 @@ class DemuxSampleInfoDataHandler(SafeHandler):
         project_name = sample_project.replace("__", ".", 1) if sample_project else ""
         if project_name:
             library_method = self._get_project_library_method(project_name)
-            project_info = self._get_project_id_by_name(project_name)
+            project_info = self._get_project_info_by_name(project_name)
             project_id = project_info.get("project_id", "")
         else:
             library_method = None
