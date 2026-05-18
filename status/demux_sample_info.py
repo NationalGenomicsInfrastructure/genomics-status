@@ -168,22 +168,42 @@ class DemuxSampleInfoDataHandler(SafeHandler):
 
         return self._config, self._config_version, self._config_id
 
+    def _fetch_document_by_flowcell_id(self, flowcell_id):
+        """Fetch demux sample info document by flowcell_id.
+
+        Args:
+            flowcell_id: The flowcell identifier
+
+        Returns:
+            dict: The document with _id and _rev preserved for update operations,
+                  or None if not found
+
+        Raises:
+            ApiException: If there's a database error
+        """
+        view_result = self.application.cloudant.post_view(
+            db="demux_sample_info",
+            ddoc="info",
+            view="flowcell_id",
+            key=flowcell_id,
+            include_docs=True,
+        ).get_result()
+
+        rows = view_result.get("rows", [])
+
+        if not rows:
+            return None
+
+        return rows[0]["doc"]
+
     def get(self, flowcell_id):
         """Retrieve demux sample info document for a specific flowcell."""
         self.set_header("Content-type", "application/json")
 
         try:
-            # Query the view to find the document ID by flowcell_id
-            view_result = self.application.cloudant.post_view(
-                db="demux_sample_info",
-                ddoc="info",
-                view="flowcell_id",
-                key=flowcell_id,
-            ).get_result()
+            document = self._fetch_document_by_flowcell_id(flowcell_id)
 
-            rows = view_result.get("rows", [])
-
-            if not rows:
+            if not document:
                 self.set_status(404)
                 self.write(
                     json.dumps(
@@ -193,14 +213,6 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                     )
                 )
                 return
-
-            # Get the document ID from the view result
-            doc_id = rows[0]["id"]
-
-            # Fetch the actual document using the ID
-            document = self.application.cloudant.get_document(
-                db="demux_sample_info", doc_id=doc_id
-            ).get_result()
 
             # Remove CouchDB-specific fields from the response
             if "_id" in document:
@@ -1608,16 +1620,9 @@ class DemuxSampleInfoDataHandler(SafeHandler):
 
             # Fetch the existing document
             try:
-                view_result = self.application.cloudant.post_view(
-                    db="demux_sample_info",
-                    ddoc="info",
-                    view="flowcell_id",
-                    key=flowcell_id,
-                ).get_result()
+                document = self._fetch_document_by_flowcell_id(flowcell_id)
 
-                existing_rows = view_result.get("rows", [])
-
-                if not existing_rows:
+                if not document:
                     self.set_status(404)
                     self.write(
                         json.dumps(
@@ -1627,12 +1632,6 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                         )
                     )
                     return
-
-                # Get the document
-                doc_id = existing_rows[0]["id"]
-                document = self.application.cloudant.get_document(
-                    db="demux_sample_info", doc_id=doc_id
-                ).get_result()
 
                 # Store the original revision for conflict detection
                 original_rev = document.get("_rev")
@@ -1922,7 +1921,7 @@ class DemuxSampleInfoDataHandler(SafeHandler):
 
                 # Fetch the updated document to return to the client
                 updated_doc = self.application.cloudant.get_document(
-                    db="demux_sample_info", doc_id=doc_id
+                    db="demux_sample_info", doc_id=document["_id"]
                 ).get_result()
 
                 self.set_status(200)
@@ -1981,16 +1980,9 @@ class SampleDeleteHandler(DemuxSampleInfoDataHandler):
         try:
             # Fetch the existing document
             try:
-                view_result = self.application.cloudant.post_view(
-                    db="demux_sample_info",
-                    ddoc="info",
-                    view="flowcell_id",
-                    key=flowcell_id,
-                ).get_result()
+                document = self._fetch_document_by_flowcell_id(flowcell_id)
 
-                existing_rows = view_result.get("rows", [])
-
-                if not existing_rows:
+                if not document:
                     self.set_status(404)
                     self.write(
                         json.dumps(
@@ -2000,12 +1992,6 @@ class SampleDeleteHandler(DemuxSampleInfoDataHandler):
                         )
                     )
                     return
-
-                # Get the document
-                doc_id = existing_rows[0]["id"]
-                document = self.application.cloudant.get_document(
-                    db="demux_sample_info", doc_id=doc_id
-                ).get_result()
 
             except ApiException as db_error:
                 self.set_status(500)
@@ -2112,7 +2098,7 @@ class SampleDeleteHandler(DemuxSampleInfoDataHandler):
 
                 # Fetch the updated document to return to the client
                 updated_doc = self.application.cloudant.get_document(
-                    db="demux_sample_info", doc_id=doc_id
+                    db="demux_sample_info", doc_id=document["_id"]
                 ).get_result()
 
                 # Remove CouchDB-specific fields
