@@ -3914,7 +3914,7 @@ const vDemuxSampleInfoEditor = {
                                                 <!-- Column Selection -->
                                                 <div class="mb-3">
                                                     <h6 class="text-muted mb-3">Column Selection</h6>
-                                                    <label class="form-label">Presets:</label>
+                                                    <label class="form-label pr-2">Presets:</label>
                                                     <div class="btn-group" role="group">
                                                         <input type="radio" class="btn-check" name="columnPreset" id="presetDefault" value="default" @change="applyColumnPreset('default')" autocomplete="off" checked>
                                                         <label class="btn btn-outline-primary" for="presetDefault">Default</label>
