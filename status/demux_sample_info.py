@@ -1244,14 +1244,19 @@ class DemuxSampleInfoDataHandler(SafeHandler):
         Returns:
             None (modifies calculated_lanes in place)
         """
-        for lane_data in calculated_lanes.values():
-            for sample in lane_data["sample_rows"].values():
+        logging.debug(f"_recalculate_all_samplesheet_settings called for {len(calculated_lanes)} lanes")
+        for lane_key, lane_data in calculated_lanes.items():
+            logging.debug(f"Processing lane {lane_key} with {len(lane_data.get('sample_rows', {}))} samples")
+            for sample_uuid, sample in lane_data["sample_rows"].items():
                 # Get the latest settings version
                 settings_versions = sorted(sample["settings"].keys(), reverse=True)
                 if settings_versions:
-                    self._update_sample_samplesheet_settings(
-                        sample, settings_versions[0]
-                    )
+                    try:
+                        self._update_sample_samplesheet_settings(
+                            sample, settings_versions[0]
+                        )
+                    except Exception as e:
+                        logging.exception(f"Error updating samplesheet settings for sample {sample_uuid} in lane {lane_key}")
 
     def _generate_samplesheets(self, flowcell_id, calculated_lanes):
         """Generate Illumina v2 samplesheets grouped by lane and BCLConvert settings.
@@ -1267,10 +1272,12 @@ class DemuxSampleInfoDataHandler(SafeHandler):
         Returns:
             list: List of samplesheet dictionaries as structured JSON
         """
+        logging.debug(f"_generate_samplesheets called for flowcell {flowcell_id} with {len(calculated_lanes)} lanes")
         samplesheets = []
 
         # Process each lane
         for lane, lane_data in calculated_lanes.items():
+            logging.debug(f"Generating samplesheet for lane {lane}")
             # Group samples by their effective settings (from Stage 2)
             settings_groups = {}
 
@@ -1568,9 +1575,12 @@ class DemuxSampleInfoDataHandler(SafeHandler):
             }
         }
         """
+        logging.info(f"PUT request received for flowcell: {flowcell_id}")
+        logging.debug(f"Request body size: {len(self.request.body)} bytes")
         try:
             # Parse the request body
             put_data = tornado.escape.json_decode(self.request.body)
+            logging.debug(f"Successfully parsed JSON request body")
 
             if "edited_settings" not in put_data:
                 self.set_status(400)
@@ -1581,6 +1591,7 @@ class DemuxSampleInfoDataHandler(SafeHandler):
 
             edited_settings = put_data["edited_settings"]
             user_comment = put_data.get("comment", "").strip()
+            logging.debug(f"Processing edited_settings for {len(edited_settings)} lanes")
 
             # Define which fields are allowed to be edited
             # Fields are mapped to their location in the settings structure
@@ -1646,8 +1657,10 @@ class DemuxSampleInfoDataHandler(SafeHandler):
 
                 # Store the original revision for conflict detection
                 original_rev = document.get("_rev")
+                logging.debug(f"Document fetched successfully, revision: {original_rev}")
 
             except ApiException as db_error:
+                logging.exception(f"Database error fetching document for flowcell {flowcell_id}")
                 self.set_status(500)
                 self.write(
                     json.dumps(
@@ -1699,9 +1712,11 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                 return True
 
             # Process edited settings
+            logging.debug(f"Starting to process edited settings for {len(edited_settings)} lanes")
             for lane, samples in edited_settings.items():
                 # Convert lane to string to match database structure
                 lane_key = str(lane)
+                logging.debug(f"Processing lane {lane_key} with {len(samples)} samples")
 
                 if lane_key not in document["calculated"]["lanes"]:
                     # Create the lane if it doesn't exist yet
@@ -1893,12 +1908,25 @@ class DemuxSampleInfoDataHandler(SafeHandler):
             document.get("metadata", {})
 
             # Recalculate samplesheet_settings for all samples
-            self._recalculate_all_samplesheet_settings(calculated_lanes)
+            logging.debug(f"Recalculating samplesheet settings for {len(calculated_lanes)} lanes")
+            try:
+                self._recalculate_all_samplesheet_settings(calculated_lanes)
+                logging.debug("Samplesheet settings recalculated successfully")
+            except Exception as e:
+                logging.exception(f"Error recalculating samplesheet settings: {str(e)}")
+                raise
 
-            samplesheets = self._generate_samplesheets(flowcell_id, calculated_lanes)
+            logging.debug(f"Generating samplesheets for flowcell {flowcell_id}")
+            try:
+                samplesheets = self._generate_samplesheets(flowcell_id, calculated_lanes)
+                logging.debug(f"Generated {len(samplesheets)} samplesheets")
+            except Exception as e:
+                logging.exception(f"Error generating samplesheets: {str(e)}")
+                raise
             document["samplesheets"] = samplesheets
 
             # Save the updated document back to the database
+            logging.debug(f"Preparing to save updated document to database")
             try:
                 # Check for revision conflict before saving
                 current_rev = document.get("_rev")
@@ -1914,9 +1942,11 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                     )
                     return
 
+                logging.debug(f"Saving document to database, current revision: {current_rev}")
                 response = self.application.cloudant.post_document(
                     db="demux_sample_info", document=document
                 ).get_result()
+                logging.debug(f"Database response: {response}")
 
                 if not response.get("ok"):
                     self.set_status(500)
@@ -1931,10 +1961,12 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                     return
 
                 # Fetch the updated document to return to the client
+                logging.debug(f"Fetching updated document to return to client")
                 updated_doc = self.application.cloudant.get_document(
                     db="demux_sample_info", doc_id=document["_id"]
                 ).get_result()
 
+                logging.info(f"PUT request completed successfully for flowcell: {flowcell_id}")
                 self.set_status(200)
                 self.set_header("Content-type", "application/json")
                 self.write(json.dumps(updated_doc))
@@ -1963,15 +1995,18 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                 return
 
         except json.JSONDecodeError as e:
+            logging.exception(f"JSON decode error in PUT request for flowcell {flowcell_id}")
             self.set_status(400)
             self.write(json.dumps({"error": f"Invalid JSON in request body: {str(e)}"}))
         except ValueError as e:
             # Validation errors (e.g., invalid raw_samplesheet_settings values)
+            logging.exception(f"Validation error in PUT request for flowcell {flowcell_id}")
             self.set_status(400)
             self.write(json.dumps({"error": f"Validation error: {str(e)}"}))
         except (ApiException, KeyError, AttributeError, TypeError) as e:
+            logging.exception(f"Unexpected error in PUT request for flowcell {flowcell_id}: {type(e).__name__}")
             self.set_status(500)
-            self.write(json.dumps({"error": f"Internal server error: {str(e)}"}))
+            self.write(json.dumps({"error": f"Internal server error: {str(e)}", "error_type": type(e).__name__}))
 
 
 class SampleDeleteHandler(DemuxSampleInfoDataHandler):
