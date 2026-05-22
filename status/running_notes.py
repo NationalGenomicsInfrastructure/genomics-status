@@ -137,8 +137,8 @@ class RunningNotesDataHandler(SafeHandler):
             connected_projects = values["project_list"]
             workset_name = values["name"]
             note_details["name"] = workset_name
-            if 'Workset' not in categories:
-                categories.append('Workset')
+            if "Workset" not in categories:
+                categories.append("Workset")
         else:
             note_details["name"] = partition_id
             if note_type == "flowcell":
@@ -163,8 +163,8 @@ class RunningNotesDataHandler(SafeHandler):
                 view="project_ids_list",
                 key=lookup_key,
             ).get_result()["rows"][0]["value"]
-            if 'Flowcell' not in categories:
-                categories.append('Flowcell')
+            if "Flowcell" not in categories:
+                categories.append("Flowcell")
 
         def clean_html_comments(text):
             """Remove HTML comments from the text to prevent issues in slack notifications.
