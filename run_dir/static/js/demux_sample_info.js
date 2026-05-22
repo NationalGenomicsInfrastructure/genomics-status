@@ -670,7 +670,7 @@ const ConfigInspectModal = {
                                                 <tr v-if="getAllBCLConvertSettings(sortedSettings[0][1]) && Object.keys(getAllBCLConvertSettings(sortedSettings[0][1])).length > 0">
                                                     <td colspan="3" class="table-secondary">
                                                         <strong>BCLConvert Settings (Stage 1: Stored)</strong>
-                                                        <span class="badge bg-info ms-2 small" title="These are the calculated and stored settings. Stage 2 may dynamically exclude some settings during samplesheet generation.">Stage 1</span>
+                                                        <span class="badge bg-info ml-2 small" title="These are the calculated and stored settings. Stage 2 may dynamically exclude some settings during samplesheet generation.">Stage 1</span>
                                                     </td>
                                                 </tr>
                                                 <tr v-for="(value, key) in getAllBCLConvertSettings(sortedSettings[0][1])" :key="key">
@@ -716,7 +716,7 @@ const ConfigInspectModal = {
                                         <button class="btn btn-link text-start w-100 text-decoration-none d-flex align-items-center"
                                             type="button"
                                             @click="toggleSource(index)">
-                                            <span class="badge bg-primary me-2">{{ index + 1 }}</span>
+                                            <span class="badge bg-primary mr-2">{{ index + 1 }}</span>
                                             <strong class="flex-grow-1">{{ source }}</strong>
                                             <i class="fa" :class="isSourceExpanded(index) ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
                                         </button>
@@ -1142,7 +1142,7 @@ const SampleTable = {
                             :title="getEditTooltip(lane, sample.uuid, columnKey)">
                             <code v-if="isCodeFormattedColumn(columnKey)">{{ formatCellValue(sample[columnKey], columnKey) }}</code>
                             <span v-else>{{ formatCellValue(sample[columnKey], columnKey) }}</span>
-                            <span v-if="columnKey === 'sample_name' && sample.deleted" class="badge bg-danger ms-2">DELETED</span>
+                            <span v-if="columnKey === 'sample_name' && sample.deleted" class="badge bg-danger ml-2">DELETED</span>
                         </td>
                         <td>
                             <button
@@ -1346,7 +1346,7 @@ const EditSampleModal = {
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title">Edit Sample</h5>
-                        <div class="ms-auto me-2">
+                        <div class="ml-auto mr-2">
                             <button
                                 v-if="Object.keys(fieldHistory).length > 0"
                                 type="button"
@@ -1389,12 +1389,12 @@ const EditSampleModal = {
                                         <div v-for="(changes, fieldName) in fieldHistory" :key="fieldName" class="mb-3">
                                             <div class="d-flex align-items-center mb-2">
                                                 <strong class="text-primary">{{ fieldName }}:</strong>
-                                                <span class="badge bg-secondary ms-2">{{ changes.length }} change{{ changes.length !== 1 ? 's' : '' }}</span>
+                                                <span class="badge bg-secondary ml-2">{{ changes.length }} change{{ changes.length !== 1 ? 's' : '' }}</span>
                                             </div>
                                             <div class="border-start border-2 border-primary ps-3">
                                                 <div v-for="(change, idx) in changes" :key="idx" class="mb-2">
                                                     <div class="d-flex align-items-start">
-                                                        <span class="badge bg-light text-dark me-2" style="min-width: 180px;">
+                                                        <span class="badge bg-light text-dark mr-2" style="min-width: 180px;">
                                                             <i class="fa fa-clock"></i>
                                                             {{ $parent.formatTimestamp(change.timestamp) }}
                                                         </span>
@@ -1410,7 +1410,7 @@ const EditSampleModal = {
                                                             <span v-else>
                                                                 {{ change.value }}
                                                             </span>
-                                                            <span v-if="idx === changes.length - 1" class="badge bg-success ms-2">Current</span>
+                                                            <span v-if="idx === changes.length - 1" class="badge bg-success ml-2">Current</span>
                                                         </span>
                                                     </div>
                                                 </div>
@@ -1429,7 +1429,7 @@ const EditSampleModal = {
                     <div class="modal-footer">
                         <button
                             type="button"
-                            class="btn btn-sm btn-outline-danger me-auto"
+                            class="btn btn-sm btn-outline-danger mr-auto"
                             @click="handleDelete"
                             title="Delete this sample (will be traceable in database)">
                             <i class="fa fa-trash"></i> Delete Sample
@@ -1702,9 +1702,9 @@ const BulkEditModal = {
                                     <input type="checkbox" class="form-check-input" :id="'bulkEdit_sample_' + sampleInfo.uuid"
                                         :value="sampleInfo.uuid" v-model="localTargetSamples">
                                     <label class="form-check-label" :for="'bulkEdit_sample_' + sampleInfo.uuid">
-                                        <span class="badge bg-secondary me-1">L{{ sampleInfo.lane }}</span>
+                                        <span class="badge bg-secondary mr-1">L{{ sampleInfo.lane }}</span>
                                         <span class="font-monospace">{{ sampleInfo.sampleId }}</span>
-                                        <span class="text-muted ms-1">({{ sampleInfo.sampleName }})</span>
+                                        <span class="text-muted ml-1">({{ sampleInfo.sampleName }})</span>
                                     </label>
                                 </div>
                             </div>
@@ -3665,7 +3665,7 @@ const vDemuxSampleInfoEditor = {
                         <div class="card-body">
                             <p class="mb-3">
                                 <a href="/flowcells" class="btn btn-sm btn-outline-primary">
-                                    <i class="fa fa-list me-1"></i> View Flowcell List
+                                    <i class="fa fa-list mr-1"></i> View Flowcell List
                                 </a>
                             </p>
                             <label class="form-label"><strong>Enter a flowcell ID:</strong></label>
@@ -3683,7 +3683,7 @@ const vDemuxSampleInfoEditor = {
                                             class="btn btn-primary"
                                             @click="fetchDemuxInfo"
                                             :disabled="loading">
-                                            <span v-if="loading" class="spinner-border spinner-border-sm me-2" role="status"></span>
+                                            <span v-if="loading" class="spinner-border spinner-border-sm mr-2" role="status"></span>
                                             {{ loading ? 'Loading...' : 'Fetch Data' }}
                                         </button>
                                     </div>
@@ -3778,7 +3778,7 @@ const vDemuxSampleInfoEditor = {
                                     @click.prevent="viewMode = 'samplesheets'"
                                     href="#">
                                     Samplesheets
-                                    <span class="badge bg-primary ms-1">{{ samplesheets.length }}</span>
+                                    <span class="badge bg-primary ml-1">{{ samplesheets.length }}</span>
                                 </a>
                             </li>
                         </ul>
@@ -3843,7 +3843,7 @@ const vDemuxSampleInfoEditor = {
                                                 class="btn btn-success mr-2"
                                                 @click="saveChanges"
                                                 :disabled="saving">
-                                                <span v-if="saving" class="spinner-border spinner-border-sm me-2" role="status"></span>
+                                                <span v-if="saving" class="spinner-border spinner-border-sm mr-2" role="status"></span>
                                                 {{ saving ? 'Saving...' : 'Save Changes' }}
                                             </button>
                                             <button
@@ -3938,7 +3938,7 @@ const vDemuxSampleInfoEditor = {
                                                                 @change="toggleColumn(column.key)">
                                                             <label class="form-check-label" :for="'col-' + column.key" :class="{ 'text-muted': column.key === 'sample_name' }">
                                                                 {{ column.label }}
-                                                                <span v-if="column.key === 'sample_name'" class="badge bg-secondary ms-1">Required</span>
+                                                                <span v-if="column.key === 'sample_name'" class="badge bg-secondary ml-1">Required</span>
                                                             </label>
                                                         </div>
                                                     </div>
