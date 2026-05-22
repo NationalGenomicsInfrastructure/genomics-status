@@ -424,13 +424,15 @@ app.component('v-element-lane-stats', {
         unassigned_lane_stats() {
             const groupedByLane = {};
 
-            this.$root.unassiged_sequences_demultiplex.forEach(sample => {
-                const lane = sample["Lane"];
-                if (!groupedByLane[lane]) {
-                    groupedByLane[lane] = [];
-                }
-                groupedByLane[lane].push(sample);
-            });
+            if (this.$root.unassiged_sequences_demultiplex) {
+                this.$root.unassiged_sequences_demultiplex.forEach(sample => {
+                    const lane = sample["Lane"];
+                    if (!groupedByLane[lane]) {
+                        groupedByLane[lane] = [];
+                    }
+                    groupedByLane[lane].push(sample);
+                });
+            }
 
             return groupedByLane;
         },
