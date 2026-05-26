@@ -1327,6 +1327,14 @@ const EditSampleModal = {
             set(value) {
                 this.$emit('update:formData', value);
             }
+        },
+        configSources() {
+            // Extract config_sources from the latest settings
+            if (!this.sample || !this.sample.settings) return [];
+            const timestamps = Object.keys(this.sample.settings).sort().reverse();
+            if (timestamps.length === 0) return [];
+            const latestSettings = this.sample.settings[timestamps[0]];
+            return latestSettings.other_details?.config_sources || [];
         }
     },
     methods: {
@@ -1369,7 +1377,7 @@ const EditSampleModal = {
                                         </h6>
                                         <p class="mb-2 small text-muted">The following configurations were applied to generate this sample's current settings:</p>
                                         <ol class="mb-0">
-                                            <li v-for="(source, index) in (sample.config_sources || [])" :key="index" class="font-monospace small">
+                                            <li v-for="(source, index) in configSources" :key="index" class="font-monospace small">
                                                 {{ source }}
                                             </li>
                                         </ol>
