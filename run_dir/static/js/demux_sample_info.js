@@ -1462,6 +1462,9 @@ const AddSampleModal = {
         projectWarnings: Array,
         formData: Object
     },
+    components: {
+             SampleFormFields
+    },
     emits: ['close', 'save', 'update:targetLanes', 'update:targetProject', 'update:formData'],
     computed: {
         localTargetLanes: {
