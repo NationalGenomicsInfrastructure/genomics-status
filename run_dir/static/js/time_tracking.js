@@ -34,9 +34,9 @@ const vTimeTrackingMain = ({
             modal_view_mode: 'durations',
             stage_order: [
                 'Reception Control',
-                'Library Prep Start',
+                'Library Prep Queue',
                 'Library Prep',
-                'Sequencing Start',
+                'Sequencing Queue',
                 'Sequencing',
                 'Data Delivery',
                 'Analysis',
@@ -45,14 +45,14 @@ const vTimeTrackingMain = ({
             ],
             stage_definitions: {
                 'Reception Control': ['open_date', 'queued'],
-                'Library Prep Start': ['queued', 'library_prep_start'],
+                'Library Prep Queue': ['queued', 'library_prep_start'],
                 'Library Prep': ['library_prep_start', 'qc_library_finished'],
-                'Sequencing Start': ['qc_library_finished', 'sequencing_start_date'],
+                'Sequencing Queue': ['qc_library_finished', 'sequencing_start_date'],
                 'Sequencing': ['sequencing_start_date', 'all_samples_sequenced'],
                 'Data Delivery': ['all_samples_sequenced', 'all_raw_data_delivered'],
-                'Analysis': ['all_raw_data_delivered', 'best_practice_analysis_completed'],
-                'Processing Time': ['queued', 'all_samples_sequenced'],
-                'Total Time': ['queued', 'all_raw_data_delivered']
+                'Analysis': ['all_samples_sequenced', 'best_practice_analysis_completed'],
+                'Processing Time': ['queued', 'all_raw_data_delivered'],
+                'Total Time': ['open_date', 'all_raw_data_delivered']
             }
         }
     },
@@ -636,21 +636,21 @@ const vTimeTrackingMain = ({
                             <strong>How Stage Durations are Calculated:</strong>
                             <ul class="mb-0">
                                 <li><strong>Reception Control:</strong> From <code>open_date</code> to <code>queued</code></li>
-                                <li><strong>Library Prep Start:</strong> From <code>queued</code> to <code>library_prep_start</code></li>
+                                <li><strong>Library Prep Queue:</strong> From <code>queued</code> to <code>library_prep_start</code></li>
                                 <li><strong>Library Prep:</strong> From <code>library_prep_start</code> to <code>qc_library_finished</code></li>
-                                <li><strong>Sequencing Start:</strong> From <code>qc_library_finished</code> to <code>sequencing_start_date</code></li>
+                                <li><strong>Sequencing Queue:</strong> From <code>qc_library_finished</code> to <code>sequencing_start_date</code></li>
                                 <li><strong>Sequencing:</strong> From <code>sequencing_start_date</code> to <code>all_samples_sequenced</code></li>
                                 <li><strong>Data Delivery:</strong> From <code>all_samples_sequenced</code> to <code>all_raw_data_delivered</code></li>
-                                <li><strong>Analysis:</strong> From <code>all_raw_data_delivered</code> to <code>best_practice_analysis_completed</code></li>
-                                <li><strong>Processing Time:</strong> From <code>queued</code> to <code>all_samples_sequenced</code></li>
-                                <li><strong>Total Time:</strong> From <code>queued</code> to <code>all_raw_data_delivered</code></li>
+                                <li><strong>Analysis:</strong> From <code>all_samples_sequenced</code> to <code>best_practice_analysis_completed</code></li>
+                                <li><strong>Processing Time:</strong> From <code>queued</code> to <code>all_raw_data_delivered</code></li>
+                                <li><strong>Total Time:</strong> From <code>open_date</code> to <code>all_raw_data_delivered</code></li>
                             </ul>
                             <small class="text-muted">Note: Projects are only included in a stage if both the start and end dates are available.</small>
                         </div>
                     </div>
                 </div>
                 <p>
-                    <strong>Stages include:</strong> Reception Control, Library Prep Start, Library Prep, Sequencing Start,
+                    <strong>Stages include:</strong> Reception Control, Library Prep Queue, Library Prep, Sequencing Queue,
                     Sequencing, Data Delivery, Analysis, Processing Time, and Total Time.
                 </p>
                 <p>

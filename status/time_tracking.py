@@ -73,17 +73,17 @@ class TimeTrackingDataHandler(SafeHandler):
             # Define stage mappings
             stage_definitions = {
                 "Reception Control": ["open_date", "queued"],
-                "Library Prep Start": ["queued", "library_prep_start"],
+                "Library Prep Queue": ["queued", "library_prep_start"],
                 "Library Prep": ["library_prep_start", "qc_library_finished"],
-                "Sequencing Start": ["qc_library_finished", "sequencing_start_date"],
+                "Sequencing Queue": ["qc_library_finished", "sequencing_start_date"],
                 "Sequencing": ["sequencing_start_date", "all_samples_sequenced"],
                 "Data Delivery": ["all_samples_sequenced", "all_raw_data_delivered"],
                 "Analysis": [
-                    "all_raw_data_delivered",
+                    "all_samples_sequenced",
                     "best_practice_analysis_completed",
                 ],
-                "Processing Time": ["queued", "all_samples_sequenced"],
-                "Total Time": ["queued", "all_raw_data_delivered"],
+                "Processing Time": ["queued", "all_raw_data_delivered"],
+                "Total Time": ["open_date", "all_raw_data_delivered"],
             }
 
             # Define finished library methods (by user)
