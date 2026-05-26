@@ -1314,6 +1314,9 @@ const EditSampleModal = {
         formData: Object
     },
     emits: ['close', 'save', 'delete', 'update:formData'],
+    components: {
+             SampleFormFields
+    },
     data() {
         return {
             showFieldHistory: false
