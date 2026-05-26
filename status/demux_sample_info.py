@@ -1244,9 +1244,13 @@ class DemuxSampleInfoDataHandler(SafeHandler):
         Returns:
             None (modifies calculated_lanes in place)
         """
-        logging.debug(f"_recalculate_all_samplesheet_settings called for {len(calculated_lanes)} lanes")
+        logging.debug(
+            f"_recalculate_all_samplesheet_settings called for {len(calculated_lanes)} lanes"
+        )
         for lane_key, lane_data in calculated_lanes.items():
-            logging.debug(f"Processing lane {lane_key} with {len(lane_data.get('sample_rows', {}))} samples")
+            logging.debug(
+                f"Processing lane {lane_key} with {len(lane_data.get('sample_rows', {}))} samples"
+            )
             for sample_uuid, sample in lane_data["sample_rows"].items():
                 # Get the latest settings version
                 settings_versions = sorted(sample["settings"].keys(), reverse=True)
@@ -1256,7 +1260,9 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                             sample, settings_versions[0]
                         )
                     except Exception as e:
-                        logging.exception(f"Error updating samplesheet settings for sample {sample_uuid} in lane {lane_key}")
+                        logging.exception(
+                            f"Error updating samplesheet settings for sample {sample_uuid} in lane {lane_key}"
+                        )
 
     def _generate_samplesheets(self, flowcell_id, calculated_lanes):
         """Generate Illumina v2 samplesheets grouped by lane and BCLConvert settings.
@@ -1272,7 +1278,9 @@ class DemuxSampleInfoDataHandler(SafeHandler):
         Returns:
             list: List of samplesheet dictionaries as structured JSON
         """
-        logging.debug(f"_generate_samplesheets called for flowcell {flowcell_id} with {len(calculated_lanes)} lanes")
+        logging.debug(
+            f"_generate_samplesheets called for flowcell {flowcell_id} with {len(calculated_lanes)} lanes"
+        )
         samplesheets = []
 
         # Process each lane
@@ -1591,7 +1599,13 @@ class DemuxSampleInfoDataHandler(SafeHandler):
 
             edited_settings = put_data["edited_settings"]
             user_comment = put_data.get("comment", "").strip()
-            logging.debug(f"Processing edited_settings for {len(edited_settings)} lanes")
+            logging.debug(
+                f"Processing edited_settings for {len(edited_settings)} lanes"
+            )
+
+            # Load the active configuration to initialize _config_version
+            # This must be called before _config_version is used later in the method
+            self._get_sample_classification_config()
 
             # Define which fields are allowed to be edited
             # Fields are mapped to their location in the settings structure
@@ -1657,10 +1671,14 @@ class DemuxSampleInfoDataHandler(SafeHandler):
 
                 # Store the original revision for conflict detection
                 original_rev = document.get("_rev")
-                logging.debug(f"Document fetched successfully, revision: {original_rev}")
+                logging.debug(
+                    f"Document fetched successfully, revision: {original_rev}"
+                )
 
             except ApiException as db_error:
-                logging.exception(f"Database error fetching document for flowcell {flowcell_id}")
+                logging.exception(
+                    f"Database error fetching document for flowcell {flowcell_id}"
+                )
                 self.set_status(500)
                 self.write(
                     json.dumps(
@@ -1712,7 +1730,9 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                 return True
 
             # Process edited settings
-            logging.debug(f"Starting to process edited settings for {len(edited_settings)} lanes")
+            logging.debug(
+                f"Starting to process edited settings for {len(edited_settings)} lanes"
+            )
             for lane, samples in edited_settings.items():
                 # Convert lane to string to match database structure
                 lane_key = str(lane)
@@ -1908,7 +1928,9 @@ class DemuxSampleInfoDataHandler(SafeHandler):
             document.get("metadata", {})
 
             # Recalculate samplesheet_settings for all samples
-            logging.debug(f"Recalculating samplesheet settings for {len(calculated_lanes)} lanes")
+            logging.debug(
+                f"Recalculating samplesheet settings for {len(calculated_lanes)} lanes"
+            )
             try:
                 self._recalculate_all_samplesheet_settings(calculated_lanes)
                 logging.debug("Samplesheet settings recalculated successfully")
@@ -1918,7 +1940,9 @@ class DemuxSampleInfoDataHandler(SafeHandler):
 
             logging.debug(f"Generating samplesheets for flowcell {flowcell_id}")
             try:
-                samplesheets = self._generate_samplesheets(flowcell_id, calculated_lanes)
+                samplesheets = self._generate_samplesheets(
+                    flowcell_id, calculated_lanes
+                )
                 logging.debug(f"Generated {len(samplesheets)} samplesheets")
             except Exception as e:
                 logging.exception(f"Error generating samplesheets: {str(e)}")
@@ -1942,7 +1966,9 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                     )
                     return
 
-                logging.debug(f"Saving document to database, current revision: {current_rev}")
+                logging.debug(
+                    f"Saving document to database, current revision: {current_rev}"
+                )
                 response = self.application.cloudant.post_document(
                     db="demux_sample_info", document=document
                 ).get_result()
@@ -1966,7 +1992,9 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                     db="demux_sample_info", doc_id=document["_id"]
                 ).get_result()
 
-                logging.info(f"PUT request completed successfully for flowcell: {flowcell_id}")
+                logging.info(
+                    f"PUT request completed successfully for flowcell: {flowcell_id}"
+                )
                 self.set_status(200)
                 self.set_header("Content-type", "application/json")
                 self.write(json.dumps(updated_doc))
@@ -1995,18 +2023,31 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                 return
 
         except json.JSONDecodeError as e:
-            logging.exception(f"JSON decode error in PUT request for flowcell {flowcell_id}")
+            logging.exception(
+                f"JSON decode error in PUT request for flowcell {flowcell_id}"
+            )
             self.set_status(400)
             self.write(json.dumps({"error": f"Invalid JSON in request body: {str(e)}"}))
         except ValueError as e:
             # Validation errors (e.g., invalid raw_samplesheet_settings values)
-            logging.exception(f"Validation error in PUT request for flowcell {flowcell_id}")
+            logging.exception(
+                f"Validation error in PUT request for flowcell {flowcell_id}"
+            )
             self.set_status(400)
             self.write(json.dumps({"error": f"Validation error: {str(e)}"}))
         except (ApiException, KeyError, AttributeError, TypeError) as e:
-            logging.exception(f"Unexpected error in PUT request for flowcell {flowcell_id}: {type(e).__name__}")
+            logging.exception(
+                f"Unexpected error in PUT request for flowcell {flowcell_id}: {type(e).__name__}"
+            )
             self.set_status(500)
-            self.write(json.dumps({"error": f"Internal server error: {str(e)}", "error_type": type(e).__name__}))
+            self.write(
+                json.dumps(
+                    {
+                        "error": f"Internal server error: {str(e)}",
+                        "error_type": type(e).__name__,
+                    }
+                )
+            )
 
 
 class SampleDeleteHandler(DemuxSampleInfoDataHandler):
@@ -2024,6 +2065,10 @@ class SampleDeleteHandler(DemuxSampleInfoDataHandler):
             sample_uuid: The UUID of the sample to delete
         """
         try:
+            # Load the active configuration to initialize _config_version
+            # This must be called before _config_version is used later in the method
+            self._get_sample_classification_config()
+
             # Fetch the existing document
             try:
                 document = self._fetch_document_by_flowcell_id(flowcell_id)
