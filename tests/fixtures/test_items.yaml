@@ -1,0 +1,13 @@
+test: 5
+samples:
+    sample_id1: P14102_101
+    sample_id2: P14102_102
+    sample_run_id: 4_191218_BHY272DSXX_AAGAGGCA-ACTGCATA
+quota:
+    quota_id: nas-7.scilifelab.se
+flowcells:
+    flowcell_id: 191218_BHY272DSXX
+projects:
+    project_id: P14102
+application:
+    application: RNA-seq
