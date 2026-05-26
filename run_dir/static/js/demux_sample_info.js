@@ -1608,6 +1608,9 @@ const BulkEditModal = {
         formData: Object
     },
     emits: ['close', 'apply', 'update:action', 'update:project', 'update:lane', 'update:targetSamples', 'update:formData'],
+    components: {
+             SampleFormFields
+    },
     computed: {
         localAction: {
             get() {
