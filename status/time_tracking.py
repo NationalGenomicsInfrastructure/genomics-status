@@ -181,7 +181,7 @@ class TimeTrackingDataHandler(SafeHandler):
                             stage_end_dt = dateutil.parser.parse(end_value)
                             duration_days = (stage_end_dt - stage_start_dt).days
 
-                            # Only include positive durations
+                            # Only include non-negative durations
                             if duration_days >= 0:
                                 # Initialize stage if not exists
                                 if stage_name not in method_data:
