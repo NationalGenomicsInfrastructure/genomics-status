@@ -9,6 +9,28 @@ import dateutil.parser
 from status.util import SafeHandler
 
 application_log = logging.getLogger("tornado.application")
+# Define stage mappings
+stage_definitions = {
+    ("Reception Control", "days_recep_ctrl"): ["open_date", "queued"],
+    ("Library Prep Queue", "days_prep_start"): ["queued", "library_prep_start"],
+    ("Library Prep", "days_prep"): ["library_prep_start", "qc_library_finished"],
+    ("Sequencing Queue", "days_seq_start"): [
+        ["qc_library_finished", "queued"],
+        "sequencing_start_date",
+    ],
+    ("Sequencing", "days_seq"): ["sequencing_start_date", "all_samples_sequenced"],
+    ("Data Delivery", "days_data_delivery"): [
+        "all_samples_sequenced",
+        "all_raw_data_delivered",
+    ],
+    ("Analysis", "days_analysis"): [
+        "all_samples_sequenced",
+        "best_practice_analysis_completed",
+    ],
+    ("", "days_close"): ["all_raw_data_delivered", "close_date"],
+    ("Processing Time", ""): ["queued", "all_raw_data_delivered"],
+    ("Total Time", ""): ["open_date", "all_raw_data_delivered"],
+}
 
 
 class TimeTrackingHandler(SafeHandler):
@@ -70,22 +92,6 @@ class TimeTrackingDataHandler(SafeHandler):
         }
 
         try:
-            # Define stage mappings
-            stage_definitions = {
-                "Reception Control": ["open_date", "queued"],
-                "Library Prep Queue": ["queued", "library_prep_start"],
-                "Library Prep": ["library_prep_start", "qc_library_finished"],
-                "Sequencing Queue": ["qc_library_finished", "sequencing_start_date"],
-                "Sequencing": ["sequencing_start_date", "all_samples_sequenced"],
-                "Data Delivery": ["all_samples_sequenced", "all_raw_data_delivered"],
-                "Analysis": [
-                    "all_samples_sequenced",
-                    "best_practice_analysis_completed",
-                ],
-                "Processing Time": ["queued", "all_raw_data_delivered"],
-                "Total Time": ["open_date", "all_raw_data_delivered"],
-            }
-
             # Define finished library methods (by user)
             finished_by_user_methods = {
                 "Finished library",
@@ -160,7 +166,12 @@ class TimeTrackingDataHandler(SafeHandler):
                 method_data = result[category][subcategory][library_construction_method]
 
                 # Calculate durations for each stage
-                for stage_name, (start_field, end_field) in stage_definitions.items():
+                for (stage_name, _), (
+                    start_field,
+                    end_field,
+                ) in stage_definitions.items():
+                    if not stage_name:
+                        continue
                     # Get date values directly from the value object
                     start_value = None
                     if isinstance(start_field, list):
