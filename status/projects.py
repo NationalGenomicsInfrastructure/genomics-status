@@ -25,8 +25,8 @@ from status.reports import (
     SingleCellSampleSummaryReportHandler,
     VisiumReportHandler,
 )
-from status.util import SafeHandler, dthandler
 from status.time_tracking import stage_definitions
+from status.util import SafeHandler, dthandler
 
 lims = lims.Lims(BASEURI, USERNAME, PASSWORD)
 application_log = logging.getLogger("tornado.application")
@@ -296,7 +296,7 @@ class ProjectsBaseDataHandler(SafeHandler):
             "days_close",
         ]
         def_dates_gen = {
-            k[1]: v for k, v in stage_definitions.items() if k[1] in def_dates_gen
+            k[1]: v for k, v in stage_definitions.items() if k[1] in dates_gen
         }
 
         dates_summary = [
@@ -306,11 +306,8 @@ class ProjectsBaseDataHandler(SafeHandler):
             "days_prep",
         ]
         def_dates_summary = {
-            k[1]: v for k, v in stage_definitions.items() if k[1] in def_dates_summary
+            k[1]: v for k, v in stage_definitions.items() if k[1] in dates_summary
         }
-        import pdb
-
-        pdb.set_trace()
 
         if "closed" in filter_projects or "all" in filter_projects:
             closedflag = True
