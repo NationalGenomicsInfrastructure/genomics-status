@@ -1588,7 +1588,7 @@ class DemuxSampleInfoDataHandler(SafeHandler):
         try:
             # Parse the request body
             put_data = tornado.escape.json_decode(self.request.body)
-            logging.debug(f"Successfully parsed JSON request body")
+            logging.debug("Successfully parsed JSON request body")
 
             if "edited_settings" not in put_data:
                 self.set_status(400)
@@ -1950,7 +1950,7 @@ class DemuxSampleInfoDataHandler(SafeHandler):
             document["samplesheets"] = samplesheets
 
             # Save the updated document back to the database
-            logging.debug(f"Preparing to save updated document to database")
+            logging.debug("Preparing to save updated document to database")
             try:
                 # Check for revision conflict before saving
                 current_rev = document.get("_rev")
