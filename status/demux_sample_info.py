@@ -1259,7 +1259,7 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                         self._update_sample_samplesheet_settings(
                             sample, settings_versions[0]
                         )
-                    except Exception as e:
+                    except Exception:
                         logging.exception(
                             f"Error updating samplesheet settings for sample {sample_uuid} in lane {lane_key}"
                         )
@@ -1987,7 +1987,7 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                     return
 
                 # Fetch the updated document to return to the client
-                logging.debug(f"Fetching updated document to return to client")
+                logging.debug("Fetching updated document to return to client")
                 updated_doc = self.application.cloudant.get_document(
                     db="demux_sample_info", doc_id=document["_id"]
                 ).get_result()
