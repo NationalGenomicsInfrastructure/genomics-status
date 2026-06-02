@@ -3583,23 +3583,27 @@ const vDemuxSampleInfoEditor = {
             const lines = [];
             // [Header] section
             lines.push('[Header]');
-            for (const [key, value] of Object.entries(samplesheet.Header)) {
-                lines.push(`${key},${value}`);
+            if (samplesheet.Header) {
+                for (const [key, value] of Object.entries(samplesheet.Header)) {
+                    lines.push(`${key},${value}`);
+                }
             }
             lines.push('');
             // [BCLConvert_Settings] section
             lines.push('[BCLConvert_Settings]');
-            // Add BCLConvert settings in standard order
-            const settingsOrder = ['SoftwareVersion', 'MinimumTrimmedReadLength', 'MaskShortReads'];
-            for (const key of settingsOrder) {
-                if (samplesheet.BCLConvert_Settings[key] !== undefined) {
-                    lines.push(`${key},${samplesheet.BCLConvert_Settings[key]}`);
+            if (samplesheet.BCLConvert_Settings) {
+                // Add BCLConvert settings in standard order
+                const settingsOrder = ['SoftwareVersion', 'MinimumTrimmedReadLength', 'MaskShortReads'];
+                for (const key of settingsOrder) {
+                    if (samplesheet.BCLConvert_Settings[key] !== undefined) {
+                        lines.push(`${key},${samplesheet.BCLConvert_Settings[key]}`);
+                    }
                 }
-            }
-            // Add remaining settings
-            for (const [key, value] of Object.entries(samplesheet.BCLConvert_Settings)) {
-                if (!settingsOrder.includes(key)) {
-                    lines.push(`${key},${value}`);
+                // Add remaining settings
+                for (const [key, value] of Object.entries(samplesheet.BCLConvert_Settings)) {
+                    if (!settingsOrder.includes(key)) {
+                        lines.push(`${key},${value}`);
+                    }
                 }
             }
             lines.push('');
@@ -3607,8 +3611,10 @@ const vDemuxSampleInfoEditor = {
             lines.push('[BCLConvert_Data]');
             lines.push('Lane,Sample_ID,Sample_Name,index,index2,Sample_Project,OverrideCycles');
             // Add sample rows
-            for (const sample of samplesheet.BCLConvert_Data) {
-                lines.push(`${sample.Lane},${sample.Sample_ID},${sample.Sample_Name},${sample.index},${sample.index2},${sample.Sample_Project},${sample.OverrideCycles}`);
+            if (samplesheet.BCLConvert_Data) {
+                for (const sample of samplesheet.BCLConvert_Data) {
+                    lines.push(`${sample.Lane},${sample.Sample_ID},${sample.Sample_Name},${sample.index},${sample.index2},${sample.Sample_Project},${sample.OverrideCycles}`);
+                }
             }
             return lines.join('\n');
         },
@@ -3619,7 +3625,9 @@ const vDemuxSampleInfoEditor = {
             const link = document.createElement('a');
             const url = URL.createObjectURL(blob);
             link.setAttribute('href', url);
-            link.setAttribute('download', samplesheet.filename);
+            // Use filename from samplesheet or generate a default one
+            const filename = samplesheet.filename || `samplesheet_lane${samplesheet.lane || 'unknown'}.csv`;
+            link.setAttribute('download', filename);
             link.style.visibility = 'hidden';
             document.body.appendChild(link);
             link.click();
@@ -4057,9 +4065,9 @@ const vDemuxSampleInfoEditor = {
                                         <div class="card-header bg-light d-flex justify-content-between align-items-center">
                                             <div>
                                                 <h5 class="mb-0">
-                                                    <i class="fa fa-file-text"></i> Lane {{ samplesheet.lane }} - {{ samplesheet.projects.join(', ') }}
+                                                    <i class="fa fa-file-text"></i> Lane {{ samplesheet.lane || 'N/A' }} - {{ (samplesheet.projects || []).join(', ') }}
                                                 </h5>
-                                                <small class="text-muted">{{ samplesheet.sample_count }} sample{{ samplesheet.sample_count !== 1 ? 's' : '' }}</small>
+                                                <small class="text-muted">{{ samplesheet.sample_count || 0 }} sample{{ (samplesheet.sample_count || 0) !== 1 ? 's' : '' }}</small>
                                             </div>
                                             <div class="btn-group">
                                                 <button class="btn btn-primary btn-sm" @click="downloadSamplesheet(samplesheet)">

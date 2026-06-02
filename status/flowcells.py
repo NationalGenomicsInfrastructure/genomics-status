@@ -166,12 +166,13 @@ class FlowcellsHandler(SafeHandler):
                         pass
 
                 # Create x_flowcells-compatible structure for flowcell_status entry
+                # Note: instrument_type, run_mode, and actual_run_setup will be populated from demux_sample_info
                 fc_status_entry = {
                     "run id": runfolder_id or flowcell_id,
                     "flowcell_id": flowcell_id,
                     "startdate": startdate,
-                    "run_mode": value.get("run_mode", "N/A"),
-                    "actual_run_setup": value.get("run_setup", "N/A"),
+                    "run_mode": value.get("run_mode", ""),
+                    "actual_run_setup": value.get("actual_run_setup", ""),
                     "lane_info": value.get("lane_info", {}),
                     "instrument": value.get("instrument", ""),
                     "source": "flowcell_status",
@@ -204,8 +205,8 @@ class FlowcellsHandler(SafeHandler):
         except Exception as e:
             application_log.warning(f"Failed to fetch flowcell_status: {str(e)}")
 
-        # Query demux_sample_info to get run_setup for flowcell_status entries
-        # Only query if there are flowcell_status entries
+        # Query demux_sample_info to get instrument_type, run_mode, and run_setup
+        # Only for flowcell_status entries that are not in x_flowcells
         if has_flowcell_status_entries:
             try:
                 demux_view_params = {
@@ -227,34 +228,60 @@ class FlowcellsHandler(SafeHandler):
                     .get("rows", [])
                 )
 
-                # Build a lookup dict for run_setup from demux_sample_info
-                demux_run_setup = {}
+                # Build a lookup dict for instrument_type, run_mode, and run_setup from demux_sample_info
+                demux_data = {}
                 for row in demux_rows:
                     key = row.get("key", [])
                     if len(key) >= 2:
                         fc_id = key[1]
                         value = row.get("value", {})
-                        run_setup = value.get("run_setup")
-                        if run_setup:
-                            demux_run_setup[fc_id] = run_setup
+                        demux_data[fc_id] = {
+                            "instrument_type": value.get("instrument_type"),
+                            "run_mode": value.get("run_mode"),
+                            "run_setup": value.get("run_setup"),
+                        }
 
-                # Update flowcell_status entries with run_setup from demux_sample_info
+                # Update only flowcell_status entries with data from demux_sample_info
                 for fc_key, fc_data in temp_flowcells.items():
+                    # Only apply to flowcells from flowcell_status that are not in x_flowcells
                     if fc_data.get("source") == "flowcell_status":
                         flowcell_id = fc_data.get("flowcell_id", fc_key)
 
-                        # Try direct match first
-                        if flowcell_id in demux_run_setup:
-                            fc_data["actual_run_setup"] = demux_run_setup[flowcell_id]
-                        # Handle A-prefix case: if flowcell_status has "A000..." try "000..."
-                        elif flowcell_id.startswith("A"):
+                        # Determine which ID to use for lookup
+                        lookup_id = flowcell_id
+                        if flowcell_id not in demux_data and flowcell_id.startswith(
+                            "A"
+                        ):
+                            # Handle A-prefix case: if flowcell has "A000..." try "000..."
                             without_a = flowcell_id[1:]
-                            if without_a in demux_run_setup:
-                                fc_data["actual_run_setup"] = demux_run_setup[without_a]
+                            if without_a in demux_data:
+                                lookup_id = without_a
+
+                        # Apply demux data if found
+                        if lookup_id in demux_data:
+                            demux_info = demux_data[lookup_id]
+                            instrument_type = demux_info.get("instrument_type")
+                            run_mode = demux_info.get("run_mode")
+
+                            # Set instrument field
+                            if instrument_type:
+                                fc_data["instrument"] = instrument_type
+
+                            # Combine instrument_type and run_mode like x_flowcells does
+                            if instrument_type and run_mode:
+                                fc_data["run_mode"] = f"{instrument_type} {run_mode}"
+                            elif run_mode:
+                                fc_data["run_mode"] = run_mode
+                            elif instrument_type:
+                                fc_data["run_mode"] = instrument_type
+
+                            # Set run_setup
+                            if demux_info.get("run_setup"):
+                                fc_data["actual_run_setup"] = demux_info["run_setup"]
 
             except Exception as e:
                 application_log.warning(
-                    f"Failed to fetch demux_sample_info for run_setup: {str(e)}"
+                    f"Failed to fetch demux_sample_info for instrument_type/run_mode/run_setup: {str(e)}"
                 )
 
         notes = self.application.cloudant.post_view(
