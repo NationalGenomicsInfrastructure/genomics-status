@@ -25,6 +25,7 @@ from status.reports import (
     SingleCellSampleSummaryReportHandler,
     VisiumReportHandler,
 )
+from status.time_tracking import stage_definitions
 from status.util import SafeHandler, dthandler
 
 lims = lims.Lims(BASEURI, USERNAME, PASSWORD)
@@ -288,24 +289,24 @@ class ProjectsBaseDataHandler(SafeHandler):
         openflag = False
         projtype = self.get_argument("type", "all")
 
+        dates_gen = [
+            "days_recep_ctrl",
+            "days_analysis",
+            "days_data_delivery",
+            "days_close",
+        ]
         def_dates_gen = {
-            "days_recep_ctrl": ["open_date", "queued"],
-            "days_analysis": [
-                "all_samples_sequenced",
-                "best_practice_analysis_completed",
-            ],
-            "days_data_delivery": ["all_samples_sequenced", "all_raw_data_delivered"],
-            "days_close": ["all_raw_data_delivered", "close_date"],
+            k[1]: v for k, v in stage_definitions.items() if k[1] in dates_gen
         }
 
+        dates_summary = [
+            "days_prep_start",
+            "days_seq_start",
+            "days_seq",
+            "days_prep",
+        ]
         def_dates_summary = {
-            "days_prep_start": ["queued", "library_prep_start"],
-            "days_seq_start": [
-                ["qc_library_finished", "queued"],
-                "sequencing_start_date",
-            ],
-            "days_seq": ["sequencing_start_date", "all_samples_sequenced"],
-            "days_prep": ["library_prep_start", "qc_library_finished"],
+            k[1]: v for k, v in stage_definitions.items() if k[1] in dates_summary
         }
 
         if "closed" in filter_projects or "all" in filter_projects:
@@ -1489,22 +1490,21 @@ class PrioProjectsTableHandler(SafeHandler):
 
     def get(self):
         projects = {}
-        def_dates_rec_ctrl = {"days_recep_ctrl": ["open_date", "queued"]}
+        def_dates_rec_ctrl = {
+            k[1]: v for k, v in stage_definitions.items() if k[1] == "days_recep_ctrl"
+        }
         # dates in order
+        dates_ongoing = [
+            "days_prep_start",
+            "days_prep",
+            "days_seq_start",
+            "days_seq",
+            "days_analysis",
+            "days_data_delivery",
+            "days_close",
+        ]
         def_dates_ongoing = {
-            "days_prep_start": ["queued", "library_prep_start"],
-            "days_prep": ["library_prep_start", "qc_library_finished"],
-            "days_seq_start": [
-                ["qc_library_finished", "queued"],
-                "sequencing_start_date",
-            ],
-            "days_seq": ["sequencing_start_date", "all_samples_sequenced"],
-            "days_analysis": [
-                "all_samples_sequenced",
-                "best_practice_analysis_completed",
-            ],
-            "days_data_delivery": ["all_samples_sequenced", "all_raw_data_delivered"],
-            "days_close": ["all_raw_data_delivered", "close_date"],
+            k[1]: v for k, v in stage_definitions.items() if k[1] in dates_ongoing
         }
 
         statuses = ["ongoing", "reception control"]
