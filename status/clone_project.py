@@ -143,7 +143,7 @@ class LIMSProjectCloningHandler(SafeHandler):
         # If not, assuming it's a project name, try to get the project id from the project name,
         # since the LIMS API only accepts project ids
         projectid = None
-        if re.match("^(P[0-9]{3,7})", project_identifier):
+        if re.match(r"^(P\d{3,})", project_identifier):
             projectid = project_identifier
         else:
             try:

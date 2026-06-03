@@ -22,6 +22,8 @@ thresholds = {
     "NovaSeqXPlus 10B": 1200,
     "NovaSeqXPlus 1.5B": 750,
     "NovaSeqXPlus 25B": 3000,
+    "NovaSeqXPlus Olink_NovaSeqX_1.5B_1Lib_V4": 562.5,
+    "NovaSeqXPlus Olink_NovaSeqX_10B_8Lib_V4": 900,
     "NextSeq Mid": 25,
     "NextSeq High": 75,
     "NextSeq 2000 P1": 100,
@@ -821,6 +823,11 @@ class FlowcellHandler(SafeHandler):
                 entry["value"]["lanedata"][lane_nr]["project_threshold_summary"] = (
                     project_threshold_summary
                 )
+            running_note_template = f"{entry['value']['full_name']} ({entry['value'].get('run_mode', '')})\n"
+            for project_name, project_id in project_names.items():
+                running_note_template += f"<!-- START:{project_id} -->\n\n"
+                running_note_template += f"**{project_name} ({project_id})**\n\n"
+                running_note_template += f"<!-- END:{project_id} -->\n\n"
 
             t = self.application.loader.load("flowcell.html")
             self.write(
@@ -833,6 +840,7 @@ class FlowcellHandler(SafeHandler):
                     fc_project_yields=fc_project_yields,
                     fc_sample_yields=fc_sample_yields,
                     project_names=project_names,
+                    running_note_template=running_note_template,
                     project_details=project_details,
                     get_q30_threshold=get_q30_threshold,
                     user=self.get_current_user(),

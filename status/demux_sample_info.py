@@ -1259,7 +1259,7 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                         self._update_sample_samplesheet_settings(
                             sample, settings_versions[0]
                         )
-                    except Exception as e:
+                    except Exception:
                         logging.exception(
                             f"Error updating samplesheet settings for sample {sample_uuid} in lane {lane_key}"
                         )
@@ -1588,7 +1588,7 @@ class DemuxSampleInfoDataHandler(SafeHandler):
         try:
             # Parse the request body
             put_data = tornado.escape.json_decode(self.request.body)
-            logging.debug(f"Successfully parsed JSON request body")
+            logging.debug("Successfully parsed JSON request body")
 
             if "edited_settings" not in put_data:
                 self.set_status(400)
@@ -1950,7 +1950,7 @@ class DemuxSampleInfoDataHandler(SafeHandler):
             document["samplesheets"] = samplesheets
 
             # Save the updated document back to the database
-            logging.debug(f"Preparing to save updated document to database")
+            logging.debug("Preparing to save updated document to database")
             try:
                 # Check for revision conflict before saving
                 current_rev = document.get("_rev")
@@ -1987,7 +1987,7 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                     return
 
                 # Fetch the updated document to return to the client
-                logging.debug(f"Fetching updated document to return to client")
+                logging.debug("Fetching updated document to return to client")
                 updated_doc = self.application.cloudant.get_document(
                     db="demux_sample_info", doc_id=document["_id"]
                 ).get_result()
