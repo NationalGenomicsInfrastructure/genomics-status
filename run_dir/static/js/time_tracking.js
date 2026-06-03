@@ -81,7 +81,6 @@ const vTimeTrackingMain = ({
                 const response = await axios.get(url);
                 this.tracking_data = response.data;
                 this.stage_definitions = response.data._metadata.stage_definitions || {};
-                console.log('Stage definitions:', this.stage_definitions);
                 // Extract Production and Application data with Finished/Other subcategories
                 const productionData = this.tracking_data.Production || {};
                 const applicationData = this.tracking_data.Application || {};
