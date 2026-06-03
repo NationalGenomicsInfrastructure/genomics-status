@@ -173,15 +173,7 @@ class TimeTrackingDataHandler(SafeHandler):
                     if not stage_name:
                         continue
                     # Get date values directly from the value object
-                    start_value = None
-                    if isinstance(start_field, list):
-                        # Try each field until we find one
-                        for field in start_field:
-                            start_value = value.get(field, None)
-                            if start_value:
-                                break
-                    else:
-                        start_value = value.get(start_field, None)
+                    start_value = value.get(start_field, None)
 
                     end_value = value.get(end_field, None)
 
