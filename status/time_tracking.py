@@ -141,18 +141,18 @@ class TimeTrackingDataHandler(SafeHandler):
                     "type", "Unknown"
                 )  # Field is "type" in the view
 
-                # Exclude Internal projects
-                if project_type == "Internal":
-                    continue
-
                 # Filter by project type if specified
                 if selected_project_type and project_type != selected_project_type:
                     continue
 
                 # Determine category (Production vs Application) based on project_type
-                category = "Application"
                 if project_type == "Production":
                     category = "Production"
+                elif project_type == "Application":
+                    category = "Application"
+                else:
+                    # Ignore projects that don't fit into either category, e.g. Internal and Control
+                    continue
 
                 # Determine subcategory (Finished vs Other)
                 subcategory = "Other"
