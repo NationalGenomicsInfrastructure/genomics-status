@@ -120,23 +120,13 @@ const vTimeTrackingMain = ({
             this.updateChart();
         },
         updateChart() {
-            if (this.plot_mode === 'methods') {
-                this.renderMethodsChart();
-            } else {
-                this.renderStagesChart();
-            }
+            const plotBy = this.plot_mode; // 'methods' or 'stages'
+            this.renderAllCharts((ctx, data, name, label) =>
+                this.renderChartForType(ctx, data, name, label, plotBy));
         },
         // ====================
         // Chart Rendering
         // ====================
-        renderMethodsChart() {
-            this.renderAllCharts((ctx, data, name, label) =>
-                this.renderChartForType(ctx, data, name, label, 'methods'));
-        },
-        renderStagesChart() {
-            this.renderAllCharts((ctx, data, name, label) =>
-                this.renderChartForType(ctx, data, name, label, 'stages'));
-        },
         renderAllCharts(renderFunction) {
             const charts = [
                 {
