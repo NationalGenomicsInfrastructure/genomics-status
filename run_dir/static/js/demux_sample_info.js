@@ -1766,6 +1766,366 @@ const BulkEditModal = {
     `
 };
 
+/**
+ * SamplesheetUploadForm Component
+ *
+ * Standalone component for uploading new demux sample info from CSV samplesheet.
+ * Handles CSV parsing, validation, and submission to the API.
+ *
+ * @component
+ * @emits upload-success - Emitted when upload completes successfully with flowcell_id
+ */
+const SamplesheetUploadForm = {
+    name: 'SamplesheetUploadForm',
+    data() {
+        return {
+            formData: {
+                flowcell_id: '',
+                instrument_type: '',
+                run_mode: '',
+                num_lanes: 8,
+                run_setup: '',
+                setup_lims_step_id: '',
+                csv_content: ''
+            },
+            validationResult: null,
+            error: null,
+            loading: false,
+            success: false
+        };
+    },
+    methods: {
+        /**
+         * Parse CSV content and normalize column names
+         * @param {string} csvContent - Raw CSV content
+         * @returns {Array<Object>} Array of sample objects
+         */
+        parseSamplesheetCSV(csvContent) {
+            if (!csvContent || !csvContent.trim()) {
+                throw new Error('CSV content is empty');
+            }
+
+            const lines = csvContent.split('\n')
+                .map(line => line.trim())
+                .filter(line => line && !line.startsWith('['));
+
+            if (lines.length < 2) {
+                throw new Error('CSV must have at least a header row and one data row');
+            }
+
+            const parseCSVLine = (line) => {
+                const result = [];
+                let current = '';
+                let inQuotes = false;
+
+                for (let i = 0; i < line.length; i++) {
+                    const char = line[i];
+                    if (char === '"') {
+                        inQuotes = !inQuotes;
+                    } else if (char === ',' && !inQuotes) {
+                        result.push(current);
+                        current = '';
+                    } else {
+                        current += char;
+                    }
+                }
+                result.push(current);
+                return result.map(field => field.trim());
+            };
+
+            const headers = parseCSVLine(lines[0]);
+            const samples = [];
+
+            const columnMapping = {
+                'FCID': 'flowcell_id',
+                'Lane': 'lane',
+                'Sample_ID': 'sample_id',
+                'Sample_Name': 'sample_name',
+                'Sample_Ref': 'sample_ref',
+                'index': 'index',
+                'index2': 'index2',
+                'Description': 'description',
+                'Control': 'control',
+                'Recipe': 'recipe',
+                'Operator': 'operator',
+                'Sample_Project': 'sample_project'
+            };
+
+            const normalizedHeaders = headers.map(header => {
+                const trimmed = header.trim();
+                return columnMapping[trimmed] || trimmed.toLowerCase();
+            });
+
+            for (let i = 1; i < lines.length; i++) {
+                if (!lines[i]) continue;
+
+                const values = parseCSVLine(lines[i]);
+                const sample = {};
+
+                for (let j = 0; j < normalizedHeaders.length && j < values.length; j++) {
+                    sample[normalizedHeaders[j]] = values[j];
+                }
+
+                samples.push(sample);
+            }
+
+            return samples;
+        },
+
+        /**
+         * Validate form data
+         * @returns {Object} { valid: boolean, errors: Array<string> }
+         */
+        validateForm() {
+            const errors = [];
+
+            if (!this.formData.flowcell_id || !this.formData.flowcell_id.trim()) {
+                errors.push('Flowcell ID is required');
+            }
+
+            if (!this.formData.num_lanes || this.formData.num_lanes < 1 || this.formData.num_lanes > 8) {
+                errors.push('Number of lanes must be between 1 and 8');
+            }
+
+            if (!this.formData.run_setup || !this.formData.run_setup.trim()) {
+                errors.push('Run setup is required (e.g., "151-10-24-151")');
+            } else {
+                const parts = this.formData.run_setup.split('-');
+                if (parts.length !== 4 || parts.some(p => isNaN(parseInt(p)))) {
+                    errors.push('Run setup must be in format R1-I1-I2-R2 (e.g., "151-10-24-151")');
+                }
+            }
+
+            if (!this.formData.setup_lims_step_id || !this.formData.setup_lims_step_id.trim()) {
+                errors.push('Setup LIMS Step ID is required');
+            }
+
+            if (!this.formData.csv_content || !this.formData.csv_content.trim()) {
+                errors.push('Samplesheet CSV content is required');
+            }
+
+            return {
+                valid: errors.length === 0,
+                errors: errors
+            };
+        },
+
+        /**
+         * Build request payload
+         * @param {Array<Object>} samples - Parsed samples
+         * @returns {Object} Request payload
+         */
+        buildPayload(samples) {
+            const samplesWithFlowcell = samples.map(sample => ({
+                ...sample,
+                flowcell_id: this.formData.flowcell_id
+            }));
+
+            const payload = {
+                metadata: {
+                    num_lanes: parseInt(this.formData.num_lanes),
+                    run_setup: this.formData.run_setup.trim(),
+                    setup_lims_step_id: this.formData.setup_lims_step_id.trim()
+                },
+                uploaded_lims_info: samplesWithFlowcell
+            };
+
+            if (this.formData.instrument_type && this.formData.instrument_type.trim()) {
+                payload.metadata.instrument_type = this.formData.instrument_type.trim();
+            }
+            if (this.formData.run_mode && this.formData.run_mode.trim()) {
+                payload.metadata.run_mode = this.formData.run_mode.trim();
+            }
+
+            return payload;
+        },
+
+        /**
+         * Perform upload operation
+         * @param {boolean} isDryRun - Validation only if true
+         */
+        async performUpload(isDryRun) {
+            this.error = null;
+            if (isDryRun) {
+                this.validationResult = null;
+            } else {
+                this.success = false;
+            }
+
+            const validation = this.validateForm();
+            if (!validation.valid) {
+                this.error = validation.errors.join('; ');
+                return;
+            }
+
+            this.loading = true;
+
+            try {
+                const samples = this.parseSamplesheetCSV(this.formData.csv_content);
+                const payload = this.buildPayload(samples);
+                const url = `/api/v1/demux_sample_info/${this.formData.flowcell_id}${isDryRun ? '?dry_run=true' : ''}`;
+
+                const response = await axios.post(url, payload);
+
+                if (isDryRun) {
+                    this.validationResult = response.data;
+                } else {
+                    this.success = true;
+                    // Emit success event with flowcell_id
+                    this.$emit('upload-success', this.formData.flowcell_id);
+                }
+                this.error = null;
+
+            } catch (error) {
+                if (error.message && (isDryRun || error.message.includes('CSV'))) {
+                    this.error = `CSV parsing error: ${error.message}`;
+                } else if (error.response && error.response.data) {
+                    const errorData = error.response.data;
+                    if (error.response.status === 409) {
+                        this.error = `Conflict: ${errorData.error || 'Demux sample info already exists for this flowcell'}`;
+                    } else {
+                        const errorType = isDryRun ? 'Validation' : 'Server';
+                        this.error = `${errorType} error: ${errorData.error || JSON.stringify(errorData)}`;
+                    }
+                } else {
+                    const operation = isDryRun ? 'validation' : 'submission';
+                    this.error = `An unexpected error occurred during ${operation}`;
+                }
+
+                if (isDryRun) {
+                    this.validationResult = null;
+                } else {
+                    this.success = false;
+                }
+                console.error(error);
+            } finally {
+                this.loading = false;
+            }
+        },
+
+        async validate() {
+            await this.performUpload(true);
+        },
+
+        async submit() {
+            await this.performUpload(false);
+        },
+
+        reset() {
+            this.formData = {
+                flowcell_id: '',
+                instrument_type: '',
+                run_mode: '',
+                num_lanes: 8,
+                run_setup: '',
+                setup_lims_step_id: '',
+                csv_content: ''
+            };
+            this.validationResult = null;
+            this.error = null;
+            this.success = false;
+        }
+    },
+    template: /*html*/`
+        <div>
+            <h5 class="mb-3">Upload New Demux Sample Info</h5>
+
+            <!-- Upload form fields -->
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label">Flowcell ID <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" v-model="formData.flowcell_id" 
+                           placeholder="e.g., 233KCWLT4" required>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Number of Lanes <span class="text-danger">*</span></label>
+                    <input type="number" class="form-control" v-model.number="formData.num_lanes" 
+                           min="1" max="8" required>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Setup LIMS Step ID <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" v-model="formData.setup_lims_step_id" 
+                           placeholder="e.g., 1256609" required>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Run Setup <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" v-model="formData.run_setup" 
+                           placeholder="e.g., 151-10-24-151" required>
+                    <small class="form-text text-muted">Format: R1-I1-I2-R2 (e.g., "151-10-24-151")</small>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Instrument Type</label>
+                    <input type="text" class="form-control" v-model="formData.instrument_type" 
+                           placeholder="e.g., NovaSeqXPlus">
+                    <small class="form-text text-muted">Optional</small>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Run Mode</label>
+                    <input type="text" class="form-control" v-model="formData.run_mode" 
+                           placeholder="e.g., 10B, 25B">
+                    <small class="form-text text-muted">Optional</small>
+                </div>
+                <div class="col-12">
+                    <label class="form-label">Samplesheet CSV <span class="text-danger">*</span></label>
+                    <textarea class="form-control font-monospace" v-model="formData.csv_content" 
+                              rows="10" placeholder="Paste CSV content here..." required
+                              style="font-size: 0.85em;"></textarea>
+                    <small class="form-text text-muted">
+                        Paste the contents of your Illumina samplesheet CSV. 
+                        Lines starting with '[' will be automatically filtered out.
+                        Required columns: FCID, Lane, Sample_ID, Sample_Name, Sample_Ref, index, index2, 
+                        Description, Control, Recipe, Operator, Sample_Project
+                    </small>
+                </div>
+            </div>
+
+            <!-- Action buttons -->
+            <div class="mt-3 d-flex gap-2">
+                <button class="btn btn-warning" @click="validate" :disabled="loading">
+                    <span v-if="loading" class="spinner-border spinner-border-sm mr-2"></span>
+                    <i v-else class="fa fa-check-circle mr-1"></i>
+                    Validate
+                </button>
+                <button class="btn btn-primary" @click="submit" :disabled="loading">
+                    <span v-if="loading" class="spinner-border spinner-border-sm mr-2"></span>
+                    <i v-else class="fa fa-upload mr-1"></i>
+                    Submit
+                </button>
+                <button class="btn btn-secondary" @click="reset" :disabled="loading">
+                    <i class="fa fa-redo mr-1"></i>
+                    Reset
+                </button>
+            </div>
+
+            <!-- Error message -->
+            <div v-if="error" class="alert alert-danger mt-3" role="alert">
+                <strong>Error:</strong> {{ error }}
+            </div>
+
+            <!-- Success message -->
+            <div v-if="success" class="alert alert-success mt-3" role="alert">
+                <strong>Success!</strong> Demux sample info uploaded successfully.
+            </div>
+
+            <!-- Validation result preview -->
+            <div v-if="validationResult" class="mt-3">
+                <div class="alert alert-success" role="alert">
+                    <h5><i class="fa fa-check-circle"></i> Validation Successful</h5>
+                    <p class="mb-2"><strong>Flowcell ID:</strong> {{ validationResult.flowcell_id }}</p>
+                    <p class="mb-2"><strong>Timestamp:</strong> {{ validationResult.timestamp }}</p>
+                    <p class="mb-2"><strong>Number of samples:</strong> {{ validationResult.document?.uploaded_lims_info?.length || 0 }}</p>
+                    <details class="mt-2">
+                        <summary style="cursor: pointer;" class="text-primary">
+                            <strong>View full validation result</strong>
+                        </summary>
+                        <pre class="bg-light p-3 mt-2 border" style="max-height: 400px; overflow-y: auto; font-size: 0.85em;">{{ JSON.stringify(validationResult, null, 2) }}</pre>
+                    </details>
+                </div>
+            </div>
+        </div>
+    `
+};
+
 const vDemuxSampleInfoEditor = {
     // Register child components
     components: {
@@ -1775,7 +2135,8 @@ const vDemuxSampleInfoEditor = {
         AddSampleModal,
         BulkEditModal,
         SampleTable,
-        ProjectLaneCard
+        ProjectLaneCard,
+        SamplesheetUploadForm
     },
     data() {
         const config = window.STATUS_CONFIG || {};
@@ -1833,7 +2194,8 @@ const vDemuxSampleInfoEditor = {
             showConfigModal: false,
             configModalSources: [],
             configModalSample: null,
-            expandedConfigSources: []  // Track which config sources are expanded
+            expandedConfigSources: [],  // Track which config sources are expanded
+            showUploadForm: false  // Show fetch form by default
         }
     },
     computed: {
@@ -2163,37 +2525,37 @@ const vDemuxSampleInfoEditor = {
                 other_details: {},
                 raw_samplesheet_settings: {}
             };
-            
+
             // Process each field in FIELD_CONFIG
             Object.values(FIELD_CONFIG).forEach(fieldConfig => {
                 const fieldKey = fieldConfig.key;
                 const value = flatData[fieldKey];
-                
+
                 // Skip if value is not present in flatData
                 if (value === undefined) return;
-                
+
                 // Handle topLevel fields (stored on sample object, not in settings)
                 if (fieldConfig.topLevel) {
                     // These will be handled separately: description, control, project_id, project_name, last_modified
                     return;
                 }
-                
+
                 // Map to nested structure based on settingsPath
                 const settingsPath = fieldConfig.settingsPath;
                 if (!settingsPath || settingsPath.length < 2) return;
-                
+
                 const section = settingsPath[0]; // e.g., 'per_sample_fields', 'other_details'
                 const actualKey = settingsPath[1]; // e.g., 'Sample_ID', 'sample_ref'
-                
+
                 // Set the value in the appropriate section
                 if (backendStructure[section] !== undefined) {
                     backendStructure[section][actualKey] = value;
                 }
             });
-            
+
             return backendStructure;
         },
-        
+
         // ===== Helper Methods for Sample Object Building (Refactoring #1) =====
         /**
          * Get the latest settings for a sample
@@ -2474,7 +2836,7 @@ const vDemuxSampleInfoEditor = {
         populateFormWithProjectDefaults(targetProject, formData, warningsArray) {
             // Clear warnings
             warningsArray.splice(0, warningsArray.length);
-            
+
             if (!targetProject || !formData) {
                 // Reset fields to defaults when no project is selected
                 if (formData) {
@@ -2493,7 +2855,7 @@ const vDemuxSampleInfoEditor = {
                 sample,
                 settings: latestSettings
             }));
-            
+
             if (projectSamples.length === 0) {
                 return {};
             }
@@ -2502,7 +2864,7 @@ const vDemuxSampleInfoEditor = {
             const bulkEditableFields = Object.values(FIELD_CONFIG)
                 .filter(f => f.bulkEditable);
             const fieldData = {};
-            
+
             // For each bulk-editable field, collect values from all project samples
             bulkEditableFields.forEach(fieldConfig => {
                 const valueToSamples = new Map(); // Map of normalized value -> array of sample IDs
@@ -2525,7 +2887,7 @@ const vDemuxSampleInfoEditor = {
                     valueToSamples.get(normalizedValue).push(sampleId);
                 });
                 const uniqueValues = Array.from(valueToSamples.keys());
-                
+
                 // Check for inconsistency
                 if (uniqueValues.length > 1) {
                     // Build a more informative display
@@ -2552,14 +2914,14 @@ const vDemuxSampleInfoEditor = {
                     fieldConfig.type
                 );
             });
-            
+
             // Update the form with these defaults
             Object.entries(fieldData).forEach(([key, value]) => {
                 formData[key] = value !== undefined && value !== null 
                     ? value 
                     : this.getDefaultValue(key);
             });
-            
+
             return fieldData;
         },
         updateAddSampleFormWithProjectDefaults(targetProject) {
@@ -2919,6 +3281,22 @@ const vDemuxSampleInfoEditor = {
                     console.error(error);
                     this.loading = false;
                 });
+        },
+        // ===== Upload Form Methods =====
+        /**
+         * Handle successful upload from child component
+         * @param {string} flowcellId - The flowcell ID that was uploaded
+         */
+        handleUploadSuccess(flowcellId) {
+            this.flowcell_id = flowcellId;
+            this.showUploadForm = false;
+            this.fetchDemuxInfo();
+        },
+        /**
+         * Toggle upload form visibility
+         */
+        toggleUploadForm() {
+            this.showUploadForm = !this.showUploadForm;
         },
         toggleColumn(columnKey) {
             // Prevent toggling off mandatory columns
@@ -3469,12 +3847,12 @@ const vDemuxSampleInfoEditor = {
                     this.editedData[targetLane] = {};
                 }
                 this.editedData[targetLane][uuid] = laneSpecificSettings;
-                
+
                 // Create backend-compatible structure for immediate display using helper
                 const backendStructureSettings = this.flatToBackendStructure(laneSpecificSettings);
                 // Add flowcell_id which is not in FIELD_CONFIG
                 backendStructureSettings.flowcell_id = this.flowcell_id;
-                
+
                 // Add to the actual data structure for immediate display
                 if (!this.demux_data.calculated.lanes[targetLane]) {
                     this.demux_data.calculated.lanes[targetLane] = { sample_rows: {} };
@@ -3692,8 +4070,15 @@ const vDemuxSampleInfoEditor = {
                                 <a href="/flowcells" class="btn btn-sm btn-outline-primary">
                                     <i class="fa fa-list mr-1"></i> View Flowcell List
                                 </a>
+                                <button @click="toggleUploadForm" class="btn btn-sm btn-outline-secondary ml-2">
+                                    <i class="fa" :class="showUploadForm ? 'fa-search' : 'fa-upload'"></i>
+                                    {{ showUploadForm ? 'Switch to Fetch Existing' : 'Switch to Upload New' }}
+                                </button>
                             </p>
-                            <label class="form-label"><strong>Enter a flowcell ID:</strong></label>
+
+                            <!-- Fetch existing form -->
+                            <div v-if="!showUploadForm">
+                                <label class="form-label"><strong>Enter a flowcell ID:</strong></label>
                                 <div class="row g-2 align-items-end">
                                     <div class="col-auto flex-grow-1">
                                         <input
@@ -3714,6 +4099,11 @@ const vDemuxSampleInfoEditor = {
                                     </div>
                                 </div>
                             </div>
+
+                            <!-- Upload new form component -->
+                            <samplesheet-upload-form 
+                                v-if="showUploadForm"
+                                @upload-success="handleUploadSuccess" />
                         </div>
                     </div>
                     <!-- Error messages -->
