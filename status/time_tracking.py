@@ -88,6 +88,9 @@ class TimeTrackingDataHandler(SafeHandler):
                 "selected_project_type": selected_project_type,
                 "total_projects": 0,
                 "query_timestamp": datetime.datetime.now().isoformat(),
+                "stage_definitions": {
+                    k[0]: v for k, v in stage_definitions.items() if k[0]
+                },
             },
         }
 
