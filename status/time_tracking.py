@@ -10,6 +10,9 @@ from status.util import SafeHandler
 
 application_log = logging.getLogger("tornado.application")
 # Define stage mappings
+# Format:
+# (Stage Name, variable_name): [Start Date Field(s), End Date Field]
+# The dictionary is ordered how it would normally appear in a UI.
 stage_definitions = {
     ("Reception Control", "days_recep_ctrl"): ["open_date", "queued"],
     ("Library Prep Queue", "days_prep_start"): ["queued", "library_prep_start"],
@@ -243,6 +246,7 @@ class TimeTrackingDataHandler(SafeHandler):
                                         "best_practice_analysis_completed": value.get(
                                             "best_practice_analysis_completed"
                                         ),
+                                        "close_date": value.get("close_date"),
                                     }
                                 )
                         except (ValueError, TypeError) as e:

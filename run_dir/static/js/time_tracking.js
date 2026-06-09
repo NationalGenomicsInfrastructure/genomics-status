@@ -43,6 +43,17 @@ const vTimeTrackingMain = ({
                 'Processing Time',
                 'Total Time'
             ],
+            date_order: [
+                'open_date',
+                'queued',
+                'library_prep_start',
+                'qc_library_finished',
+                'sequencing_start_date',
+                'all_samples_sequenced',
+                'all_raw_data_delivered',
+                'best_practice_analysis_completed',
+                'close_date'
+            ],
             stage_definitions: {}
         }
     },
@@ -50,6 +61,14 @@ const vTimeTrackingMain = ({
         // ====================
         // Lifecycle & Initialization
         // ====================
+        formatDateFieldLabel(dateField) {
+            // Convert snake_case date field names to readable labels
+            // Replace underscores with spaces and capitalize each word
+            return dateField
+                .split('_')
+                .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                .join(' ');
+        },
         setDefaults() {
             // Set default date range to last 6 months
             const end = new Date();
@@ -80,8 +99,7 @@ const vTimeTrackingMain = ({
             try {
                 const response = await axios.get(url);
                 this.tracking_data = response.data;
-                this.stage_definitions = response.data._metadata.stage_definitions || {};
-                // Extract Production and Application data with Finished/Other subcategories
+                this.stage_definitions = response.data._metadata.stage_definitions || {};                // Extract Production and Application data with Finished/Other subcategories
                 const productionData = this.tracking_data.Production || {};
                 const applicationData = this.tracking_data.Application || {};
                 
@@ -540,7 +558,22 @@ const vTimeTrackingMain = ({
             const stageDef = this.stage_definitions[stage];
             if (!stageDef) return null;
             
-            const [startField, endField] = stageDef;
+            let startField = stageDef[0];
+            const endField = stageDef[1];
+
+            // Handle Sequencing Queue special case: startField might be an array
+            // Try each field in the array until we find one with a value
+            if (Array.isArray(startField)) {
+                let foundField = null;
+                for (const field of startField) {
+                    if (project[field]) {
+                        foundField = field;
+                        break;
+                    }
+                }
+                startField = foundField;
+            }
+
             const startDate = project[startField];
             const endDate = project[endField];
             
@@ -562,6 +595,10 @@ const vTimeTrackingMain = ({
             
             const [startField, endField] = stageDef;
             return project[endField] || null;
+        },
+        getDateFieldValue(project, dateField) {
+            // Get the value of a date field from a project
+            return project[dateField] || null;
         },
         // ====================
         // Modal Handlers
@@ -834,10 +871,15 @@ const vTimeTrackingMain = ({
                                         <th>Project Name</th>
                                         <th>Library Construction</th>
                                         <th>Sequencing Platform</th>
-                                        <th>Units Ordered</th>
-                                        <th v-for="stage in stage_order" :key="stage"
+                                        <th>Units/Lanes Ordered</th>
+                                        <th v-if="modal_view_mode === 'durations'"
+                                            v-for="stage in stage_order" :key="stage"
                                             :class="{'fw-bold': stage === modal_stage}">
                                             {{ stage }}
+                                        </th>
+                                        <th v-if="modal_view_mode === 'dates'"
+                                            v-for="dateField in date_order" :key="dateField">
+                                            {{ formatDateFieldLabel(dateField) }}
                                         </th>
                                     </tr>
                                 </thead>
@@ -852,15 +894,16 @@ const vTimeTrackingMain = ({
                                         <td><small>{{ project.library_construction }}</small></td>
                                         <td><small>{{ project.sequencing_platform }}</small></td>
                                         <td class="text-center">{{ project.sequence_units_ordered }}</td>
-                                        <td v-for="stage in stage_order" :key="stage"
+                                        <td v-if="modal_view_mode === 'durations'"
+                                            v-for="stage in stage_order" :key="stage"
                                             class="text-end"
                                             :class="{'fw-bold': stage === modal_stage}">
-                                            <span v-if="modal_view_mode === 'durations'">
-                                                {{ calculateStageDuration(project, stage) ?? '-' }}
-                                            </span>
-                                            <span v-else>
-                                                <small>{{ getStageEndDate(project, stage) || '-' }}</small>
-                                            </span>
+                                            {{ calculateStageDuration(project, stage) ?? '-' }}
+                                        </td>
+                                        <td v-if="modal_view_mode === 'dates'"
+                                            v-for="dateField in date_order" :key="dateField"
+                                            class="text-end">
+                                            <small>{{ getDateFieldValue(project, dateField) || '-' }}</small>
                                         </td>
                                     </tr>
                                 </tbody>
