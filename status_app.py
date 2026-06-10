@@ -186,6 +186,7 @@ from status.statistics import (
 )
 from status.suggestion_box import SuggestionBoxDataHandler, SuggestionBoxHandler
 from status.testing import TestDataHandler
+from status.time_tracking import TimeTrackingDataHandler, TimeTrackingHandler
 from status.user_management import (
     CurrentUserDataHandler,
     RolesAndTeamsHandler,
@@ -373,6 +374,7 @@ class Application(tornado.web.Application):
             ),
             ("/api/v1/suggestions", SuggestionBoxDataHandler),
             (r"/api/v1/test/(\w+)?", TestDataHandler),
+            ("/api/v1/time_tracking", TimeTrackingDataHandler),
             ("/api/v1/user_management/users", UserManagementDataHandler),
             ("/api/v1/workset/([^/]*)$", WorksetDataHandler),
             ("/api/v1/worksets", WorksetsDataHandler),
@@ -446,6 +448,7 @@ class Application(tornado.web.Application):
             ),
             ("/smartseq3_progress", SmartSeq3ProgressPageHandler),
             ("/suggestion_box", SuggestionBoxHandler),
+            ("/time_tracking", TimeTrackingHandler),
             ("/user_management", UserManagementHandler),
             ("/userpref", UserPrefPageHandler),
             ("/userpref_b5", UserPrefPageHandler_b5),
