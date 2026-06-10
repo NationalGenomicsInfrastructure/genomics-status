@@ -815,7 +815,7 @@ export const vPricingQuote = {
                               <span class="col-6 offset-2">
                                 {{ label.name }}
                               </span>
-                              <span class="col-3 text-right font-monospace">{{ label.value.toFixed(2) }} SEK</span>
+                              <span class="col-3 text-right font-monospace">{{ (label.value || 0).toFixed(2) }} SEK</span>
                             </li>
                           </template>
                           <template v-if="any_special_percentage">
