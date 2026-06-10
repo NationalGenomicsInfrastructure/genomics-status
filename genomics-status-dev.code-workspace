@@ -1,0 +1,15 @@
+{
+  "folders": [
+    {
+      "name": "Genomics Status",
+      "path": "."
+    },
+    {
+      "name": "StatusDB Seed Data",
+      "path": "/StatusDB_seed_data"
+    }
+  ],
+  "settings": {
+    "description": "Local development environment with seeded CouchDB"
+  }
+}
