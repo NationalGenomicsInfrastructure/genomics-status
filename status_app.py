@@ -2,6 +2,7 @@
 
 import base64
 import logging
+import os
 import subprocess
 import uuid
 from pathlib import Path
@@ -596,8 +597,21 @@ if __name__ == "__main__":
     log_formatter = LogFormatter(fmt=logging_format, color=True)
     logging.getLogger().handlers[0].setFormatter(log_formatter)
 
-    # Load configuration file
-    with open("settings.yaml") as settings_file:
+    # Load configuration file (with fallback to defaults)
+    settings_paths = ["settings.yaml", "config.defaults/settings.yaml"]
+    settings_file_path = None
+    for path in settings_paths:
+        if os.path.exists(path):
+            settings_file_path = path
+            break
+
+    if settings_file_path is None:
+        raise FileNotFoundError(
+            "No settings.yaml found. Expected at: " + " or ".join(settings_paths)
+        )
+
+    logging.info(f"Loading configuration from: {settings_file_path}")
+    with open(settings_file_path) as settings_file:
         server_settings = yaml.full_load(settings_file)
 
     server_settings["Testing mode"] = options["testing_mode"]
