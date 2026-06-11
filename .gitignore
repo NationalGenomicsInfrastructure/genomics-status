@@ -13,9 +13,13 @@ jquery/
 Pipfile
 Pipfile.lock
 **genosqlrc.yaml
+# But DO commit the default config
+!run_dir/config.defaults/.genosqlrc.yaml
 run_dir/qc_reports/
 run_dir/settings.yaml
 run_dir/settings/
 status.egg-info/
 tests/test_items.yaml
 **orderportal_cred.yaml
+# But DO commit the default configs
+!run_dir/config.defaults/orderportal_cred.yaml

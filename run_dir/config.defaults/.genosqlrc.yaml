@@ -1,0 +1,3 @@
+# Fake GenologicsSQL credentials for local development
+genomicsdb:
+  url: postgresql://fake_user:fake_password@localhost:5432/lims_db
