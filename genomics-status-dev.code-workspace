@@ -6,7 +6,7 @@
     },
     {
       "name": "StatusDB Seed Data",
-      "path": "/StatusDB_seed_data"
+      "path": "../StatusDB_seed_data"
     }
   ],
   "settings": {
