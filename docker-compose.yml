@@ -1,0 +1,60 @@
+# Docker Compose configuration for Genomics Status
+# 
+# This file works for both local Docker Compose usage and VS Code Dev Containers.
+# The workspace is mounted to /app by default (can be overridden via CONTAINER_WORKSPACE env var).
+#
+# Local usage:
+#   docker-compose up -d
+#
+# Dev Container usage:
+#   Open folder in VS Code and select "Reopen in Container"
+#   The .devcontainer/dev/devcontainer.json references this file
+#
+# Prerequisites:
+#   - StatusDB_seed_data repository cloned as a sibling directory (../StatusDB_seed_data)
+
+services:
+  couchdb:
+    # Build from StatusDB_seed_data sibling repository
+    build:
+      context: ../StatusDB_seed_data
+      dockerfile: Dockerfile
+    environment:
+      - COUCHDB_USER=admin
+      - COUCHDB_PASSWORD=admin
+    volumes:
+      - couchdb-data:/opt/couchdb/data
+    ports:
+      - "5984:5984"
+    networks:
+      - genomics-status-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5984/_up"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  genomics-status:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - .:${CONTAINER_WORKSPACE:-/app}:cached
+    ports:
+      - "9761:9761"
+    networks:
+      - genomics-status-network
+    depends_on:
+      couchdb:
+        condition: service_healthy
+    working_dir: ${CONTAINER_WORKSPACE:-/app}/run_dir
+    command: python ../status_app.py --testing_mode --develop
+    environment:
+      - CONTAINER_WORKSPACE=${CONTAINER_WORKSPACE:-/app}
+
+volumes:
+  couchdb-data:
+
+networks:
+  genomics-status-network:
