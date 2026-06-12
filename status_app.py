@@ -693,12 +693,6 @@ if __name__ == "__main__":
         "port", default=9761, type=int, help="The port that the server will listen to."
     )
 
-    define(
-        "config_dir",
-        default="~/conf",
-        type=str,
-        help="Path to the directory containing configuration files",
-    )
     # After parsing the command line, the command line flags are stored in tornado.options
     tornado.options.parse_command_line()
     logging_format = f"%(color)s[%(levelname)1.1s %(asctime)s %(module)s:%(lineno)d] [port:{options['port']}]%(end_color)s %(message)s"
@@ -722,11 +716,11 @@ if __name__ == "__main__":
     with open(settings_file_path) as settings_file:
         server_settings = yaml.full_load(settings_file)
 
-    # Configuration directory path from command line
-    config_dir = Path(options["config_dir"]).expanduser()
-
     server_settings["Testing mode"] = options["testing_mode"]
-    server_settings["config_dir"] = config_dir
+
+    if "config_dir" not in server_settings:
+        # ~/conf is the default config dir
+        server_settings["config_dir"] = str(Path("~/conf").expanduser())
 
     if "cookie_secret" not in server_settings:
         cookie_secret = base64.b64encode(uuid.uuid4().bytes + uuid.uuid4().bytes)

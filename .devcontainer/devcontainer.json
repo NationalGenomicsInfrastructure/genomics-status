@@ -3,10 +3,10 @@
 {
     "name": "Genomics Status",
     "build": {
-        // Sets the run context to two levels up instead of the .devcontainer/staging folder.
-        "context": "../../",
+        // Sets the run context to one level up instead of the .devcontainer folder.
+        "context": "../",
         // Update the 'dockerFile' property if you aren't using the standard 'Dockerfile' filename.
-        "dockerfile": "../../Dockerfile"
+        "dockerfile": "../Dockerfile"
     },
     "features": {},
     "customizations": {
@@ -20,7 +20,7 @@
     },
     // Use 'forwardPorts' to make a list of ports inside the container available locally.
     "forwardPorts": [9761],
-    "postCreateCommand": "./.devcontainer/staging/postCreateCommand.sh",
+    "postCreateCommand": "./.devcontainer/postCreateCommand.sh",
     "postStartCommand": "cd run_dir && python ../status_app.py --develop --testing_mode",
     // Configure tool-specific properties.
     // "customizations": {},
