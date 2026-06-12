@@ -15,7 +15,7 @@ This will start up one container running the genomics status tornado webserver a
 #### Requirements
  - Docker
  - [Genomics Status Repository](https://github.com/nationalGenomicsInfrastructure/genomics-status)
- - [Statusdb Seed Data](https://github.com/nationalGenomicsInfrastructure/statusdb_seed_data)
+ - [Statusdb Seed Data](https://github.com/nationalGenomicsInfrastructure/StatusDB_NGI)
 
 Docker Desktop is a convenient to check the status and the logs of the containers running.
 

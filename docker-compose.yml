@@ -11,13 +11,13 @@
 #   The .devcontainer/dev/devcontainer.json references this file
 #
 # Prerequisites:
-#   - StatusDB_seed_data repository cloned as a sibling directory (../StatusDB_seed_data)
+#   - StatusDB_NGI repository cloned as a sibling directory (../StatusDB_NGI)
 
 services:
   couchdb:
-    # Build from StatusDB_seed_data sibling repository
+    # Build from StatusDB_NGI sibling repository
     build:
-      context: ../StatusDB_seed_data
+      context: ../StatusDB_NGI
       dockerfile: Dockerfile
     environment:
       - COUCHDB_USER=admin

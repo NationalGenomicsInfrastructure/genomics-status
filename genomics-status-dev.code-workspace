@@ -5,8 +5,8 @@
       "path": "."
     },
     {
-      "name": "StatusDB Seed Data",
-      "path": "../StatusDB_seed_data"
+      "name": "StatusDB_NGI",
+      "path": "../StatusDB_NGI"
     }
   ],
   "settings": {
