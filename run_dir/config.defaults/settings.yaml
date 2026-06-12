@@ -2,8 +2,8 @@
 # Uses the CouchDB container from docker-compose
 
 couch_server: http://admin:admin@couchdb:5984
-username: admin
-password: admin
+couch_username: admin
+couch_password: admin
 port: 9761
 redirect_uri: http://localhost:9761/login
 cookie_secret: dev-cookie-secret-not-for-production
@@ -15,7 +15,7 @@ couch_url: http://couchdb:5984
 font_awesome_url: https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js
 
 # LIMS backend credentials location
-lims_backend_credential_location: config.defaults/lims_backend_cred.yaml
+lims_backend_credential_location: config.defaults/.genosqlrc.yaml
 
 # Order portal - not needed for local dev (file not required in testing mode)
 order_portal_credential_location: config.defaults/orderportal_cred.yaml
@@ -71,3 +71,5 @@ server_status:
 
 # Reports path
 reports_path: /tmp/reports
+
+config_dir: config.defaults
