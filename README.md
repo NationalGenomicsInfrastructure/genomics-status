@@ -6,13 +6,36 @@ Genomics Status interfaces with StatusDB, which is a [CouchDB](http://guide.couc
 
 ## Installing and running genomics status
 
-### Requirements
+For development, Genomics status can be run in a devcontainer, locally or as a docker-compose service.
+The quickest way to get started is likely the docker-compose setup, where no external dependencies are connected.
+
+### Using Docker Compose
+This will start up one container running the genomics status tornado webserver and one container running couchdb.
+
+#### Requirements
+ - Docker
+ - [Genomics Status Repository](https://github.com/nationalGenomicsInfrastructure/genomics-status)
+ - [Statusdb Seed Data](https://github.com/nationalGenomicsInfrastructure/statusdb_seed_data)
+
+Docker Desktop is a convenient to check the status and the logs of the containers running.
+
+Fork and clone both repositories to the same directory. Enter the genomics-status directory and run
+```bash
+docker-compose up -d
+```
+
+Then the web service should be available on http://localhost:9761/
+
+
+### Installing locally
+
+#### Requirements
 
 * you're either running a python virtualenv or you do have root permissions.
 * you're running python version 3.6 or later (dicts are ordered by default)
 * you have access to both StatusDB and Genologics LIMS
 
-### Installation
+#### Installation
 
 Clone the repository with the `--recursive` option (this will also download [nvd3](http://nvd3.org/) library):
 
@@ -20,7 +43,7 @@ Clone the repository with the `--recursive` option (this will also download [nvd
 git clone --recursive https://github.com/NationalGenomicsInfrastructure/genomics-status.git
 ```
 
-#### Install via `conda` [recommended]
+##### Install via `conda` [recommended]
 
 If you are using `conda`, we recommend creating a new environment using `conda-lock` to ensure that the environment is reproducible across different systems.
 
@@ -40,7 +63,7 @@ This will create a new environment with the name `<env_name>` and install all th
 
 <summary>Using default conda [alternative]</summary>
 
-#### Create the environment using `conda`
+##### Create the environment using `conda`
 
 If you prefer to create the environment using `conda` directly, you can use the provided `conda_requirements.yml` file.
 
@@ -56,7 +79,7 @@ conda activate <env_name>
 
 </details>
 
-#### Install via `pip` [alternative]
+##### Install via `pip` [alternative]
 
 Install the dependencies and the package (the `pip install -r requirements_dev.txt` can be skipped on a production server)
 
@@ -143,7 +166,7 @@ Finally, try to perform the installation again, either via `conda-lock/conda` or
 
 ### Configuration
 
-Before running the app, you need to configure it. This is done by creating the`settings.yaml` file, which points to 
+Before running the app (except for dev-mode), you need to configure it. This is done by creating the`settings.yaml` file, which points to 
 the CouchDB server to use and defines which port to serve the web app to. You will also need to create a `.genologicsrc`
 file with the API credentials for our Genologics LIMS, and a `orderportal_cred.yaml` file with the credentials for the 
 order portal. The files should look like these:
@@ -224,6 +247,15 @@ PASSWORD=<lims_api_password>
 order_portal:
     api_get_order_url: 'https://ngisweden.scilifelab.se/orders/api/v1/order'
     api_token: <order_portal_api_token>
+```
+
+`.genosqlrc.yaml` - To be placed in the home directory of the container or your user (if run locally).
+```yaml
+# Fake GenologicsSQL credentials for local development
+username: fake_user
+password: fake_password
+url: postgresql://fake_user:fake_password@localhost:5432/lims_db
+db: lims_db
 ```
 
 ### Usage
