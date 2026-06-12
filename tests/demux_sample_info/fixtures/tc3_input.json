@@ -1,0 +1,23 @@
+{
+  "metadata": {
+    "num_lanes": 1,
+    "run_setup": "164-0-0-164",
+    "setup_lims_step_id": "24-TC3"
+  },
+  "uploaded_lims_info": [
+    {
+      "flowcell_id": "GV85B",
+      "lane": "1",
+      "sample_id": "P37902_1001",
+      "sample_name": "P37902_1001",
+      "sample_ref": "Other (- -)",
+      "index": "",
+      "index2": "",
+      "description": "A__Berggren_25_08",
+      "control": "N",
+      "recipe": "164-164",
+      "operator": "Agneta_Berg",
+      "sample_project": "A__Berggren_25_08"
+    }
+  ]
+}

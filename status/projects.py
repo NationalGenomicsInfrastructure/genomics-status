@@ -18,10 +18,12 @@ from genologics.entities import Artifact
 from ibm_cloud_sdk_core.api_exception import ApiException
 from zenpy import ZenpyException
 
+from status.flowcells import ReadsTotalHandler
 from status.reports import (
     MultiQCReportHandler,
     ProjectSummaryReportHandler,
     SingleCellSampleSummaryReportHandler,
+    VisiumReportHandler,
 )
 from status.util import SafeHandler, dthandler
 
@@ -599,17 +601,7 @@ class ProjectsBaseDataHandler(SafeHandler):
             ProjectsBaseDataHandler.cached_search_list is None
             or ProjectsBaseDataHandler.search_list_last_fetched < t_threshold
         ):
-            projects_view = self.application.cloudant.post_view(
-                db="projects",
-                ddoc="projects",
-                view="name_to_id_cust_ref",
-                descending=True,
-            ).get_result()["rows"]
-
-            ProjectsBaseDataHandler.cached_search_list = [
-                (row["key"], row["value"]) for row in projects_view
-            ]
-            ProjectsBaseDataHandler.search_list_last_fetched = datetime.datetime.now()
+            self.update_projects_cache()
 
         search_string = search_string.lower().strip()
 
@@ -635,6 +627,20 @@ class ProjectsBaseDataHandler(SafeHandler):
         )
 
         return projects
+
+    def update_projects_cache(self):
+        # Update of cached project search list
+        projects_view = self.application.cloudant.post_view(
+            db="projects",
+            ddoc="projects",
+            view="name_to_id_cust_ref",
+            descending=True,
+        ).get_result()["rows"]
+
+        ProjectsBaseDataHandler.cached_search_list = [
+            (row["key"], row["value"]) for row in projects_view
+        ]
+        ProjectsBaseDataHandler.search_list_last_fetched = datetime.datetime.now()
 
 
 def prettify_css_names(s):
@@ -678,6 +684,69 @@ class ProjectsSearchHandler(ProjectsBaseDataHandler):
     def get(self, search_string):
         self.set_header("Content-type", "application/json")
         self.write(json.dumps(self.search_project_names(search_string)))
+
+
+class ProjectReadsSequencedHandler(ProjectsBaseDataHandler):
+    """Serves the total number of reads sequenced for a given project.
+
+    Loaded through /api/v1/project_reads_sequenced/([^/]*)$
+    """
+
+    def get(self, project):
+        view_rows = self.application.cloudant.post_view(
+            db="projects",
+            ddoc="project",
+            view="summary",
+            keys=[["open", project], ["closed", project]],
+        ).get_result()["rows"]
+        if not len(view_rows) == 1:
+            return {}
+
+        summary_row = view_rows[0]
+        self.set_header("Content-type", "application/json")
+        all_reads = ReadsTotalHandler.get_total_reads(self.application, project)
+        reads_sum = 0
+        for flowcells in all_reads.values():
+            for flowcell in flowcells:
+                # Include all non-failed samples, even if they don't have a sample_status
+                if flowcell.get("sample_status", {}) not in ["Failed"]:
+                    reads_sum += flowcell["cl"]
+
+        # Check if the project's flowcell field contains "Universal-"
+        project_flowcell = summary_row["value"]["details"].get("flowcell", "")
+        is_universal = project_flowcell.startswith("Universal-")
+
+        reads_sequenced = 0
+        # 1 unit = 600 million reads - only show units for Universal projects
+        # For Universal projects, check if reads meet 90% of (units_ordered * 600M)
+        units_achieved = reads_sum / 600000000
+        reads_sequenced_meets_threshold = True  # Default for non-Universal projects
+
+        if is_universal:
+            units_ordered_str = summary_row["value"]["details"].get(
+                "sequence_units_ordered_(lanes)", ""
+            )
+            try:
+                units_ordered = float(units_ordered_str) if units_ordered_str else 0
+                if units_ordered > 0:
+                    expected_reads = units_ordered * 600000000
+                    threshold = expected_reads * 0.9
+                    reads_sequenced_meets_threshold = reads_sum >= threshold
+            except (ValueError, TypeError):
+                units_ordered = 0
+
+            reads_sequenced = str(reads_sum) + f" (~ {round(units_achieved, 2)} units)"
+        else:
+            reads_sequenced = str(reads_sum)
+
+        self.write(
+            json.dumps(
+                {
+                    "reads_sequenced": reads_sequenced,
+                    "reads_sequenced_meets_threshold": reads_sequenced_meets_threshold,
+                }
+            )
+        )
 
 
 class ProjectDataHandler(ProjectsBaseDataHandler):
@@ -726,9 +795,7 @@ class ProjectDataHandler(ProjectsBaseDataHandler):
 
         summary_row["value"]["_doc_id"] = summary_row["id"]
         field_sources["_doc_id"] = "StatusDB, inserted by Genomics Status (backend)"
-        summary_row["value"]["sourcedb_url"] = (
-            "https://" + self.settings["couch_server"].split("@")[1]
-        )
+        summary_row["value"]["sourcedb_url"] = self.settings["couch_url"]
         field_sources["sourcedb_url"] = "Genomics Status (backend)"
 
         summary_row["value"]["field_sources"] = field_sources
@@ -773,6 +840,11 @@ class ProjectDataHandler(ProjectsBaseDataHandler):
             summary_row["value"]["reports"]["sample_summary_reports"] = (
                 group_summary_reports
             )
+        visium_reports = VisiumReportHandler.get_visium_reports(
+            self.application, project
+        )
+        if visium_reports:
+            summary_row["value"]["reports"]["visium_reports"] = visium_reports
 
         # Get people assignments
         people_assignments_view_result = self.application.cloudant.post_view(
@@ -1094,6 +1166,10 @@ class ProjectSamplesOldHandler(SafeHandler):
                         group_summary_reports[sample_id] = {}
                     group_summary_reports[sample_id][method] = report
             reports["sample_summary_reports"] = group_summary_reports
+        if visium_reports := VisiumReportHandler.get_visium_reports(
+            self.application, project
+        ):
+            reports["visium_reports"] = visium_reports
         self.write(
             t.generate(
                 gs_globals=self.application.gs_globals,

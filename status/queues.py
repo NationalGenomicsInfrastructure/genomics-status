@@ -2,30 +2,19 @@ import ast
 import json
 import logging
 
-import psycopg2
 from dateutil.parser import parse
 from genologics_sql import queries as geno_queries
 from genologics_sql import utils as geno_utils
 
 from status.running_notes import LatestRunningNoteHandler
-from status.util import SafeHandler
+from status.util import LIMSQueryBaseHandler, SafeHandler
 
 
-class QueuesBaseHandler(SafeHandler):
+class QueuesBaseHandler(LIMSQueryBaseHandler):
     """Base class that other queue handlers should inherit from.
 
     Contains common methods and properties used across different queue handlers.
     """
-
-    def _get_lims_cursor(self):
-        """Return a cursor to the LIMS database."""
-        connection = psycopg2.connect(
-            user=self.application.lims_conf["username"],
-            host=self.application.lims_conf["url"],
-            database=self.application.lims_conf["db"],
-            password=self.application.lims_conf["password"],
-        )
-        return connection.cursor()
 
     def get_proj_details(self, project_id):
         proj_doc = self.application.cloudant.post_view(
@@ -61,10 +50,8 @@ class QueuesBaseHandler(SafeHandler):
 
     def get_control_names(self):
         """Fetches control names from the database."""
-        cursor = self._get_lims_cursor()
         query = "SELECT name FROM controltype;"
-        cursor.execute(query)
-        rows = cursor.fetchall()
+        rows = self.get_query_result(query)
         return [row[0] for row in rows]
 
     def fetch_queue_definitions(self, queue):
@@ -83,14 +70,30 @@ class qPCRPoolsDataHandler(QueuesBaseHandler):
     URL: /api/v1/qpcr_pools
     """
 
+    def is_artifact_a_pool(self, artifactid):
+        """Check if the artifact is a pool by counting the number of samples associated with it."""
+        query = (
+            "SELECT COUNT(DISTINCT processid) "
+            "FROM artifact_sample_map "
+            f"WHERE artifactid={artifactid};"
+        )
+        cursor = self._get_lims_cursor()
+        cursor.execute(query)
+        rows = cursor.fetchall()
+        if rows and rows[0][0] > 1:
+            return True
+        return False
+
     def get(self):
-        unwanted_in_lib_val = (
-            self.application.cloudant.get_document(
-                db="gs_configs",
-                doc_id="queue_definitions",
-            )
-            .get_result()
-            .get("unwanted_in_qPCR_LibraryValidation", [])
+        queue_definitions_doc = self.application.cloudant.get_document(
+            db="gs_configs",
+            doc_id="queue_definitions",
+        ).get_result()
+        unwanted_in_lib_val = queue_definitions_doc.get(
+            "unwanted_in_qPCR_LibraryValidation", []
+        )
+        unwanted_in_lib_val_except_in_pools = queue_definitions_doc.get(
+            "unwanted_in_qPCR_LibraryValidation_except_in_pools", []
         )
         control_names = self.get_control_names()
         query = (
@@ -140,12 +143,13 @@ class qPCRPoolsDataHandler(QueuesBaseHandler):
                     if project not in pools[method][container]["projects"]:
                         if method == "LibraryValidation" and (
                             record[8] in unwanted_in_lib_val
-                            or project in ["P28910", "P28911"]
                         ):
-                            # We do not want the projects P28910, N.egative_00_00 and P28911, P.ositive_00_00
-                            # showing up in Library validation as instructed by the lab
-                            pools[method][container]["samples"].pop()
-                            continue
+                            if not (
+                                record[8] in unwanted_in_lib_val_except_in_pools
+                                and self.is_artifact_a_pool(record[0])
+                            ):
+                                pools[method][container]["samples"].pop()
+                                continue
                         proj_details = self.get_proj_details(project)
                         if (
                             proj_details["library_type"]
@@ -183,11 +187,12 @@ class qPCRPoolsDataHandler(QueuesBaseHandler):
                 else:
                     if method == "LibraryValidation" and (
                         record[8] in unwanted_in_lib_val
-                        or project in ["P28910", "P28911"]
                     ):
-                        # We do not want the projects P28910, N.egative_00_00 and P28911, P.ositive_00_00
-                        # showing up in Library validation as instructed by the lab
-                        continue
+                        if not (
+                            record[8] in unwanted_in_lib_val_except_in_pools
+                            and self.is_artifact_a_pool(record[0])
+                        ):
+                            continue
                     proj_details = self.get_proj_details(project)
                     latest_running_note = (
                         LatestRunningNoteHandler.get_latest_running_note(

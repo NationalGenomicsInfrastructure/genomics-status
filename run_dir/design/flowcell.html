@@ -42,10 +42,37 @@
       <tr class="darkth">
         <th>External Links:</th>
           <td>
-            <a id="statusdb_link" href="{{ statusdb_url }}/_utils/index.html?flowcells#/database/x_flowcells/{{ statusdb_id }}" data-toggle="tooltip" title="Opens flowcell page in StatusDB" class="btn btn-light btn-xs float-left" target="_blank">StatusDB</a>
+            <a id="statusdb_link" href="{{ statusdb_url }}/_utils/index.html?flowcells#/database/x_flowcells/{{ statusdb_id }}"
+              data-toggle="tooltip" title="Opens flowcell page in StatusDB" class="btn btn-light btn-xs float-left ml-2"
+              target="_blank"><i class="fa fa-database"></i>StatusDB</a>
+            <a href="/demux_sample_info_editor?flowcell={{ flowcell.get('short_name') }}" data-toggle="tooltip"
+              title="Opens demux sample info editor" class="btn btn-light btn-xs float-left ml-2"><i class="fa fa-edit"></i> Sample
+              Info Editor</a>
+          </td>
+      </tr>
+      <tr class="darkth">
+        <th>Generate RN template:</th>
+          <td>
+            <button id="generate_rn_template" data-toggle="tooltip" title="Fill running note with flowcell demux template" class="btn btn-light btn-xs" type="button">Generate running note template</button>
+            <button type="button" class="btn btn-xs btn-outline-secondary" id="template_info"><span class="fa fa-info-circle"></span></button>
           </td>
       </tr>
     </table>
+    <div id='displayInfo' style="display:none;" class="alert alert-info mt-1" role="alert">
+        <span type="button" class="btn-close float-right" aria-label="Close"></span>
+        This button adds template text to the running note textarea in the format
+        <pre>
+         FlowcellID
+
+        &lt;!-- START:PXXX--&gt; 
+
+        **ProjectName (PXXX)**
+
+        &lt;!-- END:PXXX--&gt;
+        </pre>
+        for each project on the flowcell in the project specific part, where PXXX is the projectid. Project specific information added between the START and END tags for a particular project will be posted only to that project, while information added outside of any project specific comments will be posted to all projects on the flowcell.
+        It is only possible to post project specific information to projects that are part of the flowcell; addition of tags for a project that is NOT on the flowcell will be handled like general information and be posted to all projects on the flowcell, but NOT to the absent project.
+    </div>
     <div class="tabbable mb-3">
       <ul class="nav nav-tabs">
         <li class="nav-item">
@@ -85,41 +112,18 @@
                     <th>Total yield (Mb):</th>
                     <td>{% for thousand in lane.get('yield', '').split(',') %}<span class="thousand_group">{{ thousand }}</span>{% end %}</td>
                     <th>Total clusters:</th> {% set threshold = thresholds.get(flowcell.get('run_mode', ''), 0) %}
-                    {% set thr_per_sp = float(threshold) * 0.75 / len([x for x in flowcell['lane'][lane_number] if x['SampleName'] not in ['Undetermined', 'default']]) %}
+                    {% set project_thresholds = lane.get('project_threshold_summary', []) %}
                     <td class="text-left
                     {% if flowcell.get('run_mode') %}
                       {% if int(lane.get('clustersnb', '0').replace(',', '')) < threshold * 1000000 %} table-warning
                       {% else %} table-success {% end %}
                     {% end %}" data-toggle="tooltip" data-placement="bottom" data-html="true"
-                    title="Threshold: {{ threshold }} million <br /> {{ "Per sample : {:.2f} million".format(thr_per_sp) }}">
+                    title="Lane threshold: {{ threshold }} million{% if project_thresholds %}<br/><br/><strong>Sample thresholds per project:</strong>{% for proj_info in project_thresholds %}<br/>• {{ proj_info['project'] }} ({{ proj_info['type'] }}, {{ proj_info['num_samples'] }} sample{{ 's' if proj_info['num_samples'] > 1 else '' }}): {{ '{:.0f}'.format(proj_info['success_threshold_m']) }}M{% end %}{% end %}">
                     {% for thousand in lane.get('clustersnb', '').split(',') %}<span class="thousand_group">{{ thousand }}</span>{% end %}
                     </td>
                     <th>% bases > Q30:</th>
                     {% set run_setup = flowcell.get('longer_read_length', '') %}
-                    {% try %} {% set run_setup = int(run_setup) %} {% except %}{% end %}
-                    {% if flowcell.get('run_mode', '') == 'HiSeq X' %}
-                      {% set q30_threshold = 75.0 %}
-                    {% elif 'MiSeq' in flowcell.get('run_mode', '') %}
-                      {% if run_setup >= 250 %}
-                        {% set q30_threshold = 60.0 %}
-                      {% elif run_setup >= 150 %}
-                        {% set q30_threshold = 70.0 %}
-                      {% elif run_setup >= 100 %}
-                        {% set q30_threshold = 75.0 %}
-                      {% elif run_setup < 100 %}
-                        {% set q30_threshold = 80.0 %}
-                      {% end %}
-                    {% else %}
-                      {% if run_setup >= 250 %}
-                        {% set q30_threshold = 60.0 %}
-                      {% elif run_setup >= 150 %}
-                        {% set q30_threshold = 75.0 %}
-                      {% elif run_setup >= 100 %}
-                        {% set q30_threshold = 80.0 %}
-                      {% elif run_setup < 100 %}
-                        {% set q30_threshold = 85.0 %}
-                      {% end %}
-                    {% end %}
+                    {% set q30_threshold = get_q30_threshold(flowcell.get('run_mode', ''), run_setup) %}
                     {% set lane_q30 = lane.get('overthirty', 0.0) %}
                     {% try %}{% set lane_q30 = float(lane_q30) %}{% except %}{% end %}
                     <td class="text-left {% if lane_q30 < 40.0 %} table-danger
@@ -189,14 +193,10 @@
                     <td>{{ sample.get('Project', '').replace('__', '.') }}</td>
                     <td>{{ sample.get('SampleName') }}</td>
                     <td class="text-right">{% for thousand in sample.get('yield', '').split(',') %}<span class="thousand_group">{{ thousand }}</span>{% end %}</td>
-                    <td class="text-right
-                        {% if not thr_per_sp or sample.get('SampleName') == 'Undetermined' %}
-                        {% elif float(sample.get('readsnb', sample.get('clustersnb', 0)).replace(',','')) > thr_per_sp *1000000 %}
-                        table-success
-                        {% else %}
-                        table-warning
-                        {% end %}
-                    ">{% for thousand in sample.get('readsnb', sample.get('clustersnb', '')).split(',') %}<span class="thousand_group">{{ thousand }}</span>{% end %}</td>
+                    <td class="text-right {{ sample.get('sample_yield_class', '') }}" {% if sample.get('sample_tooltip', '' )
+                      %}data-toggle="tooltip" data-placement="right" data-html="true" title="{{ sample.get('sample_tooltip', '') }}" {% end
+                      %}>{% for thousand in sample.get('readsnb', sample.get('clustersnb', '')).split(',') %}<span class="thousand_group">{{
+                        thousand }}</span>{% end %}</td>
 
                     {% if flowcell.get('two_reads') %}
                       {% try %}{% set overthirty_r1 = float(sample.get('overthirty_r1', 0.0)) %}{% except %}{% set overthirty_r1 = 0.0 %}{% end %}
@@ -313,6 +313,9 @@
     </div>
 </div>
 
+<script>
+    const fc_running_note_template = `{% raw running_note_template %}`;
+</script>
 <script src="/static/js/running_notes.js?v={{ gs_globals['git_commit'] }}" id="rn-js" data-note-type="flowcell"></script>
 <script src="/static/js/links.js?v={{ gs_globals['git_commit'] }}" id="ln-js" data-link-type="flowcell"></script>
 <script src="/static/js/flowcell.js?v={{ gs_globals['git_commit'] }}" id="flowcells-js" data-flowcell="{{ flowcell.get('name') }}"></script>

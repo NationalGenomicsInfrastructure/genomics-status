@@ -38,7 +38,7 @@ def main(config):
     # Connect to StatusDB
     cloudant = cloudant_v1.CloudantV1(
         authenticator=CouchDbSessionAuthenticator(
-            config.get("username"), config.get("password")
+            config.get("couch_username"), config.get("couch_password")
         )
     )
     cloudant.set_service_url(config.get("couch_url"))

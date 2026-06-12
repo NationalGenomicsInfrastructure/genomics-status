@@ -9,7 +9,7 @@ from dateutil.relativedelta import relativedelta
 from genologics import lims
 from genologics.config import BASEURI, PASSWORD, USERNAME
 
-from status.flowcell import get_project_names_from_ids, thresholds
+from status.flowcell import get_project_names_from_ids, get_q30_threshold, thresholds
 from status.running_notes import LatestRunningNoteHandler
 from status.util import SafeHandler
 
@@ -55,6 +55,7 @@ class FlowcellsHandler(SafeHandler):
                 end_key=half_a_year_ago,
             ).get_result()["rows"]
         note_keys = []
+        x_flowcells_rundirs = set()
         for row in xfc_view:
             try:
                 row["value"]["startdate"] = datetime.datetime.strptime(
@@ -79,7 +80,209 @@ class FlowcellsHandler(SafeHandler):
             if "LH" in row["value"]["instrument"]:
                 note_key = f"{row['value']['run id'].split('_')[0]}_{row['value']['run id'].split('_')[-1]}"
             note_keys.append(note_key)
+            # Mark that this flowcell was found in x_flowcells
+            row["value"]["in_x_flowcells"] = True
+            row["value"]["in_flowcell_status"] = False
             temp_flowcells[row["key"]] = row["value"]
+            # Collect run id for deduplication with flowcell_status
+            if row["value"].get("run id"):
+                x_flowcells_rundirs.add(row["value"]["run id"])
+
+        # Query flowcell_status database and merge entries that don't exist in x_flowcells
+        has_flowcell_status_entries = False
+        try:
+            six_months_ago = (
+                datetime.datetime.now() - relativedelta(months=6)
+            ).strftime("%Y%m%d")
+
+            flowcell_status_view_params = {
+                "db": "flowcell_status",
+                "ddoc": "summary",
+                "view": "date_flowcell_id",
+                "descending": True,
+            }
+
+            if not all:
+                # With descending=True, end_key specifies where to stop
+                flowcell_status_view_params["end_key"] = [six_months_ago]
+            # When all=True, fetch everything (no limit needed)
+
+            flowcell_status_rows = (
+                self.application.cloudant.post_view(**flowcell_status_view_params)
+                .get_result()
+                .get("rows", [])
+            )
+
+            # Process flowcell_status entries
+            for row in flowcell_status_rows:
+                key = row.get("key", [])
+                if len(key) < 2:
+                    continue
+
+                flowcell_id = key[1]
+                value = row.get("value", {})
+                runfolder_id = value.get("runfolder_id")
+
+                # Skip if this runfolder already exists in x_flowcells
+                # This ensures x_flowcells takes precedence
+                if runfolder_id and runfolder_id in x_flowcells_rundirs:
+                    continue
+
+                # Special case: MiSeq i100 flowcells may have "A" prepended in flowcell_status
+                # Check if removing the "A" matches an existing x_flowcells entry
+                if runfolder_id and runfolder_id.startswith("A"):
+                    without_a = runfolder_id[1:]
+                    if without_a in x_flowcells_rundirs:
+                        continue
+
+                # Format startdate from sequencing_started_timestamp
+                startdate = "N/A"
+                seq_started_ts = value.get("sequencing_started_timestamp")
+                if seq_started_ts:
+                    try:
+                        startdate = datetime.datetime.strptime(
+                            seq_started_ts.split("T")[0], "%Y-%m-%d"
+                        ).strftime("%Y-%m-%d")
+                    except (ValueError, AttributeError):
+                        pass
+
+                # Fallback: extract date from runfolder_id if startdate is still N/A
+                if startdate == "N/A" and runfolder_id:
+                    try:
+                        # runfolder_id typically starts with YYMMDD or YYYYMMDD
+                        date_part = runfolder_id.split("_")[0]
+                        if date_part.isdigit():
+                            if len(date_part) == 6:
+                                # YYMMDD format - add "20" prefix
+                                startdate = datetime.datetime.strptime(
+                                    "20" + date_part, "%Y%m%d"
+                                ).strftime("%Y-%m-%d")
+                            elif len(date_part) == 8:
+                                # YYYYMMDD format
+                                startdate = datetime.datetime.strptime(
+                                    date_part, "%Y%m%d"
+                                ).strftime("%Y-%m-%d")
+                    except (ValueError, IndexError, AttributeError):
+                        pass
+
+                # Create x_flowcells-compatible structure for flowcell_status entry
+                # Note: instrument_type, run_mode, and actual_run_setup will be populated from demux_sample_info
+                fc_status_entry = {
+                    "run id": runfolder_id or flowcell_id,
+                    "flowcell_id": flowcell_id,
+                    "startdate": startdate,
+                    "run_mode": value.get("run_mode", ""),
+                    "actual_run_setup": value.get("actual_run_setup", ""),
+                    "lane_info": value.get("lane_info", {}),
+                    "instrument": value.get("instrument", ""),
+                    "source": "flowcell_status",
+                    "sequencing_started": value.get("sequencing_started", False),
+                    "sequencing_finished": value.get("sequencing_finished", False),
+                    "demultiplexing": None,  # Not available for flowcell_status
+                    "in_flowcell_status": True,
+                    "in_x_flowcells": False,  # Will be updated if merged
+                }
+
+                # Use flowcell_id as key for flowcell_status entries
+                if flowcell_id in temp_flowcells:
+                    # Merge existing entry with flowcell_status data, giving precedence to x_flowcells data
+                    existing_entry = temp_flowcells[flowcell_id]
+                    merged_entry = {**fc_status_entry, **existing_entry}
+                    # This flowcell exists in both databases
+                    merged_entry["in_flowcell_status"] = True
+                    merged_entry["in_x_flowcells"] = True
+                    temp_flowcells[flowcell_id] = merged_entry
+                else:
+                    temp_flowcells[flowcell_id] = fc_status_entry
+
+                # Track that we have at least one flowcell_status entry
+                has_flowcell_status_entries = True
+
+                # Add to note_keys for running notes lookup
+                note_key = runfolder_id or flowcell_id
+                note_keys.append(note_key)
+
+        except Exception as e:
+            application_log.warning(f"Failed to fetch flowcell_status: {str(e)}")
+
+        # Query demux_sample_info to get instrument_type, run_mode, and run_setup
+        # Only for flowcell_status entries that are not in x_flowcells
+        if has_flowcell_status_entries:
+            try:
+                demux_view_params = {
+                    "db": "demux_sample_info",
+                    "ddoc": "summary",
+                    "view": "date_flowcell_id",
+                    "include_docs": False,
+                    "descending": True,
+                }
+
+                if not all:
+                    # Match the time range used for flowcell_status
+                    demux_view_params["end_key"] = [six_months_ago]
+                # When all=True, fetch everything (no limit)
+
+                demux_rows = (
+                    self.application.cloudant.post_view(**demux_view_params)
+                    .get_result()
+                    .get("rows", [])
+                )
+
+                # Build a lookup dict for instrument_type, run_mode, and run_setup from demux_sample_info
+                demux_data = {}
+                for row in demux_rows:
+                    key = row.get("key", [])
+                    if len(key) >= 2:
+                        fc_id = key[1]
+                        value = row.get("value", {})
+                        demux_data[fc_id] = {
+                            "instrument_type": value.get("instrument_type"),
+                            "run_mode": value.get("run_mode"),
+                            "run_setup": value.get("run_setup"),
+                        }
+
+                # Update only flowcell_status entries with data from demux_sample_info
+                for fc_key, fc_data in temp_flowcells.items():
+                    # Only apply to flowcells from flowcell_status that are not in x_flowcells
+                    if fc_data.get("source") == "flowcell_status":
+                        flowcell_id = fc_data.get("flowcell_id", fc_key)
+
+                        # Determine which ID to use for lookup
+                        lookup_id = flowcell_id
+                        if flowcell_id not in demux_data and flowcell_id.startswith(
+                            "A"
+                        ):
+                            # Handle A-prefix case: if flowcell has "A000..." try "000..."
+                            without_a = flowcell_id[1:]
+                            if without_a in demux_data:
+                                lookup_id = without_a
+
+                        # Apply demux data if found
+                        if lookup_id in demux_data:
+                            demux_info = demux_data[lookup_id]
+                            instrument_type = demux_info.get("instrument_type")
+                            run_mode = demux_info.get("run_mode")
+
+                            # Set instrument field
+                            if instrument_type:
+                                fc_data["instrument"] = instrument_type
+
+                            # Combine instrument_type and run_mode like x_flowcells does
+                            if instrument_type and run_mode:
+                                fc_data["run_mode"] = f"{instrument_type} {run_mode}"
+                            elif run_mode:
+                                fc_data["run_mode"] = run_mode
+                            elif instrument_type:
+                                fc_data["run_mode"] = instrument_type
+
+                            # Set run_setup
+                            if demux_info.get("run_setup"):
+                                fc_data["actual_run_setup"] = demux_info["run_setup"]
+
+            except Exception as e:
+                application_log.warning(
+                    f"Failed to fetch demux_sample_info for instrument_type/run_mode/run_setup: {str(e)}"
+                )
 
         notes = self.application.cloudant.post_view(
             db="running_notes",
@@ -102,7 +305,38 @@ class FlowcellsHandler(SafeHandler):
                 row["value"]["created_at_utc"]: row["value"]
             }
 
-        return OrderedDict(sorted(temp_flowcells.items(), reverse=True))
+        # Sort flowcells by date (most recent first)
+        # Priority: startdate, then run id, then flowcell key
+        def get_sort_key(item):
+            key, fc = item
+
+            # Try startdate first (format: YYYY-MM-DD)
+            startdate = fc.get("startdate")
+            if startdate and startdate != "N/A":
+                try:
+                    # Remove dashes for string sorting: YYYY-MM-DD -> YYYYMMDD
+                    return startdate.replace("-", "")
+                except (AttributeError, ValueError):
+                    pass
+
+            # Try run id (often starts with date like YYMMDD or YYYYMMDD)
+            run_id = fc.get("run id")
+            if run_id:
+                parts = run_id.split("_")
+                if parts and parts[0].isdigit():
+                    # If starts with 6 digits (YYMMDD), prefix with '20'
+                    if len(parts[0]) == 6:
+                        return "20" + run_id
+                    # Already 8 digits (YYYYMMDD) or other format
+                    return run_id
+
+            # Fallback to key (flowcell ID)
+            return key
+
+        sorted_flowcells = sorted(
+            temp_flowcells.items(), key=get_sort_key, reverse=True
+        )
+        return OrderedDict(sorted_flowcells)
 
     def list_ont_flowcells(self, unfetched_runs):
         """Load the rows of the nanopore_runs:info/all_stats view
@@ -242,6 +476,7 @@ class FlowcellsHandler(SafeHandler):
             t.generate(
                 gs_globals=self.application.gs_globals,
                 thresholds=thresholds,
+                get_q30_threshold=get_q30_threshold,
                 user=self.get_current_user(),
                 flowcells=fcs,
                 ont_flowcells=ont_fcs,
@@ -546,7 +781,6 @@ class ReadsTotalHandler(SafeHandler):
     """
 
     def get(self, query):
-        data = {}
         ordereddata = OrderedDict()
         self.set_header("Content-type", "text/html")
         t = self.application.loader.load("reads_total.html")
@@ -561,54 +795,7 @@ class ReadsTotalHandler(SafeHandler):
                 )
             )
         else:
-            xfc_view = self.application.cloudant.post_view(
-                db="x_flowcells",
-                ddoc="samples",
-                view="lane_clusters",
-                start_key=query,
-                end_key=f"{query}Z",
-                reduce=False,
-            ).get_result()["rows"]
-
-            for row in xfc_view:
-                if row["key"] not in data:
-                    data[row["key"]] = []
-                # To add correct threshold values
-                fc_long_name = row["value"]["fcp"].split(":")[0]
-                fc_date_run = fc_long_name.split("_")[0]
-                if len(fc_date_run) > 6:
-                    fc_date_run = fc_date_run[-6:]
-                fc_short_name = fc_date_run + "_" + fc_long_name.split("_")[-1]
-                fc_view = self.application.cloudant.post_view(
-                    db="x_flowcells",
-                    ddoc="info",
-                    view="summary",
-                    key=fc_short_name,
-                    descending=True,
-                ).get_result()["rows"]
-                for info_row in fc_view:
-                    row["value"]["run_mode"] = info_row["value"]["run_mode"]
-                    row["value"]["longer_read_length"] = info_row["value"][
-                        "longer_read_length"
-                    ]
-                data[row["key"]].append(row["value"])
-
-            # To check if sample is failed on lane level
-            bioinfo_view = self.application.cloudant.post_view(
-                db="bioinfo_analysis",
-                ddoc="latest_data",
-                view="sample_id",
-                start_key=[query, None, None, None],
-                end_key=[f"{query}Z", "ZZ", "ZZ", "ZZ"],
-            ).get_result()["rows"]
-            for row in bioinfo_view:
-                if row["key"][3] in data:
-                    for fcl in data[row["key"][3]]:
-                        if row["key"][1] + ":" + row["key"][2] == fcl["fcp"]:
-                            fcl["sample_status"] = row["value"]["sample_status"]
-                            break  # since the row is already found
-            for key in sorted(data.keys()):
-                ordereddata[key] = sorted(data[key], key=lambda d: d["fcp"])
+            ordereddata = self.get_total_reads(self.application, query)
             self.write(
                 t.generate(
                     gs_globals=self.application.gs_globals,
@@ -617,6 +804,64 @@ class ReadsTotalHandler(SafeHandler):
                     query=query,
                 )
             )
+
+    @staticmethod
+    def get_total_reads(app, query):
+        data = {}
+        ordereddata = OrderedDict()
+
+        # Get all flowcell info at once instead of per-row
+        fc_info_cache = {}
+        fc_info_view = app.cloudant.post_view(
+            db="x_flowcells",
+            ddoc="info",
+            view="summary",
+            descending=True,
+        ).get_result()["rows"]
+
+        for row in fc_info_view:
+            fc_info_cache[row["key"]] = row["value"]
+
+        xfc_view = app.cloudant.post_view(
+            db="x_flowcells",
+            ddoc="samples",
+            view="lane_clusters",
+            start_key=query,
+            end_key=f"{query}Z",
+            reduce=False,
+        ).get_result()["rows"]
+
+        for row in xfc_view:
+            if row["key"] not in data:
+                data[row["key"]] = []
+            # To add correct threshold values
+            fc_long_name = row["value"]["fcp"].split(":")[0]
+            fc_parts = fc_long_name.split("_")
+            fc_date_run = fc_parts[0][-6:]
+            fc_short_name = fc_date_run + "_" + fc_parts[-1]
+            if fc_short_name in fc_info_cache:
+                info = fc_info_cache[fc_short_name]
+                row["value"]["run_mode"] = info["run_mode"]
+                row["value"]["longer_read_length"] = info["longer_read_length"]
+            data[row["key"]].append(row["value"])
+
+        # To check if sample is failed on lane level
+        bioinfo_view = app.cloudant.post_view(
+            db="bioinfo_analysis",
+            ddoc="latest_data",
+            view="sample_id",
+            start_key=[query, None, None, None],
+            end_key=[f"{query}Z", "ZZ", "ZZ", "ZZ"],
+        ).get_result()["rows"]
+        for row in bioinfo_view:
+            if row["key"][3] in data:
+                for fcl in data[row["key"][3]]:
+                    if row["key"][1] + ":" + row["key"][2] == fcl["fcp"]:
+                        fcl["sample_status"] = row["value"]["sample_status"]
+                        break  # since the row is already found
+        for key in sorted(data.keys()):
+            ordereddata[key] = sorted(data[key], key=lambda d: d["fcp"])
+        return ordereddata
 
 
 # Functions

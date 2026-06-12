@@ -1,0 +1,24 @@
+{% extends "../base.html" %}
+
+<!--
+Template file: project_creation_form.html
+URL: /project_creation_form
+Title: Project Creation Form
+-->
+
+
+{% block stuff %}
+
+<div id="v_project_creation">
+    <v-create-form-list></v-create-form-list>
+</div>
+
+{% end %}
+
+{% block js %}
+
+<script src="/static/js/vue.v3.2.47.global.prod.js"></script>
+<script src="/static/js/axios.v1.11.0.min.js"></script>
+<script type="module" src="/static/js/project_creation.js"></script>
+
+{% end %}

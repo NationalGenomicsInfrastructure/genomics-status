@@ -5,7 +5,6 @@ import traceback
 import dateutil
 from ibmcloudant.cloudant_v1 import BulkDocs
 
-from status.reports import MultiQCReportHandler
 from status.util import SafeHandler
 
 
@@ -289,7 +288,6 @@ class BioinfoAnalysisHandler(SafeHandler):
                 application = key
                 break
 
-        multiqc = MultiQCReportHandler.get_multiqc(self.application, project_id) or ""
         self.write(
             t.generate(
                 gs_globals=self.application.gs_globals,
@@ -303,7 +301,6 @@ class BioinfoAnalysisHandler(SafeHandler):
                 bioinfo_responsible=bioinfo_responsible,
                 project_type=project_type,
                 edit_history=edit_history,
-                multiqc=multiqc,
             )
         )
 

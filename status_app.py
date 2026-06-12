@@ -1,6 +1,7 @@
 """Main genomics-status web application."""
 
 import base64
+import csv
 import logging
 import os
 import subprocess
@@ -34,6 +35,13 @@ from status.config_handler import ConfigDataHandler
 from status.controls import ControlsHandler
 from status.data_deliveries_plot import DataDeliveryHandler, DeliveryPlotHandler
 from status.deliveries import DeliveriesPageHandler
+from status.demux_sample_info import (
+    DemuxConfigurationDetailHandler,
+    DemuxConfigurationHandler,
+    DemuxSampleInfoDataHandler,
+    DemuxSampleInfoEditorHandler,
+    SampleDeleteHandler,
+)
 from status.flowcell import (
     ElementFlowcellDataHandler,
     ElementFlowcellHandler,
@@ -94,6 +102,15 @@ from status.production import (
     ProductionCronjobsHandler,
 )
 from status.project_cards import ProjectCardsHandler, ProjectCardsWebSocket
+from status.project_creation import (
+    ProjectCreationCountDetailsDataHandler,
+    ProjectCreationDataHandler,
+    ProjectCreationFormDataHandler,
+    ProjectCreationHandler,
+    ProjectCreationIndividualDataFetchHandler,
+    ProjectCreationListFormsDataHandler,
+    ProjectCreationListFormsHandler,
+)
 from status.projects import (
     CaliperImageHandler,
     CharonProjectHandler,
@@ -104,6 +121,7 @@ from status.projects import (
     PresetsOnLoadHandler,
     PrioProjectsTableHandler,
     ProjectDataHandler,
+    ProjectReadsSequencedHandler,
     ProjectRNAMetaDataHandler,
     ProjectSamplesDataHandler,
     ProjectSamplesHandler,
@@ -133,6 +151,7 @@ from status.reports import (
     MultiQCReportHandler,
     ProjectSummaryReportHandler,
     SingleCellSampleSummaryReportHandler,
+    VisiumReportHandler,
 )
 from status.running_notes import (
     InvoicingNotesHandler,
@@ -190,6 +209,7 @@ from status.worksets import (
     WorksetSearchHandler,
     WorksetsHandler,
 )
+from status.yield_calculator import YieldCalculatorHandler
 
 ONT_RUN_PATTERN = r"\d{8}_\d{4}_[0-9a-zA-Z]+_[0-9a-zA-Z]+_[0-9a-zA-Z]+"
 
@@ -298,7 +318,11 @@ class Application(tornado.web.Application):
                 ProjectPeopleAssignmentDataHandler,
             ),
             ("/api/v1/project/([^/]*)/tickets", ProjectTicketsDataHandler),
+            ("/api/v1/project_count_details", ProjectCreationCountDetailsDataHandler),
+            ("/api/v1/project_creation_form", ProjectCreationFormDataHandler),
+            ("/api/v1/project_creation_forms", ProjectCreationListFormsDataHandler),
             ("/api/v1/projects_fields", ProjectsFieldsDataHandler),
+            ("/api/v1/project_reads_sequenced/([^/]*)$", ProjectReadsSequencedHandler),
             ("/api/v1/project_summary/([^/]*)$", ProjectDataHandler),
             ("/api/v1/project_search/([^/]*)$", ProjectsSearchHandler),
             ("/api/v1/project_websocket", ProjectCardsWebSocket),
@@ -343,6 +367,11 @@ class Application(tornado.web.Application):
                 YearDeliverytimeApplicationHandler,
             ),
             ("/api/v1/deliveries/set_bioinfo_responsible$", DeliveriesPageHandler),
+            ("/api/v1/submit_project_creation_form", ProjectCreationDataHandler),
+            (
+                "/api/v1/project_creation_data_fetch",
+                ProjectCreationIndividualDataFetchHandler,
+            ),
             ("/api/v1/suggestions", SuggestionBoxDataHandler),
             (r"/api/v1/test/(\w+)?", TestDataHandler),
             ("/api/v1/user_management/users", UserManagementDataHandler),
@@ -352,6 +381,13 @@ class Application(tornado.web.Application):
             ("/api/v1/workset_links/([^/]*)$", WorksetLinksHandler),
             ("/api/v1/workset_queues", WorksetQueuesDataHandler),
             ("/api/v1/closed_worksets", ClosedWorksetsHandler),
+            ("/api/v1/demux_sample_info/([^/]*)$", DemuxSampleInfoDataHandler),
+            (
+                "/api/v1/demux_sample_info/([^/]*)/sample/([^/]*)/([^/]*)$",
+                SampleDeleteHandler,
+            ),
+            ("/api/v1/demux_configuration", DemuxConfigurationHandler),
+            ("/api/v1/demux_configuration/([^/]*)$", DemuxConfigurationDetailHandler),
             ("/barcode", BarcodeHandler),
             ("/controls", ControlsHandler),
             ("/applications", ApplicationsHandler),
@@ -390,6 +426,8 @@ class Application(tornado.web.Application):
             ("/production/cronjobs", ProductionCronjobsHandler),
             ("/project/([^/]*)$", ProjectSamplesOldHandler),
             ("/project_new/([^/]*)$", ProjectSamplesHandler),
+            ("/project_creation", ProjectCreationHandler),
+            ("/project_creation_forms", ProjectCreationListFormsHandler),
             ("/projects", ProjectsHandler),
             ("/project_cards", ProjectCardsHandler),
             ("/proj_meta", ProjMetaCompareHandler),
@@ -399,8 +437,10 @@ class Application(tornado.web.Application):
             ("/sample_requirements", SampleRequirementsViewHandler),
             ("/sample_requirements_preview", SampleRequirementsPreviewHandler),
             ("/sample_requirements_update", SampleRequirementsUpdateHandler),
+            ("/demux_sample_info_editor", DemuxSampleInfoEditorHandler),
             ("/sensorpush", SensorpushHandler),
             ("/sequencing_queues", SequencingQueuesHandler),
+            ("/yield_calculator", YieldCalculatorHandler),
             (
                 "/singlecell_sample_summary_report/(P[^/]*)/([^/]*)/([^/]*)$",
                 SingleCellSampleSummaryReportHandler,
@@ -410,6 +450,10 @@ class Application(tornado.web.Application):
             ("/user_management", UserManagementHandler),
             ("/userpref", UserPrefPageHandler),
             ("/userpref_b5", UserPrefPageHandler_b5),
+            (
+                "/visium_sample_summary_report/(P[^/]*)/([^/]*)$",
+                VisiumReportHandler,
+            ),
             ("/worksets", WorksetsHandler),
             ("/workset_queues", WorksetQueuesHandler),
             ("/workset/([^/]*)$", WorksetHandler),
@@ -424,7 +468,7 @@ class Application(tornado.web.Application):
         # Global connection to the database
         cloudant = cloudant_v1.CloudantV1(
             authenticator=CouchDbSessionAuthenticator(
-                settings.get("username"), settings.get("password")
+                settings.get("couch_username"), settings.get("couch_password")
             )
         )
         cloudant.set_service_url(settings.get("couch_url"))
@@ -442,9 +486,6 @@ class Application(tornado.web.Application):
                     "make sure that the doc is available with the "
                     "corresponding defaults information."
                 )
-
-        # Load private instrument listing
-        self.instrument_list = settings.get("instruments")
 
         # If settings states  mode, no authentication is used
         self.test_mode = settings["Testing mode"]
@@ -471,14 +512,14 @@ class Application(tornado.web.Application):
         # Slack
         self.slack_token = settings["slack"]["token"]
 
-        # Load password seed
-        self.password_seed = settings.get("password_seed")
-
         # Location of the psul log
         self.psul_log = settings.get("psul_log")
 
         # to display instruments in the server status
         self.server_status = settings.get("server_status")
+
+        # Load named indices from config directory
+        self.named_indices = self._load_named_indices(settings.get("config_dir", "."))
 
         # project summary - reports tab
         # Structure of the reports folder:
@@ -487,6 +528,7 @@ class Application(tornado.web.Application):
         # │    └── toulligqc_reports/
         # ├── minknow_reports/
         # ├── mqc_reports/
+        # ├── Visium/<project_id>/
         # └── yggdrasil/<project_id>/
         self.reports_path = settings.get("reports_path")
         self.report_path = {}
@@ -495,6 +537,7 @@ class Application(tornado.web.Application):
         self.report_path["toulligqc"] = Path(
             self.reports_path, "other_reports", "toulligqc_reports"
         )
+        self.report_path["visium"] = Path(self.reports_path, "Visium")
         self.report_path["yggdrasil"] = Path(self.reports_path, "yggdrasil")
 
         # lims backend credentials
@@ -509,6 +552,9 @@ class Application(tornado.web.Application):
         ).expanduser()
         with order_portal_cred_loc.open() as cred_file:
             self.order_portal_conf = yaml.safe_load(cred_file)["order_portal"]
+
+        # Add LIMS URL to globals for templates
+        self.gs_globals["lims_url"] = self.lims_conf.get("url", "")
 
         # Setup the Tornado Application
 
@@ -567,6 +613,61 @@ class Application(tornado.web.Application):
 
         tornado.web.Application.__init__(self, handlers, **settings)
 
+    def _load_named_indices(self, config_dir):
+        """Load named indices from CSV files in the named_indices directory.
+
+        Args:
+            config_dir: Path to the configuration directory
+
+        Returns:
+            Dictionary mapping file names to dictionaries of named index to list of sequence lists.
+            Each sequence list contains 1-2 items in order (i7, optionally i5).
+        """
+        named_indices = {}
+        named_indices_dir = Path(config_dir) / "named_indices"
+
+        if not named_indices_dir.exists():
+            logging.warning(f"Named indices directory not found: {named_indices_dir}")
+            return named_indices
+
+        # Read all CSV files in the directory
+        for csv_file in named_indices_dir.glob("*.csv"):
+            try:
+                file_key = csv_file.stem  # Get filename without extension
+                file_indices = {}
+
+                with csv_file.open("r") as f:
+                    reader = csv.reader(f)
+                    for row in reader:
+                        if row:  # Skip empty rows
+                            named_index = row[0]
+                            sequences = row[1:]
+
+                            # Validate sequence count (max 2: i7 and i5)
+                            if len(sequences) > 2:
+                                logging.warning(
+                                    f"Row for '{named_index}' in {csv_file.name} has {len(sequences)} sequences, "
+                                    f"expected max 2 (i7 and i5). Using only first 2."
+                                )
+                                sequences = sequences[:2]
+
+                            # Add to file_indices (named index can appear multiple times)
+                            if named_index in file_indices:
+                                file_indices[named_index].append(sequences)
+                            else:
+                                file_indices[named_index] = [sequences]
+
+                named_indices[file_key] = file_indices
+                logging.info(f"Loaded indices from {csv_file.name}")
+            except Exception as e:
+                logging.error(f"Error loading named indices from {csv_file}: {e}")
+
+        logging.info(
+            f"Loaded {len(named_indices)} named index files from {named_indices_dir}"
+        )
+
+        return named_indices
+
 
 if __name__ == "__main__":
     # Tornado built-in command line parsing. Auto configures logging
@@ -591,6 +692,13 @@ if __name__ == "__main__":
     define(
         "port", default=9761, type=int, help="The port that the server will listen to."
     )
+
+    define(
+        "config_dir",
+        default="~/conf",
+        type=str,
+        help="Path to the directory containing configuration files",
+    )
     # After parsing the command line, the command line flags are stored in tornado.options
     tornado.options.parse_command_line()
     logging_format = f"%(color)s[%(levelname)1.1s %(asctime)s %(module)s:%(lineno)d] [port:{options['port']}]%(end_color)s %(message)s"
@@ -614,7 +722,11 @@ if __name__ == "__main__":
     with open(settings_file_path) as settings_file:
         server_settings = yaml.full_load(settings_file)
 
+    # Configuration directory path from command line
+    config_dir = Path(options["config_dir"]).expanduser()
+
     server_settings["Testing mode"] = options["testing_mode"]
+    server_settings["config_dir"] = config_dir
 
     if "cookie_secret" not in server_settings:
         cookie_secret = base64.b64encode(uuid.uuid4().bytes + uuid.uuid4().bytes)
