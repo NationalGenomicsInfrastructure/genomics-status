@@ -38,7 +38,7 @@ services:
   genomics-status:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: dev.Dockerfile
     volumes:
       - .:${CONTAINER_WORKSPACE:-/app}:cached
     ports:
@@ -49,7 +49,7 @@ services:
       couchdb:
         condition: service_healthy
     working_dir: ${CONTAINER_WORKSPACE:-/app}/run_dir
-    command: python ../status_app.py --testing_mode --develop
+    command: python ../status_app.py --testing_mode --develop 
     environment:
       - CONTAINER_WORKSPACE=${CONTAINER_WORKSPACE:-/app}
 
