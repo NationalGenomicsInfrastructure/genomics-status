@@ -155,7 +155,25 @@
  <!-- ONT Table Sorting -->
 <script type="text/javascript">
 $( document ).ready(function() {
-  init_listjs_ont();
+  var table = init_listjs_ont();
+  initColumnSearch(table);
+  table.on('column-reorder', function (e, settings, details) {
+     let footer = $('#ont_fc_table tfoot tr');
+     let inputs = footer.find('input').detach(); // Detach all inputs
+     // Clear footer
+     footer.empty();
+     // Rebuild footer row based on new column order
+    const tab = new $.fn.dataTable.Api(settings);
+    tab.columns().every(function (i) {
+         let th = $('<th></th>');
+         let input = $(inputs[details.mapping[i]] || $('<input type="text" />')); // Preserve existing input if possible
+         let headertext =$(tab.column(i).header()).text();
+         input.attr('placeholder', `Search ${headertext}`);
+         th.append(input);
+         footer.append(th);
+     });
+     initColumnSearch(tab); // Re-bind search
+    });
 });
 // Initialize sorting and searching javascript plugin
 function init_listjs_ont() {
@@ -196,7 +214,10 @@ function init_listjs_ont() {
     $('#ont_fc_table_filter label').remove();
     $("#ont_fc_table_filter input").attr("placeholder", "Search..");
 
-    // Apply the search
+    return table;
+}
+
+function initColumnSearch(table) {
     table.columns().every( function () {
         var that = this;
         $( 'input', this.footer() ).on( 'keyup change', function () {
