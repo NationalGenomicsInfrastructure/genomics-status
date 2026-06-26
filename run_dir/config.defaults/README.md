@@ -28,9 +28,9 @@ docker-compose up
 # Uses all config.defaults automatically
 ```
 
-### Dev Container (Development)
+### DevContainer (Development)
 
-The dev container (`.devcontainer/dev/`) uses these defaults but allows overrides:
+The devcontainer (`.devcontainer/`) uses these defaults but allows overrides:
 
 ```bash
 # Defaults are already in place from Dockerfile
@@ -45,21 +45,6 @@ The `postCreateCommand.sh` will automatically:
 - Use defaults from Dockerfile if no custom configs exist
 - Replace with symlinks to custom configs if they exist in `run_dir/`
 
-### Staging Container (Production-like)
-
-The staging container (`.devcontainer/staging/`) expects real credentials mounted from `~/conf`:
-
-```bash
-# Set up real credentials on your host machine
-mkdir -p ~/conf
-# Add your real credential files to ~/conf/
-```
-
-The `postCreateCommand.sh` will:
-- Remove the default configs copied by Dockerfile
-- Create symlinks to your real credentials in `~/conf/`
-
-This keeps real credentials separate from the repository.
 
 ### Local Python (No Docker)
 
