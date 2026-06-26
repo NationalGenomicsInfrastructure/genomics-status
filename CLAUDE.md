@@ -108,10 +108,62 @@ Templates use Tornado's templating with embedded Python:
 
 ## Configuration
 
-Required config files in `run_dir/`:
-- `settings.yaml` - Main config (CouchDB, OAuth, Zendesk, Jira, Slack)
-- `.genologicsrc` - LIMS API credentials
-- `orderportal_cred.yaml` - Order portal API token
+Configuration files work with fallback defaults:
+
+### Settings Priority
+
+1. **Custom config**: `run_dir/settings.yaml` (if exists)
+2. **Default config**: `run_dir/config.defaults/settings.yaml` (fallback)
+
+The app automatically uses defaults if no custom config is present.
+
+### Config Files
+
+**Main settings** (`run_dir/settings.yaml` or `run_dir/config.defaults/settings.yaml`):
+- CouchDB connection (`couch_server`, `couch_url`)
+- OAuth settings (disabled with `--testing_mode`)
+- External API credentials (Zendesk, Jira, Slack)
+- Port configuration
+
+**LIMS credentials**:
+- `.genologicsrc` - Genologics LIMS API (must be in home directory)
+- `lims_backend_cred.yaml` - Additional LIMS credentials
+- Location: `~/.genologicsrc` (symlink from `run_dir/config.defaults/` for dev)
+
+**Order portal**:
+- `orderportal_cred.yaml` - API token
+
+### Setting Up Configs
+
+**For local development** (using defaults):
+```bash
+cd run_dir
+# Defaults are used automatically, no setup needed!
+python ../status_app.py --testing_mode
+```
+
+**With custom settings**:
+```bash
+cd run_dir
+cp config.defaults/settings.yaml settings.yaml
+# Edit settings.yaml with your values
+```
+
+**For `.genologicsrc`**:
+```bash
+# Symlink default (for dev/testing)
+ln -sf "$(pwd)/run_dir/config.defaults/.genologicsrc" ~/.genologicsrc
+
+# Or create custom with real credentials
+cp run_dir/config.defaults/.genologicsrc ~/.genologicsrc
+# Edit ~/.genologicsrc
+```
+
+### What's in Git
+
+- ✅ `run_dir/config.defaults/` - Safe defaults with fake credentials
+- ❌ `run_dir/settings.yaml` - Your custom settings (gitignored)
+- ❌ `~/.genologicsrc` with real credentials (gitignored)
 
 ## User Roles
 
