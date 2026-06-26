@@ -1,6 +1,6 @@
-# CLAUDE.md
+# AGENTS.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to Claude Code (claude.ai/code) and other agents when working with code in this repository.
 
 ## Overview
 
@@ -39,17 +39,6 @@ ruff format .                   # Format code
 ```
 
 Ruff is configured in `pyproject.toml` with rules for pycodestyle, Pyflakes, isort, and pyupgrade.
-
-### Running Tests
-
-Tests use nose and require a running server:
-```bash
-# Start the server first, then in another terminal:
-cd tests
-nosetests test_integration.py
-```
-
-Tests are in the `tests/` directory and require `tests/test_items.yaml` for test data.
 
 ## Architecture
 
