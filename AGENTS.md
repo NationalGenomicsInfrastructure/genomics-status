@@ -24,11 +24,17 @@ python ../status_app.py --testing_mode --port=9762
 
 The `--testing_mode` flag disables Google OAuth authentication. The app runs on port 9761 by default.
 
+### Docker Compose
+
+The project supports docker compose to run a development setup, completely without local settings file. This requires the Statusdb_NGI repository to be cloned alongside of the Genomics-status repository.
+
 ### Dev Container
 
-The project supports VS Code Dev Containers. When using Dev Containers:
-- Ports 9761 (app) and 5984 (CouchDB) are forwarded
+The project also supports devcontainers. When using Dev Containers:
+- Ports 9761 (app) is forwarded
 - The app auto-starts with `--develop --testing_mode`
+
+A remote `stage` database is needed to run the application run in a devcontainer.
 
 ### Linting
 
@@ -50,6 +56,8 @@ Ruff is configured in `pyproject.toml` with rules for pycodestyle, Pyflakes, iso
 4. Template makes JavaScript calls to the REST API (`/api/v1/...`)
 5. API handlers query CouchDB and return JSON
 6. Client-side JavaScript builds the UI
+
+The traditional structure uses tornado templating more, with little or no use of javascript (jquery) and the REST API. The more modern approach is to use Vue and the REST API more and the tornado templating less. This hybrid approach creates seperate Vue apps on different pages, and Vue components are not very often reusable. 
 
 ### Code Structure
 
@@ -83,7 +91,7 @@ Key databases: `projects`, `flowcells`, `worksets`, `gs_users`, `gs_configs`, `s
 ### API Pattern
 
 API handlers typically:
-1. Inherit from `SafeHandler` or `UnsafeHandler`
+1. Inherit from `SafeHandler` (Rare exception `UnsafeHandler` where the data can safely be exposed on the intranet)
 2. Implement `get()`, `post()`, or `put()` methods
 3. Set `Content-type: application/json` header
 4. Return JSON via `self.write(json.dumps(data))`
