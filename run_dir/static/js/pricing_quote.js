@@ -381,8 +381,6 @@ app.component('v-pricing-quote', {
               })
         },
         add_cost_label: function(){
-          console.log(this.cLabel_index)
-          console.log(this.$root.quote_special_additions)
           this.$root.quote_special_additions[this.cLabel_index] = { name: '', value: 0 }
           this.cLabel_index++
         },
