@@ -290,6 +290,7 @@ app.component('v-pricing-quote', {
             this.$root.price_type = sel_data['price_type']
             if('special_addition' in sel_data){
               this.$root.quote_special_additions = sel_data['special_addition']
+              this.cLabel_index = Object.keys(sel_data['special_addition']).length
             }
             if('special_percentage' in sel_data){
               this.$root.quote_special_percentage_label = sel_data['special_percentage']['name']
@@ -380,6 +381,8 @@ app.component('v-pricing-quote', {
               })
         },
         add_cost_label: function(){
+          console.log(this.cLabel_index)
+          console.log(this.$root.quote_special_additions)
           this.$root.quote_special_additions[this.cLabel_index] = { name: '', value: 0 }
           this.cLabel_index++
         },
