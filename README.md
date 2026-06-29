@@ -24,7 +24,17 @@ Fork and clone both repositories to the same directory. Enter the genomics-statu
 docker-compose up -d
 ```
 
-Then the web service should be available on http://localhost:9761/
+Then the web service should be available on http://localhost:9761/ and the couchdb instance should be available at http://localhost:5984/_utils/index.html.
+
+The database is using a data volume which is not reset automatically. To **delete** all the data in the volume run:
+```
+docker-compose down -v
+```
+Where `-v` is what deletes the volumes. Then rebuilding again will run the init-seed-data.sh script from a fresh start:
+
+```
+docker-compose up --build -d
+```
 
 
 ### Installing locally
