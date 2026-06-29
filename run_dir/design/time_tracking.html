@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+<!--
+Template file: time_tracking.html
+URL: /time_tracking
+Title: Time Tracking - Project duration statistics across stages and methods
+-->
+
+{% block stuff %}
+
+<div class="container-fluid" id="time_tracking_main">
+    <v-time-tracking/>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1"></script>
+<script src="https://cdn.jsdelivr.net/npm/@sgratzl/chartjs-chart-boxplot@3.7.0"></script>
+<script src="/static/js/vue.v3.2.47.global.prod.js"></script>
+<script src="/static/js/axios.v1.11.0.min.js"></script>
+<script src="/static/js/time_tracking.js"></script>
+
+{% end %}

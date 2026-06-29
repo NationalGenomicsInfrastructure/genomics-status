@@ -68,6 +68,7 @@ class TestQ30Thresholds(unittest.TestCase):
     def test_novaseqxplus_thresholds(self):
         """Test NovaSeqXPlus Q30 thresholds."""
         # 2 x 50 bp (or below) = 85%
+        self.assertEqual(get_q30_threshold("NovaSeqXPlus 5B", 50), 85.0)
         self.assertEqual(get_q30_threshold("NovaSeqXPlus 10B", 50), 85.0)
         self.assertEqual(get_q30_threshold("NovaSeqXPlus 10B", 25), 85.0)
 
@@ -76,10 +77,13 @@ class TestQ30Thresholds(unittest.TestCase):
 
         # 2 x 150 bp = 75%
         self.assertEqual(get_q30_threshold("NovaSeqXPlus 10B", 150), 75.0)
+        self.assertEqual(get_q30_threshold("NovaSeqXPlus 5B", 150), 75.0)
 
         # 2 x 250 bp (or above) = 75%
         self.assertEqual(get_q30_threshold("NovaSeqXPlus 10B", 250), 75.0)
         self.assertEqual(get_q30_threshold("NovaSeqXPlus 10B", 300), 75.0)
+
+        self.assertEqual(get_q30_threshold("NovaSeqXPlus 1.5B", 300), 75.0)
 
     def test_novaseq_non_xplus_thresholds(self):
         """Test NovaSeq (non-XPlus) Q30 thresholds (should match NextSeq)."""
