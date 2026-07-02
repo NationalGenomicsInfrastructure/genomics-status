@@ -34,7 +34,7 @@ The project also supports devcontainers. When using Dev Containers:
 - Ports 9761 (app) is forwarded
 - The app auto-starts with `--develop --testing_mode`
 
-A remote `stage` database is needed to run the application run in a devcontainer.
+A remote `stage` database is needed to run the application in a devcontainer.
 
 ### Linting
 
