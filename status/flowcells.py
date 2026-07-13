@@ -93,7 +93,7 @@ class FlowcellsHandler(SafeHandler):
         try:
             six_months_ago = (
                 datetime.datetime.now() - relativedelta(months=6)
-            ).strftime("%Y%m%d")
+            ).strftime("%Y-%m-%d")
 
             flowcell_status_view_params = {
                 "db": "flowcell_status",
@@ -104,7 +104,9 @@ class FlowcellsHandler(SafeHandler):
 
             if not all:
                 # With descending=True, end_key specifies where to stop
-                flowcell_status_view_params["end_key"] = [six_months_ago]
+                flowcell_status_view_params["end_key"] = [
+                    six_months_ago.replace("-", "")
+                ]
             # When all=True, fetch everything (no limit needed)
 
             flowcell_status_rows = (
