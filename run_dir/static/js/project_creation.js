@@ -138,6 +138,7 @@ const vProjectCreationMain = {
             }
             this.newJsonForm.status = 'retired';
             this.$root.saveNewForm();
+            alert('Draft cancelled. Redirecting...');
             // Redirect to form list using regular javascript
             window.location.href = '/project_creation_forms';
         },
@@ -157,6 +158,7 @@ const vProjectCreationMain = {
             }
             this.newJsonForm.status = 'valid';
             this.$root.saveNewForm();
+            alert('Form published successfully! Redirecting...');
             window.location.href = '/project_creation_forms';
         },
         saveNewForm(background = false) {
@@ -488,8 +490,7 @@ const vProjectCreationForm = {
                         </form>
                     </template>
                     <template v-if="this.$root.toplevelEditMode">
-                        <v-create-form></v-create-form>
-                        <div class="card mt-4 mb-5">
+                        <div class="card mt-4">
                             <div class="card-body">
                                 <h2 class="card-title">Changes </h2>
                                 <div class="row">
@@ -505,6 +506,7 @@ const vProjectCreationForm = {
                                 </div>
                             </div>
                         </div>
+                        <v-create-form></v-create-form>
                     </template>
                 </template>
             </div>
@@ -802,6 +804,10 @@ const vFormField = {
                         <input class="form-check-input" type="checkbox" :name="identifier" :id="identifier" :placeholder="description" v-model="this.$root.formData[identifier]">
                     </div>
                 </template>
+                <template v-if="this.formType === 'textarea'">
+                    <textarea class="form-control" :name="identifier" :id="identifier" :placeholder="description" v-model="this.$root.formData[identifier]" rows="4"></textarea>
+                </template>
+
 
                 <p class="fst-italic">{{ field.description }}</p>
                 <template v-if="this.conditionalsApplied.length > 0">
@@ -961,7 +967,8 @@ const vCreateForm = {
             newConditionalThen: '',
             newField: '',
             showDebug: false,
-            showHelp: false
+            showHelp: false,
+            collapsedFields: {}
         }
     },
     computed: {
@@ -1073,12 +1080,16 @@ const vCreateForm = {
                 alert('Field with this identifier already exists');
                 return;
             }
+            // Calculate next position
+            const maxPosition = Math.max(...Object.values(this.fields).map(f => f.position || 0), 0);
             // Create a new field with default values
             const newField = {
                 ngi_form_type: 'string',
                 ngi_form_label: this.newField,
                 description: 'New field',
-                type: 'string'
+                ngi_form_group: 'auto_assigned',
+                type: 'string',
+                position: maxPosition + 1
             };
             // Add the new field to the JSON schema
             this.newForm.properties[this.newField] = newField;
@@ -1086,6 +1097,57 @@ const vCreateForm = {
             this.newField = '';
             // Update the form data to include the new field
             this.$root.formData[this.newField] = '';
+        },
+        initializeFieldPositions() {
+            // Ensure all fields have a position attribute
+            let position = 0;
+            Object.values(this.fields).forEach(field => {
+                if (field.position === undefined) {
+                    field.position = position;
+                    position++;
+                } else {
+                    position = Math.max(position, field.position) + 1;
+                }
+            });
+        },
+        fieldsForGroup(groupIdentifier) {
+            // Return fields that belong to a specific group, sorted by position
+            this.initializeFieldPositions();
+            return Object.fromEntries(
+                Object.entries(this.fields)
+                    .filter(([identifier, field]) => field.ngi_form_group === groupIdentifier)
+                    .sort((a, b) => (a[1].position || 0) - (b[1].position || 0))
+            );
+        },
+        moveFieldUp(identifier) {
+            this.initializeFieldPositions();
+            const field = this.fields[identifier];
+            const groupId = field.ngi_form_group;
+            const fieldsInGroup = Object.entries(this.fieldsForGroup(groupId));
+            const currentIndex = fieldsInGroup.findIndex(([id]) => id === identifier);
+
+            if (currentIndex > 0) {
+                // Swap positions with the field above
+                const previousField = fieldsInGroup[currentIndex - 1][1];
+                const temp = field.position;
+                field.position = previousField.position;
+                previousField.position = temp;
+            }
+        },
+        moveFieldDown(identifier) {
+            this.initializeFieldPositions();
+            const field = this.fields[identifier];
+            const groupId = field.ngi_form_group;
+            const fieldsInGroup = Object.entries(this.fieldsForGroup(groupId));
+            const currentIndex = fieldsInGroup.findIndex(([id]) => id === identifier);
+
+            if (currentIndex < fieldsInGroup.length - 1) {
+                // Swap positions with the field below
+                const nextField = fieldsInGroup[currentIndex + 1][1];
+                const temp = field.position;
+                field.position = nextField.position;
+                nextField.position = temp;
+            }
         },
         addPropertyToCondition(conditional) {
             // Add a new property to the conditional logic
@@ -1115,6 +1177,18 @@ const vCreateForm = {
         }, 5000);
     },
     watch: {
+        // Initialize all fields as collapsed
+        fields: {
+            handler(newFields) {
+                if (newFields) {
+                    Object.keys(newFields).forEach(identifier => {
+                        if (!(identifier in this.collapsedFields)) {
+                            this.collapsedFields[identifier] = true;
+                        }
+                    });
+                }
+            }
+        },
         // Auto save when sections are closed and when field edit modes are exited
         displayConditionalLogic(newValue) {
             if (!newValue) {
@@ -1150,7 +1224,7 @@ const vCreateForm = {
     template: 
         /*html*/`
         <div class="container pb-5">
-            <div class="row mt-5">
+            <div class="row mt-2">
                 <div class="row mt-3 mb-3">
                     <div class="col-auto">
                         <h1>Update Form:
@@ -1216,6 +1290,7 @@ const vCreateForm = {
                                         <li><strong>Custom Datalist</strong>: Text input, automatically filtering a list of options. The options are dynamically fetched from the database, based on the recent years projects.
                                         The values are cached for 24 hours, so they are not always completely up to date. Only fields that are output from the couchdb view details_count can be used with this form type.
                                         </li>
+                                        <li><strong>Textarea</strong>: A multi-line text input field.</li>
                                     </ul>
                                 </div>
 
@@ -1331,9 +1406,40 @@ const vCreateForm = {
                     </h2>
                     <template v-if="this.displayFields">
                     <div class="ml-3">
-                        <template v-for="(field, identifier) in fields" :key="identifier">
-                            <template v-if="field.ngi_form_type !== undefined">
-                                <v-update-form-field :field="field" :identifier="identifier"></v-update-form-field>
+                        <div class="mb-3">
+                            <button class="btn btn-secondary btn-sm mr-2" @click="Object.keys(fields).forEach(id => collapsedFields[id] = true)">
+                                Collapse All
+                            </button>
+                            <button class="btn btn-secondary btn-sm" @click="Object.keys(fields).forEach(id => collapsedFields[id] = false)">
+                                Expand All
+                            </button>
+                        </div>
+                        <template v-for="[group_identifier, form_group] in Object.entries(this.formGroups)" :key="group_identifier">
+                            <template v-if="Object.keys(this.fieldsForGroup(group_identifier)).length !== 0">
+                                <div class="mb-4 p-3 bg-light rounded">
+                                    <h3 class="mb-3">{{ form_group.display_name }}</h3>
+                                    <template v-for="(field, identifier) in this.fieldsForGroup(group_identifier)" :key="identifier">
+                                        <template v-if="field.ngi_form_type !== undefined">
+                                            <div class="border-bottom pb-3 mb-3">
+                                                <div class="d-flex align-items-center">
+                                                    <h4 style="cursor: pointer; flex-grow: 1; margin-bottom: 0;" @click="collapsedFields[identifier] = !collapsedFields[identifier]">
+                                                        <i :class="collapsedFields[identifier] ? 'fa-solid fa-caret-right' : 'fa-solid fa-caret-down'"></i>
+                                                        {{ identifier }}
+                                                    </h4>
+                                                    <button class="btn btn-secondary btn-sm mr-2" @click="moveFieldUp(identifier)" title="Move up">
+                                                        <i class="fa-solid fa-arrow-up"></i>
+                                                    </button>
+                                                    <button class="btn btn-secondary btn-sm" @click="moveFieldDown(identifier)" title="Move down">
+                                                        <i class="fa-solid fa-arrow-down"></i>
+                                                    </button>
+                                                </div>
+                                                <template v-if="!collapsedFields[identifier]">
+                                                    <v-update-form-field :field="field" :identifier="identifier"></v-update-form-field>
+                                                </template>
+                                            </div>
+                                        </template>
+                                    </template>
+                                </div>
                             </template>
                         </template>
                         <div class="mb-3">
@@ -1916,6 +2022,7 @@ const vUpdateFormField = {
                         <option value="select">Select</option>
                         <option value="datalist">Datalist (must select value in list)</option>
                         <option value="custom_datalist">Custom Datalist (fetch most used suggestions)</option>
+                        <option value="textarea">Textarea</option>
                     </select>
                 </div>
                 <div>
