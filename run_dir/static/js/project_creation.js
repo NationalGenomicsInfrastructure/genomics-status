@@ -543,6 +543,13 @@ const vFormField = {
             }
             return this.field.enum;
         },
+        fieldSuggestions() {
+            // Check if suggestions are defined on field
+            if (this.field.suggestions == undefined) {
+                return []
+            }
+            return this.field.suggestions;
+        },
         formType() {
             return this.field.ngi_form_type;
         },
@@ -553,6 +560,9 @@ const vFormField = {
             let conditional_options = this.$root.getOptions(this.identifier);
             if (conditional_options !== null) {
                 return conditional_options;
+            }
+            if (this.field.ngi_form_type === 'editable_datalist') {
+                return this.fieldSuggestions;
             }
             return this.fieldEnum;
         },
@@ -754,12 +764,13 @@ const vFormField = {
                     </select>
                 </template>
 
-                <template v-if="this.formType === 'datalist'">
+                <template v-if="this.formType === 'datalist' || this.formType === 'editable_datalist'">
                     <input
                         class="form-control"
                         :list="identifier+'_list'"
                         :aria-label="description"
                         v-model="this.$root.formData[identifier]"
+                        :placeholder="this.formType === 'editable_datalist' ? 'Type to search or enter custom value...' : ''"
                     />
                     <datalist :id="identifier+'_list'">
                         <template v-for="option in options">
@@ -1287,6 +1298,7 @@ const vCreateForm = {
                                         <li><strong>Date</strong>: A date picker input field.</li>
                                         <li><strong>Select</strong>: A dropdown list or predefined options. Only predefined options are allowed.</li>
                                         <li><strong>Datalist</strong>: Text input, automatically filtering a list of predefined options. As with select, only predefined options are allowed.</li>
+                                        <li><strong>Editable Datalist</strong>: Text input, automatically filtering a list of predefined options. Unlike select and datalist, the user can also enter a custom value that is not in the list of options.</li>
                                         <li><strong>Custom Datalist</strong>: Text input, automatically filtering a list of options. The options are dynamically fetched from the database, based on the recent years projects.
                                         The values are cached for 24 hours, so they are not always completely up to date. Only fields that are output from the couchdb view details_count can be used with this form type.
                                         </li>
@@ -1907,10 +1919,14 @@ const vUpdateFormField = {
         },
         nrOfAllowedValues() {
             // Check if enum is defined on field
-            if (this.newJsonSchema['properties'][this.identifier]['enum'] === undefined) {
+            let fieldType = 'enum';
+            if(this.newJsonSchema['properties'][this.identifier]['ngi_form_type']==='editable_datalist'){
+                fieldType = 'suggestions';
+            }
+            if (this.newJsonSchema['properties'][this.identifier][fieldType] === undefined) {
                 return 0
             }
-            return this.newJsonSchema['properties'][this.identifier]['enum'].length;
+            return this.newJsonSchema['properties'][this.identifier][fieldType].length;
         },
         currentValue() {
             return this.$root.formData[this.identifier];
@@ -1932,11 +1948,16 @@ const vUpdateFormField = {
     },
     methods: {
         add_new_allowed() {
-            if (this.newJsonSchema['properties'][this.identifier]['enum'] === undefined) {
-                this.newJsonSchema['properties'][this.identifier]['enum'] = []
+            let fieldType = 'enum';
+            if(this.newJsonSchema['properties'][this.identifier]['ngi_form_type']==='editable_datalist'){
+                fieldType = 'suggestions';
+            };
+
+            if (this.newJsonSchema['properties'][this.identifier][fieldType] === undefined) {
+                this.newJsonSchema['properties'][this.identifier][fieldType] = []
             }
             // Add a new empty allowed value
-            this.newJsonSchema['properties'][this.identifier]['enum'].push('')
+            this.newJsonSchema['properties'][this.identifier][fieldType].push('')
         },
         add_visible_if() {
             this.visibleIfErrorMessage = '';
@@ -2021,6 +2042,7 @@ const vUpdateFormField = {
                         <option value="date">Date</option>
                         <option value="select">Select</option>
                         <option value="datalist">Datalist (must select value in list)</option>
+                        <option value="editable_datalist">Editable Datalist (values in list with custom values allowed)</option>
                         <option value="custom_datalist">Custom Datalist (fetch most used suggestions)</option>
                         <option value="textarea">Textarea</option>
                     </select>
@@ -2081,17 +2103,36 @@ const vUpdateFormField = {
                         <h3>Allowed values</h3>
                         <p>{{this.nrOfAllowedValues}} number of allowed values are added.</p>
                         <template v-if="this.showAllowedValues">
-                            <button class="btn btn-danger mb-2" @click.prevent="this.showAllowedValues = false">Hide allowed values</button>
+                            <button class="btn btn-danger mb-2 mr-2" @click.prevent="this.showAllowedValues = false">Hide allowed values</button>
                             <template v-for="(option, index) in this.newJsonSchema['properties'][identifier]['enum']" :key="index">
                                 <div class="input-group mb-3">
                                     <input :id="identifier + '_enum_'+index" class="form-control col-auto" type="string" v-model="this.newJsonSchema['properties'][identifier]['enum'][index]" :disabled="!fieldEditMode">
                                     <button v-if="fieldEditMode" class="btn btn-danger col-auto" @click.prevent="this.newJsonSchema['properties'][identifier]['enum'].splice(index, 1)">Remove<i class="fa-solid fa-trash ml-2"></i></button>
                                 </div>
                             </template>
-                            <button v-if="fieldEditMode" class="btn btn-primary" @click.prevent="this.add_new_allowed()">Add new allowed value</button>
+                            <button v-if="fieldEditMode" class="btn btn-primary mb-2" @click.prevent="this.add_new_allowed()">Add new allowed value</button>
                         </template>
                         <template v-else>
                             <button class="btn btn-primary" @click.prevent="this.showAllowedValues = true">Show allowed values</button>
+                        </template>
+                    </div>
+                </template>
+                <template v-if="(this.formType === 'editable_datalist')">
+                    <div class="col-6">
+                        <h3>Possible values</h3>
+                        <p>{{this.nrOfAllowedValues}} number of possible values are added.</p>
+                        <template v-if="this.showAllowedValues">
+                            <button class="btn btn-danger mb-2 mr-2" @click.prevent="this.showAllowedValues = false">Hide possible values</button>
+                            <template v-for="(option, index) in this.newJsonSchema['properties'][identifier]['suggestions']" :key="index">
+                                <div class="input-group mb-3">
+                                    <input :id="identifier + '_suggestions_'+index" class="form-control col-auto" type="string" v-model="this.newJsonSchema['properties'][identifier]['suggestions'][index]" :disabled="!fieldEditMode">
+                                    <button v-if="fieldEditMode" class="btn btn-danger col-auto" @click.prevent="this.newJsonSchema['properties'][identifier]['suggestions'].splice(index, 1)">Remove<i class="fa-solid fa-trash ml-2"></i></button>
+                                </div>
+                            </template>
+                            <button v-if="fieldEditMode" class="btn btn-primary mb-2" @click.prevent="this.add_new_allowed()">Add new possible value</button>
+                        </template>
+                        <template v-else>
+                            <button class="btn btn-primary" @click.prevent="this.showAllowedValues = true">Show possible values</button>
                         </template>
                     </div>
                 </template>
