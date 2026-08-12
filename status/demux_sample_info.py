@@ -245,6 +245,8 @@ class DemuxSampleInfoDataHandler(SafeHandler):
     def _validate_post_data(self, post_data):
         """Validate the structure and required fields of POST data.
 
+        Used by both initial POST creation and reupload flows.
+
         Returns:
             tuple: (is_valid, error_message, metadata, uploaded_lims_info)
         """
