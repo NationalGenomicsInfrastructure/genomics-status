@@ -1457,6 +1457,132 @@ class DemuxSampleInfoDataHandler(SafeHandler):
 
         return document
 
+    def _build_reupload_index(self, document):
+        """Build a reverse matching index from existing sample_rows.
+
+        Maps (lane, sample_id, index, index2) -> [uuid, ...] for
+        all samples (including deleted ones, since re-upload can
+        recover them).
+
+        Args:
+            document: The existing demux sample info document
+
+        Returns:
+            dict: Mapping of tuple keys to lists of UUIDs
+        """
+        index = {}
+        calculated = document.get("calculated", {})
+        lanes = calculated.get("lanes", {})
+
+        for lane_key, lane_data in lanes.items():
+            sample_rows = lane_data.get("sample_rows", {})
+            for uuid, sample_row in sample_rows.items():
+                settings_versions = sorted(sample_row.get("settings", {}).keys(), reverse=True)
+                if not settings_versions:
+                    continue
+                latest = sample_row["settings"][settings_versions[0]]
+                per_sample = latest.get("per_sample_fields", {})
+
+                # Strip "Sample_" prefix from Sample_ID to match CSV format
+                sample_id = per_sample.get("Sample_ID", "").removeprefix("Sample_")
+                lane = str(per_sample.get("Lane", lane_key))
+
+                key = (
+                    lane,
+                    sample_id,
+                    per_sample.get("index", ""),
+                    per_sample.get("index2", ""),
+                )
+                index.setdefault(key, []).append(uuid)
+
+        return index
+
+    def _resolve_csv_sample(self, csv_row, metadata):
+        """Resolve a CSV row through classification and named index expansion.
+
+        Returns the effective (possibly expanded) index sequences and the
+        classification result so the caller can use them for matching or
+        for creating the full sample row later.
+
+        Args:
+            csv_row: A single sample dict from uploaded_lims_info
+            metadata: Run metadata dict
+
+        Returns:
+            tuple: (effective_index, effective_index2, classification_result,
+                    project_name, project_id)
+        """
+        self._get_sample_classification_config()
+        project_name, library_method, project_id = self._get_project_info(csv_row)
+
+        sample_classification = self._classify_sample_type(
+            csv_row,
+            library_method,
+            metadata,
+        )
+
+        sequences, named_index = self._expand_named_indices(
+            csv_row, sample_classification
+        )
+
+        # sequences is [[index1, index2]] for single-entry samples
+        index_1 = sequences[0] if len(sequences) > 0 else csv_row.get("index", "")
+        index_2 = sequences[1] if len(sequences) > 1 else csv_row.get("index2", "")
+
+        return index_1, index_2, sample_classification, project_name, project_id
+
+    def _reupload_match_samples(self, csv_samples, db_index):
+        """Match CSV rows against the DB index using exact-key lookup.
+
+        For each CSV row, the effective key is looked up in the DB index.
+        If there is exactly one match, the CSV row is considered an update
+        for that UUID. If there are zero or multiple matches, the CSV row
+        is treated as a new sample (no match). Remaining DB entries that
+        were never matched by any CSV row are orphaned for deletion.
+
+        Each csv_sample dict is expected to have '_reupload_key' set by the
+        caller before invoking this method.
+
+        Args:
+            csv_samples: List of sample dicts from uploaded_lims_info,
+                         each with an added '_reupload_key' tuple.
+            db_index: Reverse index from _build_reupload_index, keyed by
+                      (lane, sample_id, index, index2) -> [uuid, ...]
+
+        Returns:
+            tuple: (matched, created, orphaned_uuids)
+                matched: dict mapping uuid -> csv sample
+                created: list of csv sample dicts (no DB match)
+                orphaned_uuids: set of UUIDs to soft-delete
+        """
+        matched = {}
+        orphaned_uuids = set()
+        matched_csv_indices = set()
+
+        for i, csv_sample in enumerate(csv_samples):
+            csv_key = csv_sample["_reupload_key"]
+            candidates = db_index.pop(csv_key, [])
+
+            if len(candidates) == 1:
+                matched[candidates[0]] = csv_sample
+                matched_csv_indices.add(i)
+            elif len(candidates) > 1:
+                # Multiple candidates (e.g., duplicate Sample_ID on
+                # the same lane with different indices) - all
+                # candidates become orphans
+                orphaned_uuids.update(candidates)
+
+        for key_uuids in db_index.values():
+            orphaned_uuids.update(key_uuids)
+
+        created = [
+            csv_samples[i]
+            for i in range(len(csv_samples))
+            if i not in matched_csv_indices
+        ]
+
+        return matched, created, orphaned_uuids
+
     def post(self, flowcell_id):
         """Accept POST request with metadata and uploaded_lims_info to create/update demux sample info document."""
         try:
