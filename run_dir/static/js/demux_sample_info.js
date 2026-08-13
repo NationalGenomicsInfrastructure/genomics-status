@@ -2107,8 +2107,108 @@ const SamplesheetUploadForm = {
                 <strong>Success!</strong> Demux sample info uploaded successfully.
             </div>
 
-            <!-- Validation result preview -->
-            <div v-if="validationResult" class="mt-3">
+            <!-- Reupload preview (when existing document is found with dry_run) -->
+            <div v-if="validationResult && validationResult.is_reupload" class="mt-3">
+                <div class="alert alert-info" role="alert">
+                    <h5><i class="fa fa-sync-alt"></i> Reupload Preview</h5>
+                    <p class="mb-1"><strong>Flowcell ID:</strong> {{ validationResult.flowcell_id }}</p>
+                    <p class="mb-1"><strong>Timestamp:</strong> {{ validationResult.timestamp }}</p>
+                    <div class="row mt-2">
+                        <div class="col-md-4">
+                            <span class="badge bg-success me-1">{{ validationResult.summary.matched }}</span> matched
+                        </div>
+                        <div class="col-md-4">
+                            <span class="badge bg-primary me-1">{{ validationResult.summary.created }}</span> new samples
+                        </div>
+                        <div class="col-md-4">
+                            <span class="badge bg-danger me-1">{{ validationResult.summary.deleted }}</span> deleted (will be excluded)
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Matched samples -->
+                <div v-if="validationResult.changes?.matched?.length" class="mt-3">
+                    <h6><i class="fa fa-check text-success"></i> Matched Samples (updated)</h6>
+                    <div class="table-responsive">
+                        <table class="table table-sm table-bordered">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Sample ID</th>
+                                    <th>UUID</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr v-for="m in validationResult.changes.matched" :key="m.uuid">
+                                    <td>{{ m.sample_id || '-' }}</td>
+                                    <td><code>{{ m.uuid }}</code></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- New samples -->
+                <div v-if="validationResult.changes?.new_samples?.length" class="mt-3">
+                    <h6><i class="fa fa-plus text-primary"></i> New Samples (created with new UUID)</h6>
+                    <div class="table-responsive">
+                        <table class="table table-sm table-bordered">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Lane</th>
+                                    <th>Sample ID</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr v-for="s in validationResult.changes.new_samples" :key="s.sample_id + s.lane">
+                                    <td>{{ s.lane }}</td>
+                                    <td>{{ s.sample_id || '-' }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Deleted samples -->
+                <div v-if="validationResult.changes?.deleted?.length" class="mt-3">
+                    <h6><i class="fa fa-times text-danger"></i> Samples to be Deleted (soft-deleted, will be excluded from samplesheet)</h6>
+                    <div class="table-responsive">
+                        <table class="table table-sm table-bordered">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Sample ID</th>
+                                    <th>UUID</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr v-for="d in validationResult.changes.deleted" :key="d">
+                                    <td>{{ d || '-' }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Changes (metadata diff) -->
+                <div v-if="validationResult.changes?.metadata && validationResult.changes.metadata.length" class="mt-3">
+                    <h6><i class="fa fa-info-circle"></i> Metadata Changes</h6>
+                    <ul class="list-unstyled">
+                        <li v-for="c in validationResult.changes.metadata" :key="c.field" class="mb-1">
+                            <span v-if="c.old && c.new" class="text-warning">
+                                <strong>{{ c.field }}:</strong> {{ c.old }} &rarr; {{ c.new }}
+                            </span>
+                            <span v-else-if="!c.old && c.new" class="text-success">
+                                <strong>{{ c.field }}:</strong> (new) {{ c.new }}
+                            </span>
+                            <span v-else-if="c.old && !c.new" class="text-danger">
+                                <strong>{{ c.field }}:</strong> (removed) {{ c.old }}
+                            </span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Original validation result preview -->
+            <div v-if="validationResult && !validationResult.is_reupload" class="mt-3">
                 <div class="alert alert-success" role="alert">
                     <h5><i class="fa fa-check-circle"></i> Validation Successful</h5>
                     <p class="mb-2"><strong>Flowcell ID:</strong> {{ validationResult.flowcell_id }}</p>
