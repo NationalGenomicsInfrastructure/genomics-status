@@ -8,8 +8,8 @@ import unittest
 from unittest.mock import MagicMock
 
 import tornado.web
-from tornado.testing import AsyncHTTPTestCase
 from tornado.escape import json_encode
+from tornado.testing import AsyncHTTPTestCase
 
 from status.demux_sample_info import DemuxSampleInfoDataHandler
 
@@ -174,24 +174,30 @@ class TestReuploadIntegration(AsyncHTTPTestCase):
 
     def get_app(self):
         """Return the base application."""
-        return tornado.web.Application([
-            (r"/api/v1/demux_sample_info/([^/]*)", DemuxSampleInfoDataHandler),
-        ])
+        return tornado.web.Application(
+            [
+                (r"/api/v1/demux_sample_info/([^/]*)", DemuxSampleInfoDataHandler),
+            ]
+        )
 
     def setUp(self):
         super().setUp()
         self._mock_cloudant = MagicMock()
-        self._mock_cloudant.post_document.return_value.get_result.return_value = {"ok": True}
+        self._mock_cloudant.post_document.return_value.get_result.return_value = {
+            "ok": True
+        }
         self._mock_cloudant.get_document.return_value.get_result.return_value = None
 
         self._app.cloudant = self._mock_cloudant
         self._app.gs_globals = {}
         self._app.test_mode = True
         self._app.named_indices = {}
-        
+
         # Default to reupload scenario
         self._existing_doc = _create_existing_document_with_samples()
-        self._mock_cloudant.get_document.return_value.get_result.return_value = self._existing_doc
+        self._mock_cloudant.get_document.return_value.get_result.return_value = (
+            self._existing_doc
+        )
 
     def _make_post_view_side_effect(self, include_existing_doc=True):
         """Create a side_effect mock that can be customized per test."""
@@ -219,28 +225,33 @@ class TestReuploadIntegration(AsyncHTTPTestCase):
                 }
             ]
         }
-        
+
         self._existing_doc_with_doc_key = {
             "_id": "TEST_FC_001",
             "_rev": "5-xyz789",
             **self._existing_doc,
         }
 
-        def mock_post_view(db=None, ddoc=None, view=None, key=None, include_docs=False, **kwargs):
+        def mock_post_view(
+            db=None, ddoc=None, view=None, key=None, include_docs=False, **kwargs
+        ):
             result = MagicMock()
             if db == "demux_configuration" and view == "active_created_at":
                 result.get_result.return_value = demux_config_rows
             elif db == "demux_sample_info" and view == "flowcell_id":
                 if include_docs and include_existing_doc:
                     result.get_result.return_value = {
-                        "rows": [{"value": [key, key], "doc": self._existing_doc_with_doc_key}]
+                        "rows": [
+                            {
+                                "value": [key, key],
+                                "doc": self._existing_doc_with_doc_key,
+                            }
+                        ]
                     }
                 elif include_docs and not include_existing_doc:
                     result.get_result.return_value = {"rows": []}
                 else:
-                    result.get_result.return_value = {
-                        "rows": [{"value": [key, key]}]
-                    }
+                    result.get_result.return_value = {"rows": [{"value": [key, key]}]}
             elif db == "projects" and view == "name_to_id":
                 result.get_result.return_value = {"rows": []}
             else:
@@ -251,7 +262,9 @@ class TestReuploadIntegration(AsyncHTTPTestCase):
 
     def test_reupload_dry_run(self):
         """Reupload with dry_run=true should return preview without saving."""
-        self._mock_cloudant.post_view.side_effect = self._make_post_view_side_effect(include_existing_doc=True)
+        self._mock_cloudant.post_view.side_effect = self._make_post_view_side_effect(
+            include_existing_doc=True
+        )
 
         # POST body with all required fields
         post_data = {
@@ -297,19 +310,23 @@ class TestReuploadIntegration(AsyncHTTPTestCase):
 
     def test_reupload_no_409_conflict(self):
         """Verify that POST does not return 409 for existing documents."""
-        self._mock_cloudant.post_view.side_effect = self._make_post_view_side_effect(include_existing_doc=True)
+        self._mock_cloudant.post_view.side_effect = self._make_post_view_side_effect(
+            include_existing_doc=True
+        )
 
         response = self.fetch(
             "/api/v1/demux_sample_info/TEST_FC_001",
             method="POST",
-            body=json_encode({
-                "metadata": {
-                    "num_lanes": 8,
-                    "run_setup": "151-8-8-151",
-                    "setup_lims_step_id": "24-123456",
-                },
-                "uploaded_lims_info": [],
-            }),
+            body=json_encode(
+                {
+                    "metadata": {
+                        "num_lanes": 8,
+                        "run_setup": "151-8-8-151",
+                        "setup_lims_step_id": "24-123456",
+                    },
+                    "uploaded_lims_info": [],
+                }
+            ),
             headers={"Content-Type": "application/json"},
         )
 
@@ -317,20 +334,24 @@ class TestReuploadIntegration(AsyncHTTPTestCase):
 
     def test_reupload_first_upload_unchanged(self):
         """When no document exists, POST should create new (current behavior)."""
-        self._mock_cloudant.post_view.side_effect = self._make_post_view_side_effect(include_existing_doc=False)
+        self._mock_cloudant.post_view.side_effect = self._make_post_view_side_effect(
+            include_existing_doc=False
+        )
         self._mock_cloudant.get_document.return_value.get_result.return_value = None
 
         response = self.fetch(
             "/api/v1/demux_sample_info/TEST_FC_001",
             method="POST",
-            body=json_encode({
-                "metadata": {
-                    "num_lanes": 2,
-                    "run_setup": "151-8-8-151",
-                    "setup_lims_step_id": "24-123456",
-                },
-                "uploaded_lims_info": [],
-            }),
+            body=json_encode(
+                {
+                    "metadata": {
+                        "num_lanes": 2,
+                        "run_setup": "151-8-8-151",
+                        "setup_lims_step_id": "24-123456",
+                    },
+                    "uploaded_lims_info": [],
+                }
+            ),
             headers={"Content-Type": "application/json"},
         )
 

@@ -153,9 +153,7 @@ class TestDemuxSampleInfoPost(AsyncHTTPTestCase):
         classification = handler._classify_sample_type(sample, library_method="")
 
         self.assertEqual(classification["sample_type"], "10X_SINGLE")
-        self.assertEqual(
-            classification["index_length"], [8, 0]
-        )
+        self.assertEqual(classification["index_length"], [8, 0])
 
     def test_classify_sample_type_named_index_single_sequence_row(self):
         """Regression: named index rows with only i7 sequence must not raise index errors."""
@@ -257,9 +255,7 @@ class TestDemuxSampleInfoPost(AsyncHTTPTestCase):
         classification = handler._classify_sample_type(sample, library_method="")
 
         self.assertEqual(classification["sample_type"], "SMARTSEQ")
-        self.assertEqual(
-            classification["index_length"], [11, 0]
-        )
+        self.assertEqual(classification["index_length"], [11, 0])
 
     def test_classify_sample_type_short_single_index(self):
         """Test classification of short single index samples."""
@@ -312,7 +308,9 @@ class TestDemuxSampleInfoPost(AsyncHTTPTestCase):
                 sample_id,
                 r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
             )
-            other_details = sample_data["settings"]["2024-01-15T10:30:00"]["other_details"]
+            other_details = sample_data["settings"]["2024-01-15T10:30:00"][
+                "other_details"
+            ]
             self.assertIn("sample_type", other_details)
 
         lane_6 = calculated_lanes["6"]["sample_rows"]
@@ -323,7 +321,9 @@ class TestDemuxSampleInfoPost(AsyncHTTPTestCase):
                 sample_id,
                 r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
             )
-            other_details = sample_data["settings"]["2024-01-15T10:30:00"]["other_details"]
+            other_details = sample_data["settings"]["2024-01-15T10:30:00"][
+                "other_details"
+            ]
             self.assertIn("sample_type", other_details)
             self.assertIn("index_length", other_details)
 
@@ -411,12 +411,18 @@ class TestDemuxSampleInfoPost(AsyncHTTPTestCase):
             "_id": "TEST_FC",
             "_rev": "1-test",
             "flowcell_id": "TEST_FC",
-            "metadata": {"num_lanes": 1, "run_setup": "test", "first_generated": "2024-01-01"},
+            "metadata": {
+                "num_lanes": 1,
+                "run_setup": "test",
+                "first_generated": "2024-01-01",
+            },
             "uploaded_lims_info": [],
             "calculated": {"lanes": {}, "version_history": {}},
             "samplesheets": [],
         }
-        self._app.cloudant.get_document.return_value.get_result.return_value = sample_doc
+        self._app.cloudant.get_document.return_value.get_result.return_value = (
+            sample_doc
+        )
 
         response = self.fetch(
             "/api/v1/demux_sample_info/233KCWLT4",

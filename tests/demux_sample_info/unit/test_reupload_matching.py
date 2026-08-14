@@ -5,7 +5,6 @@ import unittest
 
 from status.demux_sample_info import DemuxSampleInfoDataHandler
 
-
 SAMPLE_UUID_A = "aaaa1111-bbbb-cccc-dddd-eeeeeeeeeeee"
 SAMPLE_UUID_B = "bbbb2222-cccc-dddd-eeee-ffffffffffff"
 SAMPLE_UUID_C = "cccc3333-dddd-eeee-ffff-aaaaaaaaaaaa"
@@ -209,9 +208,7 @@ class TestReuploadMatchSamples(unittest.TestCase):
         db_index = {
             ("1", "P101", "AAAA", "GGGG"): [SAMPLE_UUID_A],
         }
-        matched, created, orphaned_uuids = handler._reupload_match_samples(
-            [], db_index
-        )
+        matched, created, orphaned_uuids = handler._reupload_match_samples([], db_index)
         self.assertEqual(matched, {})
         self.assertEqual(created, [])
         self.assertIn(SAMPLE_UUID_A, orphaned_uuids)

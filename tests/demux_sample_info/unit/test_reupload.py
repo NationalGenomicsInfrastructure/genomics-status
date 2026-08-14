@@ -7,17 +7,15 @@ These tests verify the reupload logic:
 - Metadata can be updated (run_setup, num_lanes, instrument_type)
 """
 
-import json
 import unittest
 from unittest.mock import MagicMock, Mock
 
 import tornado.web
-from tornado.testing import AsyncHTTPTestCase
 from tornado.escape import json_encode
+from tornado.testing import AsyncHTTPTestCase
 
 from status.demux_sample_info import DemuxSampleInfoDataHandler
 from tests.demux_sample_info.conftest import setup_mock_demux_config
-
 
 MATCHED_UUID = "aaaa1111-bbbb-cccc-dddd-eeeeeeeeeeee"
 NEW_UUID = "bbbb2222-cccc-dddd-eeee-ffffffffffff"
@@ -166,9 +164,11 @@ class TestReuploadPost(AsyncHTTPTestCase):
 
     def get_app(self):
         """Return the base application — mocks are set up in setUp()."""
-        return tornado.web.Application([
-            (r"/api/v1/demux_sample_info/([^/]*)", DemuxSampleInfoDataHandler),
-        ])
+        return tornado.web.Application(
+            [
+                (r"/api/v1/demux_sample_info/([^/]*)", DemuxSampleInfoDataHandler),
+            ]
+        )
 
     def setUp(self):
         super().setUp()
@@ -202,19 +202,22 @@ class TestReuploadPost(AsyncHTTPTestCase):
         response = self.fetch(
             "/api/v1/demux_sample_info/TEST_FC_001",
             method="POST",
-            body=json_encode({
-                "metadata": {
-                    "num_lanes": 2,
-                    "run_setup": "151-8-8-151",
-                    "setup_lims_step_id": "24-123456",
-                },
-                "uploaded_lims_info": [],
-            }),
+            body=json_encode(
+                {
+                    "metadata": {
+                        "num_lanes": 2,
+                        "run_setup": "151-8-8-151",
+                        "setup_lims_step_id": "24-123456",
+                    },
+                    "uploaded_lims_info": [],
+                }
+            ),
             headers={"Content-Type": "application/json"},
         )
 
-        self.assertNotEqual(response.code, 409,
-                            "POST reupload returned 409 but should merge instead")
+        self.assertNotEqual(
+            response.code, 409, "POST reupload returned 409 but should merge instead"
+        )
 
     def test_post_reupload_409_removed_on_view_hit(self):
         """POST should not return 409 even when fetch fails after view hit."""
@@ -227,20 +230,23 @@ class TestReuploadPost(AsyncHTTPTestCase):
         response = self.fetch(
             "/api/v1/demux_sample_info/TEST_FC_001",
             method="POST",
-            body=json_encode({
-                "metadata": {
-                    "num_lanes": 1,
-                    "run_setup": "151-8-8-151",
-                    "setup_lims_step_id": "24-123456",
-                },
-                "uploaded_lims_info": [],
-            }),
+            body=json_encode(
+                {
+                    "metadata": {
+                        "num_lanes": 1,
+                        "run_setup": "151-8-8-151",
+                        "setup_lims_step_id": "24-123456",
+                    },
+                    "uploaded_lims_info": [],
+                }
+            ),
             headers={"Content-Type": "application/json"},
         )
 
         # Should be 500 (document fetch failed), NOT 409
-        self.assertNotEqual(response.code, 409,
-                            "POST returned 409 for view-hit-then-fetch-fail")
+        self.assertNotEqual(
+            response.code, 409, "POST returned 409 for view-hit-then-fetch-fail"
+        )
 
     def test_validate_post_data_shared_method(self):
         """_validate_post_data should delegate to _parse_and_validate_post_data."""
@@ -265,14 +271,16 @@ class TestReuploadPost(AsyncHTTPTestCase):
 
         handler = DemuxSampleInfoDataHandler(self.get_app(), MagicMock())
         handler.request = MagicMock()
-        handler.request.body = json_encode({
-            "metadata": {
-                "num_lanes": 1,
-                "run_setup": "151-10-10-151",  # Changed run_setup
-                "setup_lims_step_id": "24-123456",
-            },
-            "uploaded_lims_info": [],
-        }).encode()
+        handler.request.body = json_encode(
+            {
+                "metadata": {
+                    "num_lanes": 1,
+                    "run_setup": "151-10-10-151",  # Changed run_setup
+                    "setup_lims_step_id": "24-123456",
+                },
+                "uploaded_lims_info": [],
+            }
+        ).encode()
 
         # Set up mocks on handler.application (which is self.application from setUp)
         handler.application.cloudant.post_view.return_value.get_result.return_value = {
@@ -289,16 +297,20 @@ class TestReuploadPost(AsyncHTTPTestCase):
         # The reupload logic updates run_setup but preserves first_generated
         # Integration test will verify the full document
         self.assertIn("first_generated", existing_doc["metadata"])
-        self.assertEqual(existing_doc["metadata"]["first_generated"], original_first_generated)
+        self.assertEqual(
+            existing_doc["metadata"]["first_generated"], original_first_generated
+        )
 
 
 class TestReuploadIndexBuilding(AsyncHTTPTestCase):
     """Test building the reupload matching index."""
 
     def get_app(self):
-        return tornado.web.Application([
-            (r"/api/v1/demux_sample_info/([^/]*)", DemuxSampleInfoDataHandler),
-        ])
+        return tornado.web.Application(
+            [
+                (r"/api/v1/demux_sample_info/([^/]*)", DemuxSampleInfoDataHandler),
+            ]
+        )
 
     def setUp(self):
         super().setUp()
@@ -364,9 +376,11 @@ class TestReuploadHelperMethods(AsyncHTTPTestCase):
     """Test helper methods used in the reupload logic."""
 
     def get_app(self):
-        return tornado.web.Application([
-            (r"/api/v1/demux_sample_info/([^/]*)", DemuxSampleInfoDataHandler),
-        ])
+        return tornado.web.Application(
+            [
+                (r"/api/v1/demux_sample_info/([^/]*)", DemuxSampleInfoDataHandler),
+            ]
+        )
 
     def setUp(self):
         super().setUp()
@@ -433,12 +447,19 @@ class TestReuploadHelperMethods(AsyncHTTPTestCase):
         # Second deletion (should be no-op)
         new_timestamp = "2025-06-02T12:00:00.000Z"
         # Store original deleted_at
-        original_deleted_at = doc["calculated"]["lanes"]["1"]["sample_rows"][ORPHANED_UUID].get("deleted_at")
-        
+        original_deleted_at = doc["calculated"]["lanes"]["1"]["sample_rows"][
+            ORPHANED_UUID
+        ].get("deleted_at")
+
         handler._delete_orphaned_sample(doc, ORPHANED_UUID, new_timestamp)
 
         # deleted_at should remain the original timestamp
-        self.assertEqual(doc["calculated"]["lanes"]["1"]["sample_rows"][ORPHANED_UUID].get("deleted_at"), original_deleted_at)
+        self.assertEqual(
+            doc["calculated"]["lanes"]["1"]["sample_rows"][ORPHANED_UUID].get(
+                "deleted_at"
+            ),
+            original_deleted_at,
+        )
 
     def test_delete_orphaned_sample_unknown_uuid(self):
         """_delete_orphaned_sample should no-op for unknown UUID."""
