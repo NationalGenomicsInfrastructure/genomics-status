@@ -153,7 +153,9 @@ class TestReuploadMatchSamples(unittest.TestCase):
         self.assertIn(SAMPLE_UUID_A, matched)
         self.assertNotIn(SAMPLE_UUID_A, orphaned_uuids)
         self.assertEqual(len(created), 0)
-        self.assertEqual(len(orphaned_uuids), 0)
+        # SAMPLE_UUID_B is orphaned because nothing in CSV matches it
+        self.assertIn(SAMPLE_UUID_B, orphaned_uuids)
+        self.assertEqual(len(orphaned_uuids), 1)
 
     def test__no_match_creates_new(self):
         """A CSV row not matching any DB entry goes to created."""

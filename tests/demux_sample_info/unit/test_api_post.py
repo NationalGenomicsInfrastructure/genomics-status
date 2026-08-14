@@ -41,7 +41,6 @@ class TestDemuxSampleInfoPost(AsyncHTTPTestCase):
         self._app.test_mode = True
         setup_mock_demux_config(
             self._app.cloudant,
-            config={},
             version="test_version",
             config_id="test_config_id",
         )
@@ -337,7 +336,10 @@ class TestDemuxSampleInfoPost(AsyncHTTPTestCase):
             "2024-01-15T10:30:00"
         )
 
-        with patch.object(handler, "_get_project_library_method", return_value=""):
+        with (
+            patch.object(handler, "_get_project_info_by_name", return_value={}),
+            patch.object(handler, "_get_project_library_method", return_value=""),
+        ):
             flowcell_id = "233KCWLT4"
             metadata = self.test_data["metadata"]
             uploaded_info = self.test_data["uploaded_lims_info"]
