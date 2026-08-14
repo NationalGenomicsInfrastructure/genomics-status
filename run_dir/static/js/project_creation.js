@@ -312,6 +312,9 @@ const vProjectCreationForm = {
         return {
             showDebug: false,
             isTryingOutForm: false,
+            isEditingProject: false,
+            projectIdToRetrieve: '',
+            retrievedProjectId: null,
         }
     },
     computed: {
@@ -376,26 +379,91 @@ const vProjectCreationForm = {
             }
             return this.fieldsPerGroup[group_identifier];
         },
+        retrieveProjectData() {
+            if (!this.projectIdToRetrieve.trim()) {
+                alert('Please enter a project ID');
+                return;
+            }
+            
+            axios
+                .get(`/api/v1/project_creation_form_edit?project_id=${this.projectIdToRetrieve}`)
+                .then(response => {
+                    if (response.data.result) {
+                        this.populateFormWithProjectData(response.data.result);
+                        this.retrievedProjectId = response.data.result.project_id;
+                        this.isEditingProject = true;
+                        alert(`Project ${response.data.result.name}, ${response.data.result.project_id} loaded successfully`);
+                    } else {
+                        alert('Project not found');
+                    }
+                })
+                .catch(error => {
+                    alert(`Error retrieving project: ${error.response?.data?.error || error.message}`);
+                    console.log(error);
+                });
+        },
+        populateFormWithProjectData(projectData) {
+            // Populate form fields with project data
+            if (projectData.name) {
+                this.$root.formData['project_name'] = projectData.name;
+            }
+            if (projectData.Account) {
+                this.$root.formData['user_account'] = projectData.Account;
+            }
+            if (projectData.Client) {
+                this.$root.formData['researcher_name'] = projectData.Client;
+            }
+            if (projectData.researcher_id) {
+                this.$root.formData['researcher_id'] = projectData.researcher_id;
+            }
+            if (projectData.udfs) {
+                Object.entries(projectData.udfs).forEach(([udfName, udfValue]) => {
+                    // Find the field identifier that corresponds to this UDF
+                    const fieldIdentifier = Object.keys(this.$root.fields).find(fieldId => {
+                        return this.$root.fields[fieldId].ngi_form_lims_udf === udfName;
+                    });
+                    if (fieldIdentifier) {
+                        this.$root.formData[fieldIdentifier] = udfValue;
+                    }
+                });
+            }
+        },
         submitForm() {
             const form_data = this.$root.formData;
             const form_metadata = {};
             form_metadata['title'] = this.$root.jsonForm['title'];
             form_metadata['version'] = this.$root.jsonForm['version'];
-            const matchingResearcher = this.$root.fetched_data['researcher_name'].find(
-                researcher => researcher.researcher_name === form_data['researcher_name'].trim()
-            );
-            form_data['researcher_id'] = matchingResearcher ? matchingResearcher.id : '';
+            
+            // Only look for matching researcher if we have fetched data available
+            if (this.$root.fetched_data['researcher_name']) {
+                const matchingResearcher = this.$root.fetched_data['researcher_name'].find(
+                    researcher => researcher.researcher_name === form_data['researcher_name'].trim()
+                );
+                form_data['researcher_id'] = matchingResearcher ? matchingResearcher.id : '';
+            }
+            
+            if (this.isEditingProject) {
+                // Save edits to existing project
+                this.saveProjectEdits();
+            } else {
+                // Create new project
+                this.createNewProject(form_data, form_metadata);
+            }
+        },
+        createNewProject(form_data, form_metadata) {
             axios
                 .post('/api/v1/submit_project_creation_form', {
                     form_data: form_data,
                     form_metadata: form_metadata,
                 })
                 .then(response => {
-                    console.log('Server response:', response.data);
                     if (response.data.success && response.data.project_id) {
                         alert(`Project created with ID: ${response.data.project_id}`);
                         // Clear the form data
                         this.$root.formData = {};
+                        this.isEditingProject = false;
+                        this.retrievedProjectId = null;
+                        this.projectIdToRetrieve = '';
                     }
                     else{
                         alert("Hmm, something went wrong and no project id was generated. Please contact a system administrator.");
@@ -403,6 +471,38 @@ const vProjectCreationForm = {
                 })
                 .catch(error => {
                     this.$root.errorMessages.push('Error submitting form. Please try again or contact a system administrator.');
+                    console.log(error);
+                });
+        },
+        saveProjectEdits() {
+            const form_data = this.$root.formData;
+            
+            // Build project values from UDFs
+            const project_values = { udfs: {} };
+            Object.keys(this.$root.fields).forEach(fieldId => {
+                const field = this.$root.fields[fieldId];
+                if (field.ngi_form_lims_udf) {
+                    project_values.udfs[field.ngi_form_lims_udf] = form_data[fieldId];
+                }
+            });
+            
+            axios
+                .post(`/api/v1/project_creation_form_edit?project_id=${this.retrievedProjectId}`, {
+                    form_data: {
+                        project_values: project_values,
+                        researcher_id: form_data['researcher_id']
+                    }
+                })
+                .then(response => {
+                    alert(`Project ${this.retrievedProjectId} updated successfully`);
+                    // Clear the editing state
+                    this.isEditingProject = false;
+                    this.retrievedProjectId = null;
+                    this.projectIdToRetrieve = '';
+                    this.$root.formData = {};
+                })
+                .catch(error => {
+                    alert(`Error saving project edits: ${error.response?.data?.error || error.message}`);
                     console.log(error);
                 });
         },
@@ -473,6 +573,29 @@ const vProjectCreationForm = {
                         <p>{{ description }}</p>
                         <p>{{ instruction }}</p>
 
+                        <div class="card mb-4">
+                            <div class="card-body">
+                                <h4 class="card-title">Retrieve Existing Project</h4>
+                                <div class="input-group">
+                                    <input 
+                                        type="text" 
+                                        class="form-control" 
+                                        placeholder="Enter project ID"
+                                        v-model="projectIdToRetrieve"
+                                        @keyup.enter="retrieveProjectData"
+                                    />
+                                    <button class="btn btn-primary" @click="retrieveProjectData" type="button">
+                                        <i class="fa fa-search mr-2"></i>Retrieve Project
+                                    </button>
+                                </div>
+                                <template v-if="isEditingProject">
+                                    <div class="alert alert-info mt-2 mb-0">
+                                        <i class="fa fa-info-circle mr-2"></i>Editing project: <strong>{{ retrievedProjectId }}</strong>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+
                         <form @submit.prevent="submitForm" class="mt-3 mb-5">
                             <template v-for="[group_identifier, form_group] in sortedFormGroups" :key="group_identifier">
                                 <template v-if="Object.keys(this.fields_for_given_group(group_identifier)).length !== 0">
@@ -480,13 +603,27 @@ const vProjectCreationForm = {
                                         <h3>{{form_group.display_name}}</h3>
                                         <template v-for="(field, identifier) in this.fields_for_given_group(group_identifier)" :key="identifier">
                                             <template v-if="field.ngi_form_type !== undefined">
-                                                <v-form-field :field="field" :identifier="identifier"></v-form-field>
+                                                <v-form-field :field="field" :identifier="identifier" :is-editing-project="isEditingProject"></v-form-field>
                                             </template>
                                         </template>
                                     </div>
                                 </template>
                             </template>
-                            <button type="submit" class="btn btn-lg btn-success mt-3" :disabled="this.$root.toplevelEditMode">Create Project in LIMS</button>
+                            <div class="mt-3">
+                                <template v-if="isEditingProject">
+                                    <button type="submit" class="btn btn-lg btn-warning" :disabled="this.$root.toplevelEditMode">
+                                        <i class="fa fa-save mr-2"></i>Save Edits in LIMS
+                                    </button>
+                                    <button type="button" class="btn btn-lg btn-secondary ml-2" @click="isEditingProject = false; retrievedProjectId = null; projectIdToRetrieve = ''; this.$root.formData = {}" :disabled="this.$root.toplevelEditMode">
+                                        <i class="fa fa-times mr-2"></i>Cancel
+                                    </button>
+                                </template>
+                                <template v-else>
+                                    <button type="submit" class="btn btn-lg btn-success" :disabled="this.$root.toplevelEditMode">
+                                        <i class="fa fa-plus mr-2"></i>Create Project in LIMS
+                                    </button>
+                                </template>
+                            </div>
                         </form>
                     </template>
                     <template v-if="this.$root.toplevelEditMode">
@@ -516,7 +653,7 @@ const vProjectCreationForm = {
 
 const vFormField = {
     name: 'v-form-field',
-    props: ['field', 'identifier'],
+    props: ['field', 'identifier', 'isEditingProject'],
     data() {
         return {
             cancelTokenSource: null,
@@ -787,6 +924,7 @@ const vFormField = {
                             :list="identifier+'_list'"
                             placeholder="Type to search..."
                             @change="onCustomDatalistChange"
+                            :disabled="isEditingProject && identifier === 'user_account'"
                         />
                         <datalist :id="identifier+'_list'">
                             <option
@@ -800,7 +938,7 @@ const vFormField = {
                     </div>
                 </template>
                 <template v-if="this.formType === 'string'">
-                    <input class="form-control" :type="text" :name="identifier" :id="identifier" :placeholder="description" v-model="this.$root.formData[identifier]">
+                    <input class="form-control" :type="text" :name="identifier" :id="identifier" :placeholder="description" v-model="this.$root.formData[identifier]" :disabled="isEditingProject && identifier === 'project_name'">
                 </template>
                 <template v-if="this.formType === 'date'">
                     <input class="form-control" type="date" :name="identifier" :id="identifier" v-model="this.$root.formData[identifier]">

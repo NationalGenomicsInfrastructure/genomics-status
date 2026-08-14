@@ -2,12 +2,12 @@ import datetime
 import json
 import re
 
+import requests
 from genologics import lims
 from genologics.config import BASEURI, PASSWORD, USERNAME
-from genologics.entities import Lab, Researcher
+from genologics.entities import Lab, Project, Researcher
 from requests import exceptions as requests_exceptions
 
-from status.clone_project import LIMSProjectCloningHandler
 from status.projects import ProjectsBaseDataHandler
 from status.util import LIMSQueryBaseHandler, SafeHandler
 
@@ -68,6 +68,25 @@ class ProjectCreationFormUtils:
         if doc_status != "draft":
             return False
         return True
+
+
+class ProjectCreationUtils:
+    """Utility class for project creation operations."""
+
+    @staticmethod
+    def get_latest_udf_list(cloudant_client):
+        latest_form = ProjectCreationFormUtils.get_valid_proj_creation_form(
+            cloudant_client
+        )
+        udf_list = []
+        for _, property_info in (
+            latest_form.get("json_schema", {}).get("properties", {}).items()
+        ):
+            if "ngi_form_lims_udf" in property_info:
+                udf_name = property_info["ngi_form_lims_udf"]
+                if udf_name not in udf_list:
+                    udf_list.append(udf_name)
+        return udf_list
 
 
 class ProjectCreationHandler(SafeHandler):
@@ -164,20 +183,14 @@ class ProjectCreationDataHandler(SafeHandler):
             project_values["researcher"] = researcher
             project_values["udfs"] = {}
             project_values["udfs"]["Project coordinator"] = current_user.name
-            latest_form = ProjectCreationFormUtils.get_valid_proj_creation_form(
+            udf_list = ProjectCreationUtils.get_latest_udf_list(
                 self.application.cloudant
             )
-            properties = latest_form.get("json_schema", {}).get("properties", {})
-            for property_name, property_info in properties.items():
-                if "ngi_form_lims_udf" in property_info:
-                    udf_name = property_info["ngi_form_lims_udf"]
-                    project_values["udfs"][udf_name] = request_data["form_data"].get(
-                        property_name
-                    )
+            for udf in udf_list:
+                if udf not in project_values["udfs"]:
+                    project_values["udfs"][udf] = request_data["form_data"].get(udf)
 
-            created_project = LIMSProjectCloningHandler.create_project_in_lims(
-                project_values
-            )
+            created_project = self.create_project_in_lims(project_values)
             if "error" in created_project:
                 self.set_status(400)
                 return self.write(json.dumps({"error": created_project["error"]}))
@@ -190,6 +203,23 @@ class ProjectCreationDataHandler(SafeHandler):
         except json.JSONDecodeError:
             self.set_status(400)
             return self.write("Error: Invalid JSON data")
+
+    @staticmethod
+    def create_project_in_lims(proj_values):
+        """Create a new project in LIMS and return the project id and name"""
+        lims_instance = lims.Lims(BASEURI, USERNAME, PASSWORD)
+
+        try:
+            new_project = Project.create(
+                lims_instance,
+                udfs=proj_values["udfs"],
+                name=proj_values["name"],
+                researcher=proj_values["researcher"],
+            )
+        except requests.exceptions.HTTPError as e:
+            return {"error": e.response.text}
+
+        return {"project_id": new_project.id, "project_name": new_project.name}
 
 
 class ProjectCreationFormDataHandler(SafeHandler):
@@ -598,3 +628,121 @@ class ProjectCreationIndividualDataFetchHandler(LIMSQueryBaseHandler):
             researchers.append({"researcher_name": researcher_name, "id": f"{row[0]}"})
 
         return researchers
+
+
+class ProjectEditingHandler(SafeHandler):
+    """API Handler to fetch data from LIMS for project editing based on provided field and value."""
+
+    def get(self, project_id):
+        t = self.application.loader.load("project_creation/project_creation.html")
+
+        self.write(
+            t.generate(
+                gs_globals=self.application.gs_globals,
+                user=self.get_current_user(),
+                edit_mode=False,
+                version_id=None,
+                get_project_id=project_id,
+            )
+        )
+
+
+class ProjectEditingDataHandler(SafeHandler):
+    """API Handler to fetch data from LIMS based on provided field and value for project editing"""
+
+    def get(self):
+        project_identifier = self.get_query_argument("project_id", default=None)
+        project_id = self.get_project_id(self.application.cloudant, project_identifier)
+        if not project_id:
+            self.set_status(404)
+            return self.write({"error": "Project not found"})
+
+        udf_list = ProjectCreationUtils.get_latest_udf_list(self.application.cloudant)
+
+        lims_instance = lims.Lims(BASEURI, USERNAME, PASSWORD)
+        project_data = self.retrieve_project_data_from_lims(
+            lims_instance, project_id, udf_list
+        )
+        project_data["project_id"] = (
+            project_id  # Include the project ID in the response
+        )
+
+        if not project_data:
+            self.set_status(404)
+            return self.write({"error": "Error retrieving project data from LIMS"})
+        return self.write({"result": project_data})
+
+    def post(self):
+        current_user = self.get_current_user()
+        if not (current_user.is_proj_coord or current_user.is_admin):
+            self.set_status(401)
+            return self.write(
+                "Error: You do not have the permissions for this operation!"
+            )
+        request_data = json.loads(self.request.body)
+        project_values = request_data["form_data"].get("project_values", {})
+        researcher_id = request_data["form_data"].get("researcher_id")
+
+        project_id = self.get_query_argument("project_id", default=None)
+
+        if not project_id:
+            self.set_status(404)
+            return self.write({"error": "Project not found"})
+
+        lims_instance = lims.Lims(BASEURI, USERNAME, PASSWORD)
+        existing_project = Project(lims=lims_instance, id=project_id)
+        udf_list = ProjectCreationUtils.get_latest_udf_list(self.application.cloudant)
+        for udf in udf_list:
+            if udf in project_values["udfs"]:
+                existing_project.udf[udf] = project_values["udfs"][udf]
+
+        existing_project.researcher = Researcher(lims_instance, id=researcher_id)
+        try:
+            existing_project.put()
+        except requests.exceptions.HTTPError as e:
+            self.set_status(500)
+            return self.write({"error": f"Error updating project: {str(e)}"})
+
+        return self.write({"result": "Project updated successfully"})
+
+    @staticmethod
+    def retrieve_project_data_from_lims(lims_instance, projectid, udf_list):
+        existing_project = Project(lims=lims_instance, id=projectid)
+        proj_values = {}
+        try:
+            proj_values["name"] = existing_project.name
+        except requests.exceptions.HTTPError:
+            return {}
+
+        proj_values["researcher_id"] = existing_project.researcher.id
+        proj_values["Client"] = existing_project.researcher.name
+        proj_values["Account"] = existing_project.researcher.lab.name
+
+        udfs = {}
+        for udf in udf_list:
+            if udf in existing_project.udf:
+                udfs[udf] = existing_project.udf[udf]
+        proj_values["udfs"] = udfs
+
+        return proj_values
+
+    @staticmethod
+    def get_project_id(cloudant, project_identifier):
+        """Return projectid for the provided identifier"""
+        # Check if the project_identifier matches a project id.
+        # If not, assuming it's a project name, try to get the project id from the project name,
+        # since the LIMS API only accepts project ids
+        projectid = None
+        if re.match(r"^(P\d{3,})", project_identifier):
+            projectid = project_identifier
+        else:
+            try:
+                projectid = cloudant.post_view(
+                    db="projects",
+                    ddoc="projects",
+                    view="name_to_id",
+                    key=project_identifier,
+                ).get_result()["rows"][0]["value"]
+            except IndexError:
+                pass
+        return projectid

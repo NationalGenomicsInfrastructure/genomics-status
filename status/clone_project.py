@@ -1,10 +1,10 @@
-import re
-
-import requests
 from genologics import lims
 from genologics.config import BASEURI, PASSWORD, USERNAME
-from genologics.entities import Project
 
+from status.project_creation import (
+    ProjectCreationDataHandler,
+    ProjectEditingDataHandler,
+)
 from status.util import SafeHandler
 
 
@@ -28,7 +28,9 @@ class LIMSProjectCloningHandler(SafeHandler):
     """
 
     def get(self, project_identifier):
-        projectid = self.get_project_id(project_identifier)
+        projectid = ProjectEditingDataHandler.get_project_id(
+            self.application.cloudant, project_identifier
+        )
         if not projectid:
             self.set_status(404)
             return self.write({"error": "Project not found"})
@@ -52,7 +54,9 @@ class LIMSProjectCloningHandler(SafeHandler):
                 "Error: You do not have the permissions for this operation!"
             )
 
-        projectid = self.get_project_id(project_identifier)
+        projectid = ProjectEditingDataHandler.get_project_id(
+            self.application.cloudant, project_identifier
+        )
         if not projectid:
             self.set_status(404)
             return self.write({"error": "Project not found"})
@@ -67,7 +71,7 @@ class LIMSProjectCloningHandler(SafeHandler):
         self.write(new_proj)
 
     def get_project_data_from_lims(self, projectid, req_type):
-        copy_udfs = {
+        copy_udfs = [
             "Customer project reference",
             "Project Comment",
             "Type",
@@ -101,75 +105,24 @@ class LIMSProjectCloningHandler(SafeHandler):
             "PhiX spike-in (percent)",
             "Flowcell option",
             "Ethics permit number",
-        }
+        ]
 
         lims_instance = lims.Lims(BASEURI, USERNAME, PASSWORD)
-        uri = lims_instance.get_uri(f"projects/{projectid}")
-        existing_project = Project(lims=lims_instance, uri=uri)
-        proj_values = {}
-        try:
-            proj_values["name"] = existing_project.name
-        except requests.exceptions.HTTPError:
-            return {}
-
-        proj_values["researcher_id"] = existing_project.researcher.id
-        proj_values["Client"] = existing_project.researcher.name
-        proj_values["Account"] = existing_project.researcher.lab.name
-
-        udfs = {}
-        for udf in copy_udfs:
-            if udf in existing_project.udf:
-                udfs[udf] = existing_project.udf[udf]
-        proj_values["udfs"] = udfs
+        proj_values = ProjectEditingDataHandler.retrieve_project_data_from_lims(
+            lims_instance, projectid, copy_udfs
+        )
 
         if req_type == "get":
             return proj_values
 
         else:
-            new_name = existing_project.name + "_CLONE"
+            new_name = proj_values["name"] + "_CLONE"
             check_if_new_name_exists = lims_instance.get_projects(name=new_name)
 
             if check_if_new_name_exists:
                 return {"error": f"A project with the name {new_name} already exists"}
 
             proj_values["name"] = new_name
-            proj_values["researcher"] = existing_project.researcher
+            proj_values["researcher"] = proj_values["researcher"]
 
-            return self.create_project_in_lims(proj_values)
-
-    def get_project_id(self, project_identifier):
-        """Return projectid for the provided identifier"""
-        # Check if the project_identifier matches a project id.
-        # If not, assuming it's a project name, try to get the project id from the project name,
-        # since the LIMS API only accepts project ids
-        projectid = None
-        if re.match(r"^(P\d{3,})", project_identifier):
-            projectid = project_identifier
-        else:
-            try:
-                projectid = self.application.cloudant.post_view(
-                    db="projects",
-                    ddoc="name_to_id",
-                    view="name_to_id",
-                    key=project_identifier,
-                ).get_result()["rows"][0]["value"]
-            except IndexError:
-                pass
-        return projectid
-
-    @staticmethod
-    def create_project_in_lims(proj_values):
-        """Create a new project in LIMS and return the project id and name"""
-        lims_instance = lims.Lims(BASEURI, USERNAME, PASSWORD)
-
-        try:
-            new_project = Project.create(
-                lims_instance,
-                udfs=proj_values["udfs"],
-                name=proj_values["name"],
-                researcher=proj_values["researcher"],
-            )
-        except requests.exceptions.HTTPError as e:
-            return {"error": e.response.text}
-
-        return {"project_id": new_project.id, "project_name": new_project.name}
+            return ProjectCreationDataHandler.create_project_in_lims(proj_values)

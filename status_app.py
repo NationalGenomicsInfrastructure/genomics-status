@@ -109,6 +109,8 @@ from status.project_creation import (
     ProjectCreationIndividualDataFetchHandler,
     ProjectCreationListFormsDataHandler,
     ProjectCreationListFormsHandler,
+    ProjectEditingDataHandler,
+    ProjectEditingHandler,
 )
 from status.projects import (
     CaliperImageHandler,
@@ -320,6 +322,7 @@ class Application(tornado.web.Application):
             ("/api/v1/project/([^/]*)/tickets", ProjectTicketsDataHandler),
             ("/api/v1/project_count_details", ProjectCreationCountDetailsDataHandler),
             ("/api/v1/project_creation_form", ProjectCreationFormDataHandler),
+            ("/api/v1/project_creation_form_edit", ProjectEditingDataHandler),
             ("/api/v1/project_creation_forms", ProjectCreationListFormsDataHandler),
             ("/api/v1/projects_fields", ProjectsFieldsDataHandler),
             ("/api/v1/project_reads_sequenced/([^/]*)$", ProjectReadsSequencedHandler),
@@ -428,6 +431,7 @@ class Application(tornado.web.Application):
             ("/project/([^/]*)$", ProjectSamplesOldHandler),
             ("/project_new/([^/]*)$", ProjectSamplesHandler),
             ("/project_creation", ProjectCreationHandler),
+            ("/project_creation_edit/([^/]*)$", ProjectEditingHandler),
             ("/project_creation_forms", ProjectCreationListFormsHandler),
             ("/projects", ProjectsHandler),
             ("/project_cards", ProjectCardsHandler),
