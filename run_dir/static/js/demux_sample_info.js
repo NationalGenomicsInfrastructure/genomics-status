@@ -1791,7 +1791,9 @@ const SamplesheetUploadForm = {
             validationResult: null,
             error: null,
             loading: false,
-            success: false
+            success: false,
+            showReuploadConfirmModal: false,
+            awaitingConfirmation: false
         };
     },
     methods: {
@@ -2008,6 +2010,11 @@ const SamplesheetUploadForm = {
         },
 
         async submit() {
+            if (this.validationResult?.is_reupload) {
+                this.showReuploadConfirmModal = true;
+                this.awaitingConfirmation = true;
+                return;
+            }
             await this.performUpload(false);
         },
 
@@ -2024,6 +2031,17 @@ const SamplesheetUploadForm = {
             this.validationResult = null;
             this.error = null;
             this.success = false;
+            this.showReuploadConfirmModal = false;
+            this.awaitingConfirmation = false;
+        },
+        async confirmReupload() {
+            this.showReuploadConfirmModal = false;
+            this.awaitingConfirmation = false;
+            await this.performUpload(false);
+        },
+        cancelReupload() {
+            this.showReuploadConfirmModal = false;
+            this.awaitingConfirmation = false;
         }
     },
     template: /*html*/`
@@ -2205,6 +2223,121 @@ const SamplesheetUploadForm = {
                         </li>
                     </ul>
                 </div>
+
+                <!-- Full document preview -->
+                <div v-if="validationResult.document" class="mt-3">
+                    <details>
+                        <summary style="cursor: pointer;" class="text-primary">
+                            <strong>View full document</strong>
+                        </summary>
+                        <pre class="bg-light p-3 mt-2 border" style="max-height: 400px; overflow-y: auto; font-size: 0.85em;">{{ JSON.stringify(validationResult.document, null, 2) }}</pre>
+                    </details>
+                </div>
+            </div>
+
+            <!-- Reupload confirmation modal -->
+            <div v-if="showReuploadConfirmModal" class="modal d-block" style="background: rgba(0,0,0,0.5);" tabindex="-1">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header bg-warning">
+                            <h5 class="modal-title">
+                                <i class="fa fa-exclamation-triangle"></i> Confirm Reupload
+                            </h5>
+                            <button type="button" class="btn-close" @click="cancelReupload"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="alert alert-warning">
+                                <strong>Warning:</strong> This will modify the existing demux sample info for this flowcell.
+                            </div>
+
+                            <p>The following changes will be applied:</p>
+
+                            <ul class="mb-3">
+                                <li><strong>{{ validationResult.summary.matched }}</strong> matched sample(s) will be updated from CSV</li>
+                                <li><strong>{{ validationResult.summary.created }}</strong> new sample(s) will be created with new UUIDs</li>
+                                <li><strong>{{ validationResult.summary.deleted }}</strong> sample(s) will be soft-deleted (excluded from samplesheets)</li>
+                            </ul>
+
+                            <div v-if="validationResult.changes?.matched?.length" class="mb-3">
+                                <h6><i class="fa fa-check text-success"></i> Matched Samples (will be updated)</h6>
+                                <table class="table table-sm table-bordered">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Sample ID</th>
+                                            <th>UUID</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr v-for="m in validationResult.changes.matched" :key="m.uuid">
+                                            <td>{{ m.sample_id || '-' }}</td>
+                                            <td><code>{{ m.uuid }}</code></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div v-if="validationResult.changes?.new_samples?.length" class="mb-3">
+                                <h6><i class="fa fa-plus text-primary"></i> New Samples (will be created)</h6>
+                                <table class="table table-sm table-bordered">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Lane</th>
+                                            <th>Sample ID</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr v-for="s in validationResult.changes.new_samples" :key="s.sample_id + s.lane">
+                                            <td>{{ s.lane }}</td>
+                                            <td>{{ s.sample_id || '-' }}</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div v-if="validationResult.changes?.deleted?.length" class="mb-3">
+                                <h6><i class="fa fa-times text-danger"></i> Samples to be Soft-deleted (excluded from samplesheets)</h6>
+                                <table class="table table-sm table-bordered">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Sample ID</th>
+                                            <th>UUID</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr v-for="d in validationResult.changes.deleted" :key="d">
+                                            <td>{{ d || '-' }}</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div v-if="validationResult.changes?.metadata?.length" class="mb-3">
+                                <h6><i class="fa fa-info-circle"></i> Metadata Changes</h6>
+                                <ul class="list-unstyled">
+                                    <li v-for="c in validationResult.changes.metadata" :key="c.field" class="mb-1">
+                                        <span v-if="c.old && c.new" class="text-warning">
+                                            <strong>{{ c.field }}:</strong> {{ c.old }} &rarr; {{ c.new }}
+                                        </span>
+                                        <span v-else-if="!c.old && c.new" class="text-success">
+                                            <strong>{{ c.field }}:</strong> (new) {{ c.new }}
+                                        </span>
+                                        <span v-else-if="c.old && !c.new" class="text-danger">
+                                            <strong>{{ c.field }}:</strong> (removed) {{ c.old }}
+                                        </span>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" @click="cancelReupload">Cancel</button>
+                            <button type="button" class="btn btn-warning" @click="confirmReupload" :disabled="loading">
+                                <span v-if="loading" class="spinner-border spinner-border-sm mr-2"></span>
+                                <i v-else class="fa fa-check mr-1"></i>
+                                Confirm & Apply
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- Original validation result preview -->
@@ -2216,9 +2349,9 @@ const SamplesheetUploadForm = {
                     <p class="mb-2"><strong>Number of samples:</strong> {{ validationResult.document?.uploaded_lims_info?.length || 0 }}</p>
                     <details class="mt-2">
                         <summary style="cursor: pointer;" class="text-primary">
-                            <strong>View full validation result</strong>
+                            <strong>View full document</strong>
                         </summary>
-                        <pre class="bg-light p-3 mt-2 border" style="max-height: 400px; overflow-y: auto; font-size: 0.85em;">{{ JSON.stringify(validationResult, null, 2) }}</pre>
+                        <pre class="bg-light p-3 mt-2 border" style="max-height: 400px; overflow-y: auto; font-size: 0.85em;">{{ JSON.stringify(validationResult.document, null, 2) }}</pre>
                     </details>
                 </div>
             </div>
