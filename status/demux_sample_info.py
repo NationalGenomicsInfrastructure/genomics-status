@@ -1476,8 +1476,10 @@ class DemuxSampleInfoDataHandler(SafeHandler):
 
         for lane_key, lane_data in lanes.items():
             sample_rows = lane_data.get("sample_rows", {})
-            for uuid, sample_row in sample_rows.items():
-                settings_versions = sorted(sample_row.get("settings", {}).keys(), reverse=True)
+            for sample_uuid, sample_row in sample_rows.items():
+                settings_versions = sorted(
+                    sample_row.get("settings", {}).keys(), reverse=True
+                )
                 if not settings_versions:
                     continue
                 latest = sample_row["settings"][settings_versions[0]]
@@ -1493,7 +1495,7 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                     per_sample.get("index", ""),
                     per_sample.get("index2", ""),
                 )
-                index.setdefault(key, []).append(uuid)
+                index.setdefault(key, []).append(sample_uuid)
 
         return index
 
@@ -1528,7 +1530,9 @@ class DemuxSampleInfoDataHandler(SafeHandler):
         # sequences is [[index1, index2]] for single-entry samples
         first_sequence = sequences[0] if sequences else []
         index_1 = first_sequence[0] if first_sequence else csv_row.get("index", "")
-        index_2 = first_sequence[1] if len(first_sequence) > 1 else csv_row.get("index2", "")
+        index_2 = (
+            first_sequence[1] if len(first_sequence) > 1 else csv_row.get("index2", "")
+        )
 
         return index_1, index_2, sample_classification, project_name, project_id
 
@@ -1632,19 +1636,19 @@ class DemuxSampleInfoDataHandler(SafeHandler):
         # Resolve each CSV sample through classification to get effective indexes
         resolved_samples = []
         for csv_row in uploaded_lims_info:
-            effective_index, effective_index2, sample_class, project_name, project_id = (
-                self._resolve_csv_sample(csv_row.copy(), metadata)
-            )
+            (
+                effective_index,
+                effective_index2,
+                sample_class,
+                project_name,
+                project_id,
+            ) = self._resolve_csv_sample(csv_row.copy(), metadata)
             # Attach derived data back to the row for later use
             resolved_row = dict(csv_row)
             resolved_row["project_name"] = project_name
             resolved_row["project_id"] = project_id
             resolved_row["_matched_class"] = sample_class
-            try:
-                mini_id = csv_row.get("sample_id", "")
-                sample_id = self._normalize_sample_id(csv_row.get("sample_id", ""))
-            except AttributeError:
-                sample_id = str(csv_row.get("sample_id", ""))
+            sample_id = self._normalize_sample_id(csv_row.get("sample_id", ""))
             resolved_row["_reupload_key"] = (
                 str(resolved_row["lane"]),
                 sample_id,
@@ -1671,21 +1675,25 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                 old_value = document["metadata"].get(field)
                 new_value = metadata[field]
                 if old_value != new_value:
-                    metadata_changes.append({
-                        "field": field,
-                        "old": old_value,
-                        "new": new_value,
-                    })
+                    metadata_changes.append(
+                        {
+                            "field": field,
+                            "old": old_value,
+                            "new": new_value,
+                        }
+                    )
                 document["metadata"][field] = metadata[field]
         if "setup_lims_step_id" in metadata:
             old_value = document["metadata"].get("setup_lims_step_id")
             new_value = metadata["setup_lims_step_id"]
             if old_value != new_value:
-                metadata_changes.append({
-                    "field": "setup_lims_step_id",
-                    "old": old_value,
-                    "new": new_value,
-                })
+                metadata_changes.append(
+                    {
+                        "field": "setup_lims_step_id",
+                        "old": old_value,
+                        "new": new_value,
+                    }
+                )
             document["metadata"]["setup_lims_step_id"] = metadata["setup_lims_step_id"]
 
         # 2) Merge matched sample rows — add new settings on top of existing
@@ -1702,7 +1710,9 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                 latest = candidate_row["settings"][latest_ts]
                 if latest["per_sample_fields"]["Lane"] == int(lane_key):
                     if (
-                        self._strip_sample_id(latest["per_sample_fields"].get("Sample_ID", ""))
+                        self._strip_sample_id(
+                            latest["per_sample_fields"].get("Sample_ID", "")
+                        )
                         == key[1]
                         and latest["per_sample_fields"].get("index", "") == key[2]
                         and latest["per_sample_fields"].get("index2", "") == key[3]
@@ -1714,12 +1724,10 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                 new_settings_entry = new_calculated_lanes[lane_key]["sample_rows"][
                     new_calculated_uuid
                 ]["settings"]
-                existing_row = document["calculated"]["lanes"][lane_key][
-                    "sample_rows"
-                ][old_uuid]
-                existing_row["settings"].update(
-                    copy.deepcopy(new_settings_entry)
-                )
+                existing_row = document["calculated"]["lanes"][lane_key]["sample_rows"][
+                    old_uuid
+                ]
+                existing_row["settings"].update(copy.deepcopy(new_settings_entry))
                 existing_row["last_modified"] = timestamp
                 updated_uuids.add(old_uuid)
 
@@ -1734,14 +1742,12 @@ class DemuxSampleInfoDataHandler(SafeHandler):
             ].items():
                 latest_ts = max(cand_row["settings"].keys())
                 latest = cand_row["settings"][latest_ts]
-                try:
-                    mini_id = resolved_row.get("sample_id", "")
-                    sample_id = self._normalize_sample_id(csv_row.get("sample_id", ""))
-                except AttributeError:
-                    sample_id = str(resolved_row.get("sample_id", ""))
+                sample_id = self._normalize_sample_id(resolved_row.get("sample_id", ""))
                 if (
                     (
-                        self._strip_sample_id(latest["per_sample_fields"].get("Sample_ID", ""))
+                        self._strip_sample_id(
+                            latest["per_sample_fields"].get("Sample_ID", "")
+                        )
                         == sample_id
                     )
                     and latest["per_sample_fields"]["Lane"] == int(lane_key)
@@ -1750,9 +1756,9 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                 ):
                     if lane_key not in document["calculated"]["lanes"]:
                         document["calculated"]["lanes"][lane_key] = {"sample_rows": {}}
-                    document["calculated"]["lanes"][lane_key]["sample_rows"][cand_uuid] = (
-                        cand_row
-                    )
+                    document["calculated"]["lanes"][lane_key]["sample_rows"][
+                        cand_uuid
+                    ] = cand_row
                     break
 
         # 4) Soft-delete orphaned UUIDs
@@ -1763,9 +1769,7 @@ class DemuxSampleInfoDataHandler(SafeHandler):
         if "version_history" not in document["calculated"]:
             document["calculated"]["version_history"] = {}
 
-        uploader = (
-            self.get_current_user().email if self.get_current_user() else None
-        )
+        uploader = self.get_current_user().email if self.get_current_user() else None
         if comment:
             user_comment = comment
         else:
@@ -1793,49 +1797,60 @@ class DemuxSampleInfoDataHandler(SafeHandler):
         if dry_run:
             self.set_status(200)
             self.set_header("Content-type", "application/json")
-            self.write(json.dumps({
-                "status": "dry_run",
-                "message": "Dry run - reupload not saved",
-                "flowcell_id": flowcell_id,
-                "timestamp": timestamp,
-                "is_reupload": True,
-                "summary": {
-                    "matched": len(matched),
-                    "created": len(created),
-                    "deleted": len(orphaned_uuids),
-                },
-                "changes": {
-                    "matched": [
-                        {
-                            "uuid": u,
-                            "sample_id": self._get_sample_id_from_row(
-                                document, u
-                            ),
-                        }
-                        for u in matched.keys()
-                    ],
-                    "new_samples": [
-                        {"lane": r["_reupload_key"][0], "sample_id": r.get("sample_id", "")}
-                        for r in created
-                    ],
-                    "deleted": [
-                        self._get_sample_id_from_doc(document, u)
-                        for u in orphaned_uuids
-                    ],
-                    "metadata": metadata_changes,
-                },
-                "document": document,
-            }))
+            self.write(
+                json.dumps(
+                    {
+                        "status": "dry_run",
+                        "message": "Dry run - reupload not saved",
+                        "flowcell_id": flowcell_id,
+                        "timestamp": timestamp,
+                        "is_reupload": True,
+                        "summary": {
+                            "matched": len(matched),
+                            "created": len(created),
+                            "deleted": len(orphaned_uuids),
+                        },
+                        "changes": {
+                            "matched": [
+                                {
+                                    "uuid": u,
+                                    "sample_id": self._get_sample_id_from_row(
+                                        document, u
+                                    ),
+                                }
+                                for u in matched.keys()
+                            ],
+                            "new_samples": [
+                                {
+                                    "lane": r["_reupload_key"][0],
+                                    "sample_id": r.get("sample_id", ""),
+                                }
+                                for r in created
+                            ],
+                            "deleted": [
+                                self._get_sample_id_from_doc(document, u)
+                                for u in orphaned_uuids
+                            ],
+                            "metadata": metadata_changes,
+                        },
+                        "document": document,
+                    }
+                )
+            )
             return
 
         # 8) Save to database with conflict detection
         current_rev = document.get("_rev")
         if current_rev != original_rev:
             self.set_status(409)
-            self.write(json.dumps({
-                "error": "Document was modified by another user. Please refresh and try again.",
-                "error_code": "DOCUMENT_CONFLICT",
-            }))
+            self.write(
+                json.dumps(
+                    {
+                        "error": "Document was modified by another user. Please refresh and try again.",
+                        "error_code": "DOCUMENT_CONFLICT",
+                    }
+                )
+            )
             return
 
         response = self.application.cloudant.post_document(
@@ -1844,10 +1859,14 @@ class DemuxSampleInfoDataHandler(SafeHandler):
 
         if not response.get("ok"):
             self.set_status(500)
-            self.write(json.dumps({
-                "error": "Failed to update document in database",
-                "response": response,
-            }))
+            self.write(
+                json.dumps(
+                    {
+                        "error": "Failed to update document in database",
+                        "response": response,
+                    }
+                )
+            )
             return
 
         updated_doc = self.application.cloudant.get_document(
@@ -1860,20 +1879,24 @@ class DemuxSampleInfoDataHandler(SafeHandler):
 
         self.set_status(200)
         self.set_header("Content-type", "application/json")
-        self.write(json.dumps({
-            "status": "success",
-            "message": "Demux sample info updated successfully",
-            "flowcell_id": flowcell_id,
-            "timestamp": timestamp,
-            "document": updated_doc,
-        }))
+        self.write(
+            json.dumps(
+                {
+                    "status": "success",
+                    "message": "Demux sample info updated successfully",
+                    "flowcell_id": flowcell_id,
+                    "timestamp": timestamp,
+                    "document": updated_doc,
+                }
+            )
+        )
 
     @staticmethod
     def _normalize_sample_id(sample_id_str):
         """Strip all occurrences of the ``Sample_`` prefix."""
         s = str(sample_id_str)
         while s.startswith("Sample_"):
-            s = s[len("Sample_"):]
+            s = s[len("Sample_") :]
         return s
 
     def _strip_sample_id(self, sample_id_str):
@@ -1890,9 +1913,11 @@ class DemuxSampleInfoDataHandler(SafeHandler):
             if row:
                 versions = sorted(row.get("settings", {}).keys(), reverse=True)
                 if versions:
-                    return row["settings"][versions[0]].get(
-                        "per_sample_fields", {}
-                    ).get("Sample_ID", "")
+                    return (
+                        row["settings"][versions[0]]
+                        .get("per_sample_fields", {})
+                        .get("Sample_ID", "")
+                    )
         return ""
 
     def _get_sample_id_from_doc(self, document, uuid):
@@ -1955,13 +1980,15 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                 document = self._fetch_document_by_flowcell_id(flowcell_id)
                 if not document:
                     self.set_status(500)
-                    self.write(json.dumps({
-                        "error": "View hit but document fetch failed",
-                    }))
+                    self.write(
+                        json.dumps(
+                            {
+                                "error": "View hit but document fetch failed",
+                            }
+                        )
+                    )
                     return
-                return self._apply_reupload(
-                    flowcell_id, document, post_data, dry_run
-                )
+                return self._apply_reupload(flowcell_id, document, post_data, dry_run)
 
             # Document doesn't exist - build it (for dry_run or creation)
             document = self._create_document(
