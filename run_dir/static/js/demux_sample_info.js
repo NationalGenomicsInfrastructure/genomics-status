@@ -2236,8 +2236,8 @@ const SamplesheetUploadForm = {
             </div>
 
             <!-- Reupload confirmation modal -->
-            <div v-if="showReuploadConfirmModal" class="modal d-block" style="background: rgba(0,0,0,0.5);" tabindex="-1">
-                <div class="modal-dialog modal-lg">
+            <div v-if="showReuploadConfirmModal" class="modal fade show d-block" style="background: rgba(0,0,0,0.5); overflow-y: auto;" tabindex="-1">
+                <div class="modal-dialog modal-dialog-scrollable modal-lg">
                     <div class="modal-content">
                         <div class="modal-header bg-warning">
                             <h5 class="modal-title">
