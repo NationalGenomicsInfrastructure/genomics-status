@@ -250,7 +250,7 @@ class TestReuploadPost(AsyncHTTPTestCase):
 
     def test_validate_post_data_shared_method(self):
         """_validate_post_data should delegate to _parse_and_validate_post_data."""
-        handler = DemuxSampleInfoDataHandler(self.get_app(), MagicMock())
+        handler = DemuxSampleInfoDataHandler(self._app, MagicMock())
         valid_data = {
             "metadata": {
                 "num_lanes": 2,
@@ -269,7 +269,7 @@ class TestReuploadPost(AsyncHTTPTestCase):
         existing_doc = _make_existing_document()
         original_first_generated = existing_doc["metadata"]["first_generated"]
 
-        handler = DemuxSampleInfoDataHandler(self.get_app(), MagicMock())
+        handler = DemuxSampleInfoDataHandler(self._app, MagicMock())
         handler.request = MagicMock()
         handler.request.body = json_encode(
             {
@@ -327,7 +327,7 @@ class TestReuploadIndexBuilding(AsyncHTTPTestCase):
 
     def test_build_reupload_index_basic(self):
         """Reupload index should map (lane, sample_id, index, index2) to UUIDs."""
-        handler = DemuxSampleInfoDataHandler(self.get_app(), MagicMock())
+        handler = DemuxSampleInfoDataHandler(self._app, MagicMock())
         doc = _make_existing_document()
 
         index = handler._build_reupload_index(doc)
@@ -348,7 +348,7 @@ class TestReuploadIndexBuilding(AsyncHTTPTestCase):
 
     def test_build_reupload_index_includes_deleted(self):
         """Deleted samples should also be included in the index."""
-        handler = DemuxSampleInfoDataHandler(self.get_app(), MagicMock())
+        handler = DemuxSampleInfoDataHandler(self._app, MagicMock())
         doc = _make_existing_document_with_deleted()
 
         index = handler._build_reupload_index(doc)
@@ -363,7 +363,7 @@ class TestReuploadIndexBuilding(AsyncHTTPTestCase):
 
     def test_build_reupload_index_deduplicates(self):
         """Same sample ID on same lane maps to same set of UUIDs."""
-        handler = DemuxSampleInfoDataHandler(self.get_app(), MagicMock())
+        handler = DemuxSampleInfoDataHandler(self._app, MagicMock())
         doc = _make_existing_document()
 
         # Verify each key maps to a list
@@ -397,14 +397,14 @@ class TestReuploadHelperMethods(AsyncHTTPTestCase):
 
     def test_strip_sample_id(self):
         """_strip_sample_id should remove Sample_ prefix."""
-        handler = DemuxSampleInfoDataHandler(self.get_app(), MagicMock())
+        handler = DemuxSampleInfoDataHandler(self._app, MagicMock())
         self.assertEqual(handler._strip_sample_id("Sample_123"), "123")
         self.assertEqual(handler._strip_sample_id("123"), "123")
         self.assertEqual(handler._strip_sample_id("Sample_P101"), "P101")
 
     def test_get_sample_id_from_row(self):
         """_get_sample_id_from_row should return Sample_ID for a given UUID."""
-        handler = DemuxSampleInfoDataHandler(self.get_app(), MagicMock())
+        handler = DemuxSampleInfoDataHandler(self._app, MagicMock())
         doc = _make_existing_document()
 
         sample_id = handler._get_sample_id_from_row(doc, MATCHED_UUID)
@@ -416,7 +416,7 @@ class TestReuploadHelperMethods(AsyncHTTPTestCase):
 
     def test_get_sample_id_from_doc(self):
         """_get_sample_id_from_doc should return a summary string."""
-        handler = DemuxSampleInfoDataHandler(self.get_app(), MagicMock())
+        handler = DemuxSampleInfoDataHandler(self._app, MagicMock())
         doc = _make_existing_document()
 
         summary = handler._get_sample_id_from_doc(doc, MATCHED_UUID)
@@ -425,7 +425,7 @@ class TestReuploadHelperMethods(AsyncHTTPTestCase):
 
     def test_delete_orphaned_sample(self):
         """_delete_orphaned_sample should mark sample as deleted."""
-        handler = DemuxSampleInfoDataHandler(self.get_app(), MagicMock())
+        handler = DemuxSampleInfoDataHandler(self._app, MagicMock())
         doc = _make_existing_document()
         timestamp = "2025-06-01T12:00:00.000Z"
 
@@ -438,7 +438,7 @@ class TestReuploadHelperMethods(AsyncHTTPTestCase):
 
     def test_delete_orphaned_sample_already_deleted(self):
         """_delete_orphaned_sample should skip already-deleted samples."""
-        handler = DemuxSampleInfoDataHandler(self.get_app(), MagicMock())
+        handler = DemuxSampleInfoDataHandler(self._app, MagicMock())
         doc = _make_existing_document()
         timestamp = "2025-06-01T12:00:00.000Z"
 
@@ -463,7 +463,7 @@ class TestReuploadHelperMethods(AsyncHTTPTestCase):
 
     def test_delete_orphaned_sample_unknown_uuid(self):
         """_delete_orphaned_sample should no-op for unknown UUID."""
-        handler = DemuxSampleInfoDataHandler(self.get_app(), MagicMock())
+        handler = DemuxSampleInfoDataHandler(self._app, MagicMock())
         doc = _make_existing_document()
         timestamp = "2025-06-01T12:00:00.000Z"
 

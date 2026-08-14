@@ -2,6 +2,9 @@
 
 import copy
 import unittest
+from unittest.mock import MagicMock, Mock
+
+import tornado.web
 
 from status.demux_sample_info import DemuxSampleInfoDataHandler
 
@@ -81,20 +84,20 @@ def _make_document():
     }
 
 
-def _make_handler():
-    """Create a minimal handler for testing."""
-    handler = DemuxSampleInfoDataHandler()
-    handler.request = None
-    handler._get_sample_classification_config = lambda: None
-    return handler
-
-
 class TestBuildReuploadIndex(unittest.TestCase):
     """Tests for _build_reupload_index."""
 
+    def _make_handler(self):
+        """Create a minimal handler for testing, with Tornado-required args."""
+        app = tornado.web.Application([])
+        request = Mock()
+        handler = DemuxSampleInfoDataHandler(app, request)
+        handler._get_sample_classification_config = lambda: None
+        return handler
+
     def test_build_index_includes_deleted(self):
         """Deleted samples are included in the index."""
-        handler = _make_handler()
+        handler = self._make_handler()
         document = copy.deepcopy(_make_document())
         index = handler._build_reupload_index(document)
         key = ("1", "P104", "GGGG", "CCCC")
@@ -103,7 +106,7 @@ class TestBuildReuploadIndex(unittest.TestCase):
 
     def test_build_index_excludes_no_deleted_filter_yet(self):
         """All non-empty settings samples are indexed, including deleted ones."""
-        handler = _make_handler()
+        handler = self._make_handler()
         document = copy.deepcopy(_make_document())
         index = handler._build_reupload_index(document)
         first_uuids = [index[k][0] for k in index]
@@ -113,7 +116,7 @@ class TestBuildReuploadIndex(unittest.TestCase):
 
     def test_build_index_key_structure(self):
         """Index keys are tuples of (lane, sample_id, index, index2)."""
-        handler = _make_handler()
+        handler = self._make_handler()
         document = copy.deepcopy(_make_document())
         index = handler._build_reupload_index(document)
         for key in index.keys():
@@ -124,9 +127,17 @@ class TestBuildReuploadIndex(unittest.TestCase):
 class TestReuploadMatchSamples(unittest.TestCase):
     """Tests for _reupload_match_samples matching algorithm."""
 
+    def _make_handler(self):
+        """Create a minimal handler for testing, with Tornado-required args."""
+        app = tornado.web.Application([])
+        request = Mock()
+        handler = DemuxSampleInfoDataHandler(app, request)
+        handler._get_sample_classification_config = lambda: None
+        return handler
+
     def test__exact_match_yields_one_entry(self):
         """A CSV row matching one DB entry is marked as matched."""
-        handler = _make_handler()
+        handler = self._make_handler()
         db_index = {
             ("1", "P101", "AAAA", "GGGG"): [SAMPLE_UUID_A],
             ("1", "P102", "CCCC", ""): [SAMPLE_UUID_B],
@@ -146,7 +157,7 @@ class TestReuploadMatchSamples(unittest.TestCase):
 
     def test__no_match_creates_new(self):
         """A CSV row not matching any DB entry goes to created."""
-        handler = _make_handler()
+        handler = self._make_handler()
         db_index = {
             ("1", "P101", "XXXX", "YYYY"): [SAMPLE_UUID_A],
         }
@@ -165,7 +176,7 @@ class TestReuploadMatchSamples(unittest.TestCase):
 
     def test__ambiguous_match_no_match_for_csv(self):
         """Multiple DB entries sharing the same key means no CSV match."""
-        handler = _make_handler()
+        handler = self._make_handler()
         db_index = {
             ("1", "P101", "AAAA", "GGGG"): [SAMPLE_UUID_A, SAMPLE_UUID_B],
         }
@@ -185,7 +196,7 @@ class TestReuploadMatchSamples(unittest.TestCase):
 
     def test__multiple_csv_rows_match_multiple_uuids(self):
         """Multiple CSV rows matching distinct UUIDs works correctly."""
-        handler = _make_handler()
+        handler = self._make_handler()
         db_index = {
             ("1", "P101", "AAAA", "GGGG"): [SAMPLE_UUID_A],
             ("2", "P103", "TTTT", "AAAA"): [SAMPLE_UUID_C],
@@ -204,7 +215,7 @@ class TestReuploadMatchSamples(unittest.TestCase):
 
     def test__empty_csv_creates_orphans(self):
         """An empty CSV marks all DB entries as orphaned."""
-        handler = _make_handler()
+        handler = self._make_handler()
         db_index = {
             ("1", "P101", "AAAA", "GGGG"): [SAMPLE_UUID_A],
         }
@@ -215,7 +226,7 @@ class TestReuploadMatchSamples(unittest.TestCase):
 
     def test__duplicate_uuids_in_db_only_are_all_orphaned(self):
         """When DB has duplicates, all are orphaned if nothing matches."""
-        handler = _make_handler()
+        handler = self._make_handler()
         db_index = {
             ("1", "P101", "AAAA", "GGGG"): [
                 SAMPLE_UUID_A,
@@ -235,7 +246,7 @@ class TestReuploadMatchSamples(unittest.TestCase):
 
     def test__csv_row_consumes_db_entry(self):
         """Once a key is matched, it is consumed and not returned again."""
-        handler = _make_handler()
+        handler = self._make_handler()
         db_index = {
             ("1", "P101", "XXXX", "YYYY"): [SAMPLE_UUID_A],
         }

@@ -70,7 +70,7 @@ class TestDemuxSampleInfoPost(AsyncHTTPTestCase):
 
     def test_validate_post_data_valid(self):
         """Test validation with valid POST data."""
-        handler = DemuxSampleInfoDataHandler(self.get_app(), MagicMock())
+        handler = DemuxSampleInfoDataHandler(self._app, MagicMock())
 
         is_valid, error_msg, metadata, uploaded_info = handler._validate_post_data(
             self.test_data
@@ -85,7 +85,7 @@ class TestDemuxSampleInfoPost(AsyncHTTPTestCase):
 
     def test_validate_post_data_missing_metadata(self):
         """Test validation with missing metadata field."""
-        handler = DemuxSampleInfoDataHandler(self.get_app(), MagicMock())
+        handler = DemuxSampleInfoDataHandler(self._app, MagicMock())
 
         invalid_data = {"uploaded_lims_info": []}
         is_valid, error_msg, metadata, uploaded_info = handler._validate_post_data(
@@ -97,7 +97,7 @@ class TestDemuxSampleInfoPost(AsyncHTTPTestCase):
 
     def test_validate_post_data_missing_uploaded_lims_info(self):
         """Test validation with missing uploaded_lims_info field."""
-        handler = DemuxSampleInfoDataHandler(self.get_app(), MagicMock())
+        handler = DemuxSampleInfoDataHandler(self._app, MagicMock())
 
         invalid_data = {"metadata": {"num_lanes": 2}}
         is_valid, error_msg, metadata, uploaded_info = handler._validate_post_data(
@@ -109,7 +109,7 @@ class TestDemuxSampleInfoPost(AsyncHTTPTestCase):
 
     def test_validate_post_data_invalid_metadata_fields(self):
         """Test validation with missing required metadata fields."""
-        handler = DemuxSampleInfoDataHandler(self.get_app(), MagicMock())
+        handler = DemuxSampleInfoDataHandler(self._app, MagicMock())
 
         invalid_data = {
             "metadata": {"num_lanes": 2},  # Missing other required fields
@@ -124,7 +124,7 @@ class TestDemuxSampleInfoPost(AsyncHTTPTestCase):
 
     def test_classify_sample_type_10x_dual(self):
         """Test classification of 10X dual-index samples (SI-TS-*)."""
-        handler = DemuxSampleInfoDataHandler(self.get_app(), MagicMock())
+        handler = DemuxSampleInfoDataHandler(self._app, MagicMock())
 
         sample = {
             "index": "SI-TS-B7",
@@ -141,7 +141,7 @@ class TestDemuxSampleInfoPost(AsyncHTTPTestCase):
 
     def test_classify_sample_type_10x_single(self):
         """Test classification of 10X single-index samples (SI-GA-*, SI-NA-*)."""
-        handler = DemuxSampleInfoDataHandler(self.get_app(), MagicMock())
+        handler = DemuxSampleInfoDataHandler(self._app, MagicMock())
 
         sample = {
             "index": "SI-GA-A1",
@@ -157,7 +157,7 @@ class TestDemuxSampleInfoPost(AsyncHTTPTestCase):
 
     def test_classify_sample_type_named_index_single_sequence_row(self):
         """Regression: named index rows with only i7 sequence must not raise index errors."""
-        handler = DemuxSampleInfoDataHandler(self.get_app(), MagicMock())
+        handler = DemuxSampleInfoDataHandler(self._app, MagicMock())
         handler.application.named_indices = {
             "Chromium_10X_indexes": {"SI-NA-A2": [["TCTTAGGC"]]}
         }
@@ -176,7 +176,7 @@ class TestDemuxSampleInfoPost(AsyncHTTPTestCase):
 
     def test_classify_sample_type_ordinary_dual(self):
         """Test classification of ordinary dual-index samples."""
-        handler = DemuxSampleInfoDataHandler(self.get_app(), MagicMock())
+        handler = DemuxSampleInfoDataHandler(self._app, MagicMock())
 
         sample = {
             "index": "CGCCTCT",  # 7bp
@@ -193,7 +193,7 @@ class TestDemuxSampleInfoPost(AsyncHTTPTestCase):
 
     def test_classify_sample_type_noindex(self):
         """Test classification of samples with NOINDEX keyword."""
-        handler = DemuxSampleInfoDataHandler(self.get_app(), MagicMock())
+        handler = DemuxSampleInfoDataHandler(self._app, MagicMock())
 
         sample = {
             "index": "NOINDEX",  # Must be explicit "NOINDEX" string
@@ -209,7 +209,7 @@ class TestDemuxSampleInfoPost(AsyncHTTPTestCase):
 
     def test_classify_sample_type_control(self):
         """Test classification of control samples (PhiX)."""
-        handler = DemuxSampleInfoDataHandler(self.get_app(), MagicMock())
+        handler = DemuxSampleInfoDataHandler(self._app, MagicMock())
 
         sample = {
             "index": "CGCCTCT",
@@ -224,7 +224,7 @@ class TestDemuxSampleInfoPost(AsyncHTTPTestCase):
 
     def test_classify_sample_type_by_library_method(self):
         """Test classification using library method mapping with new format."""
-        handler = DemuxSampleInfoDataHandler(self.get_app(), MagicMock())
+        handler = DemuxSampleInfoDataHandler(self._app, MagicMock())
 
         sample = {
             "index": "ATCACGTT",
@@ -243,7 +243,7 @@ class TestDemuxSampleInfoPost(AsyncHTTPTestCase):
 
     def test_classify_sample_type_smartseq(self):
         """Test classification of Smart-seq samples with SMARTSEQ pattern."""
-        handler = DemuxSampleInfoDataHandler(self.get_app(), MagicMock())
+        handler = DemuxSampleInfoDataHandler(self._app, MagicMock())
 
         sample = {
             "index": "SMARTSEQ-1A",  # Matches SMARTSEQ pattern
@@ -259,7 +259,7 @@ class TestDemuxSampleInfoPost(AsyncHTTPTestCase):
 
     def test_classify_sample_type_short_single_index(self):
         """Test classification of short single index samples."""
-        handler = DemuxSampleInfoDataHandler(self.get_app(), MagicMock())
+        handler = DemuxSampleInfoDataHandler(self._app, MagicMock())
 
         sample = {
             "index": "ATCACG",  # 6bp (below threshold of 8)
@@ -274,7 +274,7 @@ class TestDemuxSampleInfoPost(AsyncHTTPTestCase):
 
     def test_group_samples_by_lane(self):
         """Test grouping of samples by lane number."""
-        handler = DemuxSampleInfoDataHandler(self.get_app(), MagicMock())
+        handler = DemuxSampleInfoDataHandler(self._app, MagicMock())
 
         samples = self.test_data["uploaded_lims_info"]
         grouped = handler._group_samples_by_lane(samples)
@@ -286,10 +286,10 @@ class TestDemuxSampleInfoPost(AsyncHTTPTestCase):
 
     def test_create_calculated_lanes(self):
         """Test creation of calculated lanes with UUIDs and classification."""
-        handler = DemuxSampleInfoDataHandler(self.get_app(), MagicMock())
+        handler = DemuxSampleInfoDataHandler(self._app, MagicMock())
         handler._project_library_methods = {}
 
-        with patch.object(handler, "_get_project_library_method", return_value=""):
+        with patch.object(handler, "_get_project_info_by_name", return_value={}):
             samples = self.test_data["uploaded_lims_info"]
             grouped_samples = handler._group_samples_by_lane(samples)
             timestamp = "2024-01-15T10:30:00"
@@ -330,7 +330,7 @@ class TestDemuxSampleInfoPost(AsyncHTTPTestCase):
     @patch("status.demux_sample_info.datetime")
     def test_create_document(self, mock_datetime):
         """Test document creation with proper structure."""
-        handler = DemuxSampleInfoDataHandler(self.get_app(), MagicMock())
+        handler = DemuxSampleInfoDataHandler(self._app, MagicMock())
         handler._project_library_methods = {}
 
         mock_datetime.datetime.now.return_value.isoformat.return_value = (
