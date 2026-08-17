@@ -314,6 +314,9 @@ class ProjectCreationFormDataHandler(SafeHandler):
             data_to_be_submitted["status"] = "draft"
             data_to_be_submitted["created"] = datetime.datetime.now().isoformat()
             data_to_be_submitted["owner"] = {"email": self.current_user.email}
+            data_to_be_submitted.pop(
+                "event_log", None
+            )  # Remove event log for new draft
 
             data_to_be_submitted = self._update_doc_data(
                 data_to_be_submitted, "create_draft"
