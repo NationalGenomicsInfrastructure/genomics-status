@@ -380,8 +380,8 @@ class TestReuploadIntegration(AsyncHTTPTestCase):
             return capture_result
 
         # Use the factory document as the existing document (like dry_run test does)
-        self._mock_cloudant.post_view.side_effect = (
-            self._make_post_view_side_effect(include_existing_doc=True)
+        self._mock_cloudant.post_view.side_effect = self._make_post_view_side_effect(
+            include_existing_doc=True
         )
         self._mock_cloudant.post_document.side_effect = capture_document
 
@@ -438,13 +438,12 @@ class TestReuploadIntegration(AsyncHTTPTestCase):
         )
         self.assertEqual(len(captured_docs), 1, "Expected one document saved")
         first_doc = captured_docs[0]
-        initial_lanes = copy.deepcopy(
-            first_doc.get("calculated", {}).get("lanes", {})
-        )
+        initial_lanes = copy.deepcopy(first_doc.get("calculated", {}).get("lanes", {}))
         initial_sample_rows = copy.deepcopy(
-            first_doc.get("calculated", {}).get("lanes", {}).get("1", {}).get(
-                "sample_rows", {}
-            )
+            first_doc.get("calculated", {})
+            .get("lanes", {})
+            .get("1", {})
+            .get("sample_rows", {})
         )
         initial_first_generated = first_doc["metadata"].get("first_generated")
         initial_version_keys = set(
@@ -461,7 +460,9 @@ class TestReuploadIntegration(AsyncHTTPTestCase):
             headers={"Content-Type": "application/json"},
         )
         self.assertEqual(
-            response2.code, 200, msg=f"Second reupload failed: {response2.body.decode()}"
+            response2.code,
+            200,
+            msg=f"Second reupload failed: {response2.body.decode()}",
         )
         self.assertEqual(len(captured_docs), 1, "Expected one document saved")
         reupload_doc = captured_docs[0]
