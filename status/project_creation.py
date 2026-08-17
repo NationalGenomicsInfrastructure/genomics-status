@@ -125,6 +125,7 @@ class ProjectCreationHandler(SafeHandler):
                 user=self.get_current_user(),
                 edit_mode=edit_mode,
                 version_id=version_id,
+                get_project_id=None,  # No project ID for creation
             )
         )
 
@@ -631,7 +632,9 @@ class ProjectCreationIndividualDataFetchHandler(LIMSQueryBaseHandler):
 
 
 class ProjectEditingHandler(SafeHandler):
-    """API Handler to fetch data from LIMS for project editing based on provided field and value."""
+    """API Handler to fetch data from LIMS for project editing based on provided field and value.
+    URL: /project_creation_edit/([^/]*)$
+    """
 
     def get(self, project_id):
         t = self.application.loader.load("project_creation/project_creation.html")
@@ -648,7 +651,9 @@ class ProjectEditingHandler(SafeHandler):
 
 
 class ProjectEditingDataHandler(SafeHandler):
-    """API Handler to fetch data from LIMS based on provided field and value for project editing"""
+    """API Handler to fetch data from LIMS based on provided field and value for project editing
+    URL: /api/v1/project_creation_form_edit
+    """
 
     def get(self):
         project_identifier = self.get_query_argument("project_id", default=None)

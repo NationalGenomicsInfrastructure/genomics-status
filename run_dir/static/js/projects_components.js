@@ -254,7 +254,11 @@ export const vProjectDetails = {
                     <h2><span :class="'badge w-100 mt-1 mb-4 ' + status_bg_class">{{project_data.status}}</span></h2>
                 </div>
                 <div class="col-4">
-                    <h4>Library preparation</h4>
+                    <h4>Library preparation
+                    <template v-if="user.roles.includes('admin') || user.roles.includes('proj_coord')">
+                        <a :href="'/project_creation_edit/' + project_id" id="project_info_edit_button" class="btn btn-secondary btn-xs" target="_blank">Edit Project Info</a>
+                    </template>
+                    </h4>
                     <dl class="dl-horizontal">
                         <div class="dt-dd-pair">
                             <dt>Sample units ordered:</dt>

@@ -307,7 +307,7 @@ const vProjectCreationMain = {
 
 const vProjectCreationForm = {
     name: 'v-project-creation-form',
-    props: ['form_loaded', 'init_edit_mode', 'version_id'],
+    props: ['form_loaded', 'init_edit_mode', 'version_id', 'get_project_id'],
     data() {
         return {
             showDebug: false,
@@ -514,6 +514,13 @@ const vProjectCreationForm = {
         }
         if (this.init_edit_mode.toLowerCase() === 'true') {
             this.$root.toplevelEditMode = true;
+        }
+        // If a project ID is provided, auto-retrieve it
+        if (this.get_project_id!== 'None') {
+            this.projectIdToRetrieve = this.get_project_id;
+            this.$nextTick(() => {
+                this.retrieveProjectData();
+            });
         }
     },
     template: 
@@ -2140,6 +2147,21 @@ const vUpdateFormField = {
             if (!newValue) {
                 this.$root.saveDraft(true);
             }
+        },
+        'newJsonSchema.properties': {
+            handler() {
+                // Update type based on ngi_form_type
+                const ngiFormType = this.newJsonSchema['properties'][this.identifier]['ngi_form_type'];
+                if (ngiFormType === 'integer') {
+                    this.newJsonSchema['properties'][this.identifier]['type'] = 'integer';
+                } else if (ngiFormType === 'boolean') {
+                    this.newJsonSchema['properties'][this.identifier]['type'] = 'boolean';
+                } else {
+                    // All other types (string, date, select, datalist, etc.) map to string
+                    this.newJsonSchema['properties'][this.identifier]['type'] = 'string';
+                }
+            },
+            deep: true
         }
     },
      template:
@@ -2176,6 +2198,7 @@ const vUpdateFormField = {
                     <label :for="identifier + '_ngi_form_type'" class="form-label">Form Type</label>
                     <select :id="identifier + '_ngi_form_type'" class="form-control" v-model="this.newJsonSchema['properties'][identifier]['ngi_form_type']" :disabled="!fieldEditMode">
                         <option value="string">String</option>
+                        <option value="integer">Number</option>
                         <option value="boolean">Boolean</option>
                         <option value="date">Date</option>
                         <option value="select">Select</option>
