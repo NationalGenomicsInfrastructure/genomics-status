@@ -1,5 +1,7 @@
+import requests
 from genologics import lims
 from genologics.config import BASEURI, PASSWORD, USERNAME
+from genologics.entities import Project
 
 from status.project_creation import (
     ProjectCreationDataHandler,
@@ -108,21 +110,35 @@ class LIMSProjectCloningHandler(SafeHandler):
         ]
 
         lims_instance = lims.Lims(BASEURI, USERNAME, PASSWORD)
-        proj_values = ProjectEditingDataHandler.retrieve_project_data_from_lims(
-            lims_instance, projectid, copy_udfs
-        )
+        uri = lims_instance.get_uri(f"projects/{projectid}")
+        existing_project = Project(lims=lims_instance, uri=uri)
+        proj_values = {}
+        try:
+            proj_values["name"] = existing_project.name
+        except requests.exceptions.HTTPError:
+            return {}
+
+        proj_values["researcher_id"] = existing_project.researcher.id
+        proj_values["Client"] = existing_project.researcher.name
+        proj_values["Account"] = existing_project.researcher.lab.name
+
+        udfs = {}
+        for udf in copy_udfs:
+            if udf in existing_project.udf:
+                udfs[udf] = existing_project.udf[udf]
+        proj_values["udfs"] = udfs
 
         if req_type == "get":
             return proj_values
 
         else:
-            new_name = proj_values["name"] + "_CLONE"
+            new_name = existing_project.name + "_CLONE"
             check_if_new_name_exists = lims_instance.get_projects(name=new_name)
 
             if check_if_new_name_exists:
                 return {"error": f"A project with the name {new_name} already exists"}
 
             proj_values["name"] = new_name
-            proj_values["researcher"] = proj_values["researcher"]
+            proj_values["researcher"] = existing_project.researcher
 
             return ProjectCreationDataHandler.create_project_in_lims(proj_values)
