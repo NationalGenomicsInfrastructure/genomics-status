@@ -136,7 +136,7 @@ const vProjectCreationMain = {
                 this.$root.errorMessages.push('Can only cancel draft when the form is in draft status.');
                 return;
             }
-            this.newJsonForm.status = 'retired';
+            this.newJsonForm.status = 'discarded';
             this.$root.saveNewForm();
             alert('Draft cancelled. Redirecting...');
             // Redirect to form list using regular javascript
@@ -169,7 +169,7 @@ const vProjectCreationMain = {
                 })
                 .then(response => {
                     if (!background) {
-                        alert('Draft saved successfully.');
+                        alert(response.data.message || 'Something is wrong! Please contact a system administrator.');
                     }
                     this.lastSavedDraftTime = Date.now();
                     this.fetch_form(response.data.form._id);
@@ -389,6 +389,8 @@ const vProjectCreationForm = {
                 .get(`/api/v1/project_creation_form_edit?project_id=${this.projectIdToRetrieve}`)
                 .then(response => {
                     if (response.data.result) {
+                        // Load the specific form version that was used to create this project
+                        this.$root.fetch_form(response.data.result.form_version_id);
                         this.populateFormWithProjectData(response.data.result);
                         this.retrievedProjectId = response.data.result.project_id;
                         this.isEditingProject = true;
@@ -432,7 +434,7 @@ const vProjectCreationForm = {
             const form_data = this.$root.formData;
             const form_metadata = {};
             form_metadata['title'] = this.$root.jsonForm['title'];
-            form_metadata['version'] = this.$root.jsonForm['version'];
+            form_metadata['version_id'] = this.$root.jsonForm['version_id'];
             
             // Only look for matching researcher if we have fetched data available
             if (this.$root.fetched_data['researcher_name']) {
@@ -464,6 +466,8 @@ const vProjectCreationForm = {
                         this.isEditingProject = false;
                         this.retrievedProjectId = null;
                         this.projectIdToRetrieve = '';
+                        // Reload the current valid form
+                        this.$root.fetch_form();
                     }
                     else{
                         alert("Hmm, something went wrong and no project id was generated. Please contact a system administrator.");
@@ -500,6 +504,8 @@ const vProjectCreationForm = {
                     this.retrievedProjectId = null;
                     this.projectIdToRetrieve = '';
                     this.$root.formData = {};
+                    // Reload the current valid form
+                    this.$root.fetch_form();
                 })
                 .catch(error => {
                     alert(`Error saving project edits: ${error.response?.data?.error || error.message}`);
@@ -602,7 +608,31 @@ const vProjectCreationForm = {
                                 </template>
                             </div>
                         </div>
-
+                        <div class="mt-3 p-3 bg-light rounded">
+                            <h5 class="mb-2">Form Information</h5>
+                            <template v-if="this.$root.jsonForm && this.$root.jsonForm['_id']">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <p class="mb-1"><strong>Version ID:</strong></p>
+                                        <p class="text-muted">{{ this.$root.jsonForm['_id'] }}</p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <p class="mb-1"><strong>Created:</strong></p>
+                                        <p class="text-muted">{{ this.$root.jsonForm['created'] }}</p>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <p class="mb-1"><strong>Status:</strong></p>
+                                        <p class="text-muted">{{ this.$root.jsonForm['status'] }}</p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <p class="mb-1"><strong>Owner:</strong></p>
+                                        <p class="text-muted">{{ this.$root.jsonForm['owner'] ? this.$root.jsonForm['owner']['email'] : 'N/A' }}</p>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
                         <form @submit.prevent="submitForm" class="mt-3 mb-5">
                             <template v-for="[group_identifier, form_group] in sortedFormGroups" :key="group_identifier">
                                 <template v-if="Object.keys(this.fields_for_given_group(group_identifier)).length !== 0">
@@ -621,7 +651,7 @@ const vProjectCreationForm = {
                                     <button type="submit" class="btn btn-lg btn-warning" :disabled="this.$root.toplevelEditMode">
                                         <i class="fa fa-save mr-2"></i>Save Edits in LIMS
                                     </button>
-                                    <button type="button" class="btn btn-lg btn-secondary ml-2" @click="isEditingProject = false; retrievedProjectId = null; projectIdToRetrieve = ''; this.$root.formData = {}" :disabled="this.$root.toplevelEditMode">
+                                    <button type="button" class="btn btn-lg btn-secondary ml-2" @click="isEditingProject = false; retrievedProjectId = null; projectIdToRetrieve = ''; this.$root.formData = {}; this.$root.fetch_form()" :disabled="this.$root.toplevelEditMode">
                                         <i class="fa fa-times mr-2"></i>Cancel
                                     </button>
                                 </template>
