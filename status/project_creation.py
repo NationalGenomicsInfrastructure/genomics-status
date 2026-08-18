@@ -694,8 +694,6 @@ class ProjectEditingDataHandler(SafeHandler):
             self.set_status(404)
             return self.write({"error": "Project not found"})
 
-        # udf_list = ProjectCreationUtils.get_latest_udf_list(self.application.cloudant)
-
         lims_instance = lims.Lims(BASEURI, USERNAME, PASSWORD)
         project_data = self.retrieve_project_data_from_lims(lims_instance, project_id)
         project_data["project_id"] = (
