@@ -431,6 +431,41 @@ const vProjectCreationForm = {
             }
         },
         submitForm() {
+            // Check for validation errors
+            const hasErrors = Object.keys(this.$root.validationErrorsPerField).length > 0 || this.$root.validationErrors.length > 0;
+            
+            if (hasErrors) {
+                // Build error message
+                let errorMessage = 'The following validation errors were found:\n\n';
+                
+                // Add field-specific errors
+                Object.entries(this.$root.validationErrorsPerField).forEach(([fieldId, errors]) => {
+                    const fieldLabel = this.$root.fields[fieldId]?.ngi_form_label || fieldId;
+                    const enteredValue = this.$root.formData[fieldId];
+                    const valueDisplay = enteredValue !== undefined && enteredValue !== '' ? `"${enteredValue}"` : '(empty)';
+                    errorMessage += `${fieldLabel}: ${valueDisplay}\n`;
+                    errors.forEach(error => {
+                        errorMessage += `  • ${error.message}\n`;
+                    });
+                    errorMessage += '\n';
+                });
+                
+                // Add general validation errors
+                if (this.$root.validationErrors.length > 0) {
+                    errorMessage += 'General errors:\n';
+                    this.$root.validationErrors.forEach(error => {
+                        errorMessage += `  • ${error}\n`;
+                    });
+                }
+                
+                errorMessage += '\nDo you wish to proceed with saving/creating the project anyway?';
+                
+                // Show confirmation dialog
+                if (!confirm(errorMessage)) {
+                    return; // User cancelled
+                }
+            }
+            
             const form_data = this.$root.formData;
             const form_metadata = {};
             form_metadata['title'] = this.$root.jsonForm['title'];
