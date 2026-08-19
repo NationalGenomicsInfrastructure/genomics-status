@@ -103,7 +103,7 @@ class ProjectCreationUtils:
                 udf_name = property_info["ngi_form_lims_udf"]
                 if udf_name not in udf_list:
                     udf_list.append(udf_name)
-        return udf_list
+        return udf_list, form.get("_id")
 
 
 class ProjectCreationHandler(SafeHandler):
@@ -204,7 +204,7 @@ class ProjectCreationDataHandler(SafeHandler):
             project_values["udfs"]["Project Form Id"] = request_data[
                 "form_metadata"
             ].get("version_id")
-            udf_list = ProjectCreationUtils.get_udf_list(self.application.cloudant)
+            udf_list, _ = ProjectCreationUtils.get_udf_list(self.application.cloudant)
             for udf in udf_list:
                 if udf not in project_values["udfs"]:
                     project_values["udfs"][udf] = request_data["form_data"].get(udf)
@@ -725,7 +725,7 @@ class ProjectEditingDataHandler(SafeHandler):
 
         lims_instance = lims.Lims(BASEURI, USERNAME, PASSWORD)
         existing_project = Project(lims=lims_instance, id=project_id)
-        udf_list = ProjectCreationUtils.get_udf_list(
+        udf_list, _ = ProjectCreationUtils.get_udf_list(
             self.application.cloudant, form_id=project_form_id
         )
         for udf in udf_list:
@@ -756,15 +756,15 @@ class ProjectEditingDataHandler(SafeHandler):
 
         udfs = {}
         # Fetch all UDFs from the project form used
-        form_used = existing_project.udf.get("Project Form Id", None)
-        udf_list = ProjectCreationUtils.get_udf_list(
-            self.application.cloudant, form_id=form_used
+        saved_form_id = existing_project.udf.get("Project Form Id", None)
+        udf_list, used_form_id = ProjectCreationUtils.get_udf_list(
+            self.application.cloudant, form_id=saved_form_id
         )
         for udf in udf_list:
             if udf in existing_project.udf:
                 udfs[udf] = existing_project.udf[udf]
         proj_values["udfs"] = udfs
-        proj_values["form_version_id"] = form_used
+        proj_values["form_version_id"] = used_form_id
 
         return proj_values
 
