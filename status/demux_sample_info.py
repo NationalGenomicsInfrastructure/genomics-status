@@ -1523,9 +1523,7 @@ class DemuxSampleInfoDataHandler(SafeHandler):
             metadata,
         )
 
-        sequences, _ = self._expand_named_indices(
-            csv_row, sample_classification
-        )
+        sequences, _ = self._expand_named_indices(csv_row, sample_classification)
 
         # sequences is [[index1, index2]] for single-entry samples
         first_sequence = sequences[0] if sequences else []
