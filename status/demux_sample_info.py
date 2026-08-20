@@ -1486,7 +1486,7 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                 per_sample = latest.get("per_sample_fields", {})
 
                 # Strip "Sample_" prefix from Sample_ID to match CSV format
-                sample_id = self._normalize_sample_id(per_sample.get("Sample_ID", ""))
+                sample_id = self._strip_sample_id(per_sample.get("Sample_ID", ""))
                 lane = str(per_sample.get("Lane", lane_key))
 
                 key = (
@@ -1648,7 +1648,7 @@ class DemuxSampleInfoDataHandler(SafeHandler):
             resolved_row["project_name"] = project_name
             resolved_row["project_id"] = project_id
             resolved_row["_matched_class"] = sample_class
-            sample_id = self._normalize_sample_id(csv_row.get("sample_id", ""))
+            sample_id = self._strip_sample_id(csv_row.get("sample_id", ""))
             resolved_row["_reupload_key"] = (
                 str(resolved_row["lane"]),
                 sample_id,
@@ -1742,7 +1742,7 @@ class DemuxSampleInfoDataHandler(SafeHandler):
             ].items():
                 latest_ts = max(cand_row["settings"].keys())
                 latest = cand_row["settings"][latest_ts]
-                sample_id = self._normalize_sample_id(resolved_row.get("sample_id", ""))
+                sample_id = self._strip_sample_id(resolved_row.get("sample_id", ""))
                 if (
                     (
                         self._strip_sample_id(
@@ -1892,19 +1892,12 @@ class DemuxSampleInfoDataHandler(SafeHandler):
         )
 
     @staticmethod
-    def _normalize_sample_id(sample_id_str):
+    def _strip_sample_id(sample_id_str):
         """Strip all occurrences of the ``Sample_`` prefix."""
         s = str(sample_id_str)
         while s.startswith("Sample_"):
             s = s[len("Sample_") :]
         return s
-
-    def _strip_sample_id(self, sample_id_str):
-        """Strip the ``Sample_`` prefix."""
-        try:
-            return sample_id_str.removeprefix("Sample_")
-        except AttributeError:
-            return str(sample_id_str)
 
     def _get_sample_id_from_row(self, document, uuid):
         """Return the Sample_ID of an existing sample_row (None if not found)."""
