@@ -1523,7 +1523,7 @@ class DemuxSampleInfoDataHandler(SafeHandler):
             metadata,
         )
 
-        sequences, named_index = self._expand_named_indices(
+        sequences, _ = self._expand_named_indices(
             csv_row, sample_classification
         )
 
