@@ -1668,7 +1668,13 @@ class DemuxSampleInfoDataHandler(SafeHandler):
 
         # 1) Update metadata fields (keep first_generated, projects, etc.)
         metadata_changes = []
-        for field in ("run_setup", "num_lanes", "instrument_type", "run_mode"):
+        for field in (
+            "run_setup",
+            "num_lanes",
+            "instrument_type",
+            "run_mode",
+            "setup_lims_step_id",
+        ):
             if field in metadata:
                 old_value = document["metadata"].get(field)
                 new_value = metadata[field]
@@ -1681,18 +1687,6 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                         }
                     )
                 document["metadata"][field] = metadata[field]
-        if "setup_lims_step_id" in metadata:
-            old_value = document["metadata"].get("setup_lims_step_id")
-            new_value = metadata["setup_lims_step_id"]
-            if old_value != new_value:
-                metadata_changes.append(
-                    {
-                        "field": "setup_lims_step_id",
-                        "old": old_value,
-                        "new": new_value,
-                    }
-                )
-            document["metadata"]["setup_lims_step_id"] = metadata["setup_lims_step_id"]
 
         # 2) Merge matched sample rows — add new settings on top of existing
         updated_uuids = set()
