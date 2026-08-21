@@ -1,0 +1,4 @@
+# Order Portal credentials for local development
+# Not needed when running with --testing_mode flag
+order_portal:
+  api_token: fake-orderportal-token

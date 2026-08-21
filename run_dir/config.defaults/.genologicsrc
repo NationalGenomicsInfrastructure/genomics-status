@@ -1,0 +1,4 @@
+[genologics]
+BASEURI=http://localhost:8443
+USERNAME=fake_user
+PASSWORD=fake_password

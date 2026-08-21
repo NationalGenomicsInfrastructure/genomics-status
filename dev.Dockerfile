@@ -21,3 +21,11 @@ RUN python -m pip install --upgrade pip
 RUN python -m pip install --upgrade setuptools
 RUN python -m pip install -r requirements.txt
 RUN python -m pip install -r requirements_dev.txt
+
+# Keep this for now, but ideally we should remove this and just be able to specify it in the defaults configs.
+# Set up default .genologicsrc in home directory
+# This is needed because genologics library reads it at import time
+COPY --chown=$MAMBA_USER:$MAMBA_USER run_dir/config.defaults/.genologicsrc /home/mambauser/.genologicsrc
+
+# Set up default .genosqlrc.yaml for genologics_sql library
+COPY --chown=$MAMBA_USER:$MAMBA_USER run_dir/config.defaults/.genosqlrc.yaml /home/mambauser/.genosqlrc.yaml
