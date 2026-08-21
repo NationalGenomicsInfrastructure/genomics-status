@@ -2,12 +2,13 @@ import datetime
 import json
 import re
 
+import requests
 from genologics import lims
 from genologics.config import BASEURI, PASSWORD, USERNAME
-from genologics.entities import Lab, Researcher
+from genologics.entities import Lab, Project, Researcher
+from ibm_cloud_sdk_core.api_exception import ApiException
 from requests import exceptions as requests_exceptions
 
-from status.clone_project import LIMSProjectCloningHandler
 from status.projects import ProjectsBaseDataHandler
 from status.util import LIMSQueryBaseHandler, SafeHandler
 
@@ -36,6 +37,17 @@ class ProjectCreationFormUtils:
             raise ValueError("Error: no valid forms found. Doc is missing")
 
         return all_valid_docs["rows"][0]["doc"]
+
+    @staticmethod
+    def get_project_creation_form_by_version(cloudant_client, version_id):
+        form_doc = cloudant_client.get_document(
+            db="project_creation_forms", doc_id=version_id
+        ).get_result()
+
+        if not form_doc:
+            raise ValueError(f"Error: no valid form found for version {version_id}")
+
+        return form_doc
 
     @staticmethod
     def get_other_active_forms(cloudant_client):
@@ -68,6 +80,30 @@ class ProjectCreationFormUtils:
         if doc_status != "draft":
             return False
         return True
+
+
+class ProjectCreationUtils:
+    """Utility class for project creation operations."""
+
+    @staticmethod
+    def get_udf_list(cloudant_client, form_id=None):
+        if form_id:
+            form = ProjectCreationFormUtils.get_project_creation_form_by_version(
+                cloudant_client, form_id
+            )
+        else:
+            form = ProjectCreationFormUtils.get_valid_proj_creation_form(
+                cloudant_client
+            )
+        udf_list = []
+        for _, property_info in (
+            form.get("json_schema", {}).get("properties", {}).items()
+        ):
+            if "ngi_form_lims_udf" in property_info:
+                udf_name = property_info["ngi_form_lims_udf"]
+                if udf_name not in udf_list:
+                    udf_list.append(udf_name)
+        return udf_list, form.get("_id")
 
 
 class ProjectCreationHandler(SafeHandler):
@@ -106,6 +142,7 @@ class ProjectCreationHandler(SafeHandler):
                 user=self.get_current_user(),
                 edit_mode=edit_mode,
                 version_id=version_id,
+                get_project_id=None,  # No project ID for creation
             )
         )
 
@@ -164,20 +201,15 @@ class ProjectCreationDataHandler(SafeHandler):
             project_values["researcher"] = researcher
             project_values["udfs"] = {}
             project_values["udfs"]["Project coordinator"] = current_user.name
-            latest_form = ProjectCreationFormUtils.get_valid_proj_creation_form(
-                self.application.cloudant
-            )
-            properties = latest_form.get("json_schema", {}).get("properties", {})
-            for property_name, property_info in properties.items():
-                if "ngi_form_lims_udf" in property_info:
-                    udf_name = property_info["ngi_form_lims_udf"]
-                    project_values["udfs"][udf_name] = request_data["form_data"].get(
-                        property_name
-                    )
+            project_values["udfs"]["Project Form Id"] = request_data[
+                "form_metadata"
+            ].get("version_id")
+            udf_list, _ = ProjectCreationUtils.get_udf_list(self.application.cloudant)
+            for udf in udf_list:
+                if udf not in project_values["udfs"]:
+                    project_values["udfs"][udf] = request_data["form_data"].get(udf)
 
-            created_project = LIMSProjectCloningHandler.create_project_in_lims(
-                project_values
-            )
+            created_project = self.create_project_in_lims(project_values)
             if "error" in created_project:
                 self.set_status(400)
                 return self.write(json.dumps({"error": created_project["error"]}))
@@ -191,9 +223,28 @@ class ProjectCreationDataHandler(SafeHandler):
             self.set_status(400)
             return self.write("Error: Invalid JSON data")
 
+    @staticmethod
+    def create_project_in_lims(proj_values):
+        """Create a new project in LIMS and return the project id and name"""
+        lims_instance = lims.Lims(BASEURI, USERNAME, PASSWORD)
+
+        try:
+            new_project = Project.create(
+                lims_instance,
+                udfs=proj_values["udfs"],
+                name=proj_values["name"],
+                researcher=proj_values["researcher"],
+            )
+        except requests.exceptions.HTTPError as e:
+            return {"error": e.response.text}
+
+        return {"project_id": new_project.id, "project_name": new_project.name}
+
 
 class ProjectCreationFormDataHandler(SafeHandler):
-    """API Handler to get or update the project creation form."""
+    """API Handler to get or update the project creation form.
+    URL: /api/v1/project_creation_form
+    """
 
     def get(self):
         # If version argument is provided, return that specific form
@@ -233,7 +284,7 @@ class ProjectCreationFormDataHandler(SafeHandler):
         The only allowed transitions are:
         draft -> draft
         draft -> valid (this will change the currently valid one into retired)
-        draft -> retired
+        draft -> discarded (this will discard the draft)
 
         valid -> draft (this will create a new draft based on the current valid form)
         """
@@ -283,6 +334,9 @@ class ProjectCreationFormDataHandler(SafeHandler):
             data_to_be_submitted["status"] = "draft"
             data_to_be_submitted["created"] = datetime.datetime.now().isoformat()
             data_to_be_submitted["owner"] = {"email": self.current_user.email}
+            data_to_be_submitted.pop(
+                "event_log", None
+            )  # Remove event log for new draft
 
             data_to_be_submitted = self._update_doc_data(
                 data_to_be_submitted, "create_draft"
@@ -294,57 +348,64 @@ class ProjectCreationFormDataHandler(SafeHandler):
             )
         else:
             new_status = submitted_form_data.get("status")
-            if new_status not in ["draft", "valid", "retired"]:
+            if new_status not in ["draft", "valid", "retired", "discarded"]:
                 self.set_status(400)
                 return self.write(
                     f"Error: invalid status transition: {form_doc.get('status')} -> {new_status}"
                 )
-            if new_status == "draft":
-                # Draft -> draft "transition"
-                data_to_be_submitted = submitted_form_data
-                data_to_be_submitted = self._update_doc_data(
-                    data_to_be_submitted, "update"
-                )
-            elif new_status == "valid":
-                # draft -> valid transition
-                data_to_be_submitted = submitted_form_data
-                data_to_be_submitted["status"] = "valid"
-                data_to_be_submitted = self._update_doc_data(
-                    data_to_be_submitted, "publish"
-                )
-
-                # Make request to retire the currently valid form
-
-                # Fetch currently valid document
-                current_valid_form_doc = None
+            if new_status == "discarded":
+                # Draft -> discarded transition
                 try:
-                    current_valid_form_doc = (
-                        ProjectCreationFormUtils.get_valid_proj_creation_form(
-                            self.application.cloudant
-                        )
-                    )
-                except ValueError:
-                    # If there is no valid one, we don't have to retire anything
-                    pass
-
-                if current_valid_form_doc is not None:
-                    current_valid_form_doc["status"] = "retired"
-                    current_valid_form_doc = self._update_doc_data(
-                        current_valid_form_doc, "retire"
-                    )
-                    self.application.cloudant.post_document(
+                    return_val = self.application.cloudant.delete_document(
                         db="project_creation_forms",
-                        document=current_valid_form_doc,
-                    )
+                        doc_id=form_doc["_id"],
+                        rev=form_doc["_rev"],
+                    ).get_result()
+                except ApiException as e:
+                    self.set_status(400)
+                    self.finish(e.message)
+                self.set_status(200)
+                return self.write({"message": "Draft discarded successfully"})
             else:
-                # Draft -> retired transition
-                data_to_be_submitted = submitted_form_data
-                data_to_be_submitted["status"] = "retired"
-                data_to_be_submitted = self._update_doc_data(
-                    data_to_be_submitted, "retire"
-                )
+                if new_status == "draft":
+                    # Draft -> draft "transition"
+                    data_to_be_submitted = submitted_form_data
+                    data_to_be_submitted = self._update_doc_data(
+                        data_to_be_submitted, "update"
+                    )
+                elif new_status == "valid":
+                    # draft -> valid transition
+                    data_to_be_submitted = submitted_form_data
+                    data_to_be_submitted["status"] = "valid"
+                    data_to_be_submitted = self._update_doc_data(
+                        data_to_be_submitted, "publish"
+                    )
 
-            form_doc["status"] = new_status
+                    # Make request to retire the currently valid form
+
+                    # Fetch currently valid document
+                    current_valid_form_doc = None
+                    try:
+                        current_valid_form_doc = (
+                            ProjectCreationFormUtils.get_valid_proj_creation_form(
+                                self.application.cloudant
+                            )
+                        )
+                    except ValueError:
+                        # If there is no valid one, we don't have to retire anything
+                        pass
+
+                    if current_valid_form_doc is not None:
+                        current_valid_form_doc["status"] = "retired"
+                        current_valid_form_doc = self._update_doc_data(
+                            current_valid_form_doc, "retire"
+                        )
+                        self.application.cloudant.post_document(
+                            db="project_creation_forms",
+                            document=current_valid_form_doc,
+                        )
+
+                form_doc["status"] = new_status
 
         return_val = self.application.cloudant.post_document(
             db="project_creation_forms",
@@ -359,7 +420,9 @@ class ProjectCreationFormDataHandler(SafeHandler):
                     data_to_be_submitted["_id"] = new_id
 
         self.set_status(200)
-        self.write({"form": data_to_be_submitted})
+        self.write(
+            {"form": data_to_be_submitted, "message": "Form updated successfully"}
+        )
 
     def _update_doc_data(self, form_doc, action_string):
         # Update the document data with the new status
@@ -598,3 +661,130 @@ class ProjectCreationIndividualDataFetchHandler(LIMSQueryBaseHandler):
             researchers.append({"researcher_name": researcher_name, "id": f"{row[0]}"})
 
         return researchers
+
+
+class ProjectEditingHandler(SafeHandler):
+    """API Handler to fetch data from LIMS for project editing based on provided field and value.
+    URL: /project_creation_edit/([^/]*)$
+    """
+
+    def get(self, project_id):
+        t = self.application.loader.load("project_creation/project_creation.html")
+
+        self.write(
+            t.generate(
+                gs_globals=self.application.gs_globals,
+                user=self.get_current_user(),
+                edit_mode=False,
+                version_id=None,
+                get_project_id=project_id,
+            )
+        )
+
+
+class ProjectEditingDataHandler(SafeHandler):
+    """API Handler to fetch data from LIMS based on provided field and value for project editing
+    URL: /api/v1/project_creation_form_edit
+    """
+
+    def get(self):
+        project_identifier = self.get_query_argument("project_id", default=None)
+        project_id = self.get_project_id(self.application.cloudant, project_identifier)
+        if not project_id:
+            self.set_status(404)
+            return self.write({"error": "Project not found"})
+
+        lims_instance = lims.Lims(BASEURI, USERNAME, PASSWORD)
+        project_data = self.retrieve_project_data_from_lims(lims_instance, project_id)
+        project_data["project_id"] = (
+            project_id  # Include the project ID in the response
+        )
+
+        if not project_data:
+            self.set_status(404)
+            return self.write({"error": "Error retrieving project data from LIMS"})
+        return self.write({"result": project_data})
+
+    def post(self):
+        current_user = self.get_current_user()
+        if not (current_user.is_proj_coord or current_user.is_admin):
+            self.set_status(401)
+            return self.write(
+                "Error: You do not have the permissions for this operation!"
+            )
+        request_data = json.loads(self.request.body)
+        project_values = request_data["form_data"].get("project_values", {})
+        researcher_id = request_data["form_data"].get("researcher_id")
+        project_form_id = request_data["form_metadata"].get("version_id")
+
+        project_id = self.get_query_argument("project_id", default=None)
+
+        if not project_id:
+            self.set_status(404)
+            return self.write({"error": "Project not found"})
+
+        lims_instance = lims.Lims(BASEURI, USERNAME, PASSWORD)
+        existing_project = Project(lims=lims_instance, id=project_id)
+        udf_list, _ = ProjectCreationUtils.get_udf_list(
+            self.application.cloudant, form_id=project_form_id
+        )
+        for udf in udf_list:
+            if udf in project_values["udfs"]:
+                existing_project.udf[udf] = project_values["udfs"][udf]
+
+        existing_project.udf["Project Form Id"] = project_form_id
+        existing_project.researcher = Researcher(lims_instance, id=researcher_id)
+        try:
+            existing_project.put()
+        except requests.exceptions.HTTPError as e:
+            self.set_status(500)
+            return self.write({"error": f"Error updating project: {str(e)}"})
+
+        return self.write({"result": "Project updated successfully"})
+
+    def retrieve_project_data_from_lims(self, lims_instance, projectid):
+        existing_project = Project(lims=lims_instance, id=projectid)
+        proj_values = {}
+        try:
+            proj_values["name"] = existing_project.name
+        except requests.exceptions.HTTPError:
+            return {}
+
+        proj_values["researcher_id"] = existing_project.researcher.id
+        proj_values["Client"] = existing_project.researcher.name
+        proj_values["Account"] = existing_project.researcher.lab.name
+
+        udfs = {}
+        # Fetch all UDFs from the project form used
+        saved_form_id = existing_project.udf.get("Project Form Id", None)
+        udf_list, used_form_id = ProjectCreationUtils.get_udf_list(
+            self.application.cloudant, form_id=saved_form_id
+        )
+        for udf in udf_list:
+            if udf in existing_project.udf:
+                udfs[udf] = existing_project.udf[udf]
+        proj_values["udfs"] = udfs
+        proj_values["form_version_id"] = used_form_id
+
+        return proj_values
+
+    @staticmethod
+    def get_project_id(cloudant, project_identifier):
+        """Return projectid for the provided identifier"""
+        # Check if the project_identifier matches a project id.
+        # If not, assuming it's a project name, try to get the project id from the project name,
+        # since the LIMS API only accepts project ids
+        projectid = None
+        if re.match(r"^(P\d{3,})", project_identifier):
+            projectid = project_identifier
+        else:
+            try:
+                projectid = cloudant.post_view(
+                    db="projects",
+                    ddoc="projects",
+                    view="name_to_id",
+                    key=project_identifier,
+                ).get_result()["rows"][0]["value"]
+            except IndexError:
+                pass
+        return projectid

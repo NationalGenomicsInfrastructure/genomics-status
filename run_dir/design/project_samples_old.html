@@ -30,7 +30,11 @@ Description: Details page for a single project
 
 <div class="row">
   <div class="col-md-4 borderRight">
-    <h4>Key Project Information</h4>
+    <h4>Key Project Information
+      {% if user.is_proj_coord or user.is_any_admin %}
+        <a href="/project_creation_edit/{{ project }}" id="project_info_edit_button" class="btn btn-secondary btn-xs" target="_blank">Edit Project Info</a>
+      {% end %}
+    </h4>
     <dl class="dl-horizontal">
       <dt>Type</dt>                          <dd id="type">-</dd>
       <dt>Application</dt>                   <dd id="application">-</dd>
