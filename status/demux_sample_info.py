@@ -43,12 +43,12 @@ def load_active_demux_config(cloudant_client):
                     doc.get("_id"),
                 )
 
-        logging.warning("No active demux configuration found in database")
-        return (None, None, None)
+            logging.warning("No active demux configuration found in database")
+            return (None, None, None)
 
     except ApiException as e:
         logging.exception(f"Failed to load active demux configuration: {e}")
-        return (None, None, None)
+    return (None, None, None)
 
 
 class DemuxSampleInfoEditorHandler(SafeHandler):
@@ -244,6 +244,8 @@ class DemuxSampleInfoDataHandler(SafeHandler):
 
     def _validate_post_data(self, post_data):
         """Validate the structure and required fields of POST data.
+
+        Used by both initial POST creation and reupload flows.
 
         Returns:
             tuple: (is_valid, error_message, metadata, uploaded_lims_info)
@@ -1066,7 +1068,7 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                     },
                     "per_sample_fields": {
                         "Lane": sample_in_lane["lane"],
-                        "Sample_ID": f"Sample_{sample_in_lane['sample_id']}",
+                        "Sample_ID": f"Sample_{self._strip_sample_id(sample_in_lane['sample_id'])}",
                         "index": index_1,
                         "index2": index_2,
                         "OverrideCycles": override_cycles,
@@ -1455,6 +1457,475 @@ class DemuxSampleInfoDataHandler(SafeHandler):
 
         return document
 
+    def _build_reupload_index(self, document):
+        """Build a reverse matching index from existing sample_rows.
+
+        Maps (lane, sample_id, index, index2) -> [uuid, ...] for
+        all samples (including deleted ones, since re-upload can
+        recover them).
+
+        Args:
+            document: The existing demux sample info document
+
+        Returns:
+            dict: Mapping of tuple keys to lists of UUIDs
+        """
+        index = {}
+        calculated = document.get("calculated", {})
+        lanes = calculated.get("lanes", {})
+
+        for lane_key, lane_data in lanes.items():
+            sample_rows = lane_data.get("sample_rows", {})
+            for sample_uuid, sample_row in sample_rows.items():
+                settings_versions = sorted(
+                    sample_row.get("settings", {}).keys(), reverse=True
+                )
+                if not settings_versions:
+                    continue
+                latest = sample_row["settings"][settings_versions[0]]
+                per_sample = latest.get("per_sample_fields", {})
+
+                # Strip "Sample_" prefix from Sample_ID to match CSV format
+                sample_id = self._strip_sample_id(per_sample.get("Sample_ID", ""))
+                lane = str(per_sample.get("Lane", lane_key))
+
+                key = (
+                    lane,
+                    sample_id,
+                    per_sample.get("index", ""),
+                    per_sample.get("index2", ""),
+                )
+                index.setdefault(key, []).append(sample_uuid)
+
+        return index
+
+    def _resolve_csv_sample(self, csv_row, metadata):
+        """Resolve a CSV row through classification and named index expansion.
+
+        Returns the effective (possibly expanded) index sequences and the
+        classification result so the caller can use them for matching or
+        for creating the full sample row later.
+
+        Args:
+            csv_row: A single sample dict from uploaded_lims_info
+            metadata: Run metadata dict
+
+        Returns:
+            tuple: (effective_index, effective_index2, classification_result,
+                    project_name, project_id)
+        """
+        self._get_sample_classification_config()
+        project_name, library_method, project_id = self._get_project_info(csv_row)
+
+        sample_classification = self._classify_sample_type(
+            csv_row,
+            library_method,
+            metadata,
+        )
+
+        sequences, _ = self._expand_named_indices(csv_row, sample_classification)
+
+        # sequences is [[index1, index2]] for single-entry samples
+        first_sequence = sequences[0] if sequences else []
+        index_1 = first_sequence[0] if first_sequence else csv_row.get("index", "")
+        index_2 = (
+            first_sequence[1] if len(first_sequence) > 1 else csv_row.get("index2", "")
+        )
+
+        return index_1, index_2, sample_classification, project_name, project_id
+
+    def _reupload_match_samples(self, csv_samples, db_index):
+        """Match CSV rows against the DB index using exact-key lookup.
+
+        For each CSV row, the effective key is looked up in the DB index.
+        If there is exactly one match, the CSV row is considered an update
+        for that UUID. If there are zero or multiple matches, the CSV row
+        is treated as a new sample (no match). Remaining DB entries that
+        were never matched by any CSV row are orphaned for deletion.
+
+        Each csv_sample dict is expected to have '_reupload_key' set by the
+        caller before invoking this method.
+
+        Args:
+            csv_samples: List of sample dicts from uploaded_lims_info,
+                         each with an added '_reupload_key' tuple.
+            db_index: Reverse index from _build_reupload_index, keyed by
+                      (lane, sample_id, index, index2) -> [uuid, ...]
+
+        Returns:
+            tuple: (matched, created, orphaned_uuids)
+                matched: dict mapping uuid -> csv sample
+                created: list of csv sample dicts (no DB match)
+                orphaned_uuids: set of UUIDs to soft-delete
+        """
+        matched = {}
+        orphaned_uuids = set()
+        matched_csv_indices = set()
+
+        for i, csv_sample in enumerate(csv_samples):
+            csv_key = csv_sample["_reupload_key"]
+            candidates = db_index.pop(csv_key, [])
+
+            if len(candidates) == 1:
+                matched[candidates[0]] = csv_sample
+                matched_csv_indices.add(i)
+            elif len(candidates) > 1:
+                # Multiple candidates (e.g., duplicate Sample_ID on
+                # the same lane with different indices) - all
+                # candidates become orphans
+                orphaned_uuids.update(candidates)
+
+        for key_uuids in db_index.values():
+            orphaned_uuids.update(key_uuids)
+
+        created = [
+            csv_samples[i]
+            for i in range(len(csv_samples))
+            if i not in matched_csv_indices
+        ]
+
+        return matched, created, orphaned_uuids
+
+    def _apply_reupload(self, flowcell_id, document, post_data, dry_run, comment=None):
+        """Apply a re-upload (reconciles CSV data against existing document).
+
+        Steps:
+        1. Validate and parse the CSV data
+        2. Build the reupload matching index
+        3. Match CSV rows to existing UUIDs, create new UUIDs for unmatched,
+           mark missing UUIDs as deleted
+        4. Build new sample structures from CSV
+        5. Merge matched samples, add new samples, soft-delete orphans
+        6. Regenerate samplesheets
+
+        Args:
+            flowcell_id: The flowcell identifier
+            document: The existing document to update
+            post_data: The raw POST body (JSON dict)
+            dry_run: If True, return preview without saving
+            comment: Optional user-provided override comment
+
+        Returns:
+            None (sets HTTP status and writes response)
+        """
+        is_valid, error_message, metadata, uploaded_lims_info = (
+            self._validate_post_data(post_data)
+        )
+        if not is_valid:
+            self.set_status(400)
+            self.write(json.dumps({"error": error_message}))
+            return
+
+        # Support optional "comment" field from frontend
+        if comment is None:
+            comment = post_data.get("comment", "").strip() or None
+
+        # Load classification config (needed for _classify_sample_type etc.)
+        self._get_sample_classification_config()
+
+        original_rev = document.get("_rev")
+        timestamp = datetime.datetime.now(datetime.timezone.utc).isoformat(
+            timespec="milliseconds"
+        )
+
+        # Build the reverse index for matching
+        db_index = self._build_reupload_index(document)
+
+        # Resolve each CSV sample through classification to get effective indexes
+        resolved_samples = []
+        for csv_row in uploaded_lims_info:
+            (
+                effective_index,
+                effective_index2,
+                sample_class,
+                project_name,
+                project_id,
+            ) = self._resolve_csv_sample(csv_row.copy(), metadata)
+            # Attach derived data back to the row for later use
+            resolved_row = dict(csv_row)
+            resolved_row["project_name"] = project_name
+            resolved_row["project_id"] = project_id
+            resolved_row["_matched_class"] = sample_class
+            sample_id = self._strip_sample_id(csv_row.get("sample_id", ""))
+            resolved_row["_reupload_key"] = (
+                str(resolved_row["lane"]),
+                sample_id,
+                effective_index,
+                effective_index2,
+            )
+            resolved_samples.append(resolved_row)
+
+        # Match CSV rows to DB entries
+        matched, created, orphaned_uuids = self._reupload_match_samples(
+            resolved_samples, db_index
+        )
+
+        # Build full sample rows for all CSV data using the same pipeline as POST
+        lanes_with_samples = self._group_samples_by_lane(uploaded_lims_info)
+        new_calculated_lanes = self._create_calculated_lanes(
+            lanes_with_samples, timestamp, metadata
+        )
+
+        # 1) Update metadata fields (keep first_generated, projects, etc.)
+        metadata_changes = []
+        for field in (
+            "run_setup",
+            "num_lanes",
+            "instrument_type",
+            "run_mode",
+            "setup_lims_step_id",
+        ):
+            if field in metadata:
+                old_value = document["metadata"].get(field)
+                new_value = metadata[field]
+                if old_value != new_value:
+                    metadata_changes.append(
+                        {
+                            "field": field,
+                            "old": old_value,
+                            "new": new_value,
+                        }
+                    )
+                document["metadata"][field] = metadata[field]
+
+        # 2) Merge matched sample rows — add new settings on top of existing
+        updated_uuids = set()
+        for old_uuid, resolved_row in matched.items():
+            key = resolved_row["_reupload_key"]
+            lane_key = key[0]
+            # Find the created uuid in new_calculated_lanes that shares the same key
+            new_calculated_uuid = None
+            for candidate_uuid, candidate_row in new_calculated_lanes[lane_key][
+                "sample_rows"
+            ].items():
+                latest_ts = max(candidate_row["settings"].keys())
+                latest = candidate_row["settings"][latest_ts]
+                if latest["per_sample_fields"]["Lane"] == int(lane_key):
+                    if (
+                        self._strip_sample_id(
+                            latest["per_sample_fields"].get("Sample_ID", "")
+                        )
+                        == key[1]
+                        and latest["per_sample_fields"].get("index", "") == key[2]
+                        and latest["per_sample_fields"].get("index2", "") == key[3]
+                    ):
+                        new_calculated_uuid = candidate_uuid
+                        break
+
+            if new_calculated_uuid is not None:
+                new_settings_entry = new_calculated_lanes[lane_key]["sample_rows"][
+                    new_calculated_uuid
+                ]["settings"]
+                existing_row = document["calculated"]["lanes"][lane_key]["sample_rows"][
+                    old_uuid
+                ]
+                existing_row["settings"].update(copy.deepcopy(new_settings_entry))
+                existing_row["last_modified"] = timestamp
+                updated_uuids.add(old_uuid)
+
+        # 3) Add newly created samples
+        for resolved_row in created:
+            key = resolved_row["_reupload_key"]
+            lane_key = key[0]
+            if lane_key not in new_calculated_lanes:
+                continue
+            for cand_uuid, cand_row in new_calculated_lanes[lane_key][
+                "sample_rows"
+            ].items():
+                latest_ts = max(cand_row["settings"].keys())
+                latest = cand_row["settings"][latest_ts]
+                sample_id = self._strip_sample_id(resolved_row.get("sample_id", ""))
+                if (
+                    (
+                        self._strip_sample_id(
+                            latest["per_sample_fields"].get("Sample_ID", "")
+                        )
+                        == sample_id
+                    )
+                    and latest["per_sample_fields"]["Lane"] == int(lane_key)
+                    and latest["per_sample_fields"].get("index", "") == key[2]
+                    and latest["per_sample_fields"].get("index2", "") == key[3]
+                ):
+                    if lane_key not in document["calculated"]["lanes"]:
+                        document["calculated"]["lanes"][lane_key] = {"sample_rows": {}}
+                    document["calculated"]["lanes"][lane_key]["sample_rows"][
+                        cand_uuid
+                    ] = cand_row
+                    break
+
+        # 4) Soft-delete orphaned UUIDs
+        for uuid_to_delete in orphaned_uuids:
+            self._delete_orphaned_sample(document, uuid_to_delete, timestamp)
+
+        # 5) Update version history
+        if "version_history" not in document["calculated"]:
+            document["calculated"]["version_history"] = {}
+
+        uploader = self.get_current_user().email if self.get_current_user() else None
+        if comment:
+            user_comment = comment
+        else:
+            user_comment = (
+                f"Re-upload matched={len(matched)}, created={len(created)}, "
+                f"deleted={len(orphaned_uuids)}"
+            )
+
+        document["calculated"]["version_history"][timestamp] = {
+            "generated_by": uploader,
+            "autogenerated": True,
+            "comment": user_comment,
+            "auto_run": False,
+            "config_version": self._config_version,
+        }
+        document["config_version"] = self._config_version
+
+        # 6) Recalculate and regenerate samplesheets
+        calculated_lanes = document.get("calculated", {}).get("lanes", {})
+        self._recalculate_all_samplesheet_settings(calculated_lanes)
+        samplesheets = self._generate_samplesheets(flowcell_id, calculated_lanes)
+        document["samplesheets"] = samplesheets
+
+        # 7) If dry-run, return the merge preview
+        if dry_run:
+            self.set_status(200)
+            self.set_header("Content-type", "application/json")
+            self.write(
+                json.dumps(
+                    {
+                        "status": "dry_run",
+                        "message": "Dry run - reupload not saved",
+                        "flowcell_id": flowcell_id,
+                        "timestamp": timestamp,
+                        "is_reupload": True,
+                        "summary": {
+                            "matched": len(matched),
+                            "created": len(created),
+                            "deleted": len(orphaned_uuids),
+                        },
+                        "changes": {
+                            "matched": [
+                                {
+                                    "uuid": u,
+                                    "sample_id": self._get_sample_id_from_row(
+                                        document, u
+                                    ),
+                                }
+                                for u in matched.keys()
+                            ],
+                            "new_samples": [
+                                {
+                                    "lane": r["_reupload_key"][0],
+                                    "sample_id": r.get("sample_id", ""),
+                                }
+                                for r in created
+                            ],
+                            "deleted": [
+                                self._get_sample_id_from_doc(document, u)
+                                for u in orphaned_uuids
+                            ],
+                            "metadata": metadata_changes,
+                        },
+                        "document": document,
+                    }
+                )
+            )
+            return
+
+        # 8) Save to database with conflict detection
+        current_rev = document.get("_rev")
+        if current_rev != original_rev:
+            self.set_status(409)
+            self.write(
+                json.dumps(
+                    {
+                        "error": "Document was modified by another user. Please refresh and try again.",
+                        "error_code": "DOCUMENT_CONFLICT",
+                    }
+                )
+            )
+            return
+
+        response = self.application.cloudant.post_document(
+            db="demux_sample_info", document=document
+        ).get_result()
+
+        if not response.get("ok"):
+            self.set_status(500)
+            self.write(
+                json.dumps(
+                    {
+                        "error": "Failed to update document in database",
+                        "response": response,
+                    }
+                )
+            )
+            return
+
+        updated_doc = self.application.cloudant.get_document(
+            db="demux_sample_info", doc_id=document["_id"]
+        ).get_result()
+
+        # Remove CouchDB-specific fields for the response
+        for field in ("_id", "_rev"):
+            updated_doc.pop(field, None)
+
+        self.set_status(200)
+        self.set_header("Content-type", "application/json")
+        self.write(
+            json.dumps(
+                {
+                    "status": "success",
+                    "message": "Demux sample info updated successfully",
+                    "flowcell_id": flowcell_id,
+                    "timestamp": timestamp,
+                    "document": updated_doc,
+                }
+            )
+        )
+
+    @staticmethod
+    def _strip_sample_id(sample_id_str):
+        """Strip all occurrences of the ``Sample_`` prefix."""
+        s = str(sample_id_str)
+        while s.startswith("Sample_"):
+            s = s[len("Sample_") :]
+        return s
+
+    def _get_sample_id_from_row(self, document, uuid):
+        """Return the Sample_ID of an existing sample_row (None if not found)."""
+        for lane_data in document.get("calculated", {}).get("lanes", {}).values():
+            row = lane_data.get("sample_rows", {}).get(uuid)
+            if row:
+                versions = sorted(row.get("settings", {}).keys(), reverse=True)
+                if versions:
+                    return (
+                        row["settings"][versions[0]]
+                        .get("per_sample_fields", {})
+                        .get("Sample_ID", "")
+                    )
+        return ""
+
+    def _get_sample_id_from_doc(self, document, uuid):
+        """Return a summary string for a deleted sample."""
+        sid = self._get_sample_id_from_row(document, uuid)
+        return f"{sid} ({uuid})"
+
+    def _delete_orphaned_sample(self, document, uuid, timestamp):
+        """Mark an existing sample row as deleted."""
+        for lane_data in document.get("calculated", {}).get("lanes", {}).values():
+            if uuid not in lane_data.get("sample_rows", {}):
+                continue
+            sample_row = lane_data["sample_rows"][uuid]
+            if sample_row.get("deleted", False):
+                continue  # already marked deleted
+            sample_row["deleted"] = True
+            sample_row["deleted_at"] = timestamp
+            sample_row["deleted_by"] = (
+                self.get_current_user().email if self.get_current_user() else None
+            )
+            sample_row["last_modified"] = timestamp
+            return
+
     def post(self, flowcell_id):
         """Accept POST request with metadata and uploaded_lims_info to create/update demux sample info document."""
         try:
@@ -1478,7 +1949,33 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                 timespec="milliseconds"
             )
 
-            # Build the complete document
+            # Check if document already exists for this flowcell (before dry_run check
+            # so dry_run for existing docs goes through the reupload path)
+            view_result = self.application.cloudant.post_view(
+                db="demux_sample_info",
+                ddoc="info",
+                view="flowcell_id",
+                key=flowcell_id,
+            ).get_result()
+
+            existing_rows = view_result.get("rows", [])
+
+            if existing_rows:
+                # Document already exists - handle as reupload
+                document = self._fetch_document_by_flowcell_id(flowcell_id)
+                if not document:
+                    self.set_status(500)
+                    self.write(
+                        json.dumps(
+                            {
+                                "error": "View hit but document fetch failed",
+                            }
+                        )
+                    )
+                    return
+                return self._apply_reupload(flowcell_id, document, post_data, dry_run)
+
+            # Document doesn't exist - build it (for dry_run or creation)
             document = self._create_document(
                 flowcell_id, metadata, uploaded_lims_info, timestamp
             )
@@ -1500,64 +1997,40 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                 )
                 return
 
-            # Check if document already exists for this flowcell
-            try:
-                view_result = self.application.cloudant.post_view(
-                    db="demux_sample_info",
-                    ddoc="info",
-                    view="flowcell_id",
-                    key=flowcell_id,
-                ).get_result()
+            # Create new document
+            response = self.application.cloudant.post_document(
+                db="demux_sample_info", document=document
+            ).get_result()
 
-                existing_rows = view_result.get("rows", [])
-
-                if existing_rows:
-                    # Document already exists - return error
-                    self.set_status(409)  # Conflict
-                    self.write(
-                        json.dumps(
-                            {
-                                "error": f"Demux sample info already exists for flowcell {flowcell_id}",
-                                "flowcell_id": flowcell_id,
-                            }
-                        )
-                    )
-                    return
-
-                # Document doesn't exist - create new one
-                response = self.application.cloudant.post_document(
-                    db="demux_sample_info", document=document
-                ).get_result()
-
-                if not response.get("ok"):
-                    self.set_status(500)
-                    self.write(
-                        json.dumps(
-                            {
-                                "error": "Failed to save document to database",
-                                "response": response,
-                            }
-                        )
-                    )
-                    return
-
-                self.set_status(201)
-                self.set_header("Content-type", "application/json")
+            if not response.get("ok"):
+                self.set_status(500)
                 self.write(
                     json.dumps(
                         {
-                            "status": "success",
-                            "message": "Demux sample info created successfully",
-                            "flowcell_id": flowcell_id,
-                            "timestamp": timestamp,
+                            "error": "Failed to save document to database",
+                            "response": response,
                         }
                     )
                 )
-
-            except ApiException as db_error:
-                self.set_status(500)
-                self.write(json.dumps({"error": f"Database error: {str(db_error)}"}))
                 return
+
+            self.set_status(201)
+            self.set_header("Content-type", "application/json")
+            self.write(
+                json.dumps(
+                    {
+                        "status": "success",
+                        "message": "Demux sample info created successfully",
+                        "flowcell_id": flowcell_id,
+                        "timestamp": timestamp,
+                    }
+                )
+            )
+
+        except ApiException as db_error:
+            self.set_status(500)
+            self.write(json.dumps({"error": f"Database error: {str(db_error)}"}))
+            return
 
         except json.JSONDecodeError as e:
             self.set_status(400)
