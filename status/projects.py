@@ -411,6 +411,9 @@ class ProjectsBaseDataHandler(SafeHandler):
             for row in itertools.chain.from_iterable(view_calls):
                 p_info = row["value"]
                 ptype = p_info["details"].get("type")
+                # This is in case the project is closed, but the closed condition is not met, e.g. if the close date is outside the requested range.
+                # In that case, we don't want to include the project in the list of open projects.
+                is_closed_project = False
 
                 if not (projtype == "All" or ptype == projtype):
                     continue
@@ -420,6 +423,7 @@ class ProjectsBaseDataHandler(SafeHandler):
                 ] * 4
 
                 if "close_date" in p_info:
+                    is_closed_project = True
                     closed_condition = p_info["close_date"] >= str(
                         start_close_date
                     ) and p_info["close_date"] <= str(end_close_date)
@@ -463,7 +467,7 @@ class ProjectsBaseDataHandler(SafeHandler):
                 elif (closedflag or filter_projects == "all") and closed_condition:
                     filtered_projects.append(row)
                 # open projects
-                elif openflag and open_condition:
+                elif openflag and open_condition and not is_closed_project:
                     if filter_projects == "all":
                         filtered_projects.append(row)
                     elif "open" in filter_projects:

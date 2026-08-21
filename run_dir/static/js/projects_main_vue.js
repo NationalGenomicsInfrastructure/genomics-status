@@ -390,8 +390,10 @@ const vProjectsStatus = {
         },
         /* Only used on project cards page */
         fetchProjects() {
+            const curr_date = new Date().toISOString().split('T')[0];
+            const four_weeks_ago = new Date(Date.now() - 28 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
             axios
-                .get('/api/v1/projects?list=pending,open&type=All')
+                .get(`/api/v1/projects?list=pending,open,closed&oldest_close_date=${four_weeks_ago}&youngest_close_date=${curr_date}&type=All`)
                 .then(response => {
                     let data = response.data
                     if (data !== null) {
