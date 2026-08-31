@@ -99,14 +99,14 @@ class qPCRPoolsDataHandler(QueuesBaseHandler):
         query = (
             "select art.artifactid, art.name, CAST(st.lastmodifieddate as DATE), st.generatedbyid, ct.name, ctp.wellxposition, ctp.wellyposition, s.projectid "
             "from artifact art, stagetransition st, container ct, containerplacement ctp, sample s, artifact_sample_map asm "
-            "where art.artifactid=st.artifactid and st.stageid in (select stageid from stage where stepid={}) and st.completedbyid is null and st.workflowrunid>0 "
+            "where art.artifactid=st.artifactid and st.stageid in (select stageid from stage where stepid=%s) and st.completedbyid is null and st.workflowrunid>0 "
             "and ctp.processartifactid=st.artifactid and ctp.containerid=ct.containerid and s.processid=asm.processid and asm.artifactid=art.artifactid "
             "group by art.artifactid, CAST(st.lastmodifieddate as DATE), st.generatedbyid, ct.name, ctp.wellxposition, ctp.wellyposition, s.projectid;"
         )
         lib_validation_query = (
             "select  st.artifactid, art.name, st.lastmodifieddate, st.generatedbyid, ct.name, ctp.wellxposition, ctp.wellyposition, s.projectid, e.udfvalue "
             "from artifact art, stagetransition st, container ct, containerplacement ctp, sample s, artifact_sample_map asm, entity_udf_view e where "
-            "art.artifactid=st.artifactid and st.stageid in (select stageid from stage where membershipid in (select sectionid from workflowsection where protocolid={})) "
+            "art.artifactid=st.artifactid and st.stageid in (select stageid from stage where membershipid in (select sectionid from workflowsection where protocolid=%s)) "
             "and st.workflowrunid>0 and st.completedbyid is null and ctp.processartifactid=st.artifactid and ctp.containerid=ct.containerid and s.processid=asm.processid "
             f"and asm.artifactid=art.artifactid and art.name not in {tuple(control_names)} and s.projectid=e.attachtoid and e.udfname='Library construction method'"
             "group by st.artifactid, art.name, st.lastmodifieddate, st.generatedbyid, ct.name, ctp.wellxposition, ctp.wellyposition, s.projectid, e.udfvalue;"
@@ -116,19 +116,19 @@ class qPCRPoolsDataHandler(QueuesBaseHandler):
         queue_defs = self.fetch_queue_definitions("qPCR")
         for key, value in queue_defs.items():
             if key != "LibraryValidation":
-                queues[key] = query.format(value["stepid"])
+                queues[key] = (query, (value["stepid"],))
             else:
                 # Library validation has a different query
                 # Queue 41, but query is slightly different to use protocolid for Library Validation QC which is 8 and, also to exclude the controls
-                queues[key] = lib_validation_query.format(value["protocolid"])
+                queues[key] = (lib_validation_query, (value["protocolid"],))
 
         methods = queues.keys()
         cursor = self._get_lims_cursor()
         pools = {}
         for method in methods:
             pools[method] = {}
-            query = queues[method]
-            cursor.execute(query)
+            query, params = queues[method]
+            cursor.execute(query, params)
             records = cursor.fetchall()
             for record in list(records):
                 queue_time = record[2].isoformat()
