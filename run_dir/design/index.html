@@ -54,30 +54,16 @@
   </div>
 
   <div class="row pt-5">
-    <div class="col-lg-7">
-      <h3>Longest waiting projects</h3>
-      <div class="scroll-body">
-        <table class="table table-bordered sortable" id="prio_projs_table">
-          <thead id="prio_projs_table_head">
-            <tr class="sticky darkth">
-              <th class="sort">Project:</th>
-              <th class="sort">Library:</th>
-              <th class="sort">Status:</th>
-              <th class="sort">Days waiting:</th>
-            </tr>
-          </thead>
-          <tbody id="prio_projs_table_body"></tbody>
-        </table>
-      </div>
+    <div class="col-lg-8 pr-4" id="vue_index_main">
+      <v-running-notes-list :user="{email: '{{user.email}}', user: '{{user.name}}'}" :partition_id="null"></v-running-notes-list-decoupled>
     </div>
 
-    <div class="col-lg-5">
-      <h3>Server Status</h3>
+    <div class="col-lg-4">
+    <h3>Server Status</h3>
       <table class="table table-bordered table-disk-quotas">
         <thead>
           <tr class="darkth">
             <th>Server</th>
-            <th>Instrument</th>
             <th>Disk (Used / Quota)</th>
           </tr>
         </thead>
@@ -85,7 +71,6 @@
           {% for server, status in server_status %}
           <tr>
             <td>{{ server }}</td>
-            <td>{{ status.get('instrument') }}</td>
             <td class="disk-quotas-highcharts {{ status.get('css_class') }}"><div class="wrapper"><span class="val" style="width:{{ status.get('used_percentage') }};">
               <span>{{ status.get('space_used') }}</span></span>
               <span class="percent float-right">{{ status.get('disk_size') }}</span></div>
@@ -97,11 +82,13 @@
     </div>
   </div>
 </div>
-
+<script src="/static/js/vue.v3.2.47.global.prod.js"></script>
+<script src="/static/js/axios.v1.3.4.min.js"></script>
+<script src="/static/js/external/textarea-caret.3.1.0.js"></script>
 <script src="https://code.highcharts.com/highcharts.js"></script>
 <script type="text/javascript" src="/static/js/index.js?v={{ gs_globals['git_commit'] }}" id="indexpage-js-import"></script>
 <script src="/static/js/dataTables-extensions-1.13.6.min.js"></script>
-
+<script type="module" src="/static/js/index_vue.js"></script>
 {% end %}
 
 {% end %}
