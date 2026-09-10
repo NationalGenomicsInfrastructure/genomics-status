@@ -8,6 +8,7 @@ const vProjectCreationMain = {
             /* Maybe some of these attributes are more suitable in the vProjectCreationForm component 
             but it would be quite a lot of work to move it.*/
             conditionalLogic: [],
+            current_user: null,
             fetched_data: {},
             formData: {},
             forms: [],
@@ -87,6 +88,7 @@ const vProjectCreationMain = {
                     if (this.$root.toplevelEditMode) {
                         this.$root.newJsonForm = JSON.parse(JSON.stringify(this.$root.jsonForm));
                     }
+                    this.$root.ensureProjectCoordinatorIsFilled();
                 })
                 .catch(error => {
                     if (this.$root.toplevelEditMode) {
@@ -97,6 +99,35 @@ const vProjectCreationMain = {
                     }
                     console.log(error)
                 })
+        },
+        fetchCurrentUser() {
+            axios
+                .get('/api/v1/current_user')
+                .then(response => {
+                    this.current_user = response.data || {};
+                    this.ensureProjectCoordinatorIsFilled();
+                })
+                .catch(error => {
+                    console.error('Error fetching current user:', error);
+                });
+        },
+        ensureProjectCoordinatorIsFilled() {
+            const currentUserName = this.current_user?.user?.trim();
+            if (!currentUserName) {
+                return;
+            }
+
+            const fieldEntry = Object.entries(this.fields || {}).find(([fieldId, field]) => {
+                const matchesUdf = field && typeof field.ngi_form_lims_udf === 'string'
+                    && field.ngi_form_lims_udf.trim().toLowerCase() === 'project coordinator';
+                return matchesUdf;
+            });
+
+            if (!fieldEntry) {
+                return;
+            }
+            const [fieldId, field] = fieldEntry;
+            this.formData[fieldId] = currentUserName;
         },
         getConditionalsFor(field_identifier) {
             // Get the conditional logic for a specific field
@@ -367,6 +398,48 @@ const vProjectCreationForm = {
             }
             return [];
         },
+        formGroupRows() {
+            // Build rows where two consecutive half-width groups share a row
+            const rows = [];
+            let pendingHalfGroup = null;
+
+            this.sortedFormGroups.forEach(([groupIdentifier, formGroup]) => {
+                const groupFields = this.fields_for_given_group(groupIdentifier);
+                if (Object.keys(groupFields).length === 0) {
+                    return;
+                }
+
+                const width = formGroup?.layout_width === 'half' ? 'half' : 'full';
+                const groupInfo = {
+                    groupIdentifier,
+                    formGroup,
+                    fields: groupFields,
+                    width
+                };
+
+                if (width === 'half') {
+                    if (pendingHalfGroup === null) {
+                        pendingHalfGroup = groupInfo;
+                    } else {
+                        rows.push([pendingHalfGroup, groupInfo]);
+                        pendingHalfGroup = null;
+                    }
+                    return;
+                }
+
+                if (pendingHalfGroup !== null) {
+                    rows.push([pendingHalfGroup]);
+                    pendingHalfGroup = null;
+                }
+                rows.push([groupInfo]);
+            });
+
+            if (pendingHalfGroup !== null) {
+                rows.push([pendingHalfGroup]);
+            }
+
+            return rows;
+        },
         title() {
             return this.$root.getValue(this.$root.jsonForm, 'title');
         }
@@ -377,7 +450,14 @@ const vProjectCreationForm = {
             if (this.fieldsPerGroup[group_identifier] === undefined) {
                 return {}
             }
-            return this.fieldsPerGroup[group_identifier];
+            // Sort the fields by their position for a consistent display order
+            return Object.fromEntries(
+                Object.entries(this.fieldsPerGroup[group_identifier]).sort(([, a], [, b]) => {
+                    const aPos = Number(a.position ?? Infinity);
+                    const bPos = Number(b.position ?? Infinity);
+                    return aPos - bPos;
+                })
+            );
         },
         loadLatestForm() {
             // Save current form data
@@ -396,6 +476,7 @@ const vProjectCreationForm = {
                                 this.$root.formData[fieldId] = currentFormData[fieldId];
                             }
                         });
+                        this.$root.ensureProjectCoordinatorIsFilled();
                     });
                 })
                 .catch(error => {
@@ -574,6 +655,7 @@ const vProjectCreationForm = {
 
     },
     mounted() {
+        this.$root.fetchCurrentUser();
         if (!this.form_loaded) {
             this.$root.fetch_form(this.version_id);
         }
@@ -698,17 +780,19 @@ const vProjectCreationForm = {
                             </template>
                         </div>
                         <form @submit.prevent="submitForm" class="mt-3 mb-5">
-                            <template v-for="[group_identifier, form_group] in sortedFormGroups" :key="group_identifier">
-                                <template v-if="Object.keys(this.fields_for_given_group(group_identifier)).length !== 0">
-                                    <div class="mb-5">
-                                        <h3>{{form_group.display_name}}</h3>
-                                        <template v-for="(field, identifier) in this.fields_for_given_group(group_identifier)" :key="identifier">
-                                            <template v-if="field.ngi_form_type !== undefined">
-                                                <v-form-field :field="field" :identifier="identifier" :is-editing-project="isEditingProject"></v-form-field>
+                            <template v-for="(groupRow, rowIndex) in formGroupRows" :key="'group-row-' + rowIndex">
+                                <div class="row">
+                                    <template v-for="groupInfo in groupRow" :key="groupInfo.groupIdentifier">
+                                        <div :class="groupInfo.width === 'half' ? 'col-12 col-lg-6 mb-5' : 'col-12 mb-5'">
+                                            <h3>{{groupInfo.formGroup.display_name}}</h3>
+                                            <template v-for="(field, identifier) in groupInfo.fields" :key="identifier">
+                                                <template v-if="field.ngi_form_type !== undefined">
+                                                    <v-form-field :field="field" :identifier="identifier" :is-editing-project="isEditingProject"></v-form-field>
+                                                </template>
                                             </template>
-                                        </template>
-                                    </div>
-                                </template>
+                                        </div>
+                                    </template>
+                                </div>
                             </template>
                             <div class="mt-3">
                                 <template v-if="isEditingProject">
@@ -843,10 +927,20 @@ const vFormField = {
 
                 // The visibility condition enum
                 const condition_enum = this.field.ngi_form_visible_if.properties[property].enum;
+                // Normalize the value to handle case insensitivity and boolean strings
+                const normalize = (v) => {
+                    if (typeof v === 'string') {
+                        const s = v.trim().toLowerCase();
+                        if (s === 'true') return true;
+                        if (s === 'false') return false;
+                        return s;
+                    }
+                    return v;
+                };
 
                 // Check if the property is in the enum
                 if (condition_enum !== undefined) {
-                    if (!condition_enum.includes(this.$root.formData[property])) {
+                    if (!condition_enum.map(normalize).includes(normalize(this.$root.formData[property]))) {
                         return false
                     }
                 }
@@ -1218,7 +1312,12 @@ const vCreateForm = {
             newField: '',
             showDebug: false,
             showHelp: false,
-            collapsedFields: {}
+            collapsedFields: {},
+            ruleModal: {
+                visible: false,
+                fieldIdentifier: '',
+                ruleType: 'if'
+            }
         }
     },
     computed: {
@@ -1256,6 +1355,54 @@ const vCreateForm = {
         // Metadata fields
         formGroups() {
             return this.$root.getValue(this.$root.newJsonForm, 'form_groups');
+        },
+        sortedFormGroupsForEditor() {
+            if (!this.formGroups) {
+                return [];
+            }
+            return Object.entries(this.formGroups).sort(([, a], [, b]) => a.position - b.position);
+        },
+        fieldEditorGroupRows() {
+            // Build rows where two consecutive half-width groups share a row
+            const rows = [];
+            let pendingHalfGroup = null;
+
+            this.sortedFormGroupsForEditor.forEach(([groupIdentifier, formGroup]) => {
+                const groupFields = this.fieldsForGroup(groupIdentifier);
+                if (Object.keys(groupFields).length === 0) {
+                    return;
+                }
+
+                const width = formGroup?.layout_width === 'half' ? 'half' : 'full';
+                const groupInfo = {
+                    groupIdentifier,
+                    formGroup,
+                    groupFields,
+                    width
+                };
+
+                if (width === 'half') {
+                    if (pendingHalfGroup === null) {
+                        pendingHalfGroup = groupInfo;
+                    } else {
+                        rows.push([pendingHalfGroup, groupInfo]);
+                        pendingHalfGroup = null;
+                    }
+                    return;
+                }
+
+                if (pendingHalfGroup !== null) {
+                    rows.push([pendingHalfGroup]);
+                    pendingHalfGroup = null;
+                }
+                rows.push([groupInfo]);
+            });
+
+            if (pendingHalfGroup !== null) {
+                rows.push([pendingHalfGroup]);
+            }
+
+            return rows;
         },
         canAddNewCondition() {
             // Check if both if and then fields are selected and exist in the schema
@@ -1419,6 +1566,79 @@ const vCreateForm = {
                 }
             };
             this.allOf.push(newProperty);
+        },
+        ifRulesForField(fieldIdentifier) {
+            if (!Array.isArray(this.allOf)) {
+                return [];
+            }
+            return this.allOf
+                .map((rule, index) => {
+                    const ifProps = rule?.if?.properties || {};
+                    if (Object.prototype.hasOwnProperty.call(ifProps, fieldIdentifier)) {
+                        return {
+                            index,
+                            description: rule.description || `Rule ${index + 1}`
+                        };
+                    }
+                    return null;
+                })
+                .filter(rule => rule !== null);
+        },
+        thenRulesForField(fieldIdentifier) {
+            if (!Array.isArray(this.allOf)) {
+                return [];
+            }
+            return this.allOf
+                .map((rule, index) => {
+                    const thenProps = rule?.then?.properties || {};
+                    if (Object.prototype.hasOwnProperty.call(thenProps, fieldIdentifier)) {
+                        return {
+                            index,
+                            description: rule.description || `Rule ${index + 1}`
+                        };
+                    }
+                    return null;
+                })
+                .filter(rule => rule !== null);
+        },
+        openRuleModal(fieldIdentifier, ruleType) {
+            this.ruleModal.fieldIdentifier = fieldIdentifier;
+            this.ruleModal.ruleType = ruleType;
+            this.ruleModal.visible = true;
+        },
+        closeRuleModal() {
+            this.ruleModal.visible = false;
+            this.ruleModal.fieldIdentifier = '';
+            this.ruleModal.ruleType = 'if';
+        },
+        activeRuleList() {
+            if (this.ruleModal.ruleType === 'then') {
+                return this.thenRulesForField(this.ruleModal.fieldIdentifier);
+            }
+            return this.ifRulesForField(this.ruleModal.fieldIdentifier);
+        },
+        activeRuleHeading() {
+            return this.ruleModal.ruleType === 'then'
+                ? 'THEN rules using this field'
+                : 'IF rules using this field';
+        },
+        jumpToRule(ruleIndex, fieldIdentifier) {
+            this.displayConditionalLogic = true;
+            this.closeRuleModal();
+            this.$nextTick(() => {
+                const target = document.getElementById(`conditional-rule-${ruleIndex}`);
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    const oldOutline = target.style.outline;
+                    const oldOutlineOffset = target.style.outlineOffset;
+                    target.style.outline = '2px solid #0d6efd';
+                    target.style.outlineOffset = '4px';
+                    setTimeout(() => {
+                        target.style.outline = oldOutline;
+                        target.style.outlineOffset = oldOutlineOffset;
+                    }, 1800);
+                }
+            });
         },
     },
     mounted() {
@@ -1665,33 +1885,65 @@ const vCreateForm = {
                                 Expand All
                             </button>
                         </div>
-                        <template v-for="[group_identifier, form_group] in Object.entries(this.formGroups)" :key="group_identifier">
-                            <template v-if="Object.keys(this.fieldsForGroup(group_identifier)).length !== 0">
-                                <div class="mb-4 p-3 bg-light rounded">
-                                    <h3 class="mb-3">{{ form_group.display_name }}</h3>
-                                    <template v-for="(field, identifier) in this.fieldsForGroup(group_identifier)" :key="identifier">
-                                        <template v-if="field.ngi_form_type !== undefined">
-                                            <div class="border-bottom pb-3 mb-3">
-                                                <div class="d-flex align-items-center">
-                                                    <h4 style="cursor: pointer; flex-grow: 1; margin-bottom: 0;" @click="collapsedFields[identifier] = !collapsedFields[identifier]">
-                                                        <i :class="collapsedFields[identifier] ? 'fa-solid fa-caret-right' : 'fa-solid fa-caret-down'"></i>
-                                                        {{ identifier }}
-                                                    </h4>
-                                                    <button class="btn btn-secondary btn-sm mr-2" @click="moveFieldUp(identifier)" title="Move up">
-                                                        <i class="fa-solid fa-arrow-up"></i>
-                                                    </button>
-                                                    <button class="btn btn-secondary btn-sm" @click="moveFieldDown(identifier)" title="Move down">
-                                                        <i class="fa-solid fa-arrow-down"></i>
-                                                    </button>
-                                                </div>
-                                                <template v-if="!collapsedFields[identifier]">
-                                                    <v-update-form-field :field="field" :identifier="identifier"></v-update-form-field>
+                        <template v-for="(groupRow, rowIndex) in fieldEditorGroupRows" :key="'field-editor-group-row-' + rowIndex">
+                            <div class="row">
+                                <template v-for="groupInfo in groupRow" :key="groupInfo.groupIdentifier">
+                                    <div :class="groupInfo.width === 'half' ? 'col-12 col-lg-6 mb-4' : 'col-12 mb-4'">
+                                        <div class="p-3 bg-light rounded h-100">
+                                            <h3 class="mb-3">{{ groupInfo.formGroup.display_name }}</h3>
+                                            <template v-for="(field, identifier) in groupInfo.groupFields" :key="identifier">
+                                                <template v-if="field.ngi_form_type !== undefined">
+                                                    <div class="border-bottom pb-3 mb-3">
+                                                        <div class="d-flex align-items-center">
+                                                            <h4 style="cursor: pointer; flex-grow: 1; margin-bottom: 0;" @click="collapsedFields[identifier] = !collapsedFields[identifier]">
+                                                                <i :class="collapsedFields[identifier] ? 'fa-solid fa-caret-right' : 'fa-solid fa-caret-down'"></i>
+                                                                {{ identifier }}
+                                                                <template v-if="field.ngi_form_visible_if && field.ngi_form_visible_if.properties && Object.keys(field.ngi_form_visible_if.properties).length > 0">
+                                                                    <span class="ml-2 text-muted" title="Visibility conditions configured">
+                                                                        <i class="fa-solid fa-eye"></i>
+                                                                    </span>
+                                                                </template>
+                                                                <template v-if="ifRulesForField(identifier).length > 0">
+                                                                    <span class="ml-2 position-relative" @click.stop>
+                                                                        <button
+                                                                            type="button"
+                                                                            class="btn btn-link btn-sm p-0 align-baseline"
+                                                                            title="Used in IF conditions"
+                                                                            @click.stop="openRuleModal(identifier, 'if')">
+                                                                            <i class="fa-solid fa-code-branch text-primary"></i>
+                                                                        </button>
+                                                                    </span>
+                                                                </template>
+                                                                <template v-if="thenRulesForField(identifier).length > 0">
+                                                                    <span class="ml-2 position-relative" @click.stop>
+                                                                        <button
+                                                                            type="button"
+                                                                            class="btn btn-link btn-sm p-0 align-baseline"
+                                                                            title="Used in THEN conditions"
+                                                                            @click.stop="openRuleModal(identifier, 'then')">
+                                                                            <i class="fa-solid fa-code-branch text-success"></i>
+                                                                        </button>
+                                                                    </span>
+                                                                </template>
+                                                            </h4>
+
+                                                            <button class="btn btn-secondary btn-sm mr-2" @click="moveFieldUp(identifier)" title="Move up">
+                                                                <i class="fa-solid fa-arrow-up"></i>
+                                                            </button>
+                                                            <button class="btn btn-secondary btn-sm" @click="moveFieldDown(identifier)" title="Move down">
+                                                                <i class="fa-solid fa-arrow-down"></i>
+                                                            </button>
+                                                        </div>
+                                                        <template v-if="!collapsedFields[identifier]">
+                                                            <v-update-form-field :field="field" :identifier="identifier"></v-update-form-field>
+                                                        </template>
+                                                    </div>
                                                 </template>
-                                            </div>
-                                        </template>
-                                    </template>
-                                </div>
-                            </template>
+                                            </template>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
                         </template>
                         <div class="mb-3">
                             <h3>Add new field</h3>
@@ -1710,7 +1962,7 @@ const vCreateForm = {
                     <template v-if="this.displayConditionalLogic">
                         <div class="ml-3">
                             <template v-for="(conditional, conditional_index) in this.allOf">
-                                <div class="border-bottom pb-5">
+                                <div class="border-bottom pb-5" :id="'conditional-rule-' + conditional_index">
                                     <v-conditional-edit-form
                                         :conditional="conditional"
                                         :conditional_index="conditional_index"
@@ -1765,6 +2017,27 @@ const vCreateForm = {
                         </div>
                     </template>
                 </div>
+
+                <div v-if="ruleModal.visible" class="modal fade show" style="display: block;" tabindex="-1" @click.self="closeRuleModal">
+                    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">{{ activeRuleHeading() }}: {{ ruleModal.fieldIdentifier }}</h5>
+                                <button type="button" class="btn-close" aria-label="Close" @click="closeRuleModal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <ul class="mb-0 pl-3">
+                                    <li v-for="ruleInfo in activeRuleList()" :key="'modalrule-' + ruleModal.ruleType + '-' + ruleModal.fieldIdentifier + '-' + ruleInfo.index">
+                                        <a href="#" @click.prevent="jumpToRule(ruleInfo.index, ruleModal.fieldIdentifier)">
+                                            Rule {{ ruleInfo.index + 1 }}: {{ ruleInfo.description }}
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div v-if="ruleModal.visible" class="modal-backdrop fade show"></div>
             </div>
         </div>
     `
@@ -1789,6 +2062,11 @@ const vFormGroupsEditor = {
         sortedFormGroups() {
             // Sort groups by position for a consistent display order
             if (this.formGroups) {
+                Object.values(this.formGroups).forEach(group => {
+                    if (group.layout_width !== 'half' && group.layout_width !== 'full') {
+                        group.layout_width = 'full';
+                    }
+                });
                 return Object.entries(this.formGroups).sort(([, a], [, b]) => a.position - b.position);
             }
             return [];
@@ -1811,7 +2089,8 @@ const vFormGroupsEditor = {
             if (identifier && !this.formGroups[identifier]) {
                 this.formGroups[identifier] = {
                     display_name: this.newGroupDisplayName,
-                    position: this.nextPosition
+                    position: this.nextPosition,
+                    layout_width: 'full'
                 };
                 // Reset input fields
                 this.newGroupIdentifier = '';
@@ -1871,6 +2150,13 @@ const vFormGroupsEditor = {
                 <div class="form-group mt-2">
                     <label>Position</label>
                     <input type="number" class="form-control" v-model.number="group.position" disabled>
+                </div>
+                <div class="form-group mt-2">
+                    <label>Width</label>
+                    <select class="form-control" v-model="group.layout_width" :disabled="!fieldEditMode">
+                        <option value="full">Full width</option>
+                        <option value="half">Half width</option>
+                    </select>
                 </div>
                 <button v-if="fieldEditMode" class="btn btn-danger btn-sm mt-2" @click="removeGroup(identifier)">
                     <i class="fa-solid fa-trash mr-1"></i> Remove Group

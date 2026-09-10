@@ -762,7 +762,10 @@ class ProjectEditingDataHandler(SafeHandler):
         )
         for udf in udf_list:
             if udf in existing_project.udf:
-                udfs[udf] = existing_project.udf[udf]
+                if isinstance(existing_project.udf[udf], datetime.date):
+                    udfs[udf] = existing_project.udf[udf].isoformat()
+                else:
+                    udfs[udf] = existing_project.udf[udf]
         proj_values["udfs"] = udfs
         proj_values["form_version_id"] = used_form_id
 
