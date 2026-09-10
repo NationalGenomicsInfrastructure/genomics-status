@@ -12,6 +12,7 @@ const vProjectCreationMain = {
             fetched_data: {},
             formData: {},
             forms: [],
+            isEditingProjectMode: false,
             jsonForm: {},
             lastSavedDraftTime: null,
             // These fields are mandatory by the genomics template https://github.com/ScilifelabDataCentre/scilifelab-metadata-templates 
@@ -81,7 +82,7 @@ const vProjectCreationMain = {
             if (this.$root.toplevelEditMode) {
                 url = url + '&edit_mode=true'
             }
-            axios
+            return axios
                 .get(url)
                 .then(response => {
                     this.$root.jsonForm = response.data.form
@@ -112,6 +113,9 @@ const vProjectCreationMain = {
                 });
         },
         ensureProjectCoordinatorIsFilled() {
+            if (this.isEditingProjectMode) {
+                return;
+            }
             const currentUserName = this.current_user?.user?.trim();
             if (!currentUserName) {
                 return;
@@ -260,6 +264,61 @@ const vProjectCreationMain = {
             // Validate the form data against the JSON schema
             this.validate_form_with_schema();
         },
+        isFieldVisibleForValidation(field) {
+            // Match the visibility logic used by the field component
+            if (!field || field.ngi_form_visible_if === undefined || field.ngi_form_visible_if.properties === undefined) {
+                return true;
+            }
+
+            const normalize = (value) => {
+                if (typeof value === 'string') {
+                    const normalized = value.trim().toLowerCase();
+                    if (normalized === 'true') return true;
+                    if (normalized === 'false') return false;
+                    return normalized;
+                }
+                return value;
+            };
+
+            return Object.keys(field.ngi_form_visible_if.properties).every(property => {
+                if (this.formData[property] === undefined) {
+                    return false;
+                }
+
+                const conditionEnum = field.ngi_form_visible_if.properties[property].enum;
+                if (conditionEnum !== undefined) {
+                    return conditionEnum.map(normalize).includes(normalize(this.formData[property]));
+                }
+                return true;
+            });
+        },
+        hiddenFieldIdsForValidation() {
+            const hiddenFieldIds = new Set();
+            Object.entries(this.fields || {}).forEach(([fieldId, field]) => {
+                if (!this.isFieldVisibleForValidation(field)) {
+                    hiddenFieldIds.add(fieldId);
+                }
+            });
+            return hiddenFieldIds;
+        },
+        shouldIgnoreValidationError(error, hiddenFieldIds) {
+            if (!error) {
+                return false;
+            }
+
+            // Required error points to parent path, the missing property is in params.
+            if (error.keyword === 'required') {
+                const missingProperty = error.params?.missingProperty;
+                return missingProperty !== undefined && hiddenFieldIds.has(missingProperty);
+            }
+
+            if (typeof error.instancePath === 'string' && error.instancePath.length > 0) {
+                const fieldId = error.instancePath.replace(/^\//, '').split('/')[0];
+                return hiddenFieldIds.has(fieldId);
+            }
+
+            return false;
+        },
         validate_form_with_schema() {
             // Validate the form data against the JSON schema
             // Create an instance of Ajv
@@ -272,8 +331,15 @@ const vProjectCreationMain = {
             this.validationErrorsPerField = {};
 
             if (!valid) {
+                const hiddenFieldIds = this.hiddenFieldIdsForValidation();
+                const relevantErrors = (validate.errors || []).filter(error => !this.shouldIgnoreValidationError(error, hiddenFieldIds));
+
+                if (relevantErrors.length === 0) {
+                    return true;
+                }
+
                 // Loop over the errors
-                validate.errors.forEach(error => {
+                relevantErrors.forEach(error => {
                     // Check if the instance path is a field
                     if (error.instancePath !== '') {
                         const field = error.instancePath.substring(1); // Remove the leading '/'
@@ -494,11 +560,14 @@ const vProjectCreationForm = {
                 .get(`/api/v1/project_creation_form_edit?project_id=${this.projectIdToRetrieve}`)
                 .then(response => {
                     if (response.data.result) {
-                        // Load the specific form version that was used to create this project
-                        this.$root.fetch_form(response.data.result.form_version_id);
-                        this.populateFormWithProjectData(response.data.result);
-                        this.retrievedProjectId = response.data.result.project_id;
                         this.isEditingProject = true;
+                        this.$root.isEditingProjectMode = true;
+                        // Load the specific form version that was used to create this project
+                        this.$root.fetch_form(response.data.result.form_version_id)
+                            .then(() => {
+                                this.populateFormWithProjectData(response.data.result);
+                            });
+                        this.retrievedProjectId = response.data.result.project_id;
                         alert(`Project ${response.data.result.name}, ${response.data.result.project_id} loaded successfully`);
                     } else {
                         alert('Project not found');
@@ -509,8 +578,23 @@ const vProjectCreationForm = {
                     console.log(error);
                 });
         },
+        resetFormDataForCurrentFields() {
+            const resetData = {};
+            Object.entries(this.$root.fields || {}).forEach(([fieldId, field]) => {
+                const formType = field?.ngi_form_type;
+                if (formType === 'boolean') {
+                    resetData[fieldId] = false;
+                } else if (formType === 'integer') {
+                    resetData[fieldId] = 0;
+                } else {
+                    resetData[fieldId] = '';
+                }
+            });
+            this.$root.formData = resetData;
+        },
         populateFormWithProjectData(projectData) {
             // Populate form fields with project data
+            this.resetFormDataForCurrentFields();
             if (projectData.name) {
                 this.$root.formData['project_name'] = projectData.name;
             }
@@ -534,6 +618,25 @@ const vProjectCreationForm = {
                     }
                 });
             }
+        },
+        buildFormDataForSubmission() {
+            // Use LIMS UDF names as keys for submitted form data.
+            const formDataByUdf = {};
+
+            Object.entries(this.$root.fields || {}).forEach(([fieldId, field]) => {
+                const udfName = typeof field?.ngi_form_lims_udf === 'string' ? field.ngi_form_lims_udf.trim() : '';
+                const targetKey = udfName !== '' ? udfName : fieldId;
+                formDataByUdf[targetKey] = this.$root.formData[fieldId];
+            });
+
+            // Preserve special/internal keys consumed explicitly in backend handlers.
+            ['project_name', 'user_account', 'researcher_name', 'researcher_id'].forEach(key => {
+                if (this.$root.formData[key] !== undefined) {
+                    formDataByUdf[key] = this.$root.formData[key];
+                }
+            });
+
+            return formDataByUdf;
         },
         submitForm() {
             // Check for validation errors
@@ -571,10 +674,10 @@ const vProjectCreationForm = {
                 }
             }
             
-            const form_data = this.$root.formData;
+            const form_data = this.buildFormDataForSubmission();
             const form_metadata = {};
             form_metadata['title'] = this.$root.jsonForm['title'];
-            form_metadata['version_id'] = this.$root.jsonForm['version_id'];
+            form_metadata['version_id'] = this.$root.jsonForm['version_id'] || this.$root.jsonForm['_id'];
             
             // Only look for matching researcher if we have fetched data available
             if (this.$root.fetched_data['researcher_name']) {
@@ -603,6 +706,7 @@ const vProjectCreationForm = {
                         alert(`Project created with ID: ${response.data.project_id}`);
                         // Clear the form data
                         this.$root.formData = {};
+                        this.$root.isEditingProjectMode = false;
                         this.isEditingProject = false;
                         this.retrievedProjectId = null;
                         this.projectIdToRetrieve = '';
@@ -641,6 +745,7 @@ const vProjectCreationForm = {
                     alert(`Project ${this.retrievedProjectId} updated successfully`);
                     // Clear the editing state
                     this.isEditingProject = false;
+                    this.$root.isEditingProjectMode = false;
                     this.retrievedProjectId = null;
                     this.projectIdToRetrieve = '';
                     this.$root.formData = {};
@@ -799,7 +904,7 @@ const vProjectCreationForm = {
                                     <button type="submit" class="btn btn-lg btn-warning" :disabled="this.$root.toplevelEditMode">
                                         <i class="fa fa-save mr-2"></i>Save Edits in LIMS
                                     </button>
-                                    <button type="button" class="btn btn-lg btn-secondary ml-2" @click="isEditingProject = false; retrievedProjectId = null; projectIdToRetrieve = ''; this.$root.formData = {}; this.$root.fetch_form()" :disabled="this.$root.toplevelEditMode">
+                                    <button type="button" class="btn btn-lg btn-secondary ml-2" @click="isEditingProject = false; this.$root.isEditingProjectMode = false; retrievedProjectId = null; projectIdToRetrieve = ''; this.$root.formData = {}; this.$root.fetch_form()" :disabled="this.$root.toplevelEditMode">
                                         <i class="fa fa-times mr-2"></i>Cancel
                                     </button>
                                 </template>
@@ -1013,14 +1118,19 @@ const vFormField = {
         }
     },
     mounted() {
-        // Initialize the form data for this field
-        if (this.formType === 'boolean') {
-            this.$root.formData[this.identifier] = false;
-        } else if (this.formType === 'integer') {
-            this.$root.formData[this.identifier] = 0;
-        }
-         else {
-            this.$root.formData[this.identifier] = '';
+        // Initialize only missing field values so prefilled values are preserved.
+        const hasValue = Object.prototype.hasOwnProperty.call(this.$root.formData, this.identifier)
+            && this.$root.formData[this.identifier] !== undefined
+            && this.$root.formData[this.identifier] !== null;
+        if (!hasValue) {
+            if (this.formType === 'boolean') {
+                this.$root.formData[this.identifier] = false;
+            } else if (this.formType === 'integer') {
+                this.$root.formData[this.identifier] = 0;
+            }
+            else {
+                this.$root.formData[this.identifier] = '';
+            }
         }
 
         if (this.formType === 'custom_datalist') {
