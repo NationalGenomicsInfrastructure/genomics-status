@@ -2020,7 +2020,7 @@ const vCreateForm = {
                                                                             class="btn btn-link btn-sm p-0 align-baseline"
                                                                             title="Used in IF conditions"
                                                                             @click.stop="openRuleModal(identifier, 'if')">
-                                                                            <i class="fa-solid fa-code-branch text-primary"></i>
+                                                                            <i class="fa-solid fa-circle-question text-primary"></i>
                                                                         </button>
                                                                     </span>
                                                                 </template>
