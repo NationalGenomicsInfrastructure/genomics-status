@@ -169,10 +169,10 @@ class ProjectCreationDataHandler(SafeHandler):
             researcher = None
             if researcher_id:
                 researcher = Researcher(lims_instance, id=researcher_id)
-            try:
-                researcher.name  # Trigger a fetch to check if researcher exists
-            except requests_exceptions.HTTPError:
-                researcher = None
+                try:
+                    researcher.name  # Trigger a fetch to check if researcher exists
+                except requests_exceptions.HTTPError:
+                    researcher = None
             if not researcher:
                 # Create Lab
                 researcher_name = request_data["form_data"].get("researcher_name")
@@ -200,7 +200,6 @@ class ProjectCreationDataHandler(SafeHandler):
             project_values["name"] = request_data["form_data"].get("project_name")
             project_values["researcher"] = researcher
             project_values["udfs"] = {}
-            project_values["udfs"]["Project coordinator"] = current_user.name
             project_values["udfs"]["Project Form Id"] = request_data[
                 "form_metadata"
             ].get("version_id")
@@ -762,7 +761,10 @@ class ProjectEditingDataHandler(SafeHandler):
         )
         for udf in udf_list:
             if udf in existing_project.udf:
-                udfs[udf] = existing_project.udf[udf]
+                if isinstance(existing_project.udf[udf], datetime.date):
+                    udfs[udf] = existing_project.udf[udf].isoformat()
+                else:
+                    udfs[udf] = existing_project.udf[udf]
         proj_values["udfs"] = udfs
         proj_values["form_version_id"] = used_form_id
 
