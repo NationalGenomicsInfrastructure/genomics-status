@@ -57,10 +57,12 @@ const TIMEZONE = 'Europe/Stockholm';
 // need to unescape them again to execute js
 function date_parse(data) {
   for (let i in data) {
-      data[i][0] = Date.parse(data[i][0]);
-      // Could potentially be removed, I think I added it when trying to get UTC conversion to work
-      date = new Date()
-      date.setTime(data[i][0])
+      var timestampStr = data[i][0];
+      // Append 'Z' if not present to ensure Date.parse treats timestamps as UTC
+      if (!timestampStr.endsWith('Z') && !timestampStr.endsWith('+00:00')) {
+          timestampStr = timestampStr + 'Z';
+      }
+      data[i][0] = Date.parse(timestampStr);
   }
   return data;
 }
@@ -248,7 +250,12 @@ function plot_sum_data(){
                 }
 
                 for (i in timedata) {
-                    timedata[i][0] = Date.parse(timedata[i][0]);
+                    var timestampStr = timedata[i][0];
+                    // Append 'Z' if not present to ensure Date.parse treats timestamps as UTC
+                    if (!timestampStr.endsWith('Z') && !timestampStr.endsWith('+00:00')) {
+                        timestampStr = timestampStr + 'Z';
+                    }
+                    timedata[i][0] = Date.parse(timestampStr);
                 }
                 var dp_var = {
                     name: sensname,
