@@ -37,7 +37,7 @@ const vReadsTotalComponent = {
         },
         summaryRows() {
             return this.sampleNames.map(sample => {
-                let checkedReads = 0, uncheckedReads = 0, q30Sum = 0, checkedQ30Count = 0;
+                let checkedReads = 0, uncheckedReads = 0, q30WeightedSum = 0, q30WeightTotal = 0;
                 const rows = this.readsData[sample];
                 rows.forEach(d => {
                     const count = Number.parseInt(d.cl, 10) || 0;
@@ -45,14 +45,14 @@ const vReadsTotalComponent = {
                         checkedReads += count;
                         const q30 = parseFloat(d.q30);
                         if (!Number.isNaN(q30)) {
-                            q30Sum += q30;
-                            checkedQ30Count += 1;
+                            q30WeightedSum += q30 * count;
+                            q30WeightTotal += count;
                         }
                     } else {
                         uncheckedReads += count;
                     }
                 });
-                const avgQ30 = checkedQ30Count > 0 ? q30Sum / checkedQ30Count : null;
+                const avgQ30 = q30WeightTotal > 0 ? q30WeightedSum / q30WeightTotal : null;
                 const firstRow = rows.find(d => d.run_mode != null) || rows[0];
                 const threshold = firstRow ? this.getRowThreshold(firstRow) : 85.0;
                 const libQc = firstRow && Object.prototype.hasOwnProperty.call(firstRow, 'lib_qc')
