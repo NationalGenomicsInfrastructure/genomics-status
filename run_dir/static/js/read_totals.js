@@ -411,15 +411,6 @@ const vReadsTotalComponent = {
             if (this.sortKey !== key) return '';
             return this.sortDirection === 'asc' ? 'asc' : 'desc';
         },
-        sortIconSvg(direction) {
-            if (direction === 'asc') {
-                return '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M7.247 4.86l-4.492 6.268a1 1 0 0 0 .779 1.622h9.433a1 1 0 0 0 .78-1.622L8.753 4.86a1 1 0 0 0-1.506 0z"/></svg>';
-            }
-            if (direction === 'desc') {
-                return '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M7.247 11.14L2.755 4.872a1 1 0 0 1 .779-1.622h9.433a1 1 0 0 1 .78 1.622L8.753 11.14a1 1 0 0 1-1.506 0z"/></svg>';
-            }
-            return '';
-        },
         downloadMainTableTSV() {
             const rows = ['Sample\tReads\tQ30'];
             this.sortedSampleNames.forEach(sample => {
@@ -605,11 +596,11 @@ const vReadsTotalComponent = {
                         <thead>
                             <tr class="darkth">
                                 <th style="position: sticky; top: 0; z-index: 2;">Include</th>
-                                <th style="position: sticky; top: 0; z-index: 2; cursor: pointer;" @click="setSort('sample')">Sample <span v-if="sortIndicator('sample')" v-html="sortIconSvg(sortIndicator('sample'))"></span></th>
-                                <th style="position: sticky; top: 0; z-index: 2; cursor: pointer;" @click="setSort('libQc')">Lib. QC <span v-if="sortIndicator('libQc')" v-html="sortIconSvg(sortIndicator('libQc'))"></span></th>
-                                <th class="text-end" style="position: sticky; top: 0; z-index: 2; font-variant-numeric: tabular-nums; cursor: pointer;" @click="setSort('flowcells')">Flowcells <span v-if="sortIndicator('flowcells')" v-html="sortIconSvg(sortIndicator('flowcells'))"></span></th>
-                                <th class="text-end" style="position: sticky; top: 0; z-index: 2; font-variant-numeric: tabular-nums; cursor: pointer;" @click="setSort('reads')">{{ countLabel }} (selected) <span v-if="sortIndicator('reads')" v-html="sortIconSvg(sortIndicator('reads'))"></span></th>
-                                <th class="text-end" style="position: sticky; top: 0; z-index: 2; font-variant-numeric: tabular-nums; cursor: pointer;" @click="setSort('q30')">Average % > q30 (selected) <span v-if="sortIndicator('q30')" v-html="sortIconSvg(sortIndicator('q30'))"></span></th>
+                                <th style="position: sticky; top: 0; z-index: 2; cursor: pointer;" @click="setSort('sample')">Sample <i v-if="sortIndicator('sample')" :class="sortIndicator('sample') === 'asc' ? 'fa-sharp fa-solid fa-sort-up ms-1' : 'fa-sharp fa-solid fa-sort-down ms-1'"></i></th>
+                                <th style="position: sticky; top: 0; z-index: 2; cursor: pointer;" @click="setSort('libQc')">Lib. QC <i v-if="sortIndicator('libQc')" :class="sortIndicator('libQc') === 'asc' ? 'fa-sharp fa-solid fa-sort-up ms-1' : 'fa-sharp fa-solid fa-sort-down ms-1'"></i></th>
+                                <th class="text-end" style="position: sticky; top: 0; z-index: 2; font-variant-numeric: tabular-nums; cursor: pointer;" @click="setSort('flowcells')">Flowcells <i v-if="sortIndicator('flowcells')" :class="sortIndicator('flowcells') === 'asc' ? 'fa-sharp fa-solid fa-sort-up ms-1' : 'fa-sharp fa-solid fa-sort-down ms-1'"></i></th>
+                                <th class="text-end" style="position: sticky; top: 0; z-index: 2; font-variant-numeric: tabular-nums; cursor: pointer;" @click="setSort('reads')">{{ countLabel }} (selected) <i v-if="sortIndicator('reads')" :class="sortIndicator('reads') === 'asc' ? 'fa-sharp fa-solid fa-sort-up ms-1' : 'fa-sharp fa-solid fa-sort-down ms-1'"></i></th>
+                                <th class="text-end" style="position: sticky; top: 0; z-index: 2; font-variant-numeric: tabular-nums; cursor: pointer;" @click="setSort('q30')">Average % > q30 (selected) <i v-if="sortIndicator('q30')" :class="sortIndicator('q30') === 'asc' ? 'fa-sharp fa-solid fa-sort-up ms-1' : 'fa-sharp fa-solid fa-sort-down ms-1'"></i></th>
                             </tr>
                         </thead>
                         <tbody>
