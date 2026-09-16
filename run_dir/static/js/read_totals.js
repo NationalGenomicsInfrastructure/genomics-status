@@ -627,7 +627,7 @@ const vReadsTotalComponent = {
                                         />
                                     </td>
                                     <td>
-                                        <span class="me-2 pr-1" style="display: inline-block; font-size: 1.1rem; transition: transform 0.15s ease;" :style="{ transform: expandedSamples[sample] ? 'rotate(90deg)' : 'rotate(0deg)' }">▶</span>
+                                        <span class="me-2 pr-1" style="display: inline-block; font-size: 1.1rem; transition: transform 0.15s ease;" :style="{ transform: expandedSamples[sample] ? 'rotate(90deg)' : 'rotate(0deg)' }"><i class="fa-sharp fa-solid fa-caret-right"></i></span>
                                         <span>{{ sample }}</span>
                                     </td>
                                     <td><span :class="sampleLibQcBadgeClass(sample)">{{ sampleLibQcLabel(sample) }}</span></td>
