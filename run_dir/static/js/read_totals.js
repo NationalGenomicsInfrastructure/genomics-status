@@ -15,6 +15,7 @@ const vReadsTotalComponent = {
             isHiseqX: false,
             expectedMinYieldPerSample: null,
             expectedMinYieldFormulaMode: null,
+            yieldThresholdSelectionMode: 'below',
             showFlowcellSelection: false,
             bulkSelectedFlowcells: {},
             highlightedSample: null,
@@ -182,6 +183,11 @@ const vReadsTotalComponent = {
             }
             return 'ordered units × 600M × 0.9 / number of project samples × 0.75.';
         },
+        yieldThresholdToggleLabel() {
+            return this.yieldThresholdSelectionMode === 'below'
+                ? 'Samples below yield threshold'
+                : 'Samples above yield threshold';
+        },
     },
     
     watch: {
@@ -226,6 +232,7 @@ const vReadsTotalComponent = {
                         this.bulkSelectedFlowcells[id] = true;
                     });
                     this.showFlowcellSelection = false;
+                    this.yieldThresholdSelectionMode = 'below';
                     
                     this.loading = false;
                     this.$nextTick(() => this.renderChart());
@@ -381,23 +388,23 @@ const vReadsTotalComponent = {
         sampleFlowcellCount(sample) {
             return (this.readsData[sample] || []).length;
         },
-        sampleSelectedCount(sample) {
+        sampleTotalCount(sample) {
             return (this.sampleRows(sample) || []).reduce((sum, d) => {
-                if (!this.checkedState[this.selectionKey(sample, d.fcp)]) return sum;
                 return sum + (Number.parseInt(d.cl, 10) || 0);
             }, 0);
         },
-        selectSamplesBelowExpectedMinYield() {
+        toggleSamplesByYieldThreshold() {
             const threshold = Number(this.expectedMinYieldPerSample);
             if (Number.isNaN(threshold)) return;
+            const selectBelow = this.yieldThresholdSelectionMode === 'below';
             this.sampleNames.forEach(sample => {
-                const shouldSelect = this.sampleSelectedCount(sample) < threshold;
+                const isBelowThreshold = this.sampleTotalCount(sample) < threshold;
+                const shouldSelect = selectBelow ? isBelowThreshold : !isBelowThreshold;
                 this.sampleRows(sample).forEach(d => {
-                    if (!shouldSelect) {
-                        this.checkedState[this.selectionKey(sample, d.fcp)] = false;
-                    }
+                    this.checkedState[this.selectionKey(sample, d.fcp)] = shouldSelect;
                 });
             });
+            this.yieldThresholdSelectionMode = selectBelow ? 'above' : 'below';
         },
         setSort(key) {
             if (this.sortKey === key) {
@@ -567,9 +574,9 @@ const vReadsTotalComponent = {
                         type="button"
                         class="btn btn-sm btn-outline-warning rounded-pill"
                         :disabled="expectedMinYieldPerSample === null"
-                        @click="selectSamplesBelowExpectedMinYield"
+                        @click="toggleSamplesByYieldThreshold"
                     >
-                        Check all samples below yield threshold
+                        {{ yieldThresholdToggleLabel }}
                     </button>
                 </div>
                 <div v-if="showFlowcellSelection" class="card mb-3">
@@ -619,7 +626,7 @@ const vReadsTotalComponent = {
                                         />
                                     </td>
                                     <td>
-                                        <span class="me-2" style="display: inline-block; font-size: 1.1rem; transition: transform 0.15s ease;" :style="{ transform: expandedSamples[sample] ? 'rotate(90deg)' : 'rotate(0deg)' }">▶</span>
+                                        <span class="me-2 pr-1" style="display: inline-block; font-size: 1.1rem; transition: transform 0.15s ease;" :style="{ transform: expandedSamples[sample] ? 'rotate(90deg)' : 'rotate(0deg)' }">▶</span>
                                         <span>{{ sample }}</span>
                                     </td>
                                     <td><span :class="sampleLibQcBadgeClass(sample)">{{ sampleLibQcLabel(sample) }}</span></td>
