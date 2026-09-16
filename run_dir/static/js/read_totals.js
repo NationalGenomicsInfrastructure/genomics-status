@@ -185,8 +185,8 @@ const vReadsTotalComponent = {
         },
         yieldThresholdToggleLabel() {
             return this.yieldThresholdSelectionMode === 'below'
-                ? 'Samples below yield threshold'
-                : 'Samples above yield threshold';
+                ? 'Show samples below yield threshold'
+                : 'Show samples above yield threshold';
         },
     },
     
@@ -556,7 +556,7 @@ const vReadsTotalComponent = {
                 <div class="d-flex flex-wrap gap-2 mb-3">
                     <button
                         type="button"
-                        class="btn btn-sm btn-outline-success rounded-pill"
+                        :class="areSamplesFullyChecked(passedLibQcSamples) ? 'btn btn-sm btn-success text-white rounded-pill' : 'btn btn-sm btn-outline-success rounded-pill'"
                         :disabled="passedLibQcSamples.length === 0"
                         @click="toggleSamplesByLibQc('Pass')"
                     >
@@ -564,7 +564,7 @@ const vReadsTotalComponent = {
                     </button>
                     <button
                         type="button"
-                        class="btn btn-sm btn-outline-danger rounded-pill"
+                        :class="areSamplesFullyChecked(failedLibQcSamples) ? 'btn btn-sm btn-danger text-white rounded-pill' : 'btn btn-sm btn-outline-danger rounded-pill'"
                         :disabled="failedLibQcSamples.length === 0"
                         @click="toggleSamplesByLibQc('Fail')"
                     >
@@ -572,8 +572,9 @@ const vReadsTotalComponent = {
                     </button>
                     <button
                         type="button"
-                        class="btn btn-sm btn-outline-warning rounded-pill"
+                        :class="yieldThresholdSelectionMode === 'below' ? 'btn btn-sm btn-warning text-dark rounded-pill' : 'btn btn-sm btn-secondary text-white rounded-pill'"
                         :disabled="expectedMinYieldPerSample === null"
+                        :aria-pressed="yieldThresholdSelectionMode === 'below'"
                         @click="toggleSamplesByYieldThreshold"
                     >
                         {{ yieldThresholdToggleLabel }}
