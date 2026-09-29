@@ -462,7 +462,7 @@ const vReadsTotalComponent = {
         buildChartSeriesData() {
             const seriesData = [
                 { name: 'q30>threshold', data: [], color: '#78b560' },
-                { name: 'q30&lt;threshold', data: [], color: '#e8cd4c' },
+                { name: 'q30<threshold', data: [], color: '#e8cd4c' },
                 { name: 'Not Selected',  data: [], color: '#dddddd' }
             ];
             this.summaryRows.forEach(r => {
