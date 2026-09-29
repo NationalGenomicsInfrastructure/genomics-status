@@ -377,6 +377,24 @@ const vReadsTotalComponent = {
             if (value === null || value === undefined) return '-';
             return Number(value).toFixed(2);
         },
+        formatCountAbbrev(value) {
+            const numericValue = Number(value);
+            if (Number.isNaN(numericValue)) {
+                return value;
+            }
+
+            const absoluteValue = Math.abs(numericValue);
+            if (absoluteValue >= 1_000_000_000) {
+                return `${Math.round(numericValue / 1_000_000_000)}B`;
+            }
+            if (absoluteValue >= 1_000_000) {
+                return `${Math.round(numericValue / 1_000_000)}M`;
+            }
+            if (absoluteValue >= 1_000) {
+                return `${Math.round(numericValue / 1_000)}k`;
+            }
+            return new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(numericValue);
+        },
         toggleFlowcellSelection() {
             this.showFlowcellSelection = !this.showFlowcellSelection;
         },
@@ -651,7 +669,7 @@ const vReadsTotalComponent = {
                                     font: {
                                         size: 11,
                                     },
-                                    callback: (value) => Number(value).toLocaleString(),
+                                    callback: (value) => this.formatCountAbbrev(value),
                                 },
                             },
                         },
