@@ -24,6 +24,7 @@ const vReadsTotalComponent = {
             sortKey: 'sample',
             sortDirection: 'asc',
             chartInstance: null,
+            chartRenderFrame: null,
             loading: true,
             error: null,
         };
@@ -193,6 +194,17 @@ const vReadsTotalComponent = {
     watch: {
         summaryRows() {
             this.$nextTick(() => this.renderChart());
+        }
+    },
+
+    beforeUnmount() {
+        if (this.chartRenderFrame !== null) {
+            cancelAnimationFrame(this.chartRenderFrame);
+            this.chartRenderFrame = null;
+        }
+        if (this.chartInstance) {
+            this.chartInstance.destroy();
+            this.chartInstance = null;
         }
     },
     
@@ -447,21 +459,39 @@ const vReadsTotalComponent = {
             });
             return seriesData;
         },
-        expectedMinYieldPlotLine() {
-            if (this.expectedMinYieldPerSample === null) {
-                return null;
-            }
+        expectedMinYieldLinePlugin() {
             return {
-                id: 'expected-min-yield',
-                color: '#fd0d0d',
-                dashStyle: 'ShortDash',
-                value: this.expectedMinYieldPerSample,
-                width: 2,
-                zIndex: 5,
-                label: {
-                    text: 'Expected minimum yield',
-                    align: 'right',
-                    style: { color: '#fd0d0d' }
+                id: 'expectedMinYieldLine',
+                afterDatasetsDraw: (chart, args, pluginOptions) => {
+                    const threshold = pluginOptions && pluginOptions.value;
+                    if (threshold === null || threshold === undefined || Number.isNaN(Number(threshold))) {
+                        return;
+                    }
+
+                    const yScale = chart.scales.y;
+                    if (!yScale) return;
+
+                    const yPosition = yScale.getPixelForValue(threshold);
+                    const { ctx, chartArea } = chart;
+                    if (yPosition < chartArea.top || yPosition > chartArea.bottom) {
+                        return;
+                    }
+
+                    ctx.save();
+                    ctx.strokeStyle = '#fd0d0d';
+                    ctx.fillStyle = '#fd0d0d';
+                    ctx.lineWidth = 2;
+                    ctx.setLineDash([6, 4]);
+                    ctx.beginPath();
+                    ctx.moveTo(chartArea.left, yPosition);
+                    ctx.lineTo(chartArea.right, yPosition);
+                    ctx.stroke();
+                    ctx.setLineDash([]);
+                    ctx.font = '12px sans-serif';
+                    ctx.textAlign = 'right';
+                    ctx.textBaseline = 'bottom';
+                    ctx.fillText('Expected minimum yield', chartArea.right - 6, yPosition - 4);
+                    ctx.restore();
                 }
             };
         },
@@ -469,47 +499,172 @@ const vReadsTotalComponent = {
             if (!this.hasData) return;
             const sampleNames = this.summaryRows.map(r => r.sample);
             const seriesData = this.buildChartSeriesData();
-            const plotLine = this.expectedMinYieldPlotLine();
+
+            if (this.chartRenderFrame !== null) {
+                cancelAnimationFrame(this.chartRenderFrame);
+                this.chartRenderFrame = null;
+            }
 
             if (this.chartInstance) {
-                this.chartInstance.xAxis[0].setCategories(sampleNames, false);
-                this.chartInstance.yAxis[0].setTitle({ text: '# ' + this.countLabel }, false);
-                this.chartInstance.yAxis[0].removePlotLine('expected-min-yield');
-                if (plotLine) {
-                    this.chartInstance.yAxis[0].addPlotLine(plotLine);
-                }
-                seriesData.forEach((series, index) => {
-                    this.chartInstance.series[index].update({ name: series.name, color: series.color }, false);
-                    this.chartInstance.series[index].setData(series.data, false);
-                });
-                this.chartInstance.redraw();
+                this.chartInstance.destroy();
+                this.chartInstance = null;
+            }
+
+            const canvas = this.$refs.readTotalsSummaryChart;
+            if (!canvas) {
                 return;
             }
 
-            this.chartInstance = Highcharts.chart('read_totals_summary_chart', {
-                credits: { enabled: false },
-                chart: { type: 'column' },
-                title: { text: 'Sample Read Counts' },
-                subtitle: { text: 'Click a bar to see that sample' },
-                xAxis: { categories: sampleNames },
-                yAxis: {
-                    min: 0,
-                    title: { text: '# ' + this.countLabel },
-                    reversedStacks: false,
-                    plotLines: plotLine ? [plotLine] : []
-                },
-                plotOptions: {
-                    column: { stacking: 'normal', borderWidth: 0, groupPadding: 0.1 },
-                    series: {
-                        cursor: 'pointer',
-                        point: {
-                            events: {
-                                click: (e) => { this.highlightSample(e.point.category); }
+            this.chartRenderFrame = requestAnimationFrame(() => {
+                this.chartRenderFrame = null;
+                this.chartInstance = new Chart(canvas.getContext('2d'), {
+                    type: 'bar',
+                    data: {
+                        labels: sampleNames,
+                        datasets: seriesData.map(series => ({
+                            label: series.name,
+                            data: series.data,
+                            backgroundColor: series.color,
+                            borderWidth: 0,
+                            stack: 'readTotals',
+                        })),
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        animation: false,
+                        layout: {
+                            padding: {
+                                top: 6,
+                                right: 6,
+                                bottom: 0,
+                                left: 4,
+                            },
+                        },
+                        elements: {
+                            bar: {
+                                borderSkipped: false,
+                                borderWidth: 0,
+                                borderRadius: 0,
+                            },
+                        },
+                        interaction: {
+                            mode: 'index',
+                            intersect: false,
+                        },
+                        onClick: (event, elements) => {
+                            if (!elements || elements.length === 0) return;
+                            const { index } = elements[0];
+                            const sample = sampleNames[index];
+                            if (sample) {
+                                this.highlightSample(sample);
                             }
-                        }
-                    }
-                },
-                series: seriesData
+                        },
+                        plugins: {
+                            legend: {
+                                display: true,
+                                position: 'bottom',
+                                align: 'center',
+                                labels: {
+                                    boxWidth: 14,
+                                    boxHeight: 14,
+                                    usePointStyle: false,
+                                    padding: 16,
+                                    font: {
+                                        size: 12,
+                                    },
+                                },
+                            },
+                            title: {
+                                display: true,
+                                text: 'Sample Read Counts',
+                                font: {
+                                    size: 18,
+                                    weight: 'bold',
+                                },
+                                padding: {
+                                    top: 8,
+                                    bottom: 2,
+                                },
+                            },
+                            subtitle: {
+                                display: true,
+                                text: 'Click a bar to see that sample',
+                                font: {
+                                    size: 12,
+                                },
+                                color: '#666666',
+                                padding: {
+                                    bottom: 12,
+                                },
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: (context) => {
+                                        const label = context.dataset.label || '';
+                                        const value = context.parsed.y;
+                                        return `${label}: ${Number(value).toLocaleString()}`;
+                                    }
+                                }
+                            },
+                            expectedMinYieldLine: {
+                                value: this.expectedMinYieldPerSample,
+                            },
+                        },
+                        scales: {
+                            x: {
+                                stacked: true,
+                                grid: {
+                                    display: false,
+                                },
+                                ticks: {
+                                    autoSkip: true,
+                                    autoSkipPadding: 10,
+                                    maxTicksLimit: 50,
+                                    maxRotation: 45,
+                                    minRotation: 45,
+                                    color: '#666666',
+                                    font: {
+                                        size: 11,
+                                    },
+                                },
+                            },
+                            y: {
+                                stacked: true,
+                                beginAtZero: true,
+                                grid: {
+                                    color: 'rgba(0, 0, 0, 0.08)',
+                                },
+                                border: {
+                                    color: 'rgba(0, 0, 0, 0.18)',
+                                },
+                                title: {
+                                    display: true,
+                                    text: '# ' + this.countLabel,
+                                    font: {
+                                        size: 12,
+                                        weight: 'normal',
+                                    },
+                                },
+                                ticks: {
+                                    color: '#666666',
+                                    font: {
+                                        size: 11,
+                                    },
+                                    callback: (value) => Number(value).toLocaleString(),
+                                },
+                            },
+                        },
+                        datasets: {
+                            bar: {
+                                categoryPercentage: 0.82,
+                                barPercentage: 0.95,
+                                maxBarThickness: 42,
+                            },
+                        },
+                    },
+                    plugins: [this.expectedMinYieldLinePlugin()],
+                });
             });
         }
     },
@@ -539,7 +694,9 @@ const vReadsTotalComponent = {
 
         <template v-else-if="hasData">
             <div>
-                <div id="read_totals_summary_chart"></div>
+                <div style="position: relative; height: 420px; width: 100%;">
+                    <canvas ref="readTotalsSummaryChart" style="display: block; width: 100%; height: 100%;"></canvas>
+                </div>
                 <p v-if="expectedMinYieldPerSample !== null" class="text-muted small mb-3">
                     Expected minimum yield per sample:
                     <strong
