@@ -550,7 +550,7 @@ const vReadsTotalComponent = {
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
-                        animation: false,
+                        animation: true,
                         layout: {
                             padding: {
                                 top: 6,
