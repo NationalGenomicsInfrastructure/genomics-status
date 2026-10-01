@@ -545,16 +545,6 @@ const vReadsTotalComponent = {
                 return;
             }
 
-            const rect = canvas.getBoundingClientRect();
-            if (rect.width === 0 || rect.height === 0) {
-                this.scheduleChartRender();
-                return;
-            }
-
-            const dpr = window.devicePixelRatio || 1;
-            canvas.width = Math.max(Math.round(rect.width * dpr), 300);
-            canvas.height = Math.max(Math.round(rect.height * dpr), 180);
-
             const context = canvas.getContext('2d');
             if (!context) {
                 return;
@@ -573,7 +563,7 @@ const vReadsTotalComponent = {
                     })),
                 },
                 options: {
-                    responsive: false,
+                    responsive: true,
                     maintainAspectRatio: false,
                     animation: false,
                     layout: {
