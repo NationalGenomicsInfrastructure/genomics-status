@@ -24,7 +24,7 @@ const vReadsTotalComponent = {
             sortKey: 'sample',
             sortDirection: 'asc',
             chartInstance: null,
-            chartRenderFrame: null,
+            chartRenderTimer: null,
             loading: true,
             error: null,
         };
@@ -193,14 +193,14 @@ const vReadsTotalComponent = {
     
     watch: {
         summaryRows() {
-            this.$nextTick(() => this.renderChart());
+            this.scheduleChartRender();
         }
     },
 
     beforeUnmount() {
-        if (this.chartRenderFrame !== null) {
-            cancelAnimationFrame(this.chartRenderFrame);
-            this.chartRenderFrame = null;
+        if (this.chartRenderTimer !== null) {
+            clearTimeout(this.chartRenderTimer);
+            this.chartRenderTimer = null;
         }
         if (this.chartInstance) {
             this.chartInstance.destroy();
@@ -247,7 +247,7 @@ const vReadsTotalComponent = {
                     this.yieldThresholdSelectionMode = 'below';
                     
                     this.loading = false;
-                    this.$nextTick(() => this.renderChart());
+                    this.scheduleChartRender();
                 })
                 .catch(error => {
                     console.error('Error fetching reads data:', error);
@@ -256,6 +256,18 @@ const vReadsTotalComponent = {
                 });
         },
         
+        scheduleChartRender() {
+            if (!this.hasData || typeof window === 'undefined') {
+                return;
+            }
+            if (this.chartRenderTimer !== null) {
+                clearTimeout(this.chartRenderTimer);
+            }
+            this.chartRenderTimer = window.setTimeout(() => {
+                this.chartRenderTimer = null;
+                this.$nextTick(() => this.renderChart());
+            }, 0);
+        },
         getRowThreshold(d) {
             const run_mode = (d.run_mode === 'HiSeq X' || d.run_mode === 'MiSeq') ? d.run_mode : 'default';
             let run_setup = 'default';
@@ -514,177 +526,189 @@ const vReadsTotalComponent = {
             };
         },
         renderChart() {
-            if (!this.hasData) return;
+            if (!this.hasData || typeof Chart === 'undefined') return;
+
             const sampleNames = this.summaryRows.map(r => r.sample);
             const seriesData = this.buildChartSeriesData();
-
-            if (this.chartRenderFrame !== null) {
-                cancelAnimationFrame(this.chartRenderFrame);
-                this.chartRenderFrame = null;
-            }
 
             if (this.chartInstance) {
                 this.chartInstance.destroy();
                 this.chartInstance = null;
             }
 
-            const canvas = this.$refs.readTotalsSummaryChart;
+            let canvas = this.$refs.readTotalsSummaryChart;
+            if (!canvas && this.$el) {
+                canvas = this.$el.querySelector('canvas');
+            }
             if (!canvas) {
+                this.scheduleChartRender();
                 return;
             }
 
-            this.chartRenderFrame = requestAnimationFrame(() => {
-                this.chartRenderFrame = null;
-                this.chartInstance = new Chart(canvas.getContext('2d'), {
-                    type: 'bar',
-                    data: {
-                        labels: sampleNames,
-                        datasets: seriesData.map(series => ({
-                            label: series.name,
-                            data: series.data,
-                            backgroundColor: series.color,
-                            borderWidth: 0,
-                            stack: 'readTotals',
-                        })),
+            const rect = canvas.getBoundingClientRect();
+            if (rect.width === 0 || rect.height === 0) {
+                this.scheduleChartRender();
+                return;
+            }
+
+            const dpr = window.devicePixelRatio || 1;
+            canvas.width = Math.max(Math.round(rect.width * dpr), 300);
+            canvas.height = Math.max(Math.round(rect.height * dpr), 180);
+
+            const context = canvas.getContext('2d');
+            if (!context) {
+                return;
+            }
+
+            this.chartInstance = new Chart(context, {
+                type: 'bar',
+                data: {
+                    labels: sampleNames,
+                    datasets: seriesData.map(series => ({
+                        label: series.name,
+                        data: series.data,
+                        backgroundColor: series.color,
+                        borderWidth: 0,
+                        stack: 'readTotals',
+                    })),
+                },
+                options: {
+                    responsive: false,
+                    maintainAspectRatio: false,
+                    animation: false,
+                    layout: {
+                        padding: {
+                            top: 6,
+                            right: 6,
+                            bottom: 0,
+                            left: 4,
+                        },
                     },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        animation: false,
-                        layout: {
-                            padding: {
-                                top: 6,
-                                right: 6,
-                                bottom: 0,
-                                left: 4,
-                            },
+                    elements: {
+                        bar: {
+                            borderSkipped: false,
+                            borderWidth: 0,
+                            borderRadius: 0,
                         },
-                        elements: {
-                            bar: {
-                                borderSkipped: false,
-                                borderWidth: 0,
-                                borderRadius: 0,
-                            },
-                        },
-                        interaction: {
-                            mode: 'index',
-                            intersect: false,
-                        },
-                        onClick: (event, elements) => {
-                            if (!elements || elements.length === 0) return;
-                            const { index } = elements[0];
-                            const sample = sampleNames[index];
-                            if (sample) {
-                                this.highlightSample(sample);
-                            }
-                        },
-                        plugins: {
-                            legend: {
-                                display: true,
-                                position: 'bottom',
-                                align: 'center',
-                                labels: {
-                                    boxWidth: 14,
-                                    boxHeight: 14,
-                                    usePointStyle: false,
-                                    padding: 16,
-                                    font: {
-                                        size: 12,
-                                    },
-                                },
-                            },
-                            title: {
-                                display: true,
-                                text: 'Sample Read Counts',
-                                font: {
-                                    size: 18,
-                                    weight: 'bold',
-                                },
-                                padding: {
-                                    top: 8,
-                                    bottom: 2,
-                                },
-                            },
-                            subtitle: {
-                                display: true,
-                                text: 'Click a bar to see that sample',
+                    },
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    onClick: (event, elements) => {
+                        if (!elements || elements.length === 0) return;
+                        const { index } = elements[0];
+                        const sample = sampleNames[index];
+                        if (sample) {
+                            this.highlightSample(sample);
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'bottom',
+                            align: 'center',
+                            labels: {
+                                boxWidth: 14,
+                                boxHeight: 14,
+                                usePointStyle: false,
+                                padding: 16,
                                 font: {
                                     size: 12,
                                 },
-                                color: '#666666',
-                                padding: {
-                                    bottom: 12,
-                                },
                             },
-                            tooltip: {
-                                callbacks: {
-                                    label: (context) => {
-                                        const label = context.dataset.label || '';
-                                        const value = context.parsed.y;
-                                        return `${label}: ${Number(value).toLocaleString()}`;
-                                    }
+                        },
+                        title: {
+                            display: true,
+                            text: 'Sample Read Counts',
+                            font: {
+                                size: 18,
+                                weight: 'bold',
+                            },
+                            padding: {
+                                top: 8,
+                                bottom: 2,
+                            },
+                        },
+                        subtitle: {
+                            display: true,
+                            text: 'Click a bar to see that sample',
+                            font: {
+                                size: 12,
+                            },
+                            color: '#666666',
+                            padding: {
+                                bottom: 12,
+                            },
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: (context) => {
+                                    const label = context.dataset.label || '';
+                                    const value = context.parsed.y;
+                                    return `${label}: ${Number(value).toLocaleString()}`;
                                 }
-                            },
-                            expectedMinYieldLine: {
-                                value: this.expectedMinYieldPerSample,
-                            },
+                            }
                         },
-                        scales: {
-                            x: {
-                                stacked: true,
-                                grid: {
-                                    display: false,
-                                },
-                                ticks: {
-                                    autoSkip: true,
-                                    autoSkipPadding: 10,
-                                    maxTicksLimit: 50,
-                                    maxRotation: 45,
-                                    minRotation: 45,
-                                    color: '#666666',
-                                    font: {
-                                        size: 11,
-                                    },
-                                },
+                        expectedMinYieldLine: {
+                            value: this.expectedMinYieldPerSample,
+                        },
+                    },
+                    scales: {
+                        x: {
+                            stacked: true,
+                            grid: {
+                                display: false,
                             },
-                            y: {
-                                stacked: true,
-                                beginAtZero: true,
-                                grid: {
-                                    color: 'rgba(0, 0, 0, 0.08)',
-                                },
-                                border: {
-                                    color: 'rgba(0, 0, 0, 0.18)',
-                                },
-                                title: {
-                                    display: true,
-                                    text: '# ' + this.countLabel,
-                                    font: {
-                                        size: 12,
-                                        weight: 'normal',
-                                    },
-                                },
-                                ticks: {
-                                    color: '#666666',
-                                    font: {
-                                        size: 11,
-                                    },
-                                    callback: (value) => this.formatCountAbbrev(value),
+                            ticks: {
+                                autoSkip: true,
+                                autoSkipPadding: 10,
+                                maxTicksLimit: 50,
+                                maxRotation: 45,
+                                minRotation: 45,
+                                color: '#666666',
+                                font: {
+                                    size: 11,
                                 },
                             },
                         },
-                        datasets: {
-                            bar: {
-                                categoryPercentage: 0.82,
-                                barPercentage: 0.95,
-                                maxBarThickness: 42,
+                        y: {
+                            stacked: true,
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.08)',
+                            },
+                            border: {
+                                color: 'rgba(0, 0, 0, 0.18)',
+                            },
+                            title: {
+                                display: true,
+                                text: '# ' + this.countLabel,
+                                font: {
+                                    size: 12,
+                                    weight: 'normal',
+                                },
+                            },
+                            ticks: {
+                                color: '#666666',
+                                font: {
+                                    size: 11,
+                                },
+                                callback: (value) => this.formatCountAbbrev(value),
                             },
                         },
                     },
-                    plugins: [this.expectedMinYieldLinePlugin()],
-                });
+                    datasets: {
+                        bar: {
+                            categoryPercentage: 0.82,
+                            barPercentage: 0.95,
+                            maxBarThickness: 42,
+                        },
+                    },
+                },
+                plugins: [this.expectedMinYieldLinePlugin()],
             });
-        }
+        },
     },
     template: /*html*/`
         <div>
