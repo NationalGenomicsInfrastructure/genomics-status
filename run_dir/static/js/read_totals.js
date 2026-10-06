@@ -30,6 +30,7 @@ const vReadsTotalComponent = {
             yieldLimitMode: 'calculated',
             manualYieldInput: '',
             manualYieldOverride: null,
+            activeYieldThresholdFilter: null,
         };
     },
     
@@ -208,6 +209,9 @@ const vReadsTotalComponent = {
         },
         activeMinYieldPerSample() {
             this.scheduleChartRender();
+            if (this.activeYieldThresholdFilter !== null) {
+                this.applySamplesByYieldThreshold(this.activeYieldThresholdFilter);
+            }
         }
     },
 
@@ -264,6 +268,7 @@ const vReadsTotalComponent = {
                     this.manualYieldInput = this.expectedMinYieldPerSample === null
                         ? ''
                         : String(Number(this.expectedMinYieldPerSample));
+                    this.activeYieldThresholdFilter = null;
                     
                     this.loading = false;
                     this.scheduleChartRender();
@@ -350,6 +355,7 @@ const vReadsTotalComponent = {
             return `/flowcells/${parts[0]}_${lastPart}`;
         },
         toggleAllSelection() {
+            this.activeYieldThresholdFilter = null;
             const nextValue = !this.isAllSelected;
             Object.keys(this.checkedState).forEach(key => {
                 this.checkedState[key] = nextValue;
@@ -386,6 +392,7 @@ const vReadsTotalComponent = {
             return selectedCount > 0 && selectedCount < rows.length;
         },
         onSampleCheckboxChange(sample, event) {
+            this.activeYieldThresholdFilter = null;
             const isChecked = event.target.checked;
             this.sampleRows(sample).forEach(d => {
                 this.checkedState[this.selectionKey(sample, d.fcp)] = isChecked;
@@ -396,6 +403,7 @@ const vReadsTotalComponent = {
             return samples.every(sample => this.isSampleChecked(sample));
         },
         toggleSamplesByLibQc(label) {
+            this.activeYieldThresholdFilter = null;
             const samples = label === 'Pass' ? this.passedLibQcSamples : this.failedLibQcSamples;
             const nextValue = !this.areSamplesFullyChecked(samples);
             samples.forEach(sample => {
@@ -448,6 +456,7 @@ const vReadsTotalComponent = {
             this.showFlowcellSelection = !this.showFlowcellSelection;
         },
         applyBulkFlowcellSelection(isChecked) {
+            this.activeYieldThresholdFilter = null;
             const selectedSet = this.selectedFlowcellIdSet;
             if (selectedSet.size === 0) return;
             this.sampleNames.forEach(sample => {
@@ -472,10 +481,10 @@ const vReadsTotalComponent = {
                 return sum + (Number.parseInt(d.cl, 10) || 0);
             }, 0);
         },
-        toggleSamplesByYieldThreshold() {
+        applySamplesByYieldThreshold(mode) {
             const threshold = Number(this.activeMinYieldPerSample);
-            if (!Number.isFinite(threshold)) return;
-            const selectBelow = this.yieldThresholdSelectionMode === 'below';
+            if (!Number.isFinite(threshold) || (mode !== 'below' && mode !== 'above')) return;
+            const selectBelow = mode === 'below';
             this.sampleNames.forEach(sample => {
                 const isBelowThreshold = this.sampleTotalCount(sample) < threshold;
                 const shouldSelect = selectBelow ? isBelowThreshold : !isBelowThreshold;
@@ -483,7 +492,12 @@ const vReadsTotalComponent = {
                     this.checkedState[this.selectionKey(sample, d.fcp)] = shouldSelect;
                 });
             });
-            this.yieldThresholdSelectionMode = selectBelow ? 'above' : 'below';
+        },
+        toggleSamplesByYieldThreshold() {
+            const nextFilter = this.yieldThresholdSelectionMode;
+            this.applySamplesByYieldThreshold(nextFilter);
+            this.activeYieldThresholdFilter = nextFilter;
+            this.yieldThresholdSelectionMode = nextFilter === 'below' ? 'above' : 'below';
         },
         setSort(key) {
             if (this.sortKey === key) {
