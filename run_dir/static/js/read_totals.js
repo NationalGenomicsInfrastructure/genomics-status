@@ -27,6 +27,9 @@ const vReadsTotalComponent = {
             chartRenderTimer: null,
             loading: true,
             error: null,
+            yieldLimitMode: 'calculated',
+            manualYieldInput: '',
+            manualYieldOverride: null,
         };
     },
     
@@ -161,22 +164,30 @@ const vReadsTotalComponent = {
         countLabel() {
             return this.isHiseqX ? 'Clusters' : 'Reads';
         },
+        activeMinYieldPerSample() {
+            if (this.yieldLimitMode === 'manual' && this.manualYieldOverride !== null) {
+                return this.manualYieldOverride;
+            }
+            return this.expectedMinYieldPerSample;
+        },
+        isManualYieldInputValid() {
+            if (this.manualYieldInput === '' || this.manualYieldInput === null) {
+                return false;
+            }
+            const value = Number(this.manualYieldInput);
+            return Number.isFinite(value) && value >= 0;
+        },
         formattedExpectedMinYieldPerSample() {
             if (this.expectedMinYieldPerSample === null || Number.isNaN(Number(this.expectedMinYieldPerSample))) {
                 return null;
             }
-            const value = Number(this.expectedMinYieldPerSample);
-            const abs = Math.abs(value);
-            if (abs >= 1_000_000_000) {
-                return `${(value / 1_000_000_000).toFixed(2)}B`;
+            return this.formatYieldDisplay(this.expectedMinYieldPerSample);
+        },
+        formattedManualYieldOverride() {
+            if (this.manualYieldOverride === null) {
+                return null;
             }
-            if (abs >= 1_000_000) {
-                return `${(value / 1_000_000).toFixed(2)}M`;
-            }
-            if (abs >= 1_000) {
-                return `${(value / 1_000).toFixed(2)}k`;
-            }
-            return new Intl.NumberFormat('en-US', { maximumFractionDigits: 2 }).format(value);
+            return this.formatYieldDisplay(this.manualYieldOverride);
         },
         expectedMinYieldFormulaText() {
             if (this.expectedMinYieldFormulaMode === 'lanes') {
@@ -193,6 +204,9 @@ const vReadsTotalComponent = {
     
     watch: {
         summaryRows() {
+            this.scheduleChartRender();
+        },
+        activeMinYieldPerSample() {
             this.scheduleChartRender();
         }
     },
@@ -245,6 +259,11 @@ const vReadsTotalComponent = {
                     });
                     this.showFlowcellSelection = false;
                     this.yieldThresholdSelectionMode = 'below';
+                    this.yieldLimitMode = 'calculated';
+                    this.manualYieldOverride = null;
+                    this.manualYieldInput = this.expectedMinYieldPerSample === null
+                        ? ''
+                        : String(Number(this.expectedMinYieldPerSample));
                     
                     this.loading = false;
                     this.scheduleChartRender();
@@ -407,6 +426,24 @@ const vReadsTotalComponent = {
             }
             return new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(numericValue);
         },
+        formatYieldDisplay(value) {
+            const numericValue = Number(value);
+            if (!Number.isFinite(numericValue)) {
+                return value;
+            }
+
+            const absoluteValue = Math.abs(numericValue);
+            if (absoluteValue >= 1_000_000_000) {
+                return `${(numericValue / 1_000_000_000).toFixed(2)}B`;
+            }
+            if (absoluteValue >= 1_000_000) {
+                return `${(numericValue / 1_000_000).toFixed(2)}M`;
+            }
+            if (absoluteValue >= 1_000) {
+                return `${(numericValue / 1_000).toFixed(2)}k`;
+            }
+            return new Intl.NumberFormat('en-US', { maximumFractionDigits: 2 }).format(numericValue);
+        },
         toggleFlowcellSelection() {
             this.showFlowcellSelection = !this.showFlowcellSelection;
         },
@@ -436,8 +473,8 @@ const vReadsTotalComponent = {
             }, 0);
         },
         toggleSamplesByYieldThreshold() {
-            const threshold = Number(this.expectedMinYieldPerSample);
-            if (Number.isNaN(threshold)) return;
+            const threshold = Number(this.activeMinYieldPerSample);
+            if (!Number.isFinite(threshold)) return;
             const selectBelow = this.yieldThresholdSelectionMode === 'below';
             this.sampleNames.forEach(sample => {
                 const isBelowThreshold = this.sampleTotalCount(sample) < threshold;
@@ -489,6 +526,16 @@ const vReadsTotalComponent = {
             });
             return seriesData;
         },
+        applyManualYield() {
+            if (!this.isManualYieldInputValid) {
+                return;
+            }
+            this.manualYieldOverride = Number(this.manualYieldInput);
+            this.yieldLimitMode = 'manual';
+        },
+        useCalculatedYieldLimit() {
+            this.yieldLimitMode = 'calculated';
+        },
         expectedMinYieldLinePlugin() {
             return {
                 id: 'expectedMinYieldLine',
@@ -520,7 +567,7 @@ const vReadsTotalComponent = {
                     ctx.font = '12px sans-serif';
                     ctx.textAlign = 'right';
                     ctx.textBaseline = 'bottom';
-                    ctx.fillText('Expected minimum yield', chartArea.right - 6, yPosition - 4);
+                    ctx.fillText('Minimum yield', chartArea.right - 6, yPosition - 4);
                     ctx.restore();
                 }
             };
@@ -641,7 +688,7 @@ const vReadsTotalComponent = {
                             }
                         },
                         expectedMinYieldLine: {
-                            value: this.expectedMinYieldPerSample,
+                            value: this.activeMinYieldPerSample,
                         },
                     },
                     scales: {
@@ -729,13 +776,41 @@ const vReadsTotalComponent = {
                 <div style="position: relative; height: 420px; width: 100%;">
                     <canvas ref="readTotalsSummaryChart" style="display: block; width: 100%; height: 100%;"></canvas>
                 </div>
-                <p v-if="expectedMinYieldPerSample !== null" class="text-muted small mb-3">
-                    Expected minimum yield per sample:
-                    <strong
-                        :title="'Formula: ' + expectedMinYieldFormulaText"
-                        style="text-decoration: underline dotted; cursor: help;"
-                    >{{ formattedExpectedMinYieldPerSample }}</strong>.
-                </p>
+                <div class="mb-3">
+                    <p v-if="expectedMinYieldPerSample !== null" class="text-muted small mb-2">
+                        Expected minimum yield per sample:
+                        <strong
+                            :title="'Formula: ' + expectedMinYieldFormulaText"
+                            style="text-decoration: underline dotted; cursor: help;"
+                        >{{ formattedExpectedMinYieldPerSample }}</strong>.
+                    </p>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" id="yieldModeCalculated" v-model="yieldLimitMode" :value="'calculated'" @change="useCalculatedYieldLimit"/>
+                        <label class="form-check-label" for="yieldModeCalculated">Use calculated minimum yield</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" id="yieldModeManual" v-model="yieldLimitMode" :value="'manual'"/>
+                        <label class="form-check-label" for="yieldModeManual">Manually set minimum yield</label>
+                    </div>
+                    <div v-if="yieldLimitMode === 'manual'" class="mt-2" style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                        <label for="manualYieldInput" class="form-label mb-0">Value:</label>
+                        <input
+                            type="number"
+                            id="manualYieldInput"
+                            class="form-control form-control-sm"
+                            style="width: 140px;"
+                            v-model="manualYieldInput"
+                            min="0"
+                            step="1000000"
+                            placeholder="e.g. 150000000"
+                            @keyup.enter="applyManualYield"
+                        />
+                        <button type="button" class="btn btn-sm btn-primary" :disabled="!isManualYieldInputValid" @click="applyManualYield">Apply yield</button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" @click="useCalculatedYieldLimit">Use calculated yield</button>
+                        <small class="text-muted">Enter value in reads (e.g. 150000000).</small>
+                        <small v-if="formattedManualYieldOverride" class="text-muted">Current manual threshold: {{ formattedManualYieldOverride }}</small>
+                    </div>
+                </div>
                 <div class="btn-group mb-3" role="group">
                     <input type="button" class="btn btn-outline-secondary" :value="isAllSelected ? 'Uncheck all' : 'Check all'" @click="toggleAllSelection"/>
                     <input type="button" class="btn btn-outline-secondary" :value="areAllSamplesExpanded ? 'Collapse all' : 'Expand all'" @click="toggleAllSamplesExpanded"/>
@@ -762,7 +837,7 @@ const vReadsTotalComponent = {
                     <button
                         type="button"
                         :class="yieldThresholdSelectionMode === 'below' ? 'btn btn-sm btn-warning text-dark rounded-pill' : 'btn btn-sm btn-secondary text-white rounded-pill'"
-                        :disabled="expectedMinYieldPerSample === null"
+                        :disabled="activeMinYieldPerSample === null"
                         :aria-pressed="yieldThresholdSelectionMode === 'below'"
                         @click="toggleSamplesByYieldThreshold"
                     >
