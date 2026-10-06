@@ -260,6 +260,18 @@ class ProjectsBaseDataHandler(SafeHandler):
             field_sources["project_bx_email"] = (
                 "Email to project bioinformatics responsible, from Order Portal"
             )
+            if "owner" in ord_det:
+                row["value"]["owner"] = ord_det["owner"]["email"]
+                field_sources["owner"] = (
+                    "From the Order Portal (Owner), formatted by Genomics Status (backend)."
+                )
+            if "project_lab_email" in ord_det["fields"]:
+                row["value"]["project_lab_email"] = ord_det["fields"][
+                    "project_lab_email"
+                ]
+                field_sources["project_lab_email"] = (
+                    "From the Order Portal (Primary Contact), formatted by Genomics Status (backend)."
+                )
 
         return row, field_sources
 
