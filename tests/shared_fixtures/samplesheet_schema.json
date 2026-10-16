@@ -1,0 +1,187 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "https://genomics.status.scilifelab.se/schemas/samplesheet.json",
+    "title": "Samplesheet Data Structure",
+    "description": "Multi-level samplesheet structure for flowcell demultiplexing",
+    "type": "object",
+    "required": ["flowcell_id", "metadata", "samplesheets"],
+    "properties": {
+        "flowcell_id": {
+            "type": "string",
+            "description": "Unique identifier for the flowcell"
+        },
+        "metadata": {
+            "type": "object",
+            "description": "Flowcell-level metadata",
+            "required": ["num_samples", "num_lanes"],
+            "properties": {
+                "num_samples": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "description": "Total number of samples in the flowcell"
+                },
+                "num_lanes": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 8,
+                    "description": "Number of lanes in the flowcell"
+                },
+                "full_name": {
+                    "type": "string",
+                    "description": "Full flowcell name"
+                },
+                "position": {
+                    "type": "string",
+                    "description": "Flowcell position (e.g., A or B)"
+                },
+                "instrument": {
+                    "type": "string",
+                    "description": "Sequencing instrument identifier"
+                },
+                "run_setup": {
+                    "type": "string",
+                    "description": "Sequencing run configuration (e.g., 2x151, 43-50)",
+                    "pattern": "^(\\d+(-|x)\\d+)?$"
+                },
+                "projects": {
+                    "type": "array",
+                    "description": "List of projects associated with this flowcell",
+                    "items": {
+                        "type": "object",
+                        "required": ["name"],
+                        "properties": {
+                            "name": {
+                                "type": "string",
+                                "description": "Project name"
+                            },
+                            "id": {
+                                "type": ["string", "null"],
+                                "description": "Project ID (P-number)",
+                                "pattern": "^P\\d+$"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "samplesheets": {
+            "type": "object",
+            "description": "Collection of samplesheet versions organized by timestamp",
+            "patternProperties": {
+                "^timestamp\\d+$": {
+                    "type": "object",
+                    "description": "A specific version of the samplesheet at a given timestamp",
+                    "required": ["LIMS_Original"],
+                    "properties": {
+                        "LIMS_Original": {
+                            "type": "array",
+                            "description": "Original samples as exported from LIMS",
+                            "items": {
+                                "$ref": "#/definitions/sample"
+                            }
+                        },
+                        "per_lane": {
+                            "type": "object",
+                            "description": "Samples organized by lane with demultiplexing configurations",
+                            "patternProperties": {
+                                "^[1-8]$": {
+                                    "type": "object",
+                                    "description": "Lane-specific samplesheet data",
+                                    "patternProperties": {
+                                        "^subdemux_\\d+$": {
+                                            "type": "object",
+                                            "description": "A specific demultiplexing configuration",
+                                            "required": ["options", "samples"],
+                                            "properties": {
+                                                "options": {
+                                                    "type": "object",
+                                                    "description": "Demultiplexing options",
+                                                    "properties": {
+                                                        "command_line": {
+                                                            "type": "object",
+                                                            "description": "Command-line options for demultiplexing software"
+                                                        },
+                                                        "in_samplesheet": {
+                                                            "type": "object",
+                                                            "description": "Options embedded in the samplesheet file"
+                                                        }
+                                                    }
+                                                },
+                                                "samples": {
+                                                    "type": "array",
+                                                    "description": "Samples for this demultiplexing configuration",
+                                                    "items": {
+                                                        "$ref": "#/definitions/sample"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "sample": {
+            "type": "object",
+            "description": "A single sample entry in the samplesheet",
+            "required": ["FCID", "Lane", "Sample_ID", "Sample_Name"],
+            "properties": {
+                "FCID": {
+                    "type": "string",
+                    "description": "Flowcell ID"
+                },
+                "Lane": {
+                    "type": "string",
+                    "description": "Lane number",
+                    "pattern": "^[1-8]$"
+                },
+                "Sample_ID": {
+                    "type": "string",
+                    "description": "Unique sample identifier"
+                },
+                "Sample_Name": {
+                    "type": "string",
+                    "description": "Sample name"
+                },
+                "Sample_Ref": {
+                    "type": "string",
+                    "description": "Reference genome"
+                },
+                "index": {
+                    "type": "string",
+                    "description": "Index 1 sequence or adapter name"
+                },
+                "index2": {
+                    "type": "string",
+                    "description": "Index 2 sequence (for dual indexing)"
+                },
+                "Description": {
+                    "type": "string",
+                    "description": "Sample or project description"
+                },
+                "Control": {
+                    "type": "string",
+                    "description": "Control sample indicator (Y/N)",
+                    "pattern": "^[YN]$"
+                },
+                "Recipe": {
+                    "type": "string",
+                    "description": "Sequencing recipe/configuration"
+                },
+                "Operator": {
+                    "type": "string",
+                    "description": "Lab operator who prepared the sample"
+                },
+                "Sample_Project": {
+                    "type": "string",
+                    "description": "Project name or identifier"
+                }
+            }
+        }
+    }
+}

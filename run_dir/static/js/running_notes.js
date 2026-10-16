@@ -317,6 +317,8 @@ $("#running_notes_form").submit( function(e) {
             $('#new_note_text').val('');
             $('#running_note_preview_body').html('<p class="text-muted"><em>Nothing to preview..</em></p>');
             $('#new_note_text').css('height', $('#running_note_preview_panel').css('height'));
+            $('#preview_category').html('');
+            $('.rn-categ button.active').removeClass('active');
             // Cler the 'no running notes found' box if it's there
             if($('#running_notes_panels').html() == '<div class="well">No running notes found.</div>'){
               $('#running_notes_panels .well').slideUp(function(){ $(this).remove(); });

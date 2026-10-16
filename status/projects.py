@@ -18,12 +18,14 @@ from genologics.entities import Artifact
 from ibm_cloud_sdk_core.api_exception import ApiException
 from zenpy import ZenpyException
 
-from status.flowcells import ReadsTotalHandler
+from status.flowcells import ReadTotalsDataHandler
 from status.reports import (
     MultiQCReportHandler,
     ProjectSummaryReportHandler,
     SingleCellSampleSummaryReportHandler,
+    VisiumReportHandler,
 )
+from status.time_tracking import stage_definitions
 from status.util import SafeHandler, dthandler
 
 lims = lims.Lims(BASEURI, USERNAME, PASSWORD)
@@ -258,6 +260,18 @@ class ProjectsBaseDataHandler(SafeHandler):
             field_sources["project_bx_email"] = (
                 "Email to project bioinformatics responsible, from Order Portal"
             )
+            if "owner" in ord_det:
+                row["value"]["owner"] = ord_det["owner"]["email"]
+                field_sources["owner"] = (
+                    "From the Order Portal (Owner), formatted by Genomics Status (backend)."
+                )
+            if "project_lab_email" in ord_det["fields"]:
+                row["value"]["project_lab_email"] = ord_det["fields"][
+                    "project_lab_email"
+                ]
+                field_sources["project_lab_email"] = (
+                    "From the Order Portal (Primary Contact), formatted by Genomics Status (backend)."
+                )
 
         return row, field_sources
 
@@ -287,24 +301,24 @@ class ProjectsBaseDataHandler(SafeHandler):
         openflag = False
         projtype = self.get_argument("type", "all")
 
+        dates_gen = [
+            "days_recep_ctrl",
+            "days_analysis",
+            "days_data_delivery",
+            "days_close",
+        ]
         def_dates_gen = {
-            "days_recep_ctrl": ["open_date", "queued"],
-            "days_analysis": [
-                "all_samples_sequenced",
-                "best_practice_analysis_completed",
-            ],
-            "days_data_delivery": ["all_samples_sequenced", "all_raw_data_delivered"],
-            "days_close": ["all_raw_data_delivered", "close_date"],
+            k[1]: v for k, v in stage_definitions.items() if k[1] in dates_gen
         }
 
+        dates_summary = [
+            "days_prep_start",
+            "days_seq_start",
+            "days_seq",
+            "days_prep",
+        ]
         def_dates_summary = {
-            "days_prep_start": ["queued", "library_prep_start"],
-            "days_seq_start": [
-                ["qc_library_finished", "queued"],
-                "sequencing_start_date",
-            ],
-            "days_seq": ["sequencing_start_date", "all_samples_sequenced"],
-            "days_prep": ["library_prep_start", "qc_library_finished"],
+            k[1]: v for k, v in stage_definitions.items() if k[1] in dates_summary
         }
 
         if "closed" in filter_projects or "all" in filter_projects:
@@ -335,8 +349,13 @@ class ProjectsBaseDataHandler(SafeHandler):
             end_queue_date,
             start_close_date,
             end_close_date,
-        ) = [None] * 6
+            start_aborted_date,
+            end_aborted_date,
+        ) = [None] * 8
 
+        if "aborted" in filter_projects:
+            end_aborted_date = self.get_argument("youngest_aborted_date", "")
+            start_aborted_date = self.get_argument("oldest_aborted_date", "")
         if closedflag:
             end_close_date = self.get_argument("youngest_close_date", default_end_date)
             start_close_date = self.get_argument(
@@ -409,6 +428,9 @@ class ProjectsBaseDataHandler(SafeHandler):
             for row in itertools.chain.from_iterable(view_calls):
                 p_info = row["value"]
                 ptype = p_info["details"].get("type")
+                # This is in case the project is closed, but the closed condition is not met, e.g. if the close date is outside the requested range.
+                # In that case, we don't want to include the project in the list of open projects.
+                is_closed_project = False
 
                 if not (projtype == "All" or ptype == projtype):
                     continue
@@ -418,6 +440,7 @@ class ProjectsBaseDataHandler(SafeHandler):
                 ] * 4
 
                 if "close_date" in p_info:
+                    is_closed_project = True
                     closed_condition = p_info["close_date"] >= str(
                         start_close_date
                     ) and p_info["close_date"] <= str(end_close_date)
@@ -451,7 +474,16 @@ class ProjectsBaseDataHandler(SafeHandler):
                         and "aborted" in p_info["project_summary"]
                     )
                 ):
-                    filtered_projects.append(row)
+                    if end_aborted_date and start_aborted_date:
+                        aborted_date = p_info["details"].get("aborted")
+                        if not aborted_date and "project_summary" in p_info:
+                            aborted_date = p_info["project_summary"].get("aborted")
+                        if aborted_date >= str(
+                            start_aborted_date
+                        ) and aborted_date <= str(end_aborted_date):
+                            filtered_projects.append(row)
+                    else:
+                        filtered_projects.append(row)
                 # pending reviews projects
                 elif (
                     "review" in filter_projects or filter_projects == "all"
@@ -464,7 +496,7 @@ class ProjectsBaseDataHandler(SafeHandler):
                 elif openflag and open_condition:
                     if filter_projects == "all":
                         filtered_projects.append(row)
-                    elif "open" in filter_projects:
+                    elif "open" in filter_projects and not is_closed_project:
                         filtered_projects.append(row)
                     # ongoing projects
                     elif (
@@ -600,17 +632,7 @@ class ProjectsBaseDataHandler(SafeHandler):
             ProjectsBaseDataHandler.cached_search_list is None
             or ProjectsBaseDataHandler.search_list_last_fetched < t_threshold
         ):
-            projects_view = self.application.cloudant.post_view(
-                db="projects",
-                ddoc="projects",
-                view="name_to_id_cust_ref",
-                descending=True,
-            ).get_result()["rows"]
-
-            ProjectsBaseDataHandler.cached_search_list = [
-                (row["key"], row["value"]) for row in projects_view
-            ]
-            ProjectsBaseDataHandler.search_list_last_fetched = datetime.datetime.now()
+            self.update_projects_cache()
 
         search_string = search_string.lower().strip()
 
@@ -636,6 +658,20 @@ class ProjectsBaseDataHandler(SafeHandler):
         )
 
         return projects
+
+    def update_projects_cache(self):
+        # Update of cached project search list
+        projects_view = self.application.cloudant.post_view(
+            db="projects",
+            ddoc="projects",
+            view="name_to_id_cust_ref",
+            descending=True,
+        ).get_result()["rows"]
+
+        ProjectsBaseDataHandler.cached_search_list = [
+            (row["key"], row["value"]) for row in projects_view
+        ]
+        ProjectsBaseDataHandler.search_list_last_fetched = datetime.datetime.now()
 
 
 def prettify_css_names(s):
@@ -681,6 +717,69 @@ class ProjectsSearchHandler(ProjectsBaseDataHandler):
         self.write(json.dumps(self.search_project_names(search_string)))
 
 
+class ProjectReadsSequencedHandler(ProjectsBaseDataHandler):
+    """Serves the total number of reads sequenced for a given project.
+
+    Loaded through /api/v1/project_reads_sequenced/([^/]*)$
+    """
+
+    def get(self, project):
+        view_rows = self.application.cloudant.post_view(
+            db="projects",
+            ddoc="project",
+            view="summary",
+            keys=[["open", project], ["closed", project]],
+        ).get_result()["rows"]
+        if not len(view_rows) == 1:
+            return {}
+
+        summary_row = view_rows[0]
+        self.set_header("Content-type", "application/json")
+        all_reads = ReadTotalsDataHandler.get_total_reads(self.application, project)
+        reads_sum = 0
+        for flowcells in all_reads.values():
+            for flowcell in flowcells:
+                # Include all non-failed samples, even if they don't have a sample_status
+                if flowcell.get("sample_status", {}) not in ["Failed"]:
+                    reads_sum += flowcell["cl"]
+
+        # Check if the project's flowcell field contains "Universal-"
+        project_flowcell = summary_row["value"]["details"].get("flowcell", "")
+        is_universal = project_flowcell.startswith("Universal-")
+
+        reads_sequenced = 0
+        # 1 unit = 600 million reads - only show units for Universal projects
+        # For Universal projects, check if reads meet 90% of (units_ordered * 600M)
+        units_achieved = reads_sum / 600000000
+        reads_sequenced_meets_threshold = True  # Default for non-Universal projects
+
+        if is_universal:
+            units_ordered_str = summary_row["value"]["details"].get(
+                "sequence_units_ordered_(lanes)", ""
+            )
+            try:
+                units_ordered = float(units_ordered_str) if units_ordered_str else 0
+                if units_ordered > 0:
+                    expected_reads = units_ordered * 600000000
+                    threshold = expected_reads * 0.9
+                    reads_sequenced_meets_threshold = reads_sum >= threshold
+            except (ValueError, TypeError):
+                units_ordered = 0
+
+            reads_sequenced = str(reads_sum) + f" (~ {round(units_achieved, 2)} units)"
+        else:
+            reads_sequenced = str(reads_sum)
+
+        self.write(
+            json.dumps(
+                {
+                    "reads_sequenced": reads_sequenced,
+                    "reads_sequenced_meets_threshold": reads_sequenced_meets_threshold,
+                }
+            )
+        )
+
+
 class ProjectDataHandler(ProjectsBaseDataHandler):
     """Serves brief information of a given project.
 
@@ -708,49 +807,6 @@ class ProjectDataHandler(ProjectsBaseDataHandler):
 
         summary_row = view_rows[0]
         summary_row, field_sources = self.project_summary_data(summary_row)
-
-        # Calculate total reads sequenced for non-failed samples in the project
-        all_reads = ReadsTotalHandler.get_total_reads(self.application, project)
-        reads_sum = 0
-        for flowcells in all_reads.values():
-            for flowcell in flowcells:
-                # Include all non-failed samples, even if they don't have a sample_status
-                if flowcell.get("sample_status", {}) not in ["Failed"]:
-                    reads_sum += flowcell["cl"]
-
-        # Check if the project's flowcell field contains "Universal-"
-        project_flowcell = summary_row["value"].get("flowcell", "")
-        is_universal = project_flowcell.startswith("Universal-")
-
-        # 1 unit = 600 million reads - only show units for Universal projects
-        # For Universal projects, check if reads meet 90% of (units_ordered * 600M)
-        units_achieved = reads_sum / 600000000
-        meets_threshold = True  # Default for non-Universal projects
-
-        if is_universal:
-            units_ordered_str = summary_row["value"].get(
-                "sequence_units_ordered_(lanes)", ""
-            )
-            try:
-                units_ordered = float(units_ordered_str) if units_ordered_str else 0
-                if units_ordered > 0:
-                    expected_reads = units_ordered * 600000000
-                    threshold = expected_reads * 0.9
-                    meets_threshold = reads_sum >= threshold
-            except (ValueError, TypeError):
-                units_ordered = 0
-
-            summary_row["value"]["reads_sequenced"] = (
-                str(reads_sum) + f" (~ {round(units_achieved, 2)} units)"
-            )
-        else:
-            summary_row["value"]["reads_sequenced"] = str(reads_sum)
-
-        summary_row["value"]["reads_sequenced_meets_threshold"] = meets_threshold
-
-        field_sources["reads_sequenced"] = (
-            "Calculated by Genomics Status (backend) from all non-failed samples in the project"
-        )
 
         date_result_rows = self.application.cloudant.post_view(
             db="projects",
@@ -815,6 +871,11 @@ class ProjectDataHandler(ProjectsBaseDataHandler):
             summary_row["value"]["reports"]["sample_summary_reports"] = (
                 group_summary_reports
             )
+        visium_reports = VisiumReportHandler.get_visium_reports(
+            self.application, project
+        )
+        if visium_reports:
+            summary_row["value"]["reports"]["visium_reports"] = visium_reports
 
         # Get people assignments
         people_assignments_view_result = self.application.cloudant.post_view(
@@ -1136,6 +1197,10 @@ class ProjectSamplesOldHandler(SafeHandler):
                         group_summary_reports[sample_id] = {}
                     group_summary_reports[sample_id][method] = report
             reports["sample_summary_reports"] = group_summary_reports
+        if visium_reports := VisiumReportHandler.get_visium_reports(
+            self.application, project
+        ):
+            reports["visium_reports"] = visium_reports
         self.write(
             t.generate(
                 gs_globals=self.application.gs_globals,
@@ -1455,22 +1520,21 @@ class PrioProjectsTableHandler(SafeHandler):
 
     def get(self):
         projects = {}
-        def_dates_rec_ctrl = {"days_recep_ctrl": ["open_date", "queued"]}
+        def_dates_rec_ctrl = {
+            k[1]: v for k, v in stage_definitions.items() if k[1] == "days_recep_ctrl"
+        }
         # dates in order
+        dates_ongoing = [
+            "days_prep_start",
+            "days_prep",
+            "days_seq_start",
+            "days_seq",
+            "days_analysis",
+            "days_data_delivery",
+            "days_close",
+        ]
         def_dates_ongoing = {
-            "days_prep_start": ["queued", "library_prep_start"],
-            "days_prep": ["library_prep_start", "qc_library_finished"],
-            "days_seq_start": [
-                ["qc_library_finished", "queued"],
-                "sequencing_start_date",
-            ],
-            "days_seq": ["sequencing_start_date", "all_samples_sequenced"],
-            "days_analysis": [
-                "all_samples_sequenced",
-                "best_practice_analysis_completed",
-            ],
-            "days_data_delivery": ["all_samples_sequenced", "all_raw_data_delivered"],
-            "days_close": ["all_raw_data_delivered", "close_date"],
+            k[1]: v for k, v in stage_definitions.items() if k[1] in dates_ongoing
         }
 
         statuses = ["ongoing", "reception control"]

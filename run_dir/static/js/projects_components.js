@@ -254,7 +254,11 @@ export const vProjectDetails = {
                     <h2><span :class="'badge w-100 mt-1 mb-4 ' + status_bg_class">{{project_data.status}}</span></h2>
                 </div>
                 <div class="col-4">
-                    <h4>Library preparation</h4>
+                    <h4>Library preparation
+                    <template v-if="user.roles.includes('admin') || user.roles.includes('proj_coord')">
+                        <a :href="'/project_creation_edit/' + project_id" id="project_info_edit_button" class="btn btn-secondary btn-xs" target="_blank">Edit Project Info</a>
+                    </template>
+                    </h4>
                     <dl class="dl-horizontal">
                         <div class="dt-dd-pair">
                             <dt>Sample units ordered:</dt>
@@ -441,6 +445,16 @@ export const vProjectDetails = {
                                     </template>
                                 </template>
                             </template>
+                            <div class="mt-1 pt-1 rounded-3">
+                                <h3 class="row mb-0">
+                                    <button class="btn btn-large badge text-primary border col-11" :href="'/read_totals/' + project_id" style="padding: 0.85rem !important;">
+                                        <a :href="'/read_totals/' + project_id" target="_blank" rel="noopener noreferrer" class="text-decoration-none row d-inline">
+                                            <span class="col-6 float-left text-left">Read totals</span>
+                                            <i class="fa-solid fa-chart-column float-right text-primary col-1 px-0"></i>
+                                        </a>
+                                    </button>
+                                </h3>
+                            </div>
                             <div v-if="'reports' in project_data && 'project_summary' in project_data.reports" class="mt-1 pt-1 rounded-3">
                                 <h3 class="row mb-0">
                                     <button class="btn btn-large badge text-primary border col-11" :href="'/proj_summary_report/'+project_id" style="padding: 0.85rem !important;">
@@ -1253,6 +1267,8 @@ export const vProjectCards = {
                 <div class="col-2 form-floating">
                     <select id="sort_by" class="form-select" aria-label="Sort by" v-model="this.$root.sortBy">
                         <option value="most_recent_date">Most recent date</option>
+                        <option value="open_date">Open Date</option>
+                        <option value="queue_date">Queue Date</option>
                         <option value="project_id">Project ID</option>
                         <option value="status">Status</option>
                     </select>

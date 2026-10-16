@@ -225,6 +225,27 @@ class GenerateInvoiceHandler(AgreementsDBHandler, InvoicingDataHandler):
             self.set_status(400)
             return self.write("Error: No projects specified!")
         projects = args.split(",")
+        invoice_defaults = self.fetch_agreement("invoice_defaults")
+
+        if (
+            len(projects) == 1
+            and self.request.arguments.get("single_project", False)[0]
+        ):
+            proj_id = projects[0]
+            agreement_doc = self.fetch_agreement(proj_id)
+            account_dets, contact_dets, proj_specs = self.get_invoice_data(
+                proj_id, agreement_doc, invoice_defaults
+            )
+
+            _, pdfgen = self.generate_invoice_html_pdf(
+                account_dets, contact_dets, proj_specs
+            )
+            fileName = f"{proj_id}_invoice_specification.pdf"
+            self.set_header("Content-Type", "application/pdf")
+            self.set_header("Content-Disposition", f"attachment; filename={fileName}")
+            self.write(pdfgen)
+            self.finish()
+            return
 
         fileName = f"invoices_{datetime.datetime.now().date()}.zip"
         buff = BytesIO()
@@ -250,7 +271,6 @@ class GenerateInvoiceHandler(AgreementsDBHandler, InvoicingDataHandler):
             "Attansv/Säljare",
             "Stängt Datum",
         ]
-        invoice_defaults = self.fetch_agreement("invoice_defaults")
         data = []
         with zp.ZipFile(buff, "w") as zf:
             for proj_id in projects:

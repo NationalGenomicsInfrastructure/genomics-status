@@ -1,0 +1,93 @@
+{
+  "metadata": {
+    "num_lanes": 2,
+    "run_setup": "85-8-0-215",
+    "setup_lims_step_id": "24-TC1"
+  },
+  "uploaded_lims_info": [
+    {
+      "flowcell_id": "22GC2NLT1",
+      "lane": "1",
+      "sample_id": "P36906_1001",
+      "sample_name": "P36906_1001",
+      "sample_ref": "Human (Homo sapiens GRCh38)",
+      "index": "GCTACGCT",
+      "index2": "TATAGCCT",
+      "description": "A__Berggren_25_01",
+      "control": "N",
+      "recipe": "85-215",
+      "operator": "Agneta_Berg",
+      "sample_project": "A__Berggren_25_01"
+    },
+    {
+      "flowcell_id": "22GC2NLT1",
+      "lane": "1",
+      "sample_id": "P36906_1002",
+      "sample_name": "P36906_1002",
+      "sample_ref": "Human (Homo sapiens GRCh38)",
+      "index": "CGAGGCTG",
+      "index2": "TATAGCCT",
+      "description": "A__Berggren_25_01",
+      "control": "N",
+      "recipe": "85-215",
+      "operator": "Agneta_Berg",
+      "sample_project": "A__Berggren_25_01"
+    },
+    {
+      "flowcell_id": "22GC2NLT1",
+      "lane": "1",
+      "sample_id": "P36906_1003",
+      "sample_name": "P36906_1003",
+      "sample_ref": "Human (Homo sapiens GRCh38)",
+      "index": "AAGAGGCA",
+      "index2": "TATAGCCT",
+      "description": "A__Berggren_25_01",
+      "control": "N",
+      "recipe": "85-215",
+      "operator": "Agneta_Berg",
+      "sample_project": "A__Berggren_25_01"
+    },
+    {
+      "flowcell_id": "22GC2NLT1",
+      "lane": "2",
+      "sample_id": "P36906_1001",
+      "sample_name": "P36906_1001",
+      "sample_ref": "Human (Homo sapiens GRCh38)",
+      "index": "GCTACGCT",
+      "index2": "TATAGCCT",
+      "description": "A__Berggren_25_01",
+      "control": "N",
+      "recipe": "85-215",
+      "operator": "Agneta_Berg",
+      "sample_project": "A__Berggren_25_01"
+    },
+    {
+      "flowcell_id": "22GC2NLT1",
+      "lane": "2",
+      "sample_id": "P36906_1002",
+      "sample_name": "P36906_1002",
+      "sample_ref": "Human (Homo sapiens GRCh38)",
+      "index": "CGAGGCTG",
+      "index2": "TATAGCCT",
+      "description": "A__Berggren_25_01",
+      "control": "N",
+      "recipe": "85-215",
+      "operator": "Agneta_Berg",
+      "sample_project": "A__Berggren_25_01"
+    },
+    {
+      "flowcell_id": "22GC2NLT1",
+      "lane": "2",
+      "sample_id": "P36906_1003",
+      "sample_name": "P36906_1003",
+      "sample_ref": "Human (Homo sapiens GRCh38)",
+      "index": "AAGAGGCA",
+      "index2": "TATAGCCT",
+      "description": "A__Berggren_25_01",
+      "control": "N",
+      "recipe": "85-215",
+      "operator": "Agneta_Berg",
+      "sample_project": "A__Berggren_25_01"
+    }
+  ]
+}

@@ -19,3 +19,4 @@ run_dir/settings/
 status.egg-info/
 tests/test_items.yaml
 **orderportal_cred.yaml
+tests/test_data/non_git_data/*

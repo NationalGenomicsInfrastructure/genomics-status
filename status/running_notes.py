@@ -137,6 +137,8 @@ class RunningNotesDataHandler(SafeHandler):
             connected_projects = values["project_list"]
             workset_name = values["name"]
             note_details["name"] = workset_name
+            if "Workset" not in categories:
+                categories.append("Workset")
         else:
             note_details["name"] = partition_id
             if note_type == "flowcell":
@@ -161,12 +163,20 @@ class RunningNotesDataHandler(SafeHandler):
                 view="project_ids_list",
                 key=lookup_key,
             ).get_result()["rows"][0]["value"]
+            if "Flowcell" not in categories:
+                categories.append("Flowcell")
+
+        def clean_html_comments(text):
+            """Remove HTML comments from the text to prevent issues in slack notifications.
+            Does not remove multiline html comments
+            """
+            return re.sub(r"<!--.*?-->(\n)*", "", text)
 
         newNote = {
             "_id": f"{partition_id}:{datetime.datetime.timestamp(created_time)}",
             "user": user,
             "email": email,
-            "note": note,
+            "note": clean_html_comments(note),
             "categories": categories,
             "projects": connected_projects,
             "parent": parent if parent else partition_id,
@@ -199,7 +209,7 @@ class RunningNotesDataHandler(SafeHandler):
                     application,
                     userTags,
                     note_details,
-                    note,
+                    clean_html_comments(note),
                     categories,
                     user,
                     created_time,
@@ -222,40 +232,84 @@ class RunningNotesDataHandler(SafeHandler):
                     application,
                     [proj_coord],
                     note_details,
-                    note,
+                    clean_html_comments(note),
                     categories,
                     user,
                     created_time,
                     "creation",
                 )
-        ###
+        ##
         # If the note is created on flowcell or workset, copy it to connected projects
         if note_type in ["flowcell", "workset", "flowcell_ont", "flowcell_element"]:
             link_id = partition_id
             if note_type == "workset":
                 link_id = workset_name
             link = f"<a class='text-decoration-none' href='{RunningNotesDataHandler.get_entity_link(application, note_type, link_id)}'>{link_id}</a>"
-            project_note = (
+            link_in_project_note = (
                 f"#####*Running note posted on {note_type.split('_')[0]} {link}:*\n"
             )
-            project_note += note
-            for proj_id in connected_projects:
-                _ = RunningNotesDataHandler.make_running_note(
-                    application,
-                    proj_id,
-                    project_note,
-                    categories,
-                    user,
-                    email,
-                    "project",
-                    created_time,
-                    parent=partition_id,
+            project_note = link_in_project_note + note
+            split_fc_notes = {}
+            if note_type in ["flowcell"]:
+                split_fc_notes = RunningNotesDataHandler.split_notes(
+                    project_note, connected_projects
                 )
+            for proj_id in connected_projects:
+                submitted_note = ""
+                if note_type in ["flowcell"]:
+                    if proj_id in split_fc_notes:
+                        submitted_note = split_fc_notes[proj_id]
+                    elif split_fc_notes["common"] != link_in_project_note:
+                        submitted_note = split_fc_notes["common"]
+                else:
+                    submitted_note = project_note
+
+                if submitted_note:
+                    _ = RunningNotesDataHandler.make_running_note(
+                        application,
+                        proj_id,
+                        submitted_note,
+                        categories,
+                        user,
+                        email,
+                        "project",
+                        created_time,
+                        parent=partition_id,
+                    )
         created_note = application.cloudant.get_document(
             db="running_notes", doc_id=newNote["_id"]
         ).get_result()
         created_note = newNote
         return created_note
+
+    @staticmethod
+    def split_notes(note, connected_projects):
+        # <!-- START:P6510 -->
+        START_RE = re.compile(r"<!--\s*START:(P\d+)\s*-->")
+        END_RE = re.compile(r"<!--\s*END:(P\d+)\s*-->")
+        projects_in_sections = set(re.findall(r"START:(P\d+)", note))
+        project_notes = {
+            proj: "" for proj in projects_in_sections if proj in connected_projects
+        }
+        project_notes["common"] = ""
+        current_proj = None
+        for line in note.split("\n"):
+            start_match = START_RE.search(line)
+            end_match = END_RE.search(line)
+            if start_match:
+                current_proj = start_match.group(1)
+                continue
+            elif end_match:
+                current_proj = None
+                continue
+
+            if current_proj and current_proj in project_notes:
+                project_notes[current_proj] += line + "\n"
+            else:
+                for proj in project_notes:
+                    project_notes[proj] += line + "\n"
+
+        return project_notes
 
     @staticmethod
     def get_entity_link(application, note_type, entity_id):

@@ -72,7 +72,8 @@ export const vPricingQuote = {
         agrm_save_success_msg:'',
         latest_cost_calculator: {},
         selected_timestamp: '',
-        invoicing_notes: []
+        invoicing_notes: [],
+        downloading_invoice: false
       }
     },
     computed: {
@@ -355,6 +356,7 @@ export const vPricingQuote = {
             this.$root.price_type = sel_data['price_type']
             if('special_addition' in sel_data){
               this.$root.quote_special_additions = sel_data['special_addition']
+              this.cLabel_index = Object.keys(sel_data['special_addition']).length
             }
             if('special_percentage' in sel_data){
               this.$root.quote_special_percentage_label = sel_data['special_percentage']['name']
@@ -428,7 +430,34 @@ export const vPricingQuote = {
             })
           }
         },
-
+       download_invoice_spec(){
+          this.downloading_invoice = true
+          const proj_id = this.proj_data['project_id']
+          // TODO: Change this when rewriting Invoicing to use Vue.js
+          // We do this beacuse of how its written at the moment
+          const formData = new URLSearchParams()
+          formData.append('projects', [proj_id])
+          formData.append('single_project', true)
+          axios.post(`/api/v1/generate_invoice`, formData, {
+              responseType: 'blob',
+              headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+          }).then(response => {
+              const url = window.URL.createObjectURL(response.data)
+              const link = document.createElement('a')
+              link.href = url
+              link.download = `${proj_id}_invoice_specification.pdf`
+              document.body.appendChild(link)
+              link.click()
+              // Clean up to prevent memory leaks
+              document.body.removeChild(link)
+              window.URL.revokeObjectURL(url)
+              this.downloading_invoice = false
+          }).catch(error => {
+              this.$root.error_messages.push('Unable to download invoice spec, please try again or contact a system administrator.')
+              console.log('Unable to download invoice spec', error)
+              this.downloading_invoice = false
+          })
+        },
         fetch_latest_agreement_template_doc: function(){
           axios
               .get('/api/v1/get_agreement_template_text')
@@ -783,7 +812,25 @@ export const vPricingQuote = {
               </div>
               <div class="row" v-if="this.saved_agreement_data['saved_agreements']">
                 <div class="col ml-2">
-                  <button v-if="this.has_admin_control" class="btn btn-warning m-1" type="submit" v-on:click="reload_latest_cost_calculator()" :disabled="this.invoice_downloaded" id="reload_with_latest_cost_calc__btn">Reload latest cost calculator version</button>
+                  <button v-if="this.has_admin_control"
+                          class="btn btn-warning m-1"
+                          type="submit"
+                          v-on:click="reload_latest_cost_calculator()"
+                          :disabled="this.invoice_downloaded"
+                          id="reload_with_latest_cost_calc__btn">
+                    Reload latest cost calculator version
+                  </button>
+                  <button v-if="this.has_admin_control && (this.invoice_generated && !this.invoice_invalidated)"
+                          class="btn btn-secondary m-1"
+                          type="submit"
+                          v-on:click="download_invoice_spec()"
+                          id="download_invoice_spec"
+                          :disabled="this.downloading_invoice">
+                    <span v-if="downloading_invoice">
+                      <i class="fa fa-spinner fa-spin"></i> Downloading...
+                    </span>
+                    <span v-else>Download Invoice Specification</span>
+                  </button>
                 </div>
               </div>
               <div class="card mt-5">
@@ -815,7 +862,7 @@ export const vPricingQuote = {
                               <span class="col-6 offset-2">
                                 {{ label.name }}
                               </span>
-                              <span class="col-3 text-right font-monospace">{{ label.value.toFixed(2) }} SEK</span>
+                              <span class="col-3 text-right font-monospace">{{ (label.value || 0).toFixed(2) }} SEK</span>
                             </li>
                           </template>
                           <template v-if="any_special_percentage">

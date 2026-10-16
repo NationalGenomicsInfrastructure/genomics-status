@@ -1,0 +1,37 @@
+{
+  "metadata": {
+    "num_lanes": 1,
+    "run_setup": "151-10-10-151",
+    "setup_lims_step_id": "24-TC8"
+  },
+  "uploaded_lims_info": [
+    {
+      "flowcell_id": "22YMHFLT3",
+      "lane": "1",
+      "sample_id": "P29904_8007",
+      "sample_name": "P29904_8007",
+      "sample_ref": "Human (Homo sapiens GRCh38)",
+      "index": "SMARTSEQ3-23F",
+      "index2": "",
+    "description": "A__Berggren_23_01",
+      "control": "N",
+    "recipe": "85-10-10-133",
+      "operator": "Agneta_Berg",
+    "sample_project": "A__Berggren_23_01"
+    },
+    {
+      "flowcell_id": "22YMHFLT3",
+      "lane": "1",
+      "sample_id": "P29904_8009",
+      "sample_name": "P29904_8009",
+      "sample_ref": "Human (Homo sapiens GRCh38)",
+      "index": "SMARTSEQ3-1G",
+      "index2": "",
+    "description": "A__Berggren_23_01",
+      "control": "N",
+    "recipe": "85-10-10-133",
+      "operator": "Agneta_Berg",
+    "sample_project": "A__Berggren_23_01"
+    }
+  ]
+}

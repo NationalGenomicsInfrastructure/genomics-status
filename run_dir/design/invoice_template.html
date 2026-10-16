@@ -8,6 +8,14 @@
       @page {
           margin-top:5mm;
       }
+      h3 {
+          font-size: 1.5rem !important;
+          font-weight: 600 !important;
+      }
+      h4 {
+          font-size: 1.1rem !important;
+          font-weight: 600 !important;
+      }
     </style>
   </head>
 
@@ -15,9 +23,10 @@
     <div class="invoice-title-img">
       <img class="align-middle float-right" title="National Genomics Infrastructure" src="static/img/NGI-final.png" style="object-fit:contain; width:195px; height:57px;" >
     </div>
+    <div style="clear: both;"></div>
       <h2> NGI invoice specification
       </h2>
-      <div style="0.95em;"> Created on {{ proj_specs['invoice_created'] }} by {{ proj_specs['invoice_created_by'] }}</div>
+      <div style="font-size: 0.95em;"> Created on {{ proj_specs['invoice_created'] }} by {{ proj_specs['invoice_created_by'] }}</div>
       <hr class="mt-1">
       <h3 class="pt-3">Account</h3>
       <hr class="mb-1">
@@ -86,32 +95,32 @@
       </dl>
       <h4>Cost Calculation</h4>
       <div class="row">
-        <div class="col-7">
+        <div class="col">
           <table class="table-invoice-pricing">
             <tbody>
               {% for category in proj_specs['price_breakup'] %}
               <tr>
-                <td>{{ category }}</td>
-                <td class="text-right">{{ proj_specs['price_breakup'][category] }} SEK</td>
+                <td style="white-space: nowrap;">{{ category }}</td>
+                <td class="text-right" style="white-space: nowrap;">{{ proj_specs['price_breakup'][category] }} SEK</td>
               </tr>
               {% end %}
               {%if 'special_addition' in proj_specs %}
                 {%for label in proj_specs['special_addition'] %}
                   <tr>
-                    <td>{{ proj_specs['special_addition'][label]['name'] }}</td>
-                    <td class="text-right">{{ proj_specs['special_addition'][label]['value'] }} SEK</td>
+                    <td style="white-space: nowrap;">{{ proj_specs['special_addition'][label]['name'] }}</td>
+                    <td class="text-right" style="white-space: nowrap;">{{ proj_specs['special_addition'][label]['value'] }} SEK</td>
                   </tr>
                 {% end %}
               {% end %}
               {%if 'special_percentage' in proj_specs %}
                 <tr>
-                  <td>{{ proj_specs['special_percentage']['name'] }} (-{{ proj_specs['special_percentage']['value'] }}%)</td>
-                  <td class="text-right">- {{proj_specs['total_cost_discount']}} SEK</td>
+                  <td style="white-space: nowrap;">{{ proj_specs['special_percentage']['name'] }} (-{{ proj_specs['special_percentage']['value'] }}%)</td>
+                  <td class="text-right" style="white-space: nowrap;">- {{proj_specs['total_cost_discount']}} SEK</td>
                 </tr>
               {% end %}
               <tr class="border-top">
-                <td class="fw-bold pt-2 mt-2">Total cost</td>
-                <td class="text-right pt-2 mt-2">{{ proj_specs['total_cost'] }} SEK</td>
+                <td class="fw-bold pt-2 mt-2" style="white-space: nowrap;">Total cost</td>
+                <td class="text-right pt-2 mt-2" style="white-space: nowrap;">{{ proj_specs['total_cost'] }} SEK</td>
               </tr>
             </tbody>
           </table>

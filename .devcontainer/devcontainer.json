@@ -26,7 +26,11 @@
     // "customizations": {},
     // Uncomment to connect as an existing user other than the container default. More info: https://aka.ms/dev-containers-non-root.
     "remoteUser": "mambauser",
+    "containerEnv": {
+        "WORKSPACE_FOLDER": "${containerWorkspaceFolder}"
+    },
     "mounts": [
         "source=${localEnv:HOME}/conf,target=/home/mambauser/conf,type=bind,consistency=cached"
-    ]
+    ],
+    "updateRemoteUserUID": true
 }

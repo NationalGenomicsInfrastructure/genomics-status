@@ -1,0 +1,94 @@
+[
+  {
+    "lane": "4",
+    "projects": [
+      "A__Berggren_25_03"
+    ],
+    "settings_index": 0,
+    "sample_count": 8,
+    "filename": "Lane4_A__Berggren_25_03_0.csv",
+    "Header": {
+      "FileFormatVersion": "2",
+      "RunName": "23FNTJLT3"
+    },
+    "BCLConvert_Settings": {
+      "CreateFastqForIndexReads": false,
+      "MinimumTrimmedReadLength": 0,
+      "MaskShortReads": 0
+    },
+    "BCLConvert_Data": [
+      {
+        "Lane": "4",
+        "Sample_ID": "Sample_P38454_1001",
+        "Sample_Name": "P38454_1001",
+        "index": "GAACTGAGCG",
+        "index2": "CGCTCCACGA",
+        "Sample_Project": "A__Berggren_25_03",
+        "OverrideCycles": "R1:Y151;I1:I10;I2:I10;R2:Y151"
+      },
+      {
+        "Lane": "4",
+        "Sample_ID": "Sample_P38454_1002",
+        "Sample_Name": "P38454_1002",
+        "index": "AGGTCAGATA",
+        "index2": "TATCTTGTAG",
+        "Sample_Project": "A__Berggren_25_03",
+        "OverrideCycles": "R1:Y151;I1:I10;I2:I10;R2:Y151"
+      },
+      {
+        "Lane": "4",
+        "Sample_ID": "Sample_P38454_1003",
+        "Sample_Name": "P38454_1003",
+        "index": "CGTCTCATAT",
+        "index2": "AGCTACTATA",
+        "Sample_Project": "A__Berggren_25_03",
+        "OverrideCycles": "R1:Y151;I1:I10;I2:I10;R2:Y151"
+      },
+      {
+        "Lane": "4",
+        "Sample_ID": "Sample_P38454_1004",
+        "Sample_Name": "P38454_1004",
+        "index": "ATTCCATAAG",
+        "index2": "CCACCAGGCA",
+        "Sample_Project": "A__Berggren_25_03",
+        "OverrideCycles": "R1:Y151;I1:I10;I2:I10;R2:Y151"
+      },
+      {
+        "Lane": "4",
+        "Sample_ID": "Sample_P38454_1005",
+        "Sample_Name": "P38454_1005",
+        "index": "GACGAGATTA",
+        "index2": "AGGATAATGT",
+        "Sample_Project": "A__Berggren_25_03",
+        "OverrideCycles": "R1:Y151;I1:I10;I2:I10;R2:Y151"
+      },
+      {
+        "Lane": "4",
+        "Sample_ID": "Sample_P38454_1006",
+        "Sample_Name": "P38454_1006",
+        "index": "AACATCGCGC",
+        "index2": "ACAAGTGGAC",
+        "Sample_Project": "A__Berggren_25_03",
+        "OverrideCycles": "R1:Y151;I1:I10;I2:I10;R2:Y151"
+      },
+      {
+        "Lane": "4",
+        "Sample_ID": "Sample_P38454_1007",
+        "Sample_Name": "P38454_1007",
+        "index": "CTAGTGCTCT",
+        "index2": "TACTGTTCCA",
+        "Sample_Project": "A__Berggren_25_03",
+        "OverrideCycles": "R1:Y151;I1:I10;I2:I10;R2:Y151"
+      },
+      {
+        "Lane": "4",
+        "Sample_ID": "Sample_P38454_1008",
+        "Sample_Name": "P38454_1008",
+        "index": "GATCAAGGCA",
+        "index2": "ATTAACAAGG",
+        "Sample_Project": "A__Berggren_25_03",
+        "OverrideCycles": "R1:Y151;I1:I10;I2:I10;R2:Y151"
+      }
+    ]
+  }
+]
