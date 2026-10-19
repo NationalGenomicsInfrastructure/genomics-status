@@ -106,7 +106,7 @@ class RunningNotesDataHandler(SafeHandler):
     ):
         gen_log = logging.getLogger("tornado.general")
         if not created_time:
-            created_time = datetime.datetime.now(datetime.timezone.utc)
+            created_time = datetime.datetime.now(datetime.UTC)
         note_details = {
             "type": note_type,
             "id": partition_id,
@@ -340,8 +340,7 @@ class RunningNotesDataHandler(SafeHandler):
             + str(
                 int(
                     (
-                        timestamp
-                        - datetime.datetime.fromtimestamp(0, datetime.timezone.utc)
+                        timestamp - datetime.datetime.fromtimestamp(0, datetime.UTC)
                     ).total_seconds()
                 )
             )

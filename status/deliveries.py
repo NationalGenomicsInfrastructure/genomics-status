@@ -260,11 +260,14 @@ class DeliveriesPageHandler(SafeHandler):
                 else:
                     ongoing_projects += 1
 
-                latest_running_note = list(
-                    LatestRunningNoteHandler.get_latest_running_note(
-                        self.application, "project", project_id
-                    ).values()
-                )[0]
+                latest_running_note = next(
+                    iter(
+                        LatestRunningNoteHandler.get_latest_running_note(
+                            self.application, "project", project_id
+                        ).values()
+                    ),
+                    {},
+                )
 
                 # project type (needed for filters)
                 project_type = (
