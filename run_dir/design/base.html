@@ -33,9 +33,9 @@
 </head>
 
 <body>
-  <nav class="navbar navbar-expand-xl navbar-light {% if gs_globals['prod'] %} bg-light {% else %} bg-warning {% end %} fixed-top border-bottom shadow-sm">
+  <nav class="navbar navbar-expand-xl navbar-light {% if gs_globals['environment']=='prod' %} bg-light {% else %} bg-warning {% end %} fixed-top border-bottom shadow-sm">
     <div class="container-fluid">
-      <a class="navbar-brand" href="/">Genomics-Status{% if not gs_globals['prod'] %}-Stage {% end %}</a>
+      <a class="navbar-brand" href="/">Genomics-Status{% if gs_globals['environment']!='prod' %}-Stage {% end %}</a>
       <form class="form-inline statusdb-search" role="search" id="navbar-searchbar">
         <input class="form-control typeahead" type="text" placeholder="Search" aria-label="Search">
       </form>
