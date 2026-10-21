@@ -51,7 +51,7 @@ class SuggestionBoxHandler(SafeHandler):
         user = self.get_current_user()
         description = self.get_argument("description")
         suggestion = self.get_argument("suggestion")
-        deployment = "" if self.application.gs_globals["prod"] else "[STAGE] "
+        deployment = "" if self.application.gs_globals["environment"] == "prod" else "[STAGE] "
 
         jira = Jira(
             url=self.application.jira_url,

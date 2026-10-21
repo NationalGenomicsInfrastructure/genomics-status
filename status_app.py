@@ -241,9 +241,7 @@ class Application(tornado.web.Application):
             self.gs_globals["git_commit_full"] = "unknown"
 
         self.gs_globals["font_awesome_url"] = settings.get("font_awesome_url", None)
-        self.gs_globals["prod"] = True
-        if "dev" in settings.get("couch_url"):
-            self.gs_globals["prod"] = False
+        self.gs_globals["environment"] = settings.get("environment", "dev")
 
         handlers = [
             # The tuples are on the form ("URI regex", "Backend request handler")
@@ -570,7 +568,7 @@ class Application(tornado.web.Application):
         settings["static_path"] = "static"
         settings["login_url"] = "/login"
 
-        if options["develop"]:
+        if self.gs_globals["environment"] == "dev":
             tornado.autoreload.watch("design/application.html")
             tornado.autoreload.watch("design/applications.html")
             tornado.autoreload.watch("design/barcode.html")
@@ -686,14 +684,6 @@ if __name__ == "__main__":
             "WARNING, this option disables "
             "all security measures, use only "
             "for testing purposes"
-        ),
-    )
-    define(
-        "develop",
-        default=False,
-        help=(
-            "Define develop mode to look for changes "
-            "in files and automatically reloading them"
         ),
     )
 

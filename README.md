@@ -154,6 +154,7 @@ couch_server: http://<username>:<password>@ngi-statusdb-dev.scilifelab.se:5984
 username: <tools_username> # same as input above
 password: <tools_password> # same as input above
 port: 9761
+environment: dev
 redirect_uri: http://localhost:9761/login
 cookie_secret: 
 couch_url: https://ngi-statusdb-dev.scilifelab.se
