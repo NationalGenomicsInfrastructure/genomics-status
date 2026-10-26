@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 import re
 import sys
@@ -13,6 +14,7 @@ from dateutil import parser
 from jwcrypto import jwk, jwt
 from jwcrypto.common import JWException
 from jwcrypto.jws import InvalidJWSSignature
+from tornado.options import options
 
 #########################
 #  Useful misc handlers #
@@ -481,3 +483,17 @@ class GoogleUser:
                 self.valid_email = email
                 authenticated = True
         return authenticated
+
+
+class JsonFormatter(logging.Formatter):
+    def format(self, record):
+        payload = {
+            "timestamp": self.formatTime(record, self.datefmt),
+            "level": record.levelname,
+            "logger": record.name,
+            "module": record.module,
+            "lineno": record.lineno,
+            "message": record.getMessage(),
+            "port": options["port"],
+        }
+        return json.dumps(payload, ensure_ascii=False)

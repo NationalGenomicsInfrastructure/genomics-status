@@ -4,6 +4,7 @@ import base64
 import csv
 import logging
 import subprocess
+import sys
 import uuid
 from pathlib import Path
 from urllib.parse import urlsplit
@@ -16,7 +17,6 @@ import yaml
 from ibm_cloud_sdk_core.api_exception import ApiException
 from ibmcloudant import CouchDbSessionAuthenticator, cloudant_v1
 from tornado import template
-from tornado.log import LogFormatter
 from tornado.options import define, options
 from zenpy import Zenpy
 
@@ -200,6 +200,7 @@ from status.user_preferences import UserPrefPageHandler, UserPrefPageHandler_b5
 from status.util import (
     BaseHandler,
     DataHandler,
+    JsonFormatter,
     LastPSULRunHandler,
     MainHandler,
 )
@@ -241,9 +242,7 @@ class Application(tornado.web.Application):
             self.gs_globals["git_commit_full"] = "unknown"
 
         self.gs_globals["font_awesome_url"] = settings.get("font_awesome_url", None)
-        self.gs_globals["prod"] = True
-        if "dev" in settings.get("couch_url"):
-            self.gs_globals["prod"] = False
+        self.gs_globals["environment"] = settings.get("environment", "dev")
 
         handlers = [
             # The tuples are on the form ("URI regex", "Backend request handler")
@@ -570,7 +569,7 @@ class Application(tornado.web.Application):
         settings["static_path"] = "static"
         settings["login_url"] = "/login"
 
-        if options["develop"]:
+        if self.gs_globals["environment"] == "dev":
             tornado.autoreload.watch("design/application.html")
             tornado.autoreload.watch("design/applications.html")
             tornado.autoreload.watch("design/barcode.html")
@@ -688,14 +687,6 @@ if __name__ == "__main__":
             "for testing purposes"
         ),
     )
-    define(
-        "develop",
-        default=False,
-        help=(
-            "Define develop mode to look for changes "
-            "in files and automatically reloading them"
-        ),
-    )
 
     define(
         "port", default=9761, type=int, help="The port that the server will listen to."
@@ -709,9 +700,17 @@ if __name__ == "__main__":
     )
     # After parsing the command line, the command line flags are stored in tornado.options
     tornado.options.parse_command_line()
-    logging_format = f"%(color)s[%(levelname)1.1s %(asctime)s %(module)s:%(lineno)d] [port:{options['port']}]%(end_color)s %(message)s"
-    log_formatter = LogFormatter(fmt=logging_format, color=True)
-    logging.getLogger().handlers[0].setFormatter(log_formatter)
+    handler = logging.StreamHandler(sys.stdout)
+    handler.setFormatter(JsonFormatter())
+
+    root_logger = logging.getLogger()
+    root_logger.handlers = [handler]
+    root_logger.setLevel(logging.INFO)
+    for logger_name in ("tornado.access", "tornado.application", "tornado.general"):
+        logger = logging.getLogger(logger_name)
+        logger.handlers = [handler]
+        logger.setLevel(logging.INFO)
+        logger.propagate = False
 
     # Configuration directory path from command line
     config_dir = Path(options["config_dir"]).expanduser()
