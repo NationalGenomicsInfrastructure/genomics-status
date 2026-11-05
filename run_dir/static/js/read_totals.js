@@ -18,6 +18,8 @@ const vReadsTotalComponent = {
             yieldThresholdSelectionMode: 'below',
             showFlowcellSelection: false,
             bulkSelectedFlowcells: {},
+            deselectedFlowcellIds: {},
+            flowcellSearchQuery: '',
             highlightedSample: null,
             checkedState: {},
             expandedSamples: {},
@@ -122,6 +124,11 @@ const vReadsTotalComponent = {
         },
         selectedFlowcellIds() {
             return this.allFlowcellIds.filter(id => this.bulkSelectedFlowcells[id]);
+        },
+        filteredFlowcellIds() {
+            const query = this.flowcellSearchQuery.trim().toLowerCase();
+            if (!query) return this.allFlowcellIds;
+            return this.allFlowcellIds.filter(id => id.toLowerCase().includes(query));
         },
         selectedFlowcellIdSet() {
             return new Set(this.selectedFlowcellIds);
@@ -261,6 +268,7 @@ const vReadsTotalComponent = {
                     this.allFlowcellIds.forEach(id => {
                         this.bulkSelectedFlowcells[id] = true;
                     });
+                    this.deselectedFlowcellIds = {};
                     this.showFlowcellSelection = false;
                     this.yieldThresholdSelectionMode = 'below';
                     this.yieldLimitMode = 'calculated';
@@ -360,6 +368,10 @@ const vReadsTotalComponent = {
             Object.keys(this.checkedState).forEach(key => {
                 this.checkedState[key] = nextValue;
             });
+            this.deselectedFlowcellIds = {};
+            this.allFlowcellIds.forEach(id => {
+                this.bulkSelectedFlowcells[id] = nextValue;
+            });
         },
         highlightSample(sample) {
             this.highlightedSample = sample;
@@ -455,17 +467,26 @@ const vReadsTotalComponent = {
         toggleFlowcellSelection() {
             this.showFlowcellSelection = !this.showFlowcellSelection;
         },
-        applyBulkFlowcellSelection(isChecked) {
+        applyBulkFlowcellSelection() {
             this.activeYieldThresholdFilter = null;
             const selectedSet = this.selectedFlowcellIdSet;
-            if (selectedSet.size === 0) return;
             this.sampleNames.forEach(sample => {
                 this.sampleRows(sample).forEach(d => {
-                    if (selectedSet.has(d.fcp)) {
-                        this.checkedState[this.selectionKey(sample, d.fcp)] = isChecked;
-                    }
+                    this.checkedState[this.selectionKey(sample, d.fcp)] = selectedSet.has(d.fcp);
                 });
             });
+            this.deselectedFlowcellIds = {};
+            this.allFlowcellIds.forEach(id => {
+                if (!selectedSet.has(id)) {
+                    this.deselectedFlowcellIds[id] = true;
+                }
+            });
+        },
+        setFilteredFlowcellsSelected(isChecked) {
+            this.filteredFlowcellIds.forEach(id => {
+                this.bulkSelectedFlowcells[id] = isChecked;
+            });
+            this.flowcellSearchQuery = '';
         },
         toggleAllSamplesExpanded() {
             const nextValue = !this.areAllSamplesExpanded;
@@ -486,9 +507,10 @@ const vReadsTotalComponent = {
             if (!Number.isFinite(threshold) || (mode !== 'below' && mode !== 'above')) return;
             const selectBelow = mode === 'below';
             this.sampleNames.forEach(sample => {
-                const isBelowThreshold = this.sampleTotalCount(sample) < threshold;
+                const isBelowThreshold = (this.summaryRowMap[sample] || 0) < threshold;
                 const shouldSelect = selectBelow ? isBelowThreshold : !isBelowThreshold;
                 this.sampleRows(sample).forEach(d => {
+                    if (this.deselectedFlowcellIds[d.fcp]) return;
                     this.checkedState[this.selectionKey(sample, d.fcp)] = shouldSelect;
                 });
             });
@@ -864,16 +886,29 @@ const vReadsTotalComponent = {
                             Select one or more flowcells below, then apply the change across all samples.
                         </p>
 
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <input
+                                type="search"
+                                class="form-control form-control-sm"
+                                style="max-width: 260px;"
+                                placeholder="Search FCID..."
+                                v-model="flowcellSearchQuery"
+                            />
+                            <input type="button" class="btn btn-sm btn-outline-secondary" value="Select all hits" :disabled="filteredFlowcellIds.length === 0" @click="setFilteredFlowcellsSelected(true)"/>
+                            <input type="button" class="btn btn-sm btn-outline-secondary" value="Deselect all hits" :disabled="filteredFlowcellIds.length === 0" @click="setFilteredFlowcellsSelected(false)"/>
+                            <small class="text-muted">{{ filteredFlowcellIds.length }} of {{ allFlowcellIds.length }} shown</small>
+                        </div>
+
                         <div style="max-height: 220px; overflow: auto; border: 1px solid #d9d9d9; border-radius: 4px; padding: 8px;">
-                            <div v-for="id in allFlowcellIds" :key="id" class="form-check">
+                            <div v-if="filteredFlowcellIds.length === 0" class="text-muted">No flowcells match your search.</div>
+                            <div v-for="id in filteredFlowcellIds" :key="id" class="form-check">
                                 <input class="form-check-input" type="checkbox" :id="'bulk_' + id" v-model="bulkSelectedFlowcells[id]"/>
                                 <label class="form-check-label" :for="'bulk_' + id">{{ id }}</label>
                             </div>
                         </div>
 
                         <div class="d-flex gap-2 mt-3">
-                            <input type="button" class="btn btn-primary" value="Check selected IDs across all samples" :disabled="selectedFlowcellIds.length === 0" @click="applyBulkFlowcellSelection(true)"/>
-                            <input type="button" class="btn btn-outline-primary" value="Uncheck selected IDs across all samples" :disabled="selectedFlowcellIds.length === 0" @click="applyBulkFlowcellSelection(false)"/>
+                            <input type="button" class="btn btn-primary" value="Apply flowcell selection across all samples" :disabled="allFlowcellIds.length === 0" @click="applyBulkFlowcellSelection"/>
                         </div>
                     </div>
                 </div>
