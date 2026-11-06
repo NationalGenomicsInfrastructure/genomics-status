@@ -3,7 +3,7 @@ import os
 import re
 import sys
 import urllib
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 import psycopg2
 import requests
@@ -157,7 +157,7 @@ class BaseHandler(tornado.web.RequestHandler):
             try:
                 verified_payload = jwt.JWT(jwt=token, key=public_key)
                 claims = json.loads(verified_payload.claims)
-                if claims["exp"] < datetime.now(timezone.utc).timestamp():
+                if claims["exp"] < datetime.now(UTC).timestamp():
                     return None
                 # If 'sub' claim is present, it must match owner
                 if "sub" in claims and claims["sub"] != owner:

@@ -1391,7 +1391,7 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                     "Header": {
                         "FileFormatVersion": "2",
                         "RunName": flowcell_id,
-                        "Date": datetime.datetime.now(datetime.timezone.utc).strftime(
+                        "Date": datetime.datetime.now(datetime.UTC).strftime(
                             "%Y-%m-%d"
                         ),
                     },
@@ -1624,7 +1624,7 @@ class DemuxSampleInfoDataHandler(SafeHandler):
         self._get_sample_classification_config()
 
         original_rev = document.get("_rev")
-        timestamp = datetime.datetime.now(datetime.timezone.utc).isoformat(
+        timestamp = datetime.datetime.now(datetime.UTC).isoformat(
             timespec="milliseconds"
         )
 
@@ -1947,7 +1947,7 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                 return
 
             # Create timestamp for this operation (UTC)
-            timestamp = datetime.datetime.now(datetime.timezone.utc).isoformat(
+            timestamp = datetime.datetime.now(datetime.UTC).isoformat(
                 timespec="milliseconds"
             )
 
@@ -2167,7 +2167,7 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                 return
 
             # Create timestamp for this update
-            timestamp = datetime.datetime.now(datetime.timezone.utc).isoformat(
+            timestamp = datetime.datetime.now(datetime.UTC).isoformat(
                 timespec="milliseconds"
             )
 
@@ -2625,7 +2625,7 @@ class SampleDeleteHandler(DemuxSampleInfoDataHandler):
                 )
 
             # Create timestamp for this deletion
-            timestamp = datetime.datetime.now(datetime.timezone.utc).isoformat(
+            timestamp = datetime.datetime.now(datetime.UTC).isoformat(
                 timespec="milliseconds"
             )
 
