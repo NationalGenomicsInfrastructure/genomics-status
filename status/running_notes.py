@@ -340,8 +340,7 @@ class RunningNotesDataHandler(SafeHandler):
             + str(
                 int(
                     (
-                        timestamp
-                        - datetime.datetime.fromtimestamp(0, datetime.UTC)
+                        timestamp - datetime.datetime.fromtimestamp(0, datetime.UTC)
                     ).total_seconds()
                 )
             )
