@@ -333,6 +333,58 @@ class TestReuploadPost(AsyncHTTPTestCase):
         )
         self.assertTrue(is_valid)
 
+    def _dry_run_reupload(self, existing_run_setup, new_run_setup):
+        """Dry-run a reupload and return the response body."""
+        existing_doc = _make_existing_document()
+        existing_doc["metadata"]["run_setup"] = existing_run_setup
+
+        # Keep the demux_configuration mock from setUp for other databases
+        config_post_view = self._app.cloudant.post_view.side_effect
+        flowcell_view_result = MagicMock()
+        flowcell_view_result.get_result.return_value = {
+            "rows": [{"value": ["TEST_FC_001", "TEST_FC_001"], "doc": existing_doc}],
+        }
+        self._app.cloudant.post_view.side_effect = lambda **kwargs: (
+            flowcell_view_result
+            if kwargs.get("db") == "demux_sample_info"
+            else config_post_view(**kwargs)
+        )
+
+        response = self.fetch(
+            "/api/v1/demux_sample_info/TEST_FC_001?dry_run=true",
+            method="POST",
+            body=json_encode(
+                {
+                    "metadata": {
+                        "num_lanes": 2,
+                        "run_setup": new_run_setup,
+                        "setup_lims_step_id": "24-123456",
+                    },
+                    "uploaded_lims_info": [],
+                }
+            ),
+            headers={"Content-Type": "application/json"},
+        )
+        self.assertEqual(response.code, 200, response.body)
+        return json.loads(response.body)
+
+    def test_reupload_legacy_underscore_run_setup_not_a_change(self):
+        """Converting a legacy underscore run_setup to dashes is not a metadata change."""
+        body = self._dry_run_reupload("151_8_8_151", "151-8-8-151")
+
+        self.assertEqual(body["changes"]["metadata"], [])
+        self.assertEqual(body["document"]["metadata"]["run_setup"], "151-8-8-151")
+
+    def test_reupload_underscore_run_setup_stored_with_dashes(self):
+        """An underscore run_setup in a reupload is stored and reported with dashes."""
+        body = self._dry_run_reupload("151-8-8-151", "151_10_10_151")
+
+        self.assertEqual(
+            body["changes"]["metadata"],
+            [{"field": "run_setup", "old": "151-8-8-151", "new": "151-10-10-151"}],
+        )
+        self.assertEqual(body["document"]["metadata"]["run_setup"], "151-10-10-151")
+
     def test_first_generated_preserved_on_reupload(self):
         """Reupload should preserve first_generated metadata field."""
         existing_doc = _make_existing_document()

@@ -1892,7 +1892,8 @@ const SamplesheetUploadForm = {
             if (!this.formData.run_setup || !this.formData.run_setup.trim()) {
                 errors.push('Run setup is required (e.g., "151-10-24-151")');
             } else {
-                const parts = this.formData.run_setup.split('-');
+                // Accept underscores too, the backend normalizes them to dashes
+                const parts = this.formData.run_setup.trim().split(/[-_]/);
                 if (parts.length !== 4 || parts.some(p => isNaN(parseInt(p)))) {
                     errors.push('Run setup must be in format R1-I1-I2-R2 (e.g., "151-10-24-151")');
                 }
