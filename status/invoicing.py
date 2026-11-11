@@ -227,10 +227,12 @@ class GenerateInvoiceHandler(AgreementsDBHandler, InvoicingDataHandler):
         projects = args.split(",")
         invoice_defaults = self.fetch_agreement("invoice_defaults")
 
-        if (
-            len(projects) == 1
-            and self.request.arguments.get("single_project", False)[0]
-        ):
+        single_project = self.request.arguments.get("single_project")
+        is_single_project = False
+        if single_project is not None:
+            is_single_project = single_project[0].decode("utf-8").lower() == "true"
+
+        if len(projects) == 1 and is_single_project:
             proj_id = projects[0]
             agreement_doc = self.fetch_agreement(proj_id)
             account_dets, contact_dets, proj_specs = self.get_invoice_data(
