@@ -11,11 +11,28 @@ from genologics.config import BASEURI, PASSWORD, USERNAME
 
 from status.flowcell import get_project_names_from_ids, get_q30_threshold, thresholds
 from status.running_notes import LatestRunningNoteHandler
-from status.util import SafeHandler
+from status.util import SafeHandler, normalize_run_setup
 
 application_log = logging.getLogger("tornado.application")
 
 lims = lims.Lims(BASEURI, USERNAME, PASSWORD)
+
+
+def format_run_setup(run_setup):
+    """Format a demux_sample_info run setup for display.
+
+    Run setup is formatted as R1-I1-I2-R2 (e.g. "151-8-8-151"), older documents
+    use underscores instead (e.g. "151_8_8_151"). Returns a more human-readable
+    format like "151nt(R1)-8nt(I1)-8nt(I2)-151nt(R2)", or None if unrecognized.
+    """
+    run_setup_parts = normalize_run_setup(run_setup).split("-")
+    if len(run_setup_parts) != 4:
+        return None
+    r1, i1, i2, r2 = run_setup_parts
+    return (
+        f"{r1}nt(R1){f'-{i1}nt(I1)' if i1 != '0' else ''}"
+        f"{f'-{i2}nt(I2)' if i2 != '0' else ''}{f'-{r2}nt(R2)' if r2 != '0' else ''}"
+    )
 
 
 class FlowcellsHandler(SafeHandler):
@@ -279,14 +296,16 @@ class FlowcellsHandler(SafeHandler):
 
                             # Set run_setup
                             if demux_info.get("run_setup"):
-                                # Run setup in samplesheet_generator epp is formatted as
-                                # f"{process.udf.get('Read 1 Cycles', '0')}_{process.udf.get('Index Read 1', '0')}_{process.udf.get('Index Read 2', '0')}_{process.udf.get('Read 2 Cycles', '0')}"
-                                # Transform it to a more human-readable format like "151nt(R1)-8nt(I1)-8nt(I2)-151nt(R2)"
-                                r1, i1, i2, r2 = demux_info["run_setup"].split("_")
-                                fc_data["actual_run_setup"] = (
-                                    f"{r1}nt(R1){f'-{i1}nt(I1)' if i1 != '0' else ''}"
-                                    f"{f'-{i2}nt(I2)' if i2 != '0' else ''}{f'-{r2}nt(R2)' if r2 != '0' else ''}"
+                                actual_run_setup = format_run_setup(
+                                    demux_info["run_setup"]
                                 )
+                                if actual_run_setup:
+                                    fc_data["actual_run_setup"] = actual_run_setup
+                                else:
+                                    application_log.warning(
+                                        f"Unrecognized run_setup '{demux_info['run_setup']}' "
+                                        f"in demux_sample_info for {lookup_id}"
+                                    )
 
             except Exception as e:
                 application_log.warning(

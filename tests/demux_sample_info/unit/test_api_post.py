@@ -82,6 +82,16 @@ class TestDemuxSampleInfoPost(AsyncHTTPTestCase):
         self.assertEqual(metadata["num_lanes"], 2)
         self.assertEqual(len(uploaded_info), 13)
 
+    def test_validate_post_data_normalizes_run_setup(self):
+        """Test that an underscore-separated run_setup is stored with dashes."""
+        handler = DemuxSampleInfoDataHandler(self._app, MagicMock())
+        self.test_data["metadata"]["run_setup"] = "151_10_10_151"
+
+        is_valid, _, metadata, _ = handler._validate_post_data(self.test_data)
+
+        self.assertTrue(is_valid)
+        self.assertEqual(metadata["run_setup"], "151-10-10-151")
+
     def test_validate_post_data_missing_metadata(self):
         """Test validation with missing metadata field."""
         handler = DemuxSampleInfoDataHandler(self._app, MagicMock())
