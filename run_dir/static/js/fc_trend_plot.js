@@ -248,15 +248,16 @@ function build_series(data, key, name, display_by, filter_inst_type, filter_inst
             if (data[d].cver.includes('10B')){
                 series_name = "10B";
                 }
-            if (data[d].cver.includes('1.5B')){
-                series_name = "1.5B";
-                }
+            // 5B captures 1.5B and 25B
             if (data[d].cver.includes('5B')) {
-                series_name = "5B";
-            }
-            if (data[d].cver.includes('25B')){
-                series_name = "25B";
+                if (data[d].cver.includes('25B')){
+                    series_name = "25B";
+                }else if (data[d].cver.includes('1.5B')){
+                    series_name = "1.5B";
+                }else{
+                    series_name = "5B";
                 }
+            }
             if(data[d].cver.includes('600Cycles_High')){
                 series_name = "Aviti 600Cycles_High";
             }
