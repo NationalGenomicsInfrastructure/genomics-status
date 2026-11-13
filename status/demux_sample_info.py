@@ -504,10 +504,14 @@ class DemuxSampleInfoDataHandler(SafeHandler):
             umi_key: Key to look up in umi_config ("i7" or "i5")
 
         Returns:
-            str: Override string (e.g., "I1:I8N2") or empty if no override needed
+            str: Override string (e.g., "I1:I8N2"), "I2:N10" when the recipe
+                 skips an index read the run has, or empty if the run has no
+                 such index read
         """
         if recipe_cycles == 0:
-            return ""
+            # BCL Convert requires every read in RunInfo.xml to be present in
+            # OverrideCycles, so an index read the recipe doesn't use is masked
+            return f"{index_name}:N{run_cycles}" if run_cycles > 0 else ""
 
         parts = []
         remaining_cycles = recipe_cycles
