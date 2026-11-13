@@ -127,6 +127,42 @@ class TestOverrideCycles(unittest.TestCase):
 
         self.assertEqual(result, "R1:Y151;I1:I8N2;I2:I20N4;R2:Y151")
 
+    def test_single_index_recipe_on_dual_index_run(self):
+        """Test that an index read the recipe skips is masked, not dropped."""
+        run_setup = "151-10-10-151"
+        recipe = "151-8-0-151"
+        index_lengths = [8, 0]
+
+        result = self.handler._generate_override_cycles(
+            run_setup, recipe, index_lengths, None
+        )
+
+        self.assertEqual(result, "R1:Y151;I1:I8N2;I2:N10;R2:Y151")
+
+    def test_no_index_recipe_on_dual_index_run(self):
+        """Test that both index reads are masked when the recipe uses neither."""
+        run_setup = "151-10-10-151"
+        recipe = "151-0-0-151"
+        index_lengths = [0, 0]
+
+        result = self.handler._generate_override_cycles(
+            run_setup, recipe, index_lengths, None
+        )
+
+        self.assertEqual(result, "R1:Y151;I1:N10;I2:N10;R2:Y151")
+
+    def test_single_index_recipe_on_single_index_run(self):
+        """Test that an index read the run doesn't have stays out of the string."""
+        run_setup = "151-10-0-151"
+        recipe = "151-8-0-151"
+        index_lengths = [8, 0]
+
+        result = self.handler._generate_override_cycles(
+            run_setup, recipe, index_lengths, None
+        )
+
+        self.assertEqual(result, "R1:Y151;I1:I8N2;R2:Y151")
+
     def test_complex_umi(self):
         """Test complex case with UMIs on multiple locations."""
         run_setup = "151-10-24-151"
