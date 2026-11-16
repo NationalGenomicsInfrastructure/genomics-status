@@ -21,3 +21,6 @@ RUN python -m pip install --upgrade pip
 RUN python -m pip install --upgrade setuptools
 RUN python -m pip install -r requirements.txt
 RUN python -m pip install -r requirements_dev.txt
+
+# Clean caches post-build (pkgs dirs are hardlinked into the env, safe to remove)
+RUN rm -rf /opt/conda/pkgs /home/$MAMBA_USER/.cache/pip /home/$MAMBA_USER/.cache/conda
