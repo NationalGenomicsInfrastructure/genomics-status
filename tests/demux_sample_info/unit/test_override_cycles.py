@@ -181,6 +181,46 @@ class TestOverrideCycles(unittest.TestCase):
 
         self.assertEqual(result, "")
 
+    def test_underscore_run_setup(self):
+        """Test with underscore-separated run setup, as in legacy documents."""
+        result = self.handler._generate_override_cycles(
+            "151_10_24_151", "151-X-X-151", [10, 24], None
+        )
+
+        self.assertEqual(result, "R1:Y151;I1:I10;I2:I24;R2:Y151")
+
+    def test_underscore_run_setup_shorthand_recipe(self):
+        """Test with underscore run setup and 2-part recipe."""
+        result = self.handler._generate_override_cycles(
+            "151_10_10_151", "151-151", [8, 8], None
+        )
+
+        self.assertEqual(result, "R1:Y151;I1:I8N2;I2:I8N2;R2:Y151")
+
+    def test_recipe_lowercase_x_and_whitespace(self):
+        """Test that recipe is normalized (lowercase x, surrounding whitespace)."""
+        result = self.handler._generate_override_cycles(
+            " 151-10-24-151 ", " 151-x-x-151 ", [10, 24], None
+        )
+
+        self.assertEqual(result, "R1:Y151;I1:I10;I2:I24;R2:Y151")
+
+    def test_placeholder_recipe(self):
+        """Test that the EPP placeholder recipe 0-0-0-0 gives no OverrideCycles."""
+        result = self.handler._generate_override_cycles(
+            "151-10-24-151", "0-0-0-0", [10, 24], None
+        )
+
+        self.assertEqual(result, "")
+
+    def test_non_numeric_recipe(self):
+        """Test that a recipe with extra text gives no OverrideCycles instead of crashing."""
+        result = self.handler._generate_override_cycles(
+            "151-10-24-151", "151-X-X-151 (rerun)", [10, 24], None
+        )
+
+        self.assertEqual(result, "")
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -363,6 +363,18 @@ def dthandler(obj):
         raise TypeError("Object can not be isoformatted.")
 
 
+def normalize_run_setup(value):
+    """Normalize a run setup or recipe string such as "151_10_10_151" to "151-10-10-151".
+
+    Older demux_sample_info documents (from the samplesheet_generator EPP) use
+    underscores as separators, while recipes and newer documents use dashes.
+    Also strips whitespace and uppercases "x" (as in "151-x-x-151").
+    """
+    if not isinstance(value, str):
+        return value
+    return value.strip().replace("_", "-").upper()
+
+
 ################################
 # Useful data-serving handlers #
 ################################

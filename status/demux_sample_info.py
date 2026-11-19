@@ -11,7 +11,7 @@ import tornado.web
 from genologics.config import BASEURI
 from ibm_cloud_sdk_core.api_exception import ApiException
 
-from status.util import SafeHandler
+from status.util import SafeHandler, normalize_run_setup
 
 
 def load_active_demux_config(cloudant_client):
@@ -279,6 +279,9 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                 None,
             )
 
+        # Store run_setup with dashes, regardless of which separator the client used
+        metadata["run_setup"] = normalize_run_setup(metadata["run_setup"])
+
         # Validate uploaded_lims_info is a list
         if not isinstance(uploaded_lims_info, list):
             return (
@@ -351,7 +354,12 @@ class DemuxSampleInfoDataHandler(SafeHandler):
             str: OverrideCycles string (e.g., "R1:U7N1Y143;R2:U7N1Y143;I1:I8;I2:I8")
                  or empty string if no override needed
         """
-        if not run_setup or not recipe:
+        run_setup = normalize_run_setup(run_setup)
+        recipe = normalize_run_setup(recipe)
+
+        # "0-0-0-0" is what the samplesheet_generator EPP writes when the project's
+        # sequencing setup could not be parsed, so treat it as no recipe at all
+        if not run_setup or not recipe or recipe == "0-0-0-0":
             return ""
 
         # Parse run_setup and recipe
@@ -363,20 +371,27 @@ class DemuxSampleInfoDataHandler(SafeHandler):
             recipe_parts = [recipe_parts[0], "X", "X", recipe_parts[1]]
 
         if len(run_parts) != 4 or len(recipe_parts) != 4:
-            # Invalid format
+            logging.warning(
+                f"Cannot generate OverrideCycles from unrecognized format: "
+                f"run_setup={run_setup}, recipe={recipe}"
+            )
             return ""
 
-        # Extract cycle counts from run_setup
+        # Extract cycle counts from run_setup and recipe (X means use full run cycles)
         try:
             run_r1, run_i1, run_i2, run_r2 = [int(x) for x in run_parts]
+            recipe_r1, recipe_i1, recipe_i2, recipe_r2 = [
+                int(part) if part != "X" else run_cycles
+                for part, run_cycles in zip(
+                    recipe_parts, [run_r1, run_i1, run_i2, run_r2]
+                )
+            ]
         except ValueError:
+            logging.warning(
+                f"Cannot generate OverrideCycles from non-numeric cycles: "
+                f"run_setup={run_setup}, recipe={recipe}"
+            )
             return ""
-
-        # Extract expected cycles from recipe (X means use full run cycles)
-        recipe_r1 = int(recipe_parts[0]) if recipe_parts[0] != "X" else run_r1
-        recipe_i1 = int(recipe_parts[1]) if recipe_parts[1] != "X" else run_i1
-        recipe_i2 = int(recipe_parts[2]) if recipe_parts[2] != "X" else run_i2
-        recipe_r2 = int(recipe_parts[3]) if recipe_parts[3] != "X" else run_r2
 
         # Use the actual index sequence lengths from the parameter
         # These represent the true index sequence length (after any UMI is accounted for)
@@ -1678,7 +1693,13 @@ class DemuxSampleInfoDataHandler(SafeHandler):
             if field in metadata:
                 old_value = document["metadata"].get(field)
                 new_value = metadata[field]
-                if old_value != new_value:
+                # Don't report a separator-only change (e.g. from a legacy
+                # underscore run_setup) as a metadata change
+                if field == "run_setup":
+                    is_changed = normalize_run_setup(old_value) != new_value
+                else:
+                    is_changed = old_value != new_value
+                if is_changed:
                     metadata_changes.append(
                         {
                             "field": field,
