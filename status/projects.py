@@ -164,6 +164,13 @@ class ProjectsBaseDataHandler(SafeHandler):
             field_sources["pending_reviews"] = (
                 "LIMS escalation, formatted by Genomics Status (backend)"
             )
+        if "samples_with_errors" in row["value"] and "common" in row["value"]["samples_with_errors"]:
+            row["value"]["common_validation_errors"] = row["value"][
+                "samples_with_errors"
+            ]["common"]
+            field_sources["common_validation_errors"] = (
+                "Validation errors for common fields, formatted by Genomics Status (backend)"
+            )
 
         ord_det = row["value"].get("order_details", {})
         # Try to fetch a name for the contact field, not just an e-mail

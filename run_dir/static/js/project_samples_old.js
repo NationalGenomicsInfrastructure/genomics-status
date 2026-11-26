@@ -487,6 +487,11 @@ function load_all_udfs(){
         $("#review_ids").html(value);
         $("#review_alert").show();
       }
+      else if (prettify(key) == 'common_validation_errors'){
+        const fields = Object.keys(value);
+        $("#ena_validation_fields").text(fields.join(', '));
+        $("#ena_fields_review_alert").show();
+      }
 
       // Pass / Fail sample counts
       else if (prettify(key) == 'passed_initial_qc' || prettify(key) == 'passed_library_qc'){
