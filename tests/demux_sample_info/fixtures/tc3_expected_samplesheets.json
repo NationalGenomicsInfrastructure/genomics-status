@@ -11,9 +11,7 @@
     },
     "BCLConvert_Settings": {
       "MinimumTrimmedReadLength": 0,
-      "MaskShortReads": 0,
-      "Index2ColumnReverseComplement": "N",
-      "RunInfoIndex2ReverseComplement": "N"
+      "MaskShortReads": 0
     },
     "BCLConvert_Data": [
       {
