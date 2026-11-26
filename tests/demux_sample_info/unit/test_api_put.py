@@ -287,7 +287,12 @@ class TestPutManualEdit(AsyncHTTPTestCase):
         ]
         self.assertEqual(len(matching_sheets), 1)
         self.assertEqual(
-            matching_sheets[0]["BCLConvert_Settings"], EXPECTED_DEFAULT_SETTINGS
+            matching_sheets[0]["BCLConvert_Settings"],
+            {
+                **EXPECTED_DEFAULT_SETTINGS,
+                "Index2ColumnReverseComplement": "N",
+                "RunInfoIndex2ReverseComplement": "N",
+            },
         )
 
     def test_put_sets_auto_run_true(self):

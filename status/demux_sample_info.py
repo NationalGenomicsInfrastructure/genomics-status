@@ -1414,7 +1414,13 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                             "%Y-%m-%d"
                         ),
                     },
-                    "BCLConvert_Settings": group["bcl_settings"],
+                    # Fixed settings added here, not in bcl_settings, so they
+                    # never split samples into separate settings groups.
+                    "BCLConvert_Settings": {
+                        **group["bcl_settings"],
+                        "Index2ColumnReverseComplement": "N",
+                        "RunInfoIndex2ReverseComplement": "N",
+                    },
                     "BCLConvert_Data": group["samples"],
                 }
 
