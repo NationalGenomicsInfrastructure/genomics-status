@@ -394,7 +394,7 @@ export const vPricingMain = {
                 })
         },
         fetchPublishedCostCalculator(assign_data) {
-            axios
+            return axios
                 .get('/api/v1/cost_calculator')
                 .then(response => {
                     let data = response.data.cost_calculator
