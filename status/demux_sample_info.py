@@ -14,6 +14,18 @@ from ibm_cloud_sdk_core.api_exception import ApiException
 from status.util import SafeHandler, normalize_run_setup
 
 
+def _has_index2_read(override_cycles):
+    """Return True if an OverrideCycles string includes an Index2 read.
+
+    Handles the prefixed form ("R1:Y151;I1:I8;I2:I8;R2:Y151") and the
+    positional form ("Y151;I8;I8;Y151", where 4 reads means R1, I1, I2, R2).
+    """
+    parts = [p.strip() for p in override_cycles.split(";") if p.strip()]
+    if any(":" in p for p in parts):
+        return any(p.startswith("I2:") for p in parts)
+    return len(parts) == 4
+
+
 def load_active_demux_config(cloudant_client):
     """Load the active demux configuration from CouchDB.
 
@@ -1400,6 +1412,22 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                     )
                 )
 
+                # Fixed Index2 settings, added here (not in bcl_settings) so they
+                # never split samples into separate settings groups. bcl-convert
+                # rejects RunInfoIndex2ReverseComplement when RunInfo.xml has no
+                # Index2 read; OverrideCycles covers every RunInfo.xml read.
+                index2_settings = (
+                    {
+                        "Index2ColumnReverseComplement": "N",
+                        "RunInfoIndex2ReverseComplement": "N",
+                    }
+                    if any(
+                        _has_index2_read(sample.get("OverrideCycles") or "")
+                        for sample in group["samples"]
+                    )
+                    else {}
+                )
+
                 # Build structured samplesheet
                 samplesheet = {
                     "lane": lane,
@@ -1414,7 +1442,10 @@ class DemuxSampleInfoDataHandler(SafeHandler):
                             "%Y-%m-%d"
                         ),
                     },
-                    "BCLConvert_Settings": group["bcl_settings"],
+                    "BCLConvert_Settings": {
+                        **group["bcl_settings"],
+                        **index2_settings,
+                    },
                     "BCLConvert_Data": group["samples"],
                 }
 

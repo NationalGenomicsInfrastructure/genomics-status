@@ -774,6 +774,51 @@ class TestGenerateSamplesheets(unittest.TestCase):
         self.assertIn("Lane2_Project_ABC_0.csv", filenames)
         self.assertIn("Lane3_Project_ABC_0.csv", filenames)
 
+    def test_index2_settings_only_with_index2_read(self):
+        """Index2 reverse-complement settings appear only when the run has an Index2 read."""
+        index2_keys = {
+            "Index2ColumnReverseComplement",
+            "RunInfoIndex2ReverseComplement",
+        }
+        lanes = {
+            "1": "Y151;I8;I8;Y151",
+            "2": "R1:Y151;I1:I8;R2:Y151",
+            "3": "R1:Y151;R2:Y151",
+            "4": "R1:Y151;I1:I8;I2:N8;R2:Y151",
+        }
+        calculated_lanes = {
+            lane: {
+                "sample_rows": {
+                    f"sample{lane}": {
+                        "settings": {
+                            self.timestamp: {
+                                "per_sample_fields": {
+                                    "Lane": lane,
+                                    "Sample_ID": f"S{lane}",
+                                    "Sample_Project": "Project_A",
+                                    "OverrideCycles": override_cycles,
+                                },
+                                "raw_samplesheet_settings": {},
+                                "other_details": {},
+                            }
+                        }
+                    }
+                }
+            }
+            for lane, override_cycles in lanes.items()
+        }
+
+        result = self.handler._generate_samplesheets("TEST123", calculated_lanes)
+        settings = {ss["lane"]: ss["BCLConvert_Settings"] for ss in result}
+
+        for lane in ("1", "4"):
+            self.assertEqual(
+                {k: settings[lane][k] for k in index2_keys},
+                dict.fromkeys(index2_keys, "N"),
+            )
+        for lane in ("2", "3"):
+            self.assertFalse(index2_keys & settings[lane].keys())
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -15,7 +15,9 @@
     "BCLConvert_Settings": {
       "CreateFastqForIndexReads": false,
       "MinimumTrimmedReadLength": 0,
-      "MaskShortReads": 0
+      "MaskShortReads": 0,
+      "Index2ColumnReverseComplement": "N",
+      "RunInfoIndex2ReverseComplement": "N"
     },
     "BCLConvert_Data": [
       {
