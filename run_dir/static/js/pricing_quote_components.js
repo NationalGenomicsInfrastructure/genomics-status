@@ -169,16 +169,17 @@ export const vPricingQuote = {
           return this.proj_data['invoice_generated']!==''? true:false
         },
     },
-    created: async function() {
-      await Promise.all([
-        this.$root.fetchPublishedCostCalculator(true),
-        this.$root.fetchExchangeRates(),
-        this.fetch_latest_agreement_template_doc()
-      ])
-    },
-    mounted: function () {
-        this.get_project_specific_data()
+    mounted: async function () {
+        // Invoicing notes don't depend on the cost calculator, so fetch them right away
         this.get_invoicing_notes()
+        // Vue does not wait for async lifecycle hooks, so the cost calculator must be loaded
+        // here before fetching project/agreement data, which reads published_cost_calculator
+        await Promise.all([
+          this.$root.fetchPublishedCostCalculator(true),
+          this.$root.fetchExchangeRates(),
+          this.fetch_latest_agreement_template_doc()
+        ])
+        this.get_project_specific_data()
     },
     watch: {
         md_src_message() {
